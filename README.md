@@ -51,7 +51,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    pip install -r requirements.txt
    ```
 
-@@ -67,50 +70,59 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
+@@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
    /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
    ```
 
@@ -105,9 +105,16 @@ python main.py
 1. Fork the repo and create a feature branch:
 
    ```bash
-   ```
-
 git checkout -b feature/your-feature
+   ```
 
 ````
 2. Commit your changes and push:
+
+   ```bash
+   git add .
+   git commit -m "Describe your changes"
+   git push origin feature/your-feature
+   ```
+
+3. Open a pull request and describe your updates.
