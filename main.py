@@ -1,24 +1,27 @@
-## main.py
+"""Main application entry point for the PiWardrive GUI."""
 
 import logging
+import subprocess
+
+from kivy.factory import Factory
+from kivy.lang import Builder
+from kivy.properties import (  # pylint: disable=no-name-in-module
+    BooleanProperty, NumericProperty)
+from kivymd.app import MDApp
+
 # Trim down HTTP debug logging
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-import subprocess
-
-from kivy.lang import Builder
-from kivy.factory import Factory
-from kivy.metrics import dp
-from kivymd.app import MDApp
-from kivy.properties import NumericProperty, BooleanProperty
-from screens.map_screen       import MapScreen
-from screens.stats_screen     import StatsScreen
-from screens.split_screen     import SplitScreen
-from screens.console_screen   import ConsoleScreen
-from screens.settings_screen  import SettingsScreen
+from screens.console_screen import ConsoleScreen
 from screens.dashboard_screen import DashboardScreen
+from screens.map_screen import MapScreen
+from screens.settings_screen import SettingsScreen
+from screens.split_screen import SplitScreen
+from screens.stats_screen import StatsScreen
+
 
 class PiWardriveApp(MDApp):
+    """Main application class handling screen setup and helpers."""
     map_poll_gps     = NumericProperty(10)
     map_poll_aps     = NumericProperty(60)
     map_show_gps     = BooleanProperty(True)
@@ -29,11 +32,13 @@ class PiWardriveApp(MDApp):
     map_use_offline  = BooleanProperty(False)
 
     def build(self):
+        """Load and return the root widget tree from KV."""
         root = Builder.load_file('kv/main.kv')
         self.root = root
         return root
 
     def on_start(self):
+        """Initialize screens and navigation on start."""
         # DEBUG: show which IDs were parsed from KV
         print("Root IDs:", self.root.ids.keys())
         try:
@@ -65,27 +70,34 @@ class PiWardriveApp(MDApp):
             nav_bar.add_widget(btn)
 
     def switch_screen(self, name):
+        """Change the active screen."""
         self.root.ids.sm.current = name
 
 
     # 1) Service control with feedback
     def control_service(self, svc, action):
+        """Run a systemctl command for a given service."""
         cmd = ['sudo', 'systemctl', action, svc]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
-            self.show_alert(f"Failed to {action} {svc}", res.stderr or "Unknown error")
+            self.show_alert(
+                f"Failed to {action} {svc}", res.stderr or "Unknown error"
+            )
 
     def show_alert(self, title, text):
+        """Display a simple alert dialog with the given title and text."""
         from kivymd.uix.dialog import MDDialog
+
         dialog = MDDialog(
             title=title,
             text=text,
             size_hint=(0.8, None),
-            buttons=[]
+            buttons=[],
         )
         dialog.open()
 
     def toggle_theme(self):
+        """Toggle between the light and dark theme."""
         self.theme_cls.theme_style = (
             'Light' if self.theme_cls.theme_style == 'Dark' else 'Dark'
         )
