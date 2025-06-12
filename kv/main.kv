@@ -247,3 +247,11 @@ BoxLayout:
                     text: 'Fix: N/A'
                     size_hint_y: None
                     height: self.texture_size[1]
+
+# Console Screen layout
+<ConsoleScreen>:
+    LogViewer:
+        id: console_log
+        size_hint_y: 1
+        size_hint_x: 1
+        log_path: '/var/log/syslog'
