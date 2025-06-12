@@ -1,36 +1,29 @@
-from kivy.uix.screenmanager import Screen
-from kivy.clock import Clock, mainthread
-from kivy.app import App
+"""Screen showing map view alongside realtime capture statistics."""
+# pylint: disable=line-too-long
 
-from utils import (
-    get_cpu_temp,
-    fetch_kismet_devices,
-    count_bettercap_handshakes,
-    # avg RSSI helper: average over access_points[*]['signal_dbm']
-    # implement get_avg_rssi in utils
-    get_avg_rssi,
-    # service status helper returns bool
-    service_status,
-    # GPS fix quality helper: returns 2D/3D/DGPS
-    get_gps_fix_quality,
-)
+from kivy.clock import Clock, mainthread
+from kivy.uix.screenmanager import Screen
+
+from utils import (count_bettercap_handshakes, fetch_kismet_devices,
+                   get_avg_rssi, get_cpu_temp, get_gps_fix_quality,
+                   service_status)
+
 
 class SplitScreen(Screen):
-    """
-    A split-screen view showing the Map on the left with a border,
-    and key metrics on the right locked to 1/3 width.
-    """
+    """Display map on the left with metrics on the right."""
     def __init__(self, **kwargs):
+        """Initialize widgets and schedule metric updates."""
         super().__init__(**kwargs)
         Clock.schedule_once(self._init_split, 0)
         Clock.schedule_interval(self._update_metrics, 2)
 
-    def _init_split(self, dt):
-        # initial metric update
+    def _init_split(self, _dt):
+        """Perform the first metric update after creation."""
         self._update_metrics(0)
 
     @mainthread
-    def _update_metrics(self, dt):
+    def _update_metrics(self, _dt):
+        """Refresh labels with capture statistics."""
         cpu_temp = get_cpu_temp()
         aps, clients = fetch_kismet_devices()
         bssid_count = len(aps)
