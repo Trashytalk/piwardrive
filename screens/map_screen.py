@@ -1,28 +1,37 @@
-from kivy.uix.screenmanager import Screen
-from kivy_garden.mapview import MapView, MapMarker, MapMarkerPopup
+"""Screen displaying the interactive Wi-Fi/GPS map."""
+
+import json
+import subprocess
+import threading
+import time
+
+import requests
+from kivy.app import App
 from kivy.clock import Clock, mainthread
 from kivy.metrics import dp
 from kivy.uix.label import Label
-from kivy.app import App
-from kivymd.uix.menu import MDDropdownMenu
+from kivy.uix.screenmanager import Screen
+from kivy_garden.mapview import MapMarker, MapMarkerPopup
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.textfield import MDTextField
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.snackbar import Snackbar
+from kivymd.uix.textfield import MDTextField
 
-import threading, subprocess, json, requests, time
 
+class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
+    """Interactive map screen showing GPS location and AP overlays."""
 
-class MapScreen(Screen):
     def __init__(self, **kwargs):
+        """Initialize screen and marker storage."""
         super().__init__(**kwargs)
         self.gps_marker  = None
         self.ap_markers  = []
         self._gps_event  = None
         self._aps_event  = None
         self._lp_event   = None
-        self._touch_time = None
 
-    def on_enter(self):
+    def on_enter(self):  # pylint: disable=arguments-differ
+        """Start GPS and AP polling when entering the screen."""
         app = App.get_running_app()
         self._gps_event = Clock.schedule_interval(
             lambda dt: self.center_on_gps(), app.map_poll_gps
@@ -31,37 +40,46 @@ class MapScreen(Screen):
             lambda dt: self.plot_aps(), app.map_poll_aps
         )
 
-    def on_leave(self):
+    def on_leave(self):  # pylint: disable=arguments-differ
+        """Unschedule polling tasks when leaving the screen."""
         if self._gps_event:
-            Clock.unschedule(self._gps_event); self._gps_event = None
+            Clock.unschedule(self._gps_event)
+            self._gps_event = None
         if self._aps_event:
-            Clock.unschedule(self._aps_event); self._aps_event = None
+            Clock.unschedule(self._aps_event)
+            self._aps_event = None
         if self._lp_event:
-            Clock.unschedule(self._lp_event); self._lp_event = None
+            Clock.unschedule(self._lp_event)
+            self._lp_event = None
 
     # Long‐press detection scheduled on MapView
-    def _map_touch_down(self, mapview, touch):
-        if mapview.collide_point(*touch.pos):
+    def _map_touch_down(self, _mapview, touch):
+        """Schedule long press detection."""
+        if _mapview.collide_point(*touch.pos):
             self._lp_event = Clock.schedule_once(
                 lambda dt: self._on_long_press(touch), 0.5
             )
 
-    def _map_touch_move(self, mapview, touch):
-        if self._lp_event and abs(touch.dx) > dp(10) or abs(touch.dy) > dp(10):
+    def _map_touch_move(self, _mapview, touch):
+        """Cancel long press if the touch moves too far."""
+        if self._lp_event and (abs(touch.dx) > dp(10) or abs(touch.dy) > dp(10)):
             Clock.unschedule(self._lp_event)
             self._lp_event = None
 
-    def _map_touch_up(self, mapview, touch):
+    def _map_touch_up(self, _mapview, touch):
+        """Cancel pending long press on touch release."""
         if self._lp_event:
             Clock.unschedule(self._lp_event)
             self._lp_event = None
 
     def _on_long_press(self, touch):
+        """Handle a confirmed long press gesture."""
         mv = self.ids.mapview
         lat, lon = mv.get_latlon_at(touch.x, touch.y)
         self._show_context_menu(lat, lon, touch.pos)
 
-    def _show_context_menu(self, lat, lon, pos):
+    def _show_context_menu(self, lat, lon, _pos):
+        """Open a context menu for map actions at the given position."""
         items = [
             {"text": "Center here", "viewclass": "OneLineListItem",
              "on_release": lambda *a: (self.ids.mapview.center_on(lat, lon),
@@ -81,12 +99,14 @@ class MapScreen(Screen):
 
     # GPS centering
     def center_on_gps(self):
+        """Center the map on the current GPS location."""
         app = App.get_running_app()
         if not app.map_show_gps:
             return
         threading.Thread(target=self._fetch_and_center, daemon=True).start()
 
     def _fetch_and_center(self):
+        """Fetch GPS coordinates in a thread and center the map."""
         try:
             proc = subprocess.run(
                 ["gpspipe", "-w", "-n", "1"],
@@ -104,6 +124,7 @@ class MapScreen(Screen):
 
     @mainthread
     def _update_map(self, lat, lon):
+        """Update map center and GPS marker from the main thread."""
         mv = self.ids.mapview
         mv.center_on(lat, lon)
         mv.zoom = 16
@@ -120,6 +141,7 @@ class MapScreen(Screen):
 
     # AP overlay
     def plot_aps(self):
+        """Plot access point markers fetched from Kismet."""
         app = App.get_running_app()
         if not app.map_show_aps:
             return
@@ -154,6 +176,7 @@ class MapScreen(Screen):
 
     # Layer menu
     def show_layer_menu(self, widget):
+        """Display the layer toggle dropdown menu."""
         items = [
             {"text": "GPS Marker", "viewclass": "OneLineListItem",
              "on_release": lambda *a, k="map_show_gps": self._toggle(k)},
@@ -168,6 +191,7 @@ class MapScreen(Screen):
         self.layer_menu.open()
 
     def _toggle(self, key):
+        """Toggle a boolean App property and show feedback."""
         app = App.get_running_app()
         setattr(app, key, not getattr(app, key))
         self.layer_menu.dismiss()
@@ -175,6 +199,7 @@ class MapScreen(Screen):
 
     # Search / Jump to coords
     def open_search_dialog(self):
+        """Open a dialog prompting for coordinates or an address."""
         self.search_field = MDTextField(
             hint_text="Lat,Lon or Address",
             pos_hint={"center_x": .5, "center_y": .6},
@@ -190,6 +215,7 @@ class MapScreen(Screen):
         )
 
     def _perform_search(self, query):
+        """Center map on the provided ``lat,lon`` query."""
         try:
             lat, lon = map(float, query.split(","))
         except:
@@ -201,12 +227,14 @@ class MapScreen(Screen):
 
     # Screenshot
     def take_screenshot(self):
+        """Save a PNG snapshot of the current map view."""
         fname = f"logs/map_{int(time.time())}.png"
         self.ids.mapview.export_to_png(fname)
         Snackbar(text=f"Saved {fname}").open()
 
     # Fullscreen
     def toggle_fullscreen(self):
+        """Toggle fullscreen mode for the map."""
         app = App.get_running_app()
         app.map_fullscreen = not app.map_fullscreen
         root = app.root
@@ -217,6 +245,7 @@ class MapScreen(Screen):
 
     # Help overlay
     def show_help_overlay(self):
+        """Display usage instructions for the map view."""
         help_text = (
             "[b]Map Controls[/b]\n"
             "- Tap ⛶ to center on GPS\n"
@@ -230,7 +259,9 @@ class MapScreen(Screen):
 
     # Helpers
     def _show_error(self, msg):
+        """Show an error message via ``Snackbar``."""
         Snackbar(text=msg, duration=3).open()
 
     def _show_not_implemented(self, feature_name):
+        """Notify the user that a feature is not yet implemented."""
         Snackbar(text=f"{feature_name} not yet implemented", duration=2).open()
