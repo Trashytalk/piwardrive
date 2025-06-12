@@ -1,17 +1,16 @@
-# utils.py
-"""
-Utility functions for the PiWardrive GUI application.
-"""
+"""Utility functions for the PiWardrive GUI application."""
 
-import os
-import subprocess
+# pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
+
 import glob
 import json
-import requests
-from datetime import datetime
+import os
+import subprocess
 from collections import deque
+from datetime import datetime
+
 import psutil
-import threading
+import requests
 
 
 def get_cpu_temp():
