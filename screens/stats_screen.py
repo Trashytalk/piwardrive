@@ -1,17 +1,23 @@
-## stats_screen
+"""System statistics screen for CPU, memory and disk usage."""
 
-from kivy.uix.screenmanager import Screen
-from kivy.clock import Clock
-from kivy.app import App
 import psutil
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.uix.screenmanager import Screen
+
 from utils import get_cpu_temp
 
+
 class StatsScreen(Screen):
+    """Display basic system metrics in the diagnostics bar."""
+
     def __init__(self, **kwargs):
+        """Schedule periodic stat updates."""
         super().__init__(**kwargs)
         Clock.schedule_interval(self.update_stats, 2)
 
     def update_stats(self, dt):
+        """Refresh temperature, memory and disk usage labels."""
         # compute metrics
         cpu_temp = get_cpu_temp()
         mem_pct  = psutil.virtual_memory().percent if psutil else None
