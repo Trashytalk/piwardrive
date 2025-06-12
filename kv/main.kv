@@ -1,0 +1,249 @@
+#:import dp kivy.metrics.dp
+#:import Graph kivy_garden.graph.Graph
+
+<Separator@Widget>:
+    size_hint_y: None
+    height: dp(1)
+    canvas:
+        Color:
+            rgba: .7, .7, .7, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<NavigationButton@MDRaisedButton>:
+    size_hint_x: 1
+
+# Root layout: dynamic top nav, screens, bottom diagnostics
+BoxLayout:
+    orientation: 'vertical'
+
+    # Top navigation bar (buttons only added via main.py)
+    MDBoxLayout:
+        id: nav_bar
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: dp(48)
+        spacing: dp(4)
+
+    # Main screens area
+    ScreenManager:
+        id: sm
+        MapScreen:
+            name: 'Map'
+        StatsScreen:
+            name: 'Stats'
+        SplitScreen:
+            name: 'Split'
+        ConsoleScreen:
+            name: 'Console'
+        SettingsScreen:
+            name: 'Settings'
+        DashboardScreen:
+            name: 'Dashboard'
+
+    # Persistent diagnostics panel
+    MDBoxLayout:
+        id: diagnostics_bar
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: dp(24)
+        spacing: dp(8)
+        padding: dp(8), dp(4)
+
+        MDLabel:
+            id: cpu_label
+            text: 'CPU: N/A'
+            size_hint_x: 1
+            halign: 'center'
+        MDLabel:
+            id: mem_label
+            text: 'Mem: N/A'
+            size_hint_x: 1
+            halign: 'center'
+        MDLabel:
+            id: disk_label
+            text: 'SSD: N/A'
+            size_hint_x: 1
+            halign: 'center'
+
+# Stats Screen layout
+<StatsScreen>:
+    ScrollView:
+        do_scroll_x: False
+        do_scroll_y: True
+        MDGridLayout:
+            cols: 3
+            adaptive_height: True
+            padding: dp(8)
+            spacing: dp(8)
+
+            # System & Storage
+            MDBoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDLabel:
+                    text: 'System'
+                    font_style: 'H5'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: cpu_temp_label
+                    text: 'CPU Temp: N/A°C'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: cpu_load_label
+                    text: 'CPU Load: N/A%'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: mem_usage_label
+                    text: 'Memory Usage: N/A%'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                Separator:
+                MDLabel:
+                    text: 'Storage'
+                    font_style: 'H6'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: disk_usage_label
+                    text: 'Disk Usage: N/A%'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: ssd_iops_label
+                    text: 'SSD I/O: N/A ops/s'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: inode_free_label
+                    text: 'Free Inodes: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            # Network & GPS
+            MDBoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDLabel:
+                    text: 'Network/GPS'
+                    font_style: 'H5'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: kismet_count_label
+                    text: 'APs: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: bettercap_count_label
+                    text: 'Handshakes: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: gps_accuracy_label
+                    text: 'Accuracy: N/A m'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: gps_fix_label
+                    text: 'Fix: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+            # Graph & Services
+            MDBoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+
+                Graph:
+                    id: cpu_graph
+                    xlabel: 'Time'
+                    ylabel: 'Load'
+                    x_ticks_minor: 5
+                    x_grid: True
+                    y_grid: True
+                    size_hint_y: None
+                    height: dp(200)
+                Separator:
+                MDBoxLayout:
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    MDLabel:
+                        id: kismet_status_label
+                        text: 'Kismet: N/A'
+                        halign: 'left'
+                    MDLabel:
+                        id: bettercap_status_label
+                        text: 'BetterCAP: N/A'
+                        halign: 'left'
+
+# Split Screen layout
+<SplitScreen>:
+    BoxLayout:
+        orientation: 'horizontal'
+
+        # Left: Map view
+        MapView:
+            id: split_mapview
+            size_hint_x: 0.66
+
+        # Right: Metrics column
+        ScrollView:
+            size_hint_x: 0.34
+
+            MDBoxLayout:
+                orientation: 'vertical'
+                padding: dp(8)
+                spacing: dp(4)
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDLabel:
+                    id: split_cpu_label
+                    text: 'CPU: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: split_bssid_label
+                    text: 'BSSIDs: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: split_handshake_label
+                    text: 'Handshakes: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: split_rssi_label
+                    text: 'Avg RSSI: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+                Separator:
+
+                MDLabel:
+                    id: split_kismet_uptime_label
+                    text: 'Kismet: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: split_bettercap_uptime_label
+                    text: 'BetterCAP: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                MDLabel:
+                    id: split_fix_quality_label
+                    text: 'Fix: N/A'
+                    size_hint_y: None
+                    height: self.texture_size[1]

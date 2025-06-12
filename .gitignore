@@ -1,0 +1,19 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+gui-env/
+venv/
+
+# Kivy logs
+.kivy/
+
+# Local config directory (not in repo)
+.config/piwardrive/
+
+# OS / editor files
+.DS_Store
+*.swp
+
