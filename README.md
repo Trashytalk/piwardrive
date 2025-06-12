@@ -1,6 +1,6 @@
 # PiWardrive
 
-PiWardrive is a headless Raspberry Pi 5 application that combines war-driving tools (Kismet & BetterCAP) with an interactive Kivy/KivyMD touchscreen interface. It provides real-time mapping of Wi‑Fi access points, GPS tracking, system/network diagnostics, and service controls—all without an X server.
+PiWardrive is a headless Raspberry Pi 5 application that combines war-driving tools (Kismet & BetterCAP) with an interactive Kivy/KivyMD touchscreen interface. It provides real-time mapping of Wi‑Fi access points, GPS tracking, system/network diagnostics, and service controls—all without an X server.
 
 ## Features
 
@@ -13,16 +13,19 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
 
 ## Hardware Prerequisites
 
-* **Raspberry Pi 5** (16 GB RAM)
+* **Raspberry Pi 5** (16 GB RAM)
 * **7" HDMI + USB touch screen**, `/dev/input/event2`
 * **SSD** mounted at `/mnt/ssd` (fstab `nofail`)
 * **GPS dongle** on `/dev/ttyACM0` (managed by `gpsd`)
 * **Wi‑Fi adapter** compatible with monitor mode
 
-## System Requirements
+## Prerequisites
 
-* **OS**: Raspberry Pi OS Bookworm (or Bullseye backports)
+* **OS**: Raspberry Pi OS Bookworm (or Bullseye backports)
 * **Python**: 3.11.2 (virtualenv under `gui-env/`)
+* **Kivy**: 2.3.1
+* **KivyMD**: 1.1.1
+* **Additional Python libs**: see `requirements.txt`
 * **System Packages**: `kismet`, `gpsd`, `bettercap`, `evtest`, `git`, `build-essential`, `cmake`
 
 ## Installation
@@ -48,22 +51,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
    pip install -r requirements.txt
    ```
 
-4. **Install OS packages**:
-
-   ```bash
-   sudo apt update && sudo apt install kismet gpsd gpsd-clients bettercap evtest git build-essential cmake
-   ```
-
-5. **Enable GPS service**:
-
-   ```bash
-   sudo systemctl enable gpsd
-   sudo systemctl start gpsd
-   ```
-
-6. **Configure fstab** (if not already):
-
-   ```bash
+@@ -67,50 +70,59 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
    /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
    ```
 
@@ -89,6 +77,15 @@ python main.py
 
 * **No X Server**: The app renders directly to DRM/framebuffer.
 * **Touch Events**: Mapped via SDL2; verify with `evtest /dev/input/event2`.
+## Screen Overview
+
+* **Map**: interactive map with GPS and access point overlays.
+* **Stats**: detailed system and network metrics.
+* **Split**: two-pane view with the map and a metrics column.
+* **Console**: tail of Kismet and BetterCAP logs.
+* **Settings**: toggle services and theme (placeholder for persistence).
+* **Dashboard**: empty workspace for custom widgets.
+
 
 ## Usage
 
@@ -114,16 +111,3 @@ git checkout -b feature/your-feature
 
 ````
 2. Commit your changes and push:
-   ```bash
-git push origin feature/your-feature
-````
-
-3. Open a Pull Request and describe your changes.
-
-## License
-
-MIT © Trashytalk
-
----
-
-*Generated on 2025-06-12*
