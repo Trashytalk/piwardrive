@@ -18,16 +18,22 @@ def setup_temp_config(tmp_path):
 def test_load_config_defaults_when_missing(tmp_path):
     setup_temp_config(tmp_path)
     data = config.load_config()
-    assert data.theme == config.DEFAULT_CONFIG.theme
+    assert data["theme"] == config.DEFAULT_CONFIG["theme"]
+    assert data["map_poll_gps"] == config.DEFAULT_CONFIG["map_poll_gps"]
+    assert data["offline_tile_path"] == config.DEFAULT_CONFIG["offline_tile_path"]
 
 def test_save_and_load_roundtrip(tmp_path):
     cfg_file = setup_temp_config(tmp_path)
     orig = config.load_config()
     orig.theme = "Light"
+    orig["map_poll_gps"] = 5
+    orig["offline_tile_path"] = "/tmp/off.mbtiles"
     config.save_config(orig)
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
     assert loaded.theme == "Light"
+    assert loaded["map_poll_gps"] == 5
+    assert loaded["offline_tile_path"] == "/tmp/off.mbtiles"
 
 def test_load_config_bad_json(tmp_path):
     cfg_file = setup_temp_config(tmp_path)
