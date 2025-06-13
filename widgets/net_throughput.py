@@ -1,10 +1,16 @@
+from typing import Any
+
+from kivy.app import App
+from kivy_garden.graph import Graph, LinePlot
+import psutil
+
 from .base import DashboardWidget
 
 
 class NetworkThroughputWidget(DashboardWidget):
     """Graph of bytes received and sent per second."""
 
-    def __init__(self, update_interval=1, max_points=60, **kwargs):
+    def __init__(self, update_interval: int = 1, max_points: int = 60, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.update_interval = update_interval
         self.max_points = max_points
@@ -35,7 +41,7 @@ class NetworkThroughputWidget(DashboardWidget):
         )
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         cur = psutil.net_io_counters()
         delta_rx = cur.bytes_recv - self.prev.bytes_recv
         delta_tx = cur.bytes_sent - self.prev.bytes_sent
