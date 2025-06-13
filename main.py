@@ -1,10 +1,11 @@
-+142-131
 """Main application entry point for the PiWardrive GUI."""
 
 import logging
 import os
 import subprocess
 from dataclasses import asdict, fields
+from typing import Any
+
 from scheduler import PollScheduler
 from config import load_config, save_config, Config
 import diagnostics
@@ -18,12 +19,12 @@ from kivymd.app import MDApp
 # Trim down HTTP debug logging
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-from screens.console_screen import ConsoleScreen
-from screens.dashboard_screen import DashboardScreen
-from screens.map_screen import MapScreen
-from screens.settings_screen import SettingsScreen
-from screens.split_screen import SplitScreen
-from screens.stats_screen import StatsScreen
+from screens.console_screen import ConsoleScreen  # type: ignore[import]
+from screens.dashboard_screen import DashboardScreen  # type: ignore[import]
+from screens.map_screen import MapScreen  # type: ignore[import]
+from screens.settings_screen import SettingsScreen  # type: ignore[import]
+from screens.split_screen import SplitScreen  # type: ignore[import]
+from screens.stats_screen import StatsScreen  # type: ignore[import]
 
 
 class PiWardriveApp(MDApp):
@@ -48,23 +49,23 @@ class PiWardriveApp(MDApp):
     log_rotate_archives = NumericProperty(3)
 
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         # load persisted configuration
         self.config_data: Config = load_config()
         for key, val in asdict(self.config_data).items():
             if hasattr(self, key):
                 setattr(self, key, val)
-        self.scheduler = PollScheduler()
+        self.scheduler: PollScheduler = PollScheduler()
         self.theme_cls.theme_style = self.theme
 
-    def build(self):
+    def build(self) -> Any:
         """Load and return the root widget tree from KV."""
         root = Builder.load_file('kv/main.kv')
         self.root = root
         return root
 
-    def on_start(self):
+    def on_start(self) -> None:
         """Initialize screens and navigation on start."""
         # DEBUG: show which IDs were parsed from KV
         print("Root IDs:", self.root.ids.keys())
@@ -103,13 +104,13 @@ class PiWardriveApp(MDApp):
                 self.log_rotate_interval,
             )
 
-    def switch_screen(self, name):
+    def switch_screen(self, name: str) -> None:
         """Change the active screen."""
         self.root.ids.sm.current = name
 
 
     # 1) Service control with feedback
-    def control_service(self, svc, action):
+    def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service."""
         cmd = ['sudo', 'systemctl', action, svc]
         res = subprocess.run(cmd, capture_output=True, text=True)
@@ -118,7 +119,7 @@ class PiWardriveApp(MDApp):
                 f"Failed to {action} {svc}", res.stderr or "Unknown error"
             )
 
-    def show_alert(self, title, text):
+    def show_alert(self, title: str, text: str) -> None:
         """Display a simple alert dialog with the given title and text."""
         from kivymd.uix.dialog import MDDialog
 
@@ -130,7 +131,7 @@ class PiWardriveApp(MDApp):
         )
         dialog.open()
 
-    def on_stop(self):
+    def on_stop(self) -> None:
         """Persist configuration values on application exit."""
         for f in fields(Config):
             key = f.name
