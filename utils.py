@@ -1,315 +1,629 @@
-"""Utility functions for the PiWardrive GUI application."""␊
-␊
-# pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check␊
-␊
-import glob␊
-import json␊
-import os␊
-import subprocess␊
-import time␊
-from collections import deque␊
-from datetime import datetime␊
-␊
-import psutil␊
-import requests␊
-␊
-def retry_call(func, attempts=3, delay=0):␊
-    """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""␊
-    last_exc = None␊
-    for _ in range(attempts):␊
-        try:␊
-            return func()␊
-        except Exception as exc:  # pragma: no cover - simple retry logic␊
-            last_exc = exc␊
-            if delay:␊
-                time.sleep(delay)␊
-    if last_exc:␊
-        raise last_exc␊
-␊
-def get_cpu_temp():␊
-    """␊
-    Read the Raspberry Pi CPU temperature from sysfs.␊
-    Returns temperature in °C as a float, or None on failure.␊
-    """␊
-    try:␊
-        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:␊
-            temp_str = f.read().strip()␊
-        return float(temp_str) / 1000.0␊
-    except Exception:␊
-        return None␊
-␊
-␊
-def get_mem_usage():␊
-    """␊
-    Return system memory usage percentage.␊
-    """␊
-    try:␊
-        return psutil.virtual_memory().percent␊
-    except Exception:␊
-        return None␊
-␊
-␊
-def get_disk_usage(path='/mnt/ssd'):␊
-    """␊
-    Return disk usage percentage for given path.␊
-    """␊
-    try:␊
-        return psutil.disk_usage(path).percent␊
-    except Exception:␊
-        return None␊
-␊
-␊
-def find_latest_file(directory, pattern='*'):␊
-    """␊
-    Find the latest file matching pattern under directory.␊
-    """␊
-    files = glob.glob(os.path.join(directory, pattern))␊
-    if not files:␊
-        return None␊
-    return max(files, key=os.path.getmtime)␊
-␊
-␊
-def tail_file(path, lines=50):␊
-    """␊
-    Tail last N lines from a file.␊
-    """␊
-    try:␊
-        with open(path, 'rb') as f:␊
-            lines_deque = deque(maxlen=lines)␊
-            for line in f:␊
-                lines_deque.append(line.decode('utf-8', errors='ignore').rstrip())␊
-        return list(lines_deque)␊
-    except Exception:␊
-        return []␊
-␊
-␊
-def run_service_cmd(service, action):␊
-    """␊
-    Run `sudo systemctl <action> <service>`, capturing output.␊
-    Returns a tuple (success: bool, stdout: str, stderr: str).␊
-    """␊
-    cmd = ['sudo', 'systemctl', action, service]␊
-    proc = subprocess.run(cmd, capture_output=True, text=True)␊
-    return proc.returncode == 0, proc.stdout, proc.stderr␊
-␊
-␊
-def service_status(service):␊
-    """␊
-    Return True if the given systemd service is active (running).␊
-    """␊
-    ok, out, err = run_service_cmd(service, 'is-active')␊
-    return ok and out.strip() == 'active'␊
-␊
-␊
-def now_timestamp():␊
-    """␊
-    Return the current time as a formatted string.␊
-    """␊
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")␊
-␊
-␊
-def fetch_kismet_devices():␊
-    """␊
-    Query Kismet REST API for devices. Returns (access_points, clients).␊
-    Tries both /kismet/devices/all.json and /devices/all.json endpoints.␊
-    """␊
-    urls = [␊
-        "http://127.0.0.1:2501/kismet/devices/all.json",␊
-        "http://127.0.0.1:2501/devices/all.json",␊
-    ]␊
-    for url in urls:␊
-        try:␊
-            resp = requests.get(url, timeout=5)␊
-            if resp.status_code == 200:␊
-                data = resp.json()␊
-                return data.get('access_points', []), data.get('clients', [])␊
-        except Exception:␊
-            pass␊
-    return [], []␊
-␊
-␊
-def count_bettercap_handshakes(log_folder='/mnt/ssd/kismet_logs'):␊
-    """␊
-    Count .pcap handshake files in BetterCAP log directories.␊
-    """␊
-    pattern = os.path.join(log_folder, '*_bettercap', '*.pcap')␊
-    return len(glob.glob(pattern))␊
-␊
-␊
-def get_gps_accuracy():␊
-    """␊
-    Read GPS accuracy from gpspipe output (epx/epy fields).␊
-    Returns max(epx, epy) in meters, or None on failure.␊
-    """␊
-    try:␊
-        proc = subprocess.run(␊
-            ['gpspipe', '-w', '-n', '10'],␊
-            capture_output=True, text=True, timeout=5␊
-        )␊
-        for line in proc.stdout.splitlines():␊
-            if 'epx' in line:␊
-                rec = json.loads(line)␊
-                epx = rec.get('epx')␊
-                epy = rec.get('epy')␊
-                if epx is not None and epy is not None:␊
-                    return max(epx, epy)␊
-    except Exception:␊
-        pass␊
-    return None␊
-␊
-␊
-def get_gps_fix_quality():␊
-    """␊
-    Read GPS fix quality (mode) from gpspipe output.␊
-    Returns a string like 'No Fix', '2D', '3D', or 'DGPS'.␊
-    """␊
-    mode_map = {1: 'No Fix', 2: '2D', 3: '3D', 4: 'DGPS'}␊
-    try:␊
-        proc = subprocess.run(␊
-            ['gpspipe', '-w', '-n', '10'],␊
-            capture_output=True, text=True, timeout=5␊
-        )␊
-        for line in proc.stdout.splitlines():␊
-            if 'mode' in line:␊
-                rec = json.loads(line)␊
-                mode = rec.get('mode')␊
-                return mode_map.get(mode, str(mode))␊
-    except Exception:␊
-        pass␊
-    return 'Unknown'␊
-␊
-␊
-def get_avg_rssi(aps):␊
-    """␊
-    Compute average RSSI (signal_dbm) from a list of access_points.␊
-    Returns float average or None if no data.␊
-    """␊
-    try:␊
-        vals = [ap.get('signal_dbm') for ap in aps if ap.get('signal_dbm') is not None]␊
-        return sum(vals) / len(vals) if vals else None␊
-    except Exception:␊
-        return None␊
-␊
-␊
-def parse_latest_gps_accuracy():␊
-    """␊
-    Alias for get_gps_accuracy for backward compatibility.␊
-    """␊
-    return get_gps_accuracy()␊
-␊
-␊
-def tail_log_file(path, lines=50):␊
-    """␊
-    Alias for tail_file.␊
-    """␊
-    return tail_file(path, lines)␊
-␊
-␊
-def get_recent_bssids(limit=5):␊
-    """Return the most recently observed BSSIDs from the Kismet API."""␊
-    try:␊
-        aps, _ = fetch_kismet_devices()␊
-        # sort by last_time (epoch) descending␊
-        sorted_aps = sorted(aps, key=lambda ap: ap.get('last_time', 0), reverse=True)␊
-        # extract up to `limit` BSSIDs␊
-        return [ap.get('bssid', 'N/A') for ap in sorted_aps[:limit]]␊
-    except Exception:␊
-        return []␊
-␊
-␊
-def haversine_distance(p1, p2):␊
-    """Return great-circle distance between two ``(lat, lon)`` points in meters."""␊
-    import math␊
-␊
-    lat1, lon1 = p1␊
-    lat2, lon2 = p2␊
-    r = 6371000  # Earth radius in meters␊
-    phi1 = math.radians(lat1)␊
-    phi2 = math.radians(lat2)␊
-    d_phi = math.radians(lat2 - lat1)␊
-    d_lambda = math.radians(lon2 - lon1)␊
-    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2␊
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))␊
-    return r * c␊
-␊
-␊
-def polygon_area(points):␊
-    """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""␊
-    if len(points) < 3:␊
-        return 0.0␊
-    import math␊
-␊
-    # approximate using equirectangular projection around centroid␊
-    lat0 = sum(p[0] for p in points) / len(points)␊
-    lon0 = sum(p[1] for p in points) / len(points)␊
-    cos_lat0 = math.cos(math.radians(lat0))␊
-␊
-    def project(p):␊
-        x = (p[1] - lon0) * cos_lat0␊
-        y = p[0] - lat0␊
-        return x, y␊
-␊
-    verts = [project(p) for p in points]␊
-    area = 0.0␊
-    for (x1, y1), (x2, y2) in zip(verts, verts[1:] + verts[:1]):␊
-        area += x1 * y2 - x2 * y1␊
-    area = abs(area) / 2␊
-    # convert degrees^2 to meters^2 using approximate size of degree␊
-    meter_per_deg = 111320.0␊
-    return area * (meter_per_deg ** 2)␊
-␊
-␊
-def point_in_polygon(point, polygon):␊
-    """Return True if ``point`` is inside ``polygon`` using ray casting."""␊
-    lat, lon = point␊
-    inside = False␊
-    n = len(polygon)␊
-    if n < 3:␊
-        return False␊
-    for i in range(n):␊
-        lat1, lon1 = polygon[i]␊
-        lat2, lon2 = polygon[(i + 1) % n]␊
-        if ((lon1 > lon) != (lon2 > lon)):␊
-            intersect = (lat2 - lat1) * (lon - lon1) / (lon2 - lon1 + 1e-12) + lat1␊
-            if lat < intersect:␊
-                inside = not inside␊
-    return inside␊
-␊
-␊
-def load_kml(path):␊
-    """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""␊
-    import zipfile␊
-    import xml.etree.ElementTree as ET␊
-␊
-    def _parse(root):␊
-        ns = {"kml": root.tag.split("}")[0].strip("{")}␊
-        feats = []␊
-        for placemark in root.findall(".//kml:Placemark", ns):␊
-            name = placemark.findtext("kml:name", default="", namespaces=ns)␊
-            coords_text = placemark.findtext(".//kml:coordinates", namespaces=ns)␊
-            if not coords_text:␊
-                continue␊
-            coords = []␊
-            for pair in coords_text.strip().split():␊
-                parts = pair.split(",")␊
-                lon = float(parts[0])␊
-                lat = float(parts[1])␊
-                coords.append((lat, lon))␊
-            if placemark.find("kml:Point", ns) is not None:␊
-                feats.append({"name": name, "type": "Point", "coordinates": coords[0]})␊
-            elif placemark.find("kml:LineString", ns) is not None:␊
-                feats.append({"name": name, "type": "LineString", "coordinates": coords})␊
-            elif placemark.find("kml:Polygon", ns) is not None:␊
-                feats.append({"name": name, "type": "Polygon", "coordinates": coords})␊
-        return feats␊
-␊
-    if path.lower().endswith(".kmz"):␊
-        with zipfile.ZipFile(path) as zf:␊
-            for name in zf.namelist():␊
-                if name.lower().endswith(".kml"):␊
-                    data = zf.read(name)␊
-                    root = ET.fromstring(data)␊
-                    return _parse(root)␊
-        return []␊
-    root = ET.parse(path).getroot()␊
-    return _parse(root)␊
+"""Utility functions for the PiWardrive GUI application."""
+
+
+
+# pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
+
+
+
+import glob
+
+import json
+
+import os
+
+import subprocess
+
+import time
+
+from collections import deque
+
+from datetime import datetime
+
+
+
+import psutil
+
+import requests
+
+
+
+def retry_call(func, attempts=3, delay=0):
+
+    """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""
+
+    last_exc = None
+
+    for _ in range(attempts):
+
+        try:
+
+            return func()
+
+        except Exception as exc:  # pragma: no cover - simple retry logic
+
+            last_exc = exc
+
+            if delay:
+
+                time.sleep(delay)
+
+    if last_exc:
+
+        raise last_exc
+
+
+
+def get_cpu_temp():
+
+    """
+
+    Read the Raspberry Pi CPU temperature from sysfs.
+
+    Returns temperature in °C as a float, or None on failure.
+
+    """
+
+    try:
+
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+
+            temp_str = f.read().strip()
+
+        return float(temp_str) / 1000.0
+
+    except Exception:
+
+        return None
+
+
+
+
+
+def get_mem_usage():
+
+    """
+
+    Return system memory usage percentage.
+
+    """
+
+    try:
+
+        return psutil.virtual_memory().percent
+
+    except Exception:
+
+        return None
+
+
+
+
+
+def get_disk_usage(path='/mnt/ssd'):
+
+    """
+
+    Return disk usage percentage for given path.
+
+    """
+
+    try:
+
+        return psutil.disk_usage(path).percent
+
+    except Exception:
+
+        return None
+
+
+
+
+
+def find_latest_file(directory, pattern='*'):
+
+    """
+
+    Find the latest file matching pattern under directory.
+
+    """
+
+    files = glob.glob(os.path.join(directory, pattern))
+
+    if not files:
+
+        return None
+
+    return max(files, key=os.path.getmtime)
+
+
+
+
+
+def tail_file(path, lines=50):
+
+    """
+
+    Tail last N lines from a file.
+
+    """
+
+    try:
+
+        with open(path, 'rb') as f:
+
+            lines_deque = deque(maxlen=lines)
+
+            for line in f:
+
+                lines_deque.append(line.decode('utf-8', errors='ignore').rstrip())
+
+        return list(lines_deque)
+
+    except Exception:
+
+        return []
+
+
+
+
+
+def run_service_cmd(service, action):
+
+    """
+
+    Run `sudo systemctl <action> <service>`, capturing output.
+
+    Returns a tuple (success: bool, stdout: str, stderr: str).
+
+    """
+
+    cmd = ['sudo', 'systemctl', action, service]
+
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+
+    return proc.returncode == 0, proc.stdout, proc.stderr
+
+
+
+
+
+def service_status(service):
+
+    """
+
+    Return True if the given systemd service is active (running).
+
+    """
+
+    ok, out, err = run_service_cmd(service, 'is-active')
+
+    return ok and out.strip() == 'active'
+
+
+
+
+
+def now_timestamp():
+
+    """
+
+    Return the current time as a formatted string.
+
+    """
+
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+
+
+
+def fetch_kismet_devices():
+
+    """
+
+    Query Kismet REST API for devices. Returns (access_points, clients).
+
+    Tries both /kismet/devices/all.json and /devices/all.json endpoints.
+
+    """
+
+    urls = [
+
+        "http://127.0.0.1:2501/kismet/devices/all.json",
+
+        "http://127.0.0.1:2501/devices/all.json",
+
+    ]
+
+    for url in urls:
+
+        try:
+
+            resp = requests.get(url, timeout=5)
+
+            if resp.status_code == 200:
+
+                data = resp.json()
+
+                return data.get('access_points', []), data.get('clients', [])
+
+        except Exception:
+
+            pass
+
+    return [], []
+
+
+
+
+
+def count_bettercap_handshakes(log_folder='/mnt/ssd/kismet_logs'):
+
+    """
+
+    Count .pcap handshake files in BetterCAP log directories.
+
+    """
+
+    pattern = os.path.join(log_folder, '*_bettercap', '*.pcap')
+
+    return len(glob.glob(pattern))
+
+
+
+
+
+def get_gps_accuracy():
+
+    """
+
+    Read GPS accuracy from gpspipe output (epx/epy fields).
+
+    Returns max(epx, epy) in meters, or None on failure.
+
+    """
+
+    try:
+
+        proc = subprocess.run(
+
+            ['gpspipe', '-w', '-n', '10'],
+
+            capture_output=True, text=True, timeout=5
+
+        )
+
+        for line in proc.stdout.splitlines():
+
+            if 'epx' in line:
+
+                rec = json.loads(line)
+
+                epx = rec.get('epx')
+
+                epy = rec.get('epy')
+
+                if epx is not None and epy is not None:
+
+                    return max(epx, epy)
+
+    except Exception:
+
+        pass
+
+    return None
+
+
+
+
+
+def get_gps_fix_quality():
+
+    """
+
+    Read GPS fix quality (mode) from gpspipe output.
+
+    Returns a string like 'No Fix', '2D', '3D', or 'DGPS'.
+
+    """
+
+    mode_map = {1: 'No Fix', 2: '2D', 3: '3D', 4: 'DGPS'}
+
+    try:
+
+        proc = subprocess.run(
+
+            ['gpspipe', '-w', '-n', '10'],
+
+            capture_output=True, text=True, timeout=5
+
+        )
+
+        for line in proc.stdout.splitlines():
+
+            if 'mode' in line:
+
+                rec = json.loads(line)
+
+                mode = rec.get('mode')
+
+                return mode_map.get(mode, str(mode))
+
+    except Exception:
+
+        pass
+
+    return 'Unknown'
+
+
+
+
+
+def get_avg_rssi(aps):
+
+    """
+
+    Compute average RSSI (signal_dbm) from a list of access_points.
+
+    Returns float average or None if no data.
+
+    """
+
+    try:
+
+        vals = [ap.get('signal_dbm') for ap in aps if ap.get('signal_dbm') is not None]
+
+        return sum(vals) / len(vals) if vals else None
+
+    except Exception:
+
+        return None
+
+
+
+
+
+def parse_latest_gps_accuracy():
+
+    """
+
+    Alias for get_gps_accuracy for backward compatibility.
+
+    """
+
+    return get_gps_accuracy()
+
+
+
+
+
+def tail_log_file(path, lines=50):
+
+    """
+
+    Alias for tail_file.
+
+    """
+
+    return tail_file(path, lines)
+
+
+
+
+
+def get_recent_bssids(limit=5):
+
+    """Return the most recently observed BSSIDs from the Kismet API."""
+
+    try:
+
+        aps, _ = fetch_kismet_devices()
+
+        # sort by last_time (epoch) descending
+
+        sorted_aps = sorted(aps, key=lambda ap: ap.get('last_time', 0), reverse=True)
+
+        # extract up to `limit` BSSIDs
+
+        return [ap.get('bssid', 'N/A') for ap in sorted_aps[:limit]]
+
+    except Exception:
+
+        return []
+
+
+
+
+
+def haversine_distance(p1, p2):
+
+    """Return great-circle distance between two ``(lat, lon)`` points in meters."""
+
+    import math
+
+
+
+    lat1, lon1 = p1
+
+    lat2, lon2 = p2
+
+    r = 6371000  # Earth radius in meters
+
+    phi1 = math.radians(lat1)
+
+    phi2 = math.radians(lat2)
+
+    d_phi = math.radians(lat2 - lat1)
+
+    d_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    return r * c
+
+
+
+
+
+def polygon_area(points):
+
+    """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""
+
+    if len(points) < 3:
+
+        return 0.0
+
+    import math
+
+
+
+    # approximate using equirectangular projection around centroid
+
+    lat0 = sum(p[0] for p in points) / len(points)
+
+    lon0 = sum(p[1] for p in points) / len(points)
+
+    cos_lat0 = math.cos(math.radians(lat0))
+
+
+
+    def project(p):
+
+        x = (p[1] - lon0) * cos_lat0
+
+        y = p[0] - lat0
+
+        return x, y
+
+
+
+    verts = [project(p) for p in points]
+
+    area = 0.0
+
+    for (x1, y1), (x2, y2) in zip(verts, verts[1:] + verts[:1]):
+
+        area += x1 * y2 - x2 * y1
+
+    area = abs(area) / 2
+
+    # convert degrees^2 to meters^2 using approximate size of degree
+
+    meter_per_deg = 111320.0
+
+    return area * (meter_per_deg ** 2)
+
+
+
+
+
+def point_in_polygon(point, polygon):
+
+    """Return True if ``point`` is inside ``polygon`` using ray casting."""
+
+    lat, lon = point
+
+    inside = False
+
+    n = len(polygon)
+
+    if n < 3:
+
+        return False
+
+    for i in range(n):
+
+        lat1, lon1 = polygon[i]
+
+        lat2, lon2 = polygon[(i + 1) % n]
+
+        if ((lon1 > lon) != (lon2 > lon)):
+
+            intersect = (lat2 - lat1) * (lon - lon1) / (lon2 - lon1 + 1e-12) + lat1
+
+            if lat < intersect:
+
+                inside = not inside
+
+    return inside
+
+
+
+
+
+def load_kml(path):
+
+    """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
+
+    import zipfile
+
+    import xml.etree.ElementTree as ET
+
+
+
+    def _parse(root):
+
+        ns = {"kml": root.tag.split("}")[0].strip("{")}
+
+        feats = []
+
+        for placemark in root.findall(".//kml:Placemark", ns):
+
+            name = placemark.findtext("kml:name", default="", namespaces=ns)
+
+            coords_text = placemark.findtext(".//kml:coordinates", namespaces=ns)
+
+            if not coords_text:
+
+                continue
+
+            coords = []
+
+            for pair in coords_text.strip().split():
+
+                parts = pair.split(",")
+
+                lon = float(parts[0])
+
+                lat = float(parts[1])
+
+                coords.append((lat, lon))
+
+            if placemark.find("kml:Point", ns) is not None:
+
+                feats.append({"name": name, "type": "Point", "coordinates": coords[0]})
+
+            elif placemark.find("kml:LineString", ns) is not None:
+
+                feats.append({"name": name, "type": "LineString", "coordinates": coords})
+
+            elif placemark.find("kml:Polygon", ns) is not None:
+
+                feats.append({"name": name, "type": "Polygon", "coordinates": coords})
+
+        return feats
+
+
+
+    if path.lower().endswith(".kmz"):
+
+        with zipfile.ZipFile(path) as zf:
+
+            for name in zf.namelist():
+
+                if name.lower().endswith(".kml"):
+
+                    data = zf.read(name)
+
+                    root = ET.fromstring(data)
+
+                    return _parse(root)
+
+        return []
+
+    root = ET.parse(path).getroot()
+
+    return _parse(root)
