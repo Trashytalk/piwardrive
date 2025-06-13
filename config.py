@@ -27,6 +27,29 @@ class Config:
 
 DEFAULT_CONFIG = Config()
 
+def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
+    result = dict(cfg)
+    for key, default in DEFAULT_CONFIG.items():
+        env_key = f"PW_{key.upper()}"
+        if env_key in os.environ:
+            raw = os.environ[env_key]
+            if isinstance(default, bool):
+                result[key] = raw.lower() in {"1", "true", "yes", "on"}
+            elif isinstance(default, int):
+                try:
+                    result[key] = int(raw)
+                except ValueError:
+                    pass
+            elif isinstance(default, list):
+                try:
+                    result[key] = json.loads(raw)
+                except json.JSONDecodeError:
+                    result[key] = raw
+            else:
+                result[key] = raw
+    return result
+
 
 def load_config() -> Config:
     """Load configuration from ``CONFIG_PATH`` and return a :class:`Config`."""
@@ -50,3 +73,29 @@ def save_config(config: Dict[str, Any]) -> None:
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
+
+@dataclass
+class AppConfig:
+    """Typed configuration container."""
+
+    theme: str = DEFAULT_CONFIG["theme"]
+    map_poll_gps: int = DEFAULT_CONFIG["map_poll_gps"]
+    map_poll_aps: int = DEFAULT_CONFIG["map_poll_aps"]
+    map_show_gps: bool = DEFAULT_CONFIG["map_show_gps"]
+    map_show_aps: bool = DEFAULT_CONFIG["map_show_aps"]
+    map_cluster_aps: bool = DEFAULT_CONFIG["map_cluster_aps"]
+    map_use_offline: bool = DEFAULT_CONFIG["map_use_offline"]
+    offline_tile_path: str = DEFAULT_CONFIG["offline_tile_path"]
+    kismet_logdir: str = DEFAULT_CONFIG["kismet_logdir"]
+    bettercap_caplet: str = DEFAULT_CONFIG["bettercap_caplet"]
+    dashboard_layout: List[Any] = field(default_factory=list)
+    debug_mode: bool = DEFAULT_CONFIG["debug_mode"]
+
+    @classmethod
+    def load(cls) -> "AppConfig":
+        """Load configuration with environment overrides."""
+        return cls(**load_config())
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return configuration as a plain dictionary."""
+        return {field: getattr(self, field) for field in DEFAULT_CONFIG.keys()}
