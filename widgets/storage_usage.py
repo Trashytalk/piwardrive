@@ -1,6 +1,7 @@
 """Widget displaying SSD usage."""
 
 import logging
+from typing import Any
 from kivymd.uix.label import MDLabel
 
 from .base import DashboardWidget
@@ -9,13 +10,14 @@ from utils import get_disk_usage
 
 class StorageUsageWidget(DashboardWidget):
     update_interval = 5.0
-    def __init__(self, **kwargs):
+
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.label = MDLabel(text="SSD: N/A")
         self.add_widget(self.label)
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         try:
             pct = get_disk_usage('/mnt/ssd')
             if pct is not None:
