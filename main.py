@@ -7,8 +7,8 @@ from scheduler import PollScheduler
 from config import load_config, save_config, DEFAULT_CONFIG
 from kivy.factory import Factory
 from kivy.lang import Builder
-from kivy.properties import (  # pylint: disable=no-name-in-module
-    BooleanProperty, NumericProperty)
+from kivy.properties import (  # pylint: disable=no-name-in-module␊
+    BooleanProperty, NumericProperty, StringProperty, ListProperty)
 from kivymd.app import MDApp
 
 # Trim down HTTP debug logging
@@ -32,8 +32,14 @@ class PiWardriveApp(MDApp):␊
     map_cluster_aps  = BooleanProperty(False)
     map_fullscreen   = BooleanProperty(False)
     map_use_offline  = BooleanProperty(False)
+    theme            = StringProperty("Dark")
+    kismet_logdir    = StringProperty("/mnt/ssd/kismet_logs")
+    bettercap_caplet = StringProperty("/usr/local/etc/bettercap/alfa.cap")
+    dashboard_layout = ListProperty([])
+    debug_mode       = BooleanProperty(False)
 
- def __init__(self, **kwargs):
+
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # load persisted configuration
         self.config_data = load_config()
@@ -41,6 +47,7 @@ class PiWardriveApp(MDApp):␊
             if hasattr(self, key):
                 setattr(self, key, val)
         self.scheduler = PollScheduler()
+        self.theme_cls.theme_style = self.theme
 
     def build(self):
         """Load and return the root widget tree from KV."""
