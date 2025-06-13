@@ -205,7 +205,7 @@ def tail_log_file(path, lines=50):
     return tail_file(path, lines)
 
 
-def get_recent_bssids(limit=5):␊
+def get_recent_bssids(limit=5):
     """
     Return the most recently observed BSSIDs from the Kismet API.
     """
@@ -214,7 +214,7 @@ def get_recent_bssids(limit=5):␊
         # sort by last_time (epoch) descending
         sorted_aps = sorted(aps, key=lambda ap: ap.get('last_time', 0), reverse=True)
         # extract up to `limit` BSSIDs
-       return [ap.get('bssid', 'N/A') for ap in sorted_aps[:limit]]
+        return [ap.get('bssid', 'N/A') for ap in sorted_aps[:limit]]
     except Exception:
         return []
 
