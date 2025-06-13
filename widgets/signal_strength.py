@@ -1,32 +1,28 @@
-"""Widget showing average Wi-Fi signal strength."""
+"""Widget displaying SSD usage."""
 
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
 
 from .base import DashboardWidget
-from utils import fetch_kismet_devices, get_avg_rssi
+from utils import get_disk_usage
 
 
-class SignalStrengthWidget(DashboardWidget):
-    """Display average RSSI from Kismet devices."""
-    
+class StorageUsageWidget(DashboardWidget):
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.label = MDLabel(text="RSSI: N/A")
+        self.label = MDLabel(text="SSD: N/A")
         self.add_widget(self.label)
         self.update()
 
     def update(self) -> None:
         try:
-            aps, _ = fetch_kismet_devices()
-            avg = get_avg_rssi(aps)
-            if avg is not None:
-                self.label.text = f"RSSI: {avg:.1f} dBm"
+            pct = get_disk_usage('/mnt/ssd')
+            if pct is not None:
+                self.label.text = f"SSD: {pct:.0f}%"
             else:
-                self.label.text = "RSSI: N/A"
+                self.label.text = "SSD: N/A"
         except Exception as exc:  # pragma: no cover - UI update
-            logging.exception("SignalStrengthWidget update failed: %s", exc)
-widgets/storage_usage.py
+            logging.exception("StorageUsageWidget update failed: %s", exc)
