@@ -1,5 +1,7 @@
 """Widget plotting CPU temperature over time."""
 
+from typing import Any
+
 from kivy.app import App
 from kivy_garden.graph import Graph, LinePlot
 
@@ -10,7 +12,7 @@ from utils import get_cpu_temp
 class CPUTempGraphWidget(DashboardWidget):
     """Display CPU temperature history using a line graph."""
 
-    def __init__(self, update_interval=5, max_points=60, **kwargs):
+    def __init__(self, update_interval: int = 5, max_points: int = 60, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.update_interval = update_interval
         self.max_points = max_points
@@ -36,7 +38,7 @@ class CPUTempGraphWidget(DashboardWidget):
         )
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         temp = get_cpu_temp()
         if temp is None:
             return
