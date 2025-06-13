@@ -37,6 +37,9 @@ class PiWardriveApp(MDApp):␊
     bettercap_caplet = StringProperty("/usr/local/etc/bettercap/alfa.cap")
     dashboard_layout = ListProperty([])
     debug_mode       = BooleanProperty(False)
+    widget_disk_trend    = BooleanProperty(True)
+    widget_cpu_temp      = BooleanProperty(True)
+    widget_net_throughput = BooleanProperty(True)
 
 
     def __init__(self, **kwargs):
