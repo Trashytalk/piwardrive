@@ -1,6 +1,8 @@
 import os
 import sys
 import tempfile
+import zipfile
+
 from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -62,3 +64,38 @@ def test_run_service_cmd_failure():
         assert success is False
         assert out == ''
         assert err == 'error'
+
+
+def test_point_in_polygon_basic():
+    square = [(0, 0), (0, 1), (1, 1), (1, 0)]
+    assert utils.point_in_polygon((0.5, 0.5), square) is True
+    assert utils.point_in_polygon((1.5, 0.5), square) is False
+
+
+def test_load_kml_parses_features(tmp_path):
+    kml_content = (
+        "<?xml version='1.0' encoding='UTF-8'?>"
+        "<kml xmlns='http://www.opengis.net/kml/2.2'>"
+        "<Placemark><name>Line</name><LineString><coordinates>0,0 1,1</coordinates></LineString></Placemark>"
+        "<Placemark><name>Pt</name><Point><coordinates>2,2</coordinates></Point></Placemark>"
+        "</kml>"
+    )
+    kml_path = tmp_path / 'test.kml'
+    kml_path.write_text(kml_content)
+    feats = utils.load_kml(str(kml_path))
+    types = sorted(f['type'] for f in feats)
+    assert types == ['LineString', 'Point']
+
+
+def test_load_kmz_parses_features(tmp_path):
+    kml_content = (
+        "<?xml version='1.0' encoding='UTF-8'?>"
+        "<kml xmlns='http://www.opengis.net/kml/2.2'>"
+        "<Placemark><name>Pt</name><Point><coordinates>3,3</coordinates></Point></Placemark>"
+        "</kml>"
+    )
+    kmz_path = tmp_path / 'test.kmz'
+    with zipfile.ZipFile(kmz_path, 'w') as zf:
+        zf.writestr('doc.kml', kml_content)
+    feats = utils.load_kml(str(kmz_path))
+    assert feats and feats[0]['type'] == 'Point'
