@@ -14,7 +14,9 @@ class StatsScreen(Screen):
     def __init__(self, **kwargs):
         """Schedule periodic stat updates."""
         super().__init__(**kwargs)
-        Clock.schedule_interval(self.update_stats, 2)
+        App.get_running_app().scheduler.schedule(
+            "stats_update", lambda dt: self.update_stats(dt), 2
+        )
 
     def update_stats(self, dt):
         """Refresh temperature, memory and disk usage labels."""
