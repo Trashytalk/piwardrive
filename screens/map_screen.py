@@ -1,6 +1,7 @@
 """Screen displaying the interactive Wi-Fi/GPS map."""
 
 import json
+import os
 import subprocess
 import threading
 import time
@@ -11,7 +12,7 @@ from kivy.clock import Clock, mainthread
 from kivy.metrics import dp
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
-from kivy_garden.mapview import MapMarker, MapMarkerPopup
+from kivy_garden.mapview import MapMarker, MapMarkerPopup, MBTilesMapSource, LineMapLayer
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.snackbar import Snackbar
@@ -29,10 +30,17 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._gps_event  = None
         self._aps_event  = None
         self._lp_event   = None
+        self.track_points = []
+        self.track_layer = None
 
     def on_enter(self):  # pylint: disable=arguments-differ
         """Start GPS and AP polling when entering the screen."""
         app = App.get_running_app()
+        if app.map_use_offline:
+            try:
+                self.ids.mapview.map_source = MBTilesMapSource('/mnt/ssd/tiles/offline.mbtiles')
+            except Exception as e:
+                Snackbar(text=f'Offline tiles error: {e}').open()
         self._gps_event = 'map_gps'
         self._aps_event = 'map_aps'
         app.scheduler.schedule(self._gps_event,
@@ -83,12 +91,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     def _show_context_menu(self, lat, lon, _pos):
         """Open a context menu for map actions at the given position."""
-        items = [
+    items = [
             {"text": "Center here", "viewclass": "OneLineListItem",
              "on_release": lambda *a: (self.ids.mapview.center_on(lat, lon),
                                        self.context_menu.dismiss())},
-            {"text": "Add waypoint", "viewclass": "OneLineListItem",
-             "on_release": lambda *a: self._show_not_implemented("Add waypoint")},
+            {"text": "Save this location", "viewclass": "OneLineListItem",
+             "on_release": lambda *a: (self.save_waypoint(lat, lon), self.context_menu.dismiss())},
+            {"text": "Load GPX Track", "viewclass": "OneLineListItem",
+             "on_release": lambda *a: (self.load_gpx_prompt(), self.context_menu.dismiss())},
             {"text": "Measure distance", "viewclass": "OneLineListItem",
              "on_release": lambda *a: self._show_not_implemented("Measure distance")},
         ]
@@ -98,7 +108,49 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             width_mult=3,
             max_height=dp(150)
         )
-        self.context_menu.open()
+               self.context_menu.open()
+
+    def save_waypoint(self, lat, lon):
+        """Persist a waypoint to the user's config directory."""
+        path = os.path.join(os.path.expanduser('~'), '.config', 'piwardrive', 'waypoints.json')
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        data = []
+        try:
+            with open(path, 'r', encoding='utf-8') as fh:
+                data = json.load(fh)
+        except Exception:
+            data = []
+        data.append({'lat': lat, 'lon': lon, 'ts': time.time()})
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump(data, fh, indent=2)
+        Snackbar(text='Waypoint saved').open()
+
+    def load_gpx_prompt(self):
+        """Prompt the user for a GPX file path and load it."""
+        self.gpx_field = MDTextField(hint_text='GPX file path', size_hint_x=.8,
+                                     pos_hint={'center_x': .5, 'center_y': .6})
+        self.gpx_dialog = MDDialog(title='Load GPX', type='custom',
+                                   content_cls=self.gpx_field, buttons=[])
+        self.gpx_dialog.open()
+        self.gpx_field.bind(on_text_validate=lambda x: self._load_gpx(x.text))
+
+    def _load_gpx(self, path):
+        self.gpx_dialog.dismiss()
+        try:
+            points = []
+            import xml.etree.ElementTree as ET
+            tree = ET.parse(path)
+            for trkpt in tree.findall('.//{*}trkpt'):
+                lat = float(trkpt.get('lat'))
+                lon = float(trkpt.get('lon'))
+                points.append((lat, lon))
+            if points:
+                mv = self.ids.mapview
+                layer = LineMapLayer(points=points)
+                mv.add_layer(layer)
+                Snackbar(text='Track loaded').open()
+        except Exception as e:
+            Snackbar(text=f'GPX load error: {e}').open()
 
     # GPS centering
     def center_on_gps(self):
@@ -131,6 +183,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         mv = self.ids.mapview
         mv.center_on(lat, lon)
         mv.zoom = 16
+
+        # append to track and render polyline
+        self.track_points.append((lat, lon))
+        if len(self.track_points) > 1:
+            if self.track_layer:
+                mv.remove_layer(self.track_layer)
+            self.track_layer = LineMapLayer(points=self.track_points)
+            mv.add_layer(self.track_layer)
 
         if self.gps_marker:
             mv.remove_widget(self.gps_marker)
