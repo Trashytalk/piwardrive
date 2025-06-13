@@ -1,3 +1,4 @@
+import logging
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.screenmanager import Screen
@@ -13,38 +14,27 @@ from widgets import (
     NetworkThroughputWidget,
 )
 
-
 class DashboardScreen(Screen):
     """Drag-and-drop dashboard for custom widgets."""
 
     def on_enter(self):
-        if getattr(self, '_init', False):
-            return
-        self._init = True
-        self.layout = FloatLayout()
-        self.add_widget(self.layout)
-        self.load_widgets()
+        if not getattr(self, '_init', False):
+            self._init = True
+            self.layout = FloatLayout()
+            self.add_widget(self.layout)
+            self.load_widgets()
+        self._register_widgets()
 
-    def load_widgets(self):
+    def _register_widgets(self):
         app = App.get_running_app()
-        enabled = {
-            "DiskUsageTrendWidget": app.widget_disk_trend,
-            "CPUTempGraphWidget": app.widget_cpu_temp,
-            "NetworkThroughputWidget": app.widget_net_throughput,
-        }
-        for info in app.dashboard_layout:
-            cls_name = info.get("cls")
-            pos = info.get("pos", (0, 0))
-            if cls_name in enabled and not enabled[cls_name]:
-                continue
+        for child in self.layout.children:
             try:
-                cls = globals()[cls_name]
-            except KeyError:
-                continue
-            widget = cls(size_hint=(None, None), size=(120, 60), pos=pos)
-            self.layout.add_widget(widget)
+                app.scheduler.register_widget(child)
+            except Exception as exc:  # pragma: no cover - registration failure
+                logging.exception("Failed to register widget %s: %s", child, exc)
 
     def on_leave(self):
+        App.get_running_app().scheduler.cancel_all()
         self.save_layout()
 
     def save_layout(self):
