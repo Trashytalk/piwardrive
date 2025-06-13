@@ -47,14 +47,18 @@ class SettingsScreen(Screen):
                     )
                 )
             layout.add_widget(row)
-
+        
         app = App.get_running_app()
 
         # Config fields
         self.kismet_field = MDTextField(text=app.kismet_logdir, hint_text="Kismet log dir")
         self.bcap_field = MDTextField(text=app.bettercap_caplet, hint_text="BetterCAP caplet")
+        self.gps_poll_field = MDTextField(text=str(app.map_poll_gps), hint_text="GPS poll rate (s)")
+        self.offline_path_field = MDTextField(text=app.offline_tile_path, hint_text="Offline tiles path")
         layout.add_widget(self.kismet_field)
         layout.add_widget(self.bcap_field)
+        layout.add_widget(self.gps_poll_field)
+        layout.add_widget(self.offline_path_field)
 
         # Toggles
         theme_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
@@ -79,6 +83,11 @@ class SettingsScreen(Screen):
         app = App.get_running_app()
         app.kismet_logdir = self.kismet_field.text
         app.bettercap_caplet = self.bcap_field.text
+        try:
+            app.map_poll_gps = int(self.gps_poll_field.text)
+        except ValueError:
+            pass
+        app.offline_tile_path = self.offline_path_field.text
         app.map_use_offline = self.offline_switch.active
         app.theme = "Dark" if self.theme_switch.active else "Light"
         app.theme_cls.theme_style = app.theme
