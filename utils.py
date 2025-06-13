@@ -206,9 +206,7 @@ def tail_log_file(path, lines=50):
 
 
 def get_recent_bssids(limit=5):
-    """
-    Return the most recently observed BSSIDs from the Kismet API.
-    """
+    """Return the most recently observed BSSIDs from the Kismet API."""
     try:
         aps, _ = fetch_kismet_devices()
         # sort by last_time (epoch) descending
