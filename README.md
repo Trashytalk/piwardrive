@@ -12,6 +12,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`.
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`.
+* **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 
 ## Hardware Prerequisites
 
@@ -56,6 +57,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` (to implement persistence).
+* **Env Overrides**: use environment variables like `PW_MAP_POLL_GPS=5`.
 * **BetterCAP Caplet**: `/usr/local/etc/bettercap/alfa.cap`
 * **Kismet Config**: `/usr/local/etc/kismet_site.conf`
 * **Systemd Units**:
@@ -63,7 +65,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
   * `kismet.service`
   * `bettercap.service`
   * (Optional) `piwardrive.service` to autostart the app.
-* **Log Rotation**: Tune `log_rotate_interval` and `log_rotate_archives`.
+* **Log Rotation**: rotate files like `/var/log/syslog` every `log_rotate_interval` seconds and keep `log_rotate_archives` backups.
 
 ## Running the App
 
@@ -89,28 +91,3 @@ python main.py
 
 * **Tabs**: Swipe or tap top buttons to switch between Map, Stats, Split, Console, Settings, Dashboard.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
-
-## Troubleshooting
-
-* **Repeated Screens**: Ensure `ScreenManager` in KV has no static children; screens are added dynamically in `main.py:on_start()`.
-* **Missing IDs**: Match `kv/main.kv` IDs (`mapview`, `cpu_label`, etc.) with code references.
-* **SSH/SFTP Access**: Enable SSH via `raspi-config` and use `sftp pi@<IP>` for file transfers.
-
-## Contributing
-
-1. Fork the repo and create a feature branch:
-
-   ```bash
-git checkout -b feature/your-feature
-   ```
-
-````
-2. Commit your changes and push:
-
-   ```bash
-   git add .
-   git commit -m "Describe your changes"
-   git push origin feature/your-feature
-   ```
-
-3. Open a pull request and describe your updates.
