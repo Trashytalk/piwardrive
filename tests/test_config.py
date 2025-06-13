@@ -1,3 +1,4 @@
+"""Tests for the configuration module."""
 import json
 import os
 import sys
