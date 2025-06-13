@@ -1,6 +1,6 @@
 """Simple polling scheduler built on ``kivy.clock.Clock``."""
 
-from typing import Callable, Dict
+from typing import Callable, Dict, Any
 from kivy.clock import Clock
 
 
@@ -14,6 +14,16 @@ class PollScheduler:
         """Register ``callback`` to run every ``interval`` seconds."""
         self.cancel(name)
         self._events[name] = Clock.schedule_interval(callback, interval)
+
+        # ------------------------------------------------------------------
+    # Widget helpers
+    def register_widget(self, widget: Any, name: str | None = None) -> None:
+        """Register a widget's ``update`` method based on ``update_interval``."""
+        interval = getattr(widget, "update_interval", None)
+        if interval is None:
+            raise ValueError(f"Widget {widget} missing 'update_interval'")
+        cb_name = name or f"{widget.__class__.__name__}-{id(widget)}"
+        self.schedule(cb_name, lambda _dt: widget.update(), interval)
 
     def cancel(self, name: str) -> None:
         """Cancel a scheduled callback by name."""
