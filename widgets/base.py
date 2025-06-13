@@ -7,6 +7,8 @@ from kivymd.uix.boxlayout import MDBoxLayout
 class DashboardWidget(DragBehavior, MDBoxLayout):
     """Simple draggable widget container."""
 
+    update_interval = 5.0
+    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.drag_rectangle = self.x, self.y, self.width, self.height
