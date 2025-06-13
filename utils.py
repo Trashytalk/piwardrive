@@ -6,12 +6,25 @@ import glob
 import json
 import os
 import subprocess
+import time
 from collections import deque
 from datetime import datetime
 
 import psutil
 import requests
 
+def retry_call(func, attempts=3, delay=0):
+    """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""
+    last_exc = None
+    for _ in range(attempts):
+        try:
+            return func()
+        except Exception as exc:  # pragma: no cover - simple retry logic
+            last_exc = exc
+            if delay:
+                time.sleep(delay)
+    if last_exc:
+        raise last_exc
 
 def get_cpu_temp():
     """
