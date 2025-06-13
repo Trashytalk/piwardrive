@@ -1,34 +1,36 @@
+
 import json
 import os
-from typing import Any, Dict
+from dataclasses import dataclass, asdict, field
+from typing import Any, Dict, List
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 
-DEFAULT_CONFIG: Dict[str, Any] = {
-    "theme": "Dark",
-    "map_poll_gps": 10,
-    "map_poll_aps": 60,
-    "map_show_gps": True,
-    "map_show_aps": True,
-    "map_cluster_aps": False,
-    "map_use_offline": False,
-    "kismet_logdir": "/mnt/ssd/kismet_logs",
-    "bettercap_caplet": "/usr/local/etc/bettercap/alfa.cap",
-    "dashboard_layout": [],
-    "debug_mode": False,
-    "widget_disk_trend": True,
-    "widget_cpu_temp": True,
-    "widget_net_throughput": True,
-}
+
+@dataclass
+class Config:
+    """Persistent application configuration."""
+
+    theme: str = "Dark"
+    map_poll_gps: int = 10
+    map_poll_aps: int = 60
+    map_show_gps: bool = True
+    map_show_aps: bool = True
+    map_cluster_aps: bool = False
+    map_use_offline: bool = False
+    kismet_logdir: str = "/mnt/ssd/kismet_logs"
+    bettercap_caplet: str = "/usr/local/etc/bettercap/alfa.cap"
+    dashboard_layout: List[Any] = field(default_factory=list)
+    debug_mode: bool = False
 
 
-def load_config() -> Dict[str, Any]:
-    """Load configuration from ``CONFIG_PATH``.
+DEFAULT_CONFIG = Config()
 
-    Returns defaults merged with values from the JSON file. Invalid or missing
-    files return only the defaults.
-    """
+
+def load_config() -> Config:
+    """Load configuration from ``CONFIG_PATH`` and return a :class:`Config`."""
+
     data: Dict[str, Any] = {}
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -37,9 +39,11 @@ def load_config() -> Dict[str, Any]:
         pass
     except json.JSONDecodeError:
         pass
-    merged = {**DEFAULT_CONFIG, **data}
-    return merged
-
+    merged = {**asdict(DEFAULT_CONFIG), **data}
+    return Config(**merged)
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(asdict(config), f, indent=2)
 
 def save_config(config: Dict[str, Any]) -> None:
     """Persist ``config`` dictionary to ``CONFIG_PATH``."""
