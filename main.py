@@ -2,9 +2,10 @@
 
 import logging
 import subprocess
-
+from dataclasses import asdict, fields
 from scheduler import PollScheduler
-from config import load_config, save_config, DEFAULT_CONFIG
+from config import load_config, save_config, Config
+
 from kivy.factory import Factory
 from kivy.lang import Builder
 from kivy.properties import (  # pylint: disable=no-name-in-module␊
@@ -44,11 +45,11 @@ class PiWardriveApp(MDApp):␊
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # load persisted configuration
-        self.config_data = load_config()
-        for key, val in self.config_data.items():
-            if hasattr(self, key):
-                setattr(self, key, val)
+        # load persisted configuration␊
+        self.config_data: Config = load_config()
+        for key, val in asdict(self.config_data).items():
+            if hasattr(self, key):␊
+                setattr(self, key, val)␊
         self.scheduler = PollScheduler()
         self.theme_cls.theme_style = self.theme
 
@@ -119,9 +120,10 @@ class PiWardriveApp(MDApp):␊
 
     def on_stop(self):
         """Persist configuration values on application exit."""
-        for key in DEFAULT_CONFIG.keys():
+        for f in fields(Config):
+            key = f.name
             if hasattr(self, key):
-                self.config_data[key] = getattr(self, key)
+                setattr(self.config_data, key, getattr(self, key))
         save_config(self.config_data)
 
 
