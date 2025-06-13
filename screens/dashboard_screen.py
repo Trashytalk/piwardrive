@@ -8,6 +8,9 @@ from widgets import (
     HandshakeCounterWidget,
     ServiceStatusWidget,
     StorageUsageWidget,
+    DiskUsageTrendWidget,
+    CPUTempGraphWidget,
+    NetworkThroughputWidget,
 )
 
 
@@ -24,9 +27,16 @@ class DashboardScreen(Screen):
 
     def load_widgets(self):
         app = App.get_running_app()
+        enabled = {
+            "DiskUsageTrendWidget": app.widget_disk_trend,
+            "CPUTempGraphWidget": app.widget_cpu_temp,
+            "NetworkThroughputWidget": app.widget_net_throughput,
+        }
         for info in app.dashboard_layout:
-            cls_name = info.get('cls')
-            pos = info.get('pos', (0, 0))
+            cls_name = info.get("cls")
+            pos = info.get("pos", (0, 0))
+            if cls_name in enabled and not enabled[cls_name]:
+                continue
             try:
                 cls = globals()[cls_name]
             except KeyError:
