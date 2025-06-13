@@ -12,6 +12,11 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "map_show_gps": True,
     "map_show_aps": True,
     "map_cluster_aps": False,
+    "map_use_offline": False,
+    "kismet_logdir": "/mnt/ssd/kismet_logs",
+    "bettercap_caplet": "/usr/local/etc/bettercap/alfa.cap",
+    "dashboard_layout": [],
+    "debug_mode": False,
 }
 
 
