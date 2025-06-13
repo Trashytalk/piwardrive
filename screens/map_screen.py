@@ -7,6 +7,7 @@ import threading␊
 import time␊
 ␊
 import requests␊
+import requests␊
 import pandas as pd␊
 import math␊
 from kivy.app import App␊
@@ -72,9 +73,12 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes␊
         if self._gps_event:␊
             app.scheduler.cancel(self._gps_event)␊
             self._gps_event = None␊
-        if self._aps_event:␊
-␊
-class MapScreen(Screen): # pylint: disable=too-many-instance-attributes␊
+        if self._aps_event:
+            app.scheduler.cancel(self._aps_event)
+            self._aps_event = None
+    # ------------------------------------------------------------------
+    # Touch handlers
+
     def _map_touch_down(self, _mapview, touch):␊
         """Schedule long press detection."""␊
         if _mapview.collide_point(*touch.pos):␊
@@ -333,12 +337,6 @@ class MapScreen(Screen): # pylint: disable=too-many-instance-attributes␊
 ␊
     # Search / Jump to coords␊
 ␊
-class MapScreen(Screen): # pylint: disable=too-many-instance-attributes␊
-        root = app.root␊
-        root.ids.nav_bar.opacity          = 0 if app.map_fullscreen else 1␊
-        root.ids.diagnostics_bar.opacity  = 0 if app.map_fullscreen else 1␊
-        root.ids.nav_bar.disabled         = app.map_fullscreen␊
-        root.ids.diagnostics_bar.disabled = app.map_fullscreen␊
 ␊
 ␊
     # Help overlay␊
