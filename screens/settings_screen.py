@@ -10,6 +10,8 @@ from kivy.uix.screenmanager import Screen␊
 from kivymd.uix.boxlayout import MDBoxLayout␊
 from kivymd.uix.button import MDRaisedButton␊
 from kivymd.uix.label import MDLabel␊
+from kivymd.uix.textfield import MDTextField
+from kivymd.uix.selectioncontrol import MDSwitch
 ␊
 ␊
 ␊
