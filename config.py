@@ -24,6 +24,8 @@ class Config:
     dashboard_layout: List[Any] = field(default_factory=list)
     debug_mode: bool = False
     offline_tile_path: str = "/mnt/ssd/tiles/offline.mbtiles"
+    log_rotate_interval: int = 3600
+    log_rotate_archives: int = 3
 
 DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
@@ -88,11 +90,13 @@ class AppConfig:
     bettercap_caplet: str = DEFAULTS["bettercap_caplet"]
     dashboard_layout: List[Any] = field(default_factory=list)
     debug_mode: bool = DEFAULTS["debug_mode"]
+    log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
+    log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     
     @classmethod
     def load(cls) -> "AppConfig":
         """Load configuration with environment overrides."""
- file_cfg = asdict(load_config())
+        file_cfg = asdict(load_config())
         merged = _apply_env_overrides(file_cfg)
         return cls(**merged)
 
