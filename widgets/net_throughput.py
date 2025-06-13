@@ -1,3 +1,4 @@
+"""Widget graphing network throughput."""
 from typing import Any
 
 from kivy.app import App
