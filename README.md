@@ -7,9 +7,10 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Interactive Map**: Online/offline map tiles, AP overlays, long-press context menus.
 * **Real‑time Metrics**: CPU, memory, disk I/O, GPS fix quality, RSSI, handshake counts.
 * **Split View**: Simultaneous map + compact metrics panel.
-* **Console & Dashboard**: Tail logs and drag‑and‑drop widget shell.
-* **Service Management**: Start/stop Kismet & BetterCAP from the GUI.
-* **Offline Support**: Store MBTiles under `/mnt/ssd/tiles/`.
+* **Console & Dashboard**: Tail logs and a drag‑and‑drop widget dashboard with persistent layouts.
+* **Service Management**: Start/stop and configure Kismet & BetterCAP from the GUI.
+* **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`.
+* **Diagnostic Tools**: Generate system reports and run connectivity tests.
 
 ## Hardware Prerequisites
 
