@@ -33,20 +33,23 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
     def on_enter(self):  # pylint: disable=arguments-differ
         """Start GPS and AP polling when entering the screen."""
         app = App.get_running_app()
-        self._gps_event = Clock.schedule_interval(
-            lambda dt: self.center_on_gps(), app.map_poll_gps
-        )
-        self._aps_event = Clock.schedule_interval(
-            lambda dt: self.plot_aps(), app.map_poll_aps
-        )
+        self._gps_event = 'map_gps'
+        self._aps_event = 'map_aps'
+        app.scheduler.schedule(self._gps_event,
+                               lambda dt: self.center_on_gps(),
+                               app.map_poll_gps)
+        app.scheduler.schedule(self._aps_event,
+                               lambda dt: self.plot_aps(),
+                               app.map_poll_aps)
 
     def on_leave(self):  # pylint: disable=arguments-differ
         """Unschedule polling tasks when leaving the screen."""
+        app = App.get_running_app()
         if self._gps_event:
-            Clock.unschedule(self._gps_event)
+            app.scheduler.cancel(self._gps_event)
             self._gps_event = None
         if self._aps_event:
-            Clock.unschedule(self._aps_event)
+            app.scheduler.cancel(self._aps_event)
             self._aps_event = None
         if self._lp_event:
             Clock.unschedule(self._lp_event)
