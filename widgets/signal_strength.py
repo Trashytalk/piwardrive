@@ -1,6 +1,7 @@
 """Widget showing average Wi-Fi signal strength."""
 
 import logging
+from typing import Any
 from kivymd.uix.label import MDLabel
 
 from .base import DashboardWidget
@@ -12,13 +13,13 @@ class SignalStrengthWidget(DashboardWidget):
     
     update_interval = 5.0
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.label = MDLabel(text="RSSI: N/A")
         self.add_widget(self.label)
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         try:
             aps, _ = fetch_kismet_devices()
             avg = get_avg_rssi(aps)
@@ -28,3 +29,4 @@ class SignalStrengthWidget(DashboardWidget):
                 self.label.text = "RSSI: N/A"
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("SignalStrengthWidget update failed: %s", exc)
+widgets/storage_usage.py
