@@ -32,7 +32,7 @@ from kivymd.uix.snackbar import Snackbar
 
 from kivymd.uix.textfield import MDTextField
 
-from utils import haversine_distance, polygon_area
+from utils import haversine_distance, polygon_area, load_kml, point_in_polygon
 
 
 
@@ -65,6 +65,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.area_points = []
         self.breadcrumb = []
         self._compass_heading = 0.0
+        self.kml_layers = []
+        self.geofences = []
 
 
     def on_enter(self):  # pylint: disable=arguments-differ
@@ -115,7 +117,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         if self._aps_event:
 
-@@ -67,70 +75,70 @@ class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
+class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
     def _map_touch_down(self, _mapview, touch):
 
         """Schedule long press detection."""
@@ -166,25 +168,27 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-    def _show_context_menu(self, lat, lon, _pos):␊
-        """Open a context menu for map actions at the given position."""␊
+    def _show_context_menu(self, lat, lon, _pos):
+        """Open a context menu for map actions at the given position."""
         items = [
-            {"text": "Center here", "viewclass": "OneLineListItem",␊
-             "on_release": lambda *a: (self.ids.mapview.center_on(lat, lon),␊
-                                       self.context_menu.dismiss())},␊
-            {"text": "Save this location", "viewclass": "OneLineListItem",␊
-             "on_release": lambda *a: (self.save_waypoint(lat, lon), self.context_menu.dismiss())},␊
-            {"text": "Load GPX Track", "viewclass": "OneLineListItem",␊
-             "on_release": lambda *a: (self.load_gpx_prompt(), self.context_menu.dismiss())},␊
-            {"text": "Measure distance", "viewclass": "OneLineListItem",␊
+            {"text": "Center here", "viewclass": "OneLineListItem",
+             "on_release": lambda *a: (self.ids.mapview.center_on(lat, lon),
+                                       self.context_menu.dismiss())},
+            {"text": "Save this location", "viewclass": "OneLineListItem",
+             "on_release": lambda *a: (self.save_waypoint(lat, lon), self.context_menu.dismiss())},
+            {"text": "Load GPX Track", "viewclass": "OneLineListItem",
+             "on_release": lambda *a: (self.load_gpx_prompt(), self.context_menu.dismiss())},
+            {"text": "Load KML/KMZ", "viewclass": "OneLineListItem",
+             "on_release": lambda *a: (self.load_kml_prompt(), self.context_menu.dismiss())},
+            {"text": "Measure distance", "viewclass": "OneLineListItem",
              "on_release": lambda *a: self.start_ruler_mode()},
-        ]␊
-        self.context_menu = MDDropdownMenu(␊
-            caller=self.ids.mapview,␊
-            items=items,␊
-            width_mult=3,␊
-            max_height=dp(150)␊
-        )␊
+        ]
+        self.context_menu = MDDropdownMenu(
+            caller=self.ids.mapview,
+            items=items,
+            width_mult=3,
+            max_height=dp(150)
+        )
         self.context_menu.open()
 
 
@@ -236,7 +240,153 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-@@ -195,69 +203,74 @@ class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
+    def _load_gpx(self, path):␊
+        self.gpx_dialog.dismiss()␊
+        try:␊
+            points = []
+
+            import xml.etree.ElementTree as ET
+
+            tree = ET.parse(path)
+
+            for trkpt in tree.findall('.//{*}trkpt'):
+
+                lat = float(trkpt.get('lat'))
+
+                lon = float(trkpt.get('lon'))
+
+                points.append((lat, lon))
+
+            if points:
+
+                mv = self.ids.mapview
+
+                layer = LineMapLayer(points=points)
+
+                mv.add_layer(layer)
+
+                Snackbar(text='Track loaded').open()
+
+        except Exception as e:
+
+            Snackbar(text=f'GPX load error: {e}').open()
+
+    def load_kml_prompt(self):
+        """Prompt the user for a KML or KMZ file path and load it."""
+        self.kml_field = MDTextField(hint_text='KML/KMZ file path', size_hint_x=.8,
+                                     pos_hint={'center_x': .5, 'center_y': .6})
+        self.kml_dialog = MDDialog(title='Load KML/KMZ', type='custom',
+                                   content_cls=self.kml_field, buttons=[])
+        self.kml_dialog.open()
+        self.kml_field.bind(on_text_validate=lambda x: self._load_kml(x.text))
+
+    def _load_kml(self, path):
+        self.kml_dialog.dismiss()
+        try:
+            features = load_kml(path)
+            mv = self.ids.mapview
+            for feat in features:
+                if feat['type'] == 'Point':
+                    m = MapMarker(lat=feat['coordinates'][0], lon=feat['coordinates'][1],
+                                  source='widgets/marker-ap.png',
+                                  anchor_x='center', anchor_y='center')
+                    mv.add_widget(m)
+                    self.kml_layers.append(m)
+                elif feat['type'] == 'LineString':
+                    layer = LineMapLayer(points=feat['coordinates'])
+                    mv.add_layer(layer)
+                    self.kml_layers.append(layer)
+                elif feat['type'] == 'Polygon':
+                    layer = LineMapLayer(points=feat['coordinates'] + [feat['coordinates'][0]])
+                    mv.add_layer(layer)
+                    self.kml_layers.append(layer)
+                    # polygon also acts as geofence
+                    self.add_geofence(feat['name'] or 'geofence', feat['coordinates'])
+            Snackbar(text='Geodata loaded').open()
+        except Exception as e:
+            Snackbar(text=f'KML load error: {e}').open()
+
+
+    # GPS centering
+
+    def center_on_gps(self):
+
+        """Center the map on the current GPS location."""
+
+        app = App.get_running_app()
+
+        if not app.map_show_gps:
+
+            return
+
+        threading.Thread(target=self._fetch_and_center, daemon=True).start()
+
+
+
+    def _fetch_and_center(self):
+
+        """Fetch GPS coordinates in a thread and center the map."""
+
+        try:
+
+            proc = subprocess.run(
+
+                ["gpspipe", "-w", "-n", "1"],
+
+                capture_output=True, text=True, timeout=5
+
+            )
+
+            line = proc.stdout.strip().splitlines()[0]
+
+            data = json.loads(line)
+
+            lat, lon = data.get("lat"), data.get("lon")
+
+            if lat is not None and lon is not None:
+
+                self._update_map(lat, lon)
+
+        except subprocess.TimeoutExpired:
+
+            self._show_error("GPS lock timed out")
+
+        except Exception as e:
+
+            self._show_error(f"GPS error: {e}")
+
+
+
+    @mainthread
+
+    def _update_map(self, lat, lon):
+
+        """Update map center and GPS marker from the main thread."""
+
+        mv = self.ids.mapview
+
+        mv.center_on(lat, lon)
+
+        mv.zoom = 16
+
+
+
+        # append to track and render polyline
+
+        self.track_points.append((lat, lon))
+
+        if len(self.track_points) > 1:
+
+            if self.track_layer:
+
+                mv.remove_layer(self.track_layer)
+
+            self.track_layer = LineMapLayer(points=self.track_points)
+
+            mv.add_layer(self.track_layer)
+
+
+
         if self.gps_marker:
 
             mv.remove_widget(self.gps_marker)
@@ -255,6 +405,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             mv.add_widget(self.gps_marker)
 
+        self._check_geofences(lat, lon)
 
 
     # AP overlay
@@ -361,7 +512,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Search / Jump to coords
 
-@@ -303,28 +316,199 @@ class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
+class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
         root = app.root
 
         root.ids.nav_bar.opacity          = 0 if app.map_fullscreen else 1
@@ -528,6 +679,31 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
     def register_sensor(self, name, handler):
         """Store additional sensor handler for future use."""
         setattr(self, f'sensor_{name}', handler)
+
+    # ------------------------------------------------------------------
+    # Geofence Handling
+    def add_geofence(self, name, polygon, on_enter=None, on_exit=None):
+        """Register a geofence polygon with optional enter/exit callbacks."""
+        self.geofences.append({
+            'name': name,
+            'polygon': polygon,
+            'inside': False,
+            'on_enter': on_enter,
+            'on_exit': on_exit,
+        })
+
+    def _check_geofences(self, lat, lon):
+        """Check all geofences for crossings."""
+        for gf in self.geofences:
+            inside = point_in_polygon((lat, lon), gf['polygon'])
+            if inside and not gf['inside']:
+                gf['inside'] = True
+                if gf['on_enter']:
+                    gf['on_enter'](gf['name'])
+            elif not inside and gf['inside']:
+                gf['inside'] = False
+                if gf['on_exit']:
+                    gf['on_exit'](gf['name'])
 
     # ------------------------------------------------------------------
     # Routing & Navigation Aids
