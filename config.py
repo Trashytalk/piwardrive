@@ -1,3 +1,4 @@
+"""Application configuration helpers with env overrides."""
 
 import json
 import os
