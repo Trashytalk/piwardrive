@@ -73,8 +73,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             app.scheduler.cancel(self._gps_event)
             self._gps_event = None
         if self._aps_event:
-
-class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
+            app.scheduler.cancel(self._aps_event)
+            self._aps_event = None
     def _map_touch_down(self, _mapview, touch):
         """Schedule long press detection."""
         if _mapview.collide_point(*touch.pos):
@@ -155,9 +155,9 @@ class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
         self.gpx_field.bind(on_text_validate=lambda x: self._load_gpx(x.text))
 
 
-    def _load_gpx(self, path):␊
-        self.gpx_dialog.dismiss()␊
-        try:␊
+    def _load_gpx(self, path):
+        self.gpx_dialog.dismiss()
+        try:
             points = []
             import xml.etree.ElementTree as ET
             tree = ET.parse(path)
@@ -332,14 +332,6 @@ class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
         Snackbar(text=f"{key} = {getattr(app, key)}", duration=1.5).open()
 
     # Search / Jump to coords
-
-class MapScreen(Screen): # pylint: disable=too-many-instance-attributes
-        root = app.root
-        root.ids.nav_bar.opacity          = 0 if app.map_fullscreen else 1
-        root.ids.diagnostics_bar.opacity  = 0 if app.map_fullscreen else 1
-        root.ids.nav_bar.disabled         = app.map_fullscreen
-        root.ids.diagnostics_bar.disabled = app.map_fullscreen
-
 
     # Help overlay
 
