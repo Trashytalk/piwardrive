@@ -1,3 +1,4 @@
+"""Tests for system diagnostics helpers."""
 import os
 import sys
 from unittest import mock
