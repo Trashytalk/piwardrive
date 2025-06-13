@@ -259,3 +259,101 @@ def polygon_area(points):
     # convert degrees^2 to meters^2 using approximate size of degree
     meter_per_deg = 111320.0
     return area * (meter_per_deg ** 2)
+
+
+def point_in_polygon(point, polygon):
+    """Return True if ``point`` is inside ``polygon`` using ray casting."""
+    lat, lon = point
+    inside = False
+    n = len(polygon)
+    if n < 3:
+        return False
+    for i in range(n):
+        lat1, lon1 = polygon[i]
+        lat2, lon2 = polygon[(i + 1) % n]
+        if ((lon1 > lon) != (lon2 > lon)):
+            intersect = (lat2 - lat1) * (lon - lon1) / (lon2 - lon1 + 1e-12) + lat1
+            if lat < intersect:
+                inside = not inside
+    return inside
+
+
+def load_kml(path):
+    """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
+    import zipfile
+    import xml.etree.ElementTree as ET
+
+    def _parse(root):
+        ns = {"kml": root.tag.split("}")[0].strip("{")}
+        feats = []
+        for placemark in root.findall(".//kml:Placemark", ns):
+            name = placemark.findtext("kml:name", default="", namespaces=ns)
+            coords_text = placemark.findtext(".//kml:coordinates", namespaces=ns)
+            if not coords_text:
+                continue
+            coords = []
+            for pair in coords_text.strip().split():
+                parts = pair.split(",")
+                lon = float(parts[0])
+                lat = float(parts[1])
+                coords.append((lat, lon))
+            if placemark.find("kml:Point", ns) is not None:
+                feats.append({"name": name, "type": "Point", "coordinates": coords[0]})
+            elif placemark.find("kml:LineString", ns) is not None:
+                feats.append({"name": name, "type": "LineString", "coordinates": coords})
+            elif placemark.find("kml:Polygon", ns) is not None:
+                feats.append({"name": name, "type": "Polygon", "coordinates": coords})
+        return feats
+
+    if path.lower().endswith(".kmz"):
+        with zipfile.ZipFile(path) as zf:
+            for name in zf.namelist():
+                if name.lower().endswith(".kml"):
+                    data = zf.read(name)
+                    root = ET.fromstring(data)
+                    return _parse(root)
+        return []
+    root = ET.parse(path).getroot()
+    return _parse(root)
+
+
+def haversine_distance(p1, p2):
+    """Return great-circle distance between two ``(lat, lon)`` points in meters."""
+    import math
+
+    lat1, lon1 = p1
+    lat2, lon2 = p2
+    r = 6371000  # Earth radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    d_phi = math.radians(lat2 - lat1)
+    d_lambda = math.radians(lon2 - lon1)
+    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return r * c
+
+
+def polygon_area(points):
+    """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""
+    if len(points) < 3:
+        return 0.0
+    import math
+
+    # approximate using equirectangular projection around centroid
+    lat0 = sum(p[0] for p in points) / len(points)
+    lon0 = sum(p[1] for p in points) / len(points)
+    cos_lat0 = math.cos(math.radians(lat0))
+
+    def project(p):
+        x = (p[1] - lon0) * cos_lat0
+        y = p[0] - lat0
+        return x, y
+
+    verts = [project(p) for p in points]
+    area = 0.0
+    for (x1, y1), (x2, y2) in zip(verts, verts[1:] + verts[:1]):
+        area += x1 * y2 - x2 * y1
+    area = abs(area) / 2
+    # convert degrees^2 to meters^2 using approximate size of degree
+    meter_per_deg = 111320.0
+    return area * (meter_per_deg ** 2)
