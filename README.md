@@ -11,6 +11,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Service Management**: Start/stop and configure Kismet & BetterCAP from the GUI.
 * **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`.
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
+* **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`.
 
 ## Hardware Prerequisites
 
@@ -36,12 +37,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    ```bash
    git clone https://github.com/TRASHYTALK/piwardrive.git
    cd piwardrive
-   ```
-
-2. **Create & activate venv**:
-
-   ```bash
-   python3.11 -m venv gui-env
+@@ -45,50 +46,51 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    source gui-env/bin/activate
    pip install --upgrade pip setuptools
    ```
@@ -67,6 +63,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
   * `kismet.service`
   * `bettercap.service`
   * (Optional) `piwardrive.service` to autostart the app.
+* **Log Rotation**: Tune `log_rotate_interval` and `log_rotate_archives`.
 
 ## Running the App
 
@@ -92,8 +89,6 @@ python main.py
 
 * **Tabs**: Swipe or tap top buttons to switch between Map, Stats, Split, Console, Settings, Dashboard.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
-* **Settings**: Toggle services and theme; stubbed for persistence.
-* **Console**: View real-time Kismet logs; useful for debugging.
 
 ## Troubleshooting
 
