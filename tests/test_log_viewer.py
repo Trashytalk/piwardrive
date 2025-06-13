@@ -1,3 +1,4 @@
+"""Tests for the log viewer widget."""
 import os
 import sys
 os.environ.setdefault("KIVY_NO_ARGS", "1")
