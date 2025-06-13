@@ -3,6 +3,8 @@
 import logging
 import subprocess
 
+from scheduler import PollScheduler
+from config import load_config, save_config, DEFAULT_CONFIG
 from kivy.factory import Factory
 from kivy.lang import Builder
 from kivy.properties import (  # pylint: disable=no-name-in-module
@@ -20,7 +22,7 @@ from screens.split_screen import SplitScreen
 from screens.stats_screen import StatsScreen
 
 
-class PiWardriveApp(MDApp):
+class PiWardriveApp(MDApp):␊
     """Main application class handling screen setup and helpers."""
     map_poll_gps     = NumericProperty(10)
     map_poll_aps     = NumericProperty(60)
@@ -30,6 +32,15 @@ class PiWardriveApp(MDApp):
     map_cluster_aps  = BooleanProperty(False)
     map_fullscreen   = BooleanProperty(False)
     map_use_offline  = BooleanProperty(False)
+
+ def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # load persisted configuration
+        self.config_data = load_config()
+        for key, val in self.config_data.items():
+            if hasattr(self, key):
+                setattr(self, key, val)
+        self.scheduler = PollScheduler()
 
     def build(self):
         """Load and return the root widget tree from KV."""
@@ -84,9 +95,9 @@ class PiWardriveApp(MDApp):
                 f"Failed to {action} {svc}", res.stderr or "Unknown error"
             )
 
-    def show_alert(self, title, text):
-        """Display a simple alert dialog with the given title and text."""
-        from kivymd.uix.dialog import MDDialog
+    def show_alert(self, title, text):␊
+        """Display a simple alert dialog with the given title and text."""␊
+        from kivymd.uix.dialog import MDDialog␊
 
         dialog = MDDialog(
             title=title,
@@ -96,11 +107,12 @@ class PiWardriveApp(MDApp):
         )
         dialog.open()
 
-    def toggle_theme(self):
-        """Toggle between the light and dark theme."""
-        self.theme_cls.theme_style = (
-            'Light' if self.theme_cls.theme_style == 'Dark' else 'Dark'
-        )
+    def on_stop(self):
+        """Persist configuration values on application exit."""
+        for key in DEFAULT_CONFIG.keys():
+            if hasattr(self, key):
+                self.config_data[key] = getattr(self, key)
+        save_config(self.config_data)
 
 
 if __name__ == '__main__':
