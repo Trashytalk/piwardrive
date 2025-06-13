@@ -17,6 +17,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "bettercap_caplet": "/usr/local/etc/bettercap/alfa.cap",
     "dashboard_layout": [],
     "debug_mode": False,
+    "widget_disk_trend": True,
+    "widget_cpu_temp": True,
+    "widget_net_throughput": True,
 }
 
 
