@@ -6,6 +6,7 @@ from config import CONFIG_DIR
 
 DEFAULT_LOG_PATH = os.path.join(CONFIG_DIR, "app.log")
 
+
 class JsonFormatter(logging.Formatter):
     """Format log records as JSON strings."""
 
@@ -20,7 +21,11 @@ class JsonFormatter(logging.Formatter):
             log_record["exc_info"] = self.formatException(record.exc_info)
         return json.dumps(log_record)
 
-def setup_logging(log_file: str = DEFAULT_LOG_PATH, level: int = logging.INFO) -> Logger:
+
+def setup_logging(
+    log_file: str = DEFAULT_LOG_PATH,
+    level: int = logging.INFO,
+) -> Logger:
     """Configure root logger with JSON output."""
     logger = logging.getLogger()
     logger.setLevel(level)
