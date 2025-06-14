@@ -14,6 +14,7 @@ _MODULE_MAP = {
     "DiskUsageTrendWidget": "disk_trend",
     "CPUTempGraphWidget": "cpu_temp_graph",
     "NetworkThroughputWidget": "net_throughput",
+    "HealthStatusWidget": "health_status",
 }
 
 
@@ -36,4 +37,5 @@ __all__ = [
     "DiskUsageTrendWidget",
     "CPUTempGraphWidget",
     "NetworkThroughputWidget",
+    "HealthStatusWidget",
 ]
