@@ -18,7 +18,7 @@ from typing import Any, Callable, Iterable, Sequence, TypeVar
 from kivy.app import App
 
 import psutil
-import requests
+import requests  # type: ignore
 
 ERROR_PREFIX = "E"
 
@@ -29,12 +29,12 @@ def format_error(code: int, message: str) -> str:
 
 
 try:
-    import orjson as _json
+    import orjson as _json  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     try:
-        import ujson as _json
+        import ujson as _json  # type: ignore
     except Exception:  # pragma: no cover - fallback
-        _json = json
+        _json = json  # type: ignore
 
 
 def _loads(data: bytes | str) -> Any:
@@ -109,12 +109,12 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
     """Return SMART health status for the device mounted at ``mount_point``."""
-    dev = None
     try:
-        for part in psutil.disk_partitions(all=False):
-            if part.mountpoint == mount_point:
-                dev = part.device
-                break
+        dev = next(
+            (p.device for p in psutil.disk_partitions(all=False)
+             if p.mountpoint == mount_point),
+            None,
+        )
         if not dev:
             return None
         proc = subprocess.run(
@@ -126,15 +126,17 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         if proc.returncode != 0:
             return None
         out = proc.stdout + proc.stderr
-        if 'PASSED' in out:
-            return 'OK'
-        if 'FAILED' in out:
-            return 'FAIL'
-        if 'WARNING' in out:
-            return 'WARN'
-        return out.strip().splitlines()[-1] if out else None
+        return _parse_smartctl_output(out)
     except Exception:
         return None
+
+
+def _parse_smartctl_output(output: str) -> str | None:
+    """Map smartctl output to a simple status string."""
+    for key, val in {"PASSED": "OK", "FAILED": "FAIL", "WARNING": "WARN"}.items():
+        if key in output:
+            return val
+    return output.strip().splitlines()[-1] if output else None
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
@@ -165,6 +167,12 @@ def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Run ``sudo systemctl`` for ``service`` with optional retries."""
+
+    from security import validate_service_name
+
+    validate_service_name(service)
+    if action not in {"start", "stop", "restart", "is-active"}:
+        raise ValueError(f"Invalid action: {action}")
 
     cmd = ["sudo", "systemctl", action, service]
 

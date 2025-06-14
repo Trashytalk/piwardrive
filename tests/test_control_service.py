@@ -29,10 +29,11 @@ def _load_control_service() -> Callable[[Any, str, str], Any]:
 
 def test_control_service_reports_error(monkeypatch: Any) -> None:
     func = _load_control_service()
-    proc = SimpleNamespace(returncode=1, stderr='oops')
-    monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: proc)
+    dummy = SimpleNamespace(
+        _run_service_cmd=lambda *_a, **_k: (False, '', 'oops')
+    )
     with mock.patch.object(utils, 'report_error') as rep:
-        func(object(), 'svc', 'start')
-    rep.assert_called_once()
-    msg = rep.call_args[0][0]
-    assert msg.startswith('[E001]') and 'Failed to start svc: oops' in msg
+
+        func(dummy, 'svc', 'start')
+    rep.assert_called_once_with('Failed to start svc: oops')
+
