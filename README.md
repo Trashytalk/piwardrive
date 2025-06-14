@@ -121,3 +121,7 @@ sequenceDiagram
 
 See [docs/](docs/) for configuration guides and widget details. Run `pytest` to execute the test suite and
 use `flake8` and `mypy` to lint and type-check the codebase.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
