@@ -107,6 +107,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.kml_layers = []
 
         self.geofences = []
+        self._cluster_capacity = 8
 
 
 
@@ -141,6 +142,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             self._aps_event, lambda dt: self.plot_aps(), app.map_poll_aps
 
         )
+        # React to zoom level changes by updating clusters
+        self.ids.mapview.bind(zoom=self.update_clusters_on_zoom)
 
 
 
@@ -1139,27 +1142,66 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Clustering Behaviors
 
-    def update_clusters_on_zoom(self, zoom):
+    def update_clusters_on_zoom(self, _mapview, zoom):
+        """Cluster markers dynamically when the map is zoomed."""
 
-        """Placeholder to re-cluster AP markers based on ``zoom`` level."""
+        if not self.ap_markers:
+            return
 
-        _ = zoom
+        # grid based clustering -- bigger cells when zoomed out
+        cell_size = 360 / (2 ** zoom * self._cluster_capacity)
+        clusters: dict[tuple[int, int], list] = {}
+        for m in self.ap_markers:
+            key = (int(m.lat / cell_size), int(m.lon / cell_size))
+            clusters.setdefault(key, []).append(m)
+
+        for group in clusters.values():
+            if len(group) <= 1:
+                continue
+            lat = sum(x.lat for x in group) / len(group)
+            lon = sum(x.lon for x in group) / len(group)
+            for m in group:
+                m.lat = lat
+                m.lon = lon
+
+        # separate any exact overlaps for readability
+        self.spiderfy_markers()
 
 
 
     def spiderfy_markers(self):
+        """Spread markers that have identical positions."""
 
-        """Placeholder to spread overlapping markers."""
+        groups: dict[tuple[float, float], list] = {}
+        for m in self.ap_markers:
+            key = (round(m.lat, 6), round(m.lon, 6))
+            groups.setdefault(key, []).append(m)
 
-        pass
+        for markers in groups.values():
+            if len(markers) <= 1:
+                continue
+            base_lat = markers[0].lat
+            base_lon = markers[0].lon
+            radius = 0.0001
+            step = 2 * math.pi / len(markers)
+            for i, mk in enumerate(markers):
+                angle = i * step
+                mk.lat = base_lat + radius * math.cos(angle)
+                mk.lon = base_lon + radius * math.sin(angle)
 
 
 
     def adjust_quadtree(self, capacity):
+        """Adjust clustering cell capacity and refresh clusters."""
 
-        """Placeholder for quadtree parameter adjustment."""
-
-        _ = capacity
+        try:
+            val = int(capacity)
+        except (TypeError, ValueError):
+            return
+        self._cluster_capacity = max(1, val)
+        mv = self.ids.get("mapview")
+        if mv:
+            self.update_clusters_on_zoom(mv, mv.zoom)
 
 
 
