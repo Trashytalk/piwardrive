@@ -154,11 +154,9 @@ def run_service_cmd(service, action, attempts: int = 1, delay: float = 0):
         return subprocess.run(cmd, capture_output=True, text=True)
 
     proc = retry_call(_call, attempts=attempts, delay=delay)
-    return (
-        proc.returncode == 0,
-        getattr(proc, 'stdout', ''),
-        getattr(proc, 'stderr', ''),
-    )
+    out = getattr(proc, "stdout", "")
+    err = getattr(proc, "stderr", "")
+    return proc.returncode == 0, out, err
 
 
 def service_status(service, attempts: int = 1, delay: float = 0) -> bool:
