@@ -1,0 +1,41 @@
+# SIGINT Suite
+
+The `sigint_suite` directory provides lightweight command-line tools for
+collecting wireless and RF metadata. These helpers can be used separately from
+the main PiWardrive UI when you only need quick scans or exports.
+
+## Modules
+
+- **bluetooth** – scan nearby Bluetooth devices via `hcitool`.
+- **wifi** – discover Wi-Fi access points using `iwlist`.
+- **cellular.band_scanner** – placeholder for cellular band scanning utilities.
+- **cellular.imsi_catcher** – stub for future IMSI catcher logic.
+- **cellular.parsers** – parsers for raw cellular output.
+- **cellular.tower_tracker** – track cell towers encountered during scans.
+- **dashboard** – minimal dashboard integration.
+- **enrichment** – routines to enrich captured data.
+- **exports** – helpers for writing results to JSON/CSV files.
+- **gps** – GPS helpers for tagging results with location.
+- **rf** – generic radio-frequency utilities.
+- **scripts** – shell scripts for running scans and installing dependencies.
+
+## Running `start_imsi_mode.sh`
+
+The `scripts/start_imsi_mode.sh` script performs a single Wi-Fi and Bluetooth
+scan and stores the results under `exports/`.
+
+```bash
+./sigint_suite/scripts/start_imsi_mode.sh
+```
+
+By default the JSON files `wifi.json` and `bluetooth.json` are written to
+`sigint_suite/exports/`. Set the `EXPORT_DIR` environment variable to override
+this location.
+
+## Dependencies
+
+The suite expects `iwlist` (from the `wireless-tools` package) and `hcitool`
+(from `bluez`) to be available on the system. Running
+`./sigint_suite/scripts/setup_all.sh` will install these packages and the
+required Python dependencies.
+

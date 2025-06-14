@@ -1,6 +1,7 @@
 # PiWardrive
 
 PiWardrive is a headless Raspberry Pi 5 application that combines war-driving tools (Kismet & BetterCAP) with an interactive Kivy/KivyMD touchscreen interface. It provides real-time mapping of Wi‑Fi access points, GPS tracking, system/network diagnostics, and service controls—all without an X server.
+A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
 
 ## Architecture Overview
 
@@ -53,6 +54,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Encrypted Secrets**: Passwords stored as PBKDF2 hashes.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 * **Configuration Profiles**: maintain multiple configs under `~/.config/piwardrive/profiles`.
+* **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
 
 ## Hardware Prerequisites
 
