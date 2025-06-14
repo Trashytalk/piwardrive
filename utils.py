@@ -13,6 +13,7 @@ import time
 
 from collections import deque
 from datetime import datetime
+from typing import Any, Callable, Iterable, Sequence, TypeVar
 
 from kivy.app import App
 
@@ -28,7 +29,7 @@ except Exception:  # pragma: no cover - optional dependency
         _json = json
 
 
-def _loads(data: bytes | str):
+def _loads(data: bytes | str) -> Any:
     """Parse JSON using the fastest available library."""
     return _json.loads(data)
 
@@ -44,9 +45,12 @@ def report_error(message: str) -> None:
         logging.exception("Failed to display error alert: %s", exc)
 
 
-def retry_call(func, attempts=3, delay=0):
+T = TypeVar("T")
+
+
+def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
     """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""
-    last_exc = None
+    last_exc: Exception | None = None
     for _ in range(attempts):
         try:
             return func()
@@ -54,11 +58,12 @@ def retry_call(func, attempts=3, delay=0):
             last_exc = exc
             if delay:
                 time.sleep(delay)
-    if last_exc:
+    if last_exc is not None:
         raise last_exc
+    raise RuntimeError("Unreachable")
 
 
-def get_cpu_temp():
+def get_cpu_temp() -> float | None:
     """
     Read the Raspberry Pi CPU temperature from sysfs.
     Returns temperature in °C as a float, or None on failure.
@@ -71,7 +76,7 @@ def get_cpu_temp():
         return None
 
 
-def get_mem_usage():
+def get_mem_usage() -> float | None:
     """
     Return system memory usage percentage.
     """
@@ -81,7 +86,7 @@ def get_mem_usage():
         return None
 
 
-def get_disk_usage(path='/mnt/ssd'):
+def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
     """
     Return disk usage percentage for given path.
     """
@@ -121,7 +126,7 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         return None
 
 
-def find_latest_file(directory, pattern='*'):
+def find_latest_file(directory: str, pattern: str = '*') -> str | None:
     """
     Find the latest file matching pattern under directory.
     """
@@ -131,13 +136,13 @@ def find_latest_file(directory, pattern='*'):
     return max(files, key=os.path.getmtime)
 
 
-def tail_file(path, lines=50):
+def tail_file(path: str, lines: int = 50) -> list[str]:
     """
     Tail last N lines from a file.
     """
     try:
         with open(path, 'rb') as f:
-            lines_deque = deque(maxlen=lines)
+            lines_deque: deque[str] = deque(maxlen=lines)
             for line in f:
                 lines_deque.append(line.decode('utf-8', errors='ignore').rstrip())
         return list(lines_deque)
@@ -145,12 +150,14 @@ def tail_file(path, lines=50):
         return []
 
 
-def run_service_cmd(service, action, attempts: int = 1, delay: float = 0):
+def run_service_cmd(
+    service: str, action: str, attempts: int = 1, delay: float = 0
+) -> tuple[bool, str, str]:
     """Run ``sudo systemctl`` for ``service`` with optional retries."""
 
     cmd = ["sudo", "systemctl", action, service]
 
-    def _call():
+    def _call() -> subprocess.CompletedProcess[str]:
         return subprocess.run(cmd, capture_output=True, text=True)
 
     proc = retry_call(_call, attempts=attempts, delay=delay)
@@ -161,7 +168,7 @@ def run_service_cmd(service, action, attempts: int = 1, delay: float = 0):
     )
 
 
-def service_status(service, attempts: int = 1, delay: float = 0) -> bool:
+def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
     """Return ``True`` if the ``systemd`` service is active."""
     try:
         ok, out, _err = run_service_cmd(
@@ -172,14 +179,14 @@ def service_status(service, attempts: int = 1, delay: float = 0) -> bool:
         return False
 
 
-def now_timestamp():
+def now_timestamp() -> str:
     """
     Return the current time as a formatted string.
     """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def fetch_kismet_devices():
+def fetch_kismet_devices() -> tuple[list, list]:
     """
     Query Kismet REST API for devices. Returns (access_points, clients).
     Tries both /kismet/devices/all.json and /devices/all.json endpoints.
@@ -235,7 +242,7 @@ async def fetch_metrics_async(log_folder: str = '/mnt/ssd/kismet_logs') -> tuple
     return aps, clients, count
 
 
-def count_bettercap_handshakes(log_folder='/mnt/ssd/kismet_logs'):
+def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     """
     Count .pcap handshake files in BetterCAP log directories.
     """
@@ -243,7 +250,7 @@ def count_bettercap_handshakes(log_folder='/mnt/ssd/kismet_logs'):
     return len(glob.glob(pattern))
 
 
-def get_gps_accuracy():
+def get_gps_accuracy() -> float | None:
     """
     Read GPS accuracy from gpspipe output (epx/epy fields).
     Returns max(epx, epy) in meters, or None on failure.
@@ -265,7 +272,7 @@ def get_gps_accuracy():
     return None
 
 
-def get_gps_fix_quality():
+def get_gps_fix_quality() -> str:
     """
     Read GPS fix quality (mode) from gpspipe output.
     Returns a string like 'No Fix', '2D', '3D', or 'DGPS'.
@@ -286,33 +293,37 @@ def get_gps_fix_quality():
     return 'Unknown'
 
 
-def get_avg_rssi(aps):
+def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
     """
     Compute average RSSI (signal_dbm) from a list of access_points.
     Returns float average or None if no data.
     """
     try:
-        vals = [ap.get('signal_dbm') for ap in aps if ap.get('signal_dbm') is not None]
+        vals = []
+        for ap in aps:
+            val = ap.get('signal_dbm')
+            if val is not None:
+                vals.append(float(val))
         return sum(vals) / len(vals) if vals else None
     except Exception:
         return None
 
 
-def parse_latest_gps_accuracy():
+def parse_latest_gps_accuracy() -> float | None:
     """
     Alias for get_gps_accuracy for backward compatibility.
     """
     return get_gps_accuracy()
 
 
-def tail_log_file(path, lines=50):
+def tail_log_file(path: str, lines: int = 50) -> list[str]:
     """
     Alias for tail_file.
     """
     return tail_file(path, lines)
 
 
-def get_recent_bssids(limit=5):
+def get_recent_bssids(limit: int = 5) -> list[str]:
     """Return the most recently observed BSSIDs from the Kismet API."""
     try:
         aps, _ = fetch_kismet_devices()
@@ -324,7 +335,7 @@ def get_recent_bssids(limit=5):
         return []
 
 
-def haversine_distance(p1, p2):
+def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> float:
     """Return great-circle distance between two ``(lat, lon)`` points in meters."""
     import math
 
@@ -344,7 +355,7 @@ def haversine_distance(p1, p2):
     return r * c
 
 
-def polygon_area(points):
+def polygon_area(points: Sequence[tuple[float, float]]) -> float:
     """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""
     if len(points) < 3:
         return 0.0
@@ -355,7 +366,7 @@ def polygon_area(points):
     lon0 = sum(p[1] for p in points) / len(points)
     cos_lat0 = math.cos(math.radians(lat0))
 
-    def project(p):
+    def project(p: tuple[float, float]) -> tuple[float, float]:
         x = (p[1] - lon0) * cos_lat0
         y = p[0] - lat0
         return x, y
@@ -370,7 +381,7 @@ def polygon_area(points):
     return area * (meter_per_deg ** 2)
 
 
-def point_in_polygon(point, polygon):
+def point_in_polygon(point: tuple[float, float], polygon: Sequence[tuple[float, float]]) -> bool:
     """Return True if ``point`` is inside ``polygon`` using ray casting."""
     lat, lon = point
     inside = False
@@ -387,12 +398,12 @@ def point_in_polygon(point, polygon):
     return inside
 
 
-def load_kml(path):
+def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
     import zipfile
     import xml.etree.ElementTree as ET
 
-    def _parse(root):
+    def _parse(root: ET.Element) -> list[dict[str, Any]]:
         ns = {"kml": root.tag.split("}")[0].strip("{")}
         feats = []
         for placemark in root.findall(".//kml:Placemark", ns):

@@ -15,14 +15,14 @@ class NetworkThroughputWidget(DashboardWidget):
         super().__init__(**kwargs)
         self.update_interval = update_interval
         self.max_points = max_points
-        self.index = 0
-        self.data_rx = []
-        self.data_tx = []
+        self.index: int = 0
+        self.data_rx: list[tuple[int, float]] = []
+        self.data_tx: list[tuple[int, float]] = []
         self.prev = psutil.net_io_counters()
 
-        self.plot_rx = LinePlot(color=[0, 0, 1, 1], line_width=1.5)
-        self.plot_tx = LinePlot(color=[1, 0, 0, 1], line_width=1.5)
-        self.graph = Graph(
+        self.plot_rx: LinePlot = LinePlot(color=[0, 0, 1, 1], line_width=1.5)
+        self.plot_tx: LinePlot = LinePlot(color=[1, 0, 0, 1], line_width=1.5)
+        self.graph: Graph = Graph(
             xlabel="Samples",
             ylabel="KB/s",
             x_ticks_minor=5,
@@ -36,7 +36,7 @@ class NetworkThroughputWidget(DashboardWidget):
         self.graph.add_plot(self.plot_rx)
         self.graph.add_plot(self.plot_tx)
         self.add_widget(self.graph)
-        self._event_name = f"net_tp_{id(self)}"
+        self._event_name: str = f"net_tp_{id(self)}"
         App.get_running_app().scheduler.schedule(
             self._event_name, lambda dt: self.update(), self.update_interval
         )

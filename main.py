@@ -93,12 +93,12 @@ class PiWardriveApp(MDApp):
         nav_bar = self.root.ids.nav_bar
 
         # 1) Add all six screens first
-        sm.add_widget(MapScreen(name="Map"))
-        sm.add_widget(StatsScreen(name="Stats"))
-        sm.add_widget(SplitScreen(name="Split"))
-        sm.add_widget(ConsoleScreen(name="Console"))
-        sm.add_widget(SettingsScreen(name="Settings"))
-        sm.add_widget(DashboardScreen(name="Dashboard"))
+        sm.add_widget(MapScreen(name="Map"))  # type: ignore[call-arg]
+        sm.add_widget(StatsScreen(name="Stats"))  # type: ignore[call-arg]
+        sm.add_widget(SplitScreen(name="Split"))  # type: ignore[call-arg]
+        sm.add_widget(ConsoleScreen(name="Console"))  # type: ignore[call-arg]
+        sm.add_widget(SettingsScreen(name="Settings"))  # type: ignore[call-arg]
+        sm.add_widget(DashboardScreen(name="Dashboard"))  # type: ignore[call-arg]
 
         # 2) Now set the initial screen explicitly
         sm.current = "Map"
