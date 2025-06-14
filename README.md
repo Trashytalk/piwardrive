@@ -14,6 +14,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
+* **Unified Error Reporting**: Consistent alerts and logs when operations fail.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 
 ## Hardware Prerequisites
@@ -39,10 +40,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 
    ```bash
    git clone https://github.com/TRASHYTALK/piwardrive.git
-   cd piwardrive
 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
-   source gui-env/bin/activate
-   pip install --upgrade pip setuptools
    ```
 
 3. **Install Python dependencies**:
@@ -68,6 +66,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
   * `bettercap.service`
   * (Optional) `piwardrive.service` to autostart the app.
 * **Log Rotation**: rotate files like `/var/log/syslog` every `log_rotate_interval` seconds and keep `log_rotate_archives` backups.
+* **Health Poll Interval**: adjust `health_poll_interval` to control how often the monitor collects metrics.
 
 ## Running the App
 
