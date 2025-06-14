@@ -33,4 +33,6 @@ def test_control_service_reports_error(monkeypatch: Any) -> None:
     monkeypatch.setattr(subprocess, 'run', lambda *a, **kw: proc)
     with mock.patch.object(utils, 'report_error') as rep:
         func(object(), 'svc', 'start')
-    rep.assert_called_once_with('Failed to start svc: oops')
+    rep.assert_called_once()
+    msg = rep.call_args[0][0]
+    assert msg.startswith('[E001]') and 'Failed to start svc: oops' in msg

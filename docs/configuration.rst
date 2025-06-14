@@ -24,3 +24,6 @@ Use :func:`config.save_config` with ``profile="myprofile"`` to create or update
 a profile. Switch via :func:`config.switch_profile` or by editing
 ``active_profile``. Profiles can be exported and imported using
 :func:`config.export_profile` and :func:`config.import_profile`.
+
+All values are validated on load. Invalid entries or environment overrides
+raise ``ValueError`` with details about the offending fields.

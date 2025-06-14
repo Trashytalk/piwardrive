@@ -22,7 +22,7 @@ from kivymd.uix.textfield import MDTextField
 
 from kivymd.uix.selectioncontrol import MDSwitch
 from kivymd.uix.snackbar import Snackbar
-from utils import report_error
+from utils import report_error, format_error
 from config import Config, save_config
 
 
@@ -134,13 +134,22 @@ class SettingsScreen(Screen):
         if os.path.exists(path):
             app.kismet_logdir = path
         else:
-            report_error(f"Invalid Kismet log dir: {path}")
+            report_error(
+                format_error(
+                    201, f"Invalid Kismet log dir: {path}. Please provide an existing path."
+                )
+            )
 
         path = self.bcap_field.text
         if os.path.exists(path):
             app.bettercap_caplet = path
         else:
-            report_error(f"Invalid BetterCAP caplet: {path}")
+            report_error(
+                format_error(
+                    202,
+                    f"Invalid BetterCAP caplet: {path}. Provide a valid file path.",
+                )
+            )
 
         try:
             value = int(self.gps_poll_field.text)
@@ -149,13 +158,20 @@ class SettingsScreen(Screen):
             else:
                 raise ValueError
         except ValueError:
-            report_error("GPS poll rate must be a positive integer")
+            report_error(
+                format_error(203, "GPS poll rate must be a positive integer. Enter a value greater than 0.")
+            )
 
         path = self.offline_path_field.text
         if os.path.exists(path):
             app.offline_tile_path = path
         else:
-            report_error(f"Invalid offline tile path: {path}")
+            report_error(
+                format_error(
+                    204,
+                    f"Invalid offline tile path: {path}. Please provide an existing directory.",
+                )
+            )
 
         app.map_use_offline = self.offline_switch.active
         app.theme = "Dark" if self.theme_switch.active else "Light"
@@ -168,6 +184,11 @@ class SettingsScreen(Screen):
         try:
             save_config(app.config_data)
         except OSError as exc:  # pragma: no cover - save failure
-            report_error(f"Failed to save config: {exc}")
+            report_error(
+                format_error(
+                    205,
+                    f"Failed to save config: {exc}. Check file permissions.",
+                )
+            )
 
         Snackbar(text="Settings saved", duration=1).open()

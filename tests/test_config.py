@@ -45,11 +45,11 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
 
 def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
     cfg_file = setup_temp_config(tmp_path)
-    cfg = config.Config(theme="Blue")
+    cfg = config.Config(theme="Light")
     config.save_config(cfg)
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
-    assert loaded.theme == "Blue"
+    assert loaded.theme == "Light"
     
 
 def test_load_config_bad_json(tmp_path: Path) -> None:
