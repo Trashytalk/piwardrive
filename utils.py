@@ -143,11 +143,17 @@ def fetch_kismet_devices():
     for url in urls:
         try:
             resp = requests.get(url, timeout=5)
+        except requests.RequestException as exc:
+            report_error(f"Kismet API request failed: {exc}")
+            continue
+        try:
             if resp.status_code == 200:
                 data = resp.json()
-                return data.get('access_points', []), data.get('clients', [])
-        except Exception:
-            pass
+                return data.get("access_points", []), data.get("clients", [])
+        except json.JSONDecodeError as exc:
+            report_error(f"Kismet API JSON decode error: {exc}")
+        except Exception as exc:  # pragma: no cover - unexpected
+            report_error(f"Kismet API error: {exc}")
     return [], []
 
 

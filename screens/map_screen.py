@@ -624,60 +624,45 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
         try:
-
             resp = requests.get("http://127.0.0.1:2501/devices/all.json", timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+        except requests.RequestException as e:
+            self._show_error(f"AP overlay request error: {e}")
+            return
+        except json.JSONDecodeError as e:
+            self._show_error(f"AP overlay JSON decode error: {e}")
+            return
+        except Exception as e:  # pragma: no cover - unexpected
+            self._show_error(f"AP overlay error: {e}")
+            return
 
-            for d in resp.json().get("devices", []):
-
-                gps = d.get("gps-info")
-
-                if gps and len(gps) >= 2:
-
-                    m = MapMarkerPopup(
-
-                        lat=gps[0],
-
-                        lon=gps[1],
-
-                        source="widgets/marker-ap.png",
-
-                        anchor_x="center",
-
-                        anchor_y="center",
-
+        for d in data.get("devices", []):
+            gps = d.get("gps-info")
+            if gps and len(gps) >= 2:
+                m = MapMarkerPopup(
+                    lat=gps[0],
+                    lon=gps[1],
+                    source="widgets/marker-ap.png",
+                    anchor_x="center",
+                    anchor_y="center",
+                )
+                m.add_widget(
+                    Label(
+                        text=d.get("bssid", "AP"),
+                        size_hint=(None, None),
+                        size=(dp(80), dp(20)),
                     )
 
-                    m.add_widget(
+                m.ap_data = {
+                    "bssid": d.get("bssid"),
+                    "ssid": d.get("ssid"),
+                    "encryption": d.get("encryption"),
+                }
+                mv.add_widget(m)
+                self.ap_markers.append(m)
 
-                        Label(
 
-                            text=d.get("bssid", "AP"),
-
-                            size_hint=(None, None),
-
-                            size=(dp(80), dp(20)),
-
-                        )
-
-                    )
-
-                    m.ap_data = {
-
-                        "bssid": d.get("bssid"),
-
-                        "ssid": d.get("ssid"),
-
-                        "encryption": d.get("encryption"),
-
-                    }
-
-                    mv.add_widget(m)
-
-                    self.ap_markers.append(m)
-
-        except Exception as e:
-
-            report_error(f"AP overlay error: {e}")
 
 
 
@@ -786,7 +771,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
     # Helpers
-
+
+
 
     def _show_not_implemented(self, feature_name):
 
