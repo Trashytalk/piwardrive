@@ -2,6 +2,8 @@
 
 import json
 import os
+import json
+import os
 import sys
 from pathlib import Path
 from dataclasses import asdict
@@ -15,6 +17,8 @@ def setup_temp_config(tmp_path: Path) -> Path:
     config_path = tmp_path / "config.json"
     config.CONFIG_DIR = str(tmp_path)
     config.CONFIG_PATH = str(config_path)
+    config.PROFILES_DIR = str(tmp_path / "profiles")
+    config.ACTIVE_PROFILE_FILE = str(tmp_path / "active_profile")
     return config_path
 
 
@@ -88,3 +92,26 @@ def test_env_override_battery_widget(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setenv("PW_WIDGET_BATTERY_STATUS", "true")
     cfg = config.AppConfig.load()
     assert cfg.widget_battery_status is True
+
+
+def test_profile_roundtrip(tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    cfg = config.Config(theme="Alt")
+    config.save_config(cfg, profile="alt")
+    path = Path(config.PROFILES_DIR) / "alt.json"
+    assert path.is_file()
+    config.set_active_profile("alt")
+    loaded = config.load_config()
+    assert loaded.theme == "Alt"
+    assert "alt" in config.list_profiles()
+
+
+def test_import_export_profile(tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    src = tmp_path / "src.json"
+    src.write_text('{"theme": "Imp"}')
+    name = config.import_profile(str(src))
+    assert name == "src"
+    exported = tmp_path / "exp.json"
+    config.export_profile(name, str(exported))
+    assert exported.is_file()

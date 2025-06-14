@@ -3,12 +3,14 @@
 import json
 import os
 from dataclasses import dataclass, asdict, field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import jsonschema
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
+PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
+ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
 
 CONFIG_SCHEMA = {
     "type": "object",
@@ -73,29 +75,52 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 
-def _parse_env_value(raw: str, default: Any) -> Any:
-    """Convert ``raw`` environment value to the type of ``default``."""
-    if isinstance(default, bool):
-        return raw.lower() in {"1", "true", "yes", "on"}
-    if isinstance(default, int):
-        try:
-            return int(raw)
-        except ValueError:
-            return default
-    if isinstance(default, list):
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            return raw
-    return raw
+def _profile_path(name: str) -> str:
+    return os.path.join(PROFILES_DIR, f"{os.path.basename(name)}.json")
 
 
-def load_config() -> Config:
-    """Load configuration from ``CONFIG_PATH`` and return a :class:`Config`."""
+def list_profiles() -> List[str]:
+    """Return available profile names under ``PROFILES_DIR``."""
+    if not os.path.isdir(PROFILES_DIR):
+        return []
+    return [
+        os.path.splitext(f)[0]
+        for f in os.listdir(PROFILES_DIR)
+        if f.endswith(".json")
+    ]
+
+
+def get_active_profile() -> Optional[str]:
+    """Return the active profile name if set."""
+    env = os.getenv("PW_PROFILE_NAME")
+    if env:
+        return env
+    try:
+        with open(ACTIVE_PROFILE_FILE, "r", encoding="utf-8") as f:
+            name = f.read().strip()
+            return name or None
+    except FileNotFoundError:
+        return None
+
+
+def set_active_profile(name: str) -> None:
+    """Persist ``name`` as the active profile."""
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    with open(ACTIVE_PROFILE_FILE, "w", encoding="utf-8") as f:
+        f.write(name)
+
+
+def load_config(profile: Optional[str] = None) -> Config:
+    """Load configuration from ``profile`` or ``CONFIG_PATH``."""
+
+    if profile is None:
+        profile = get_active_profile()
+    path = _profile_path(profile) if profile else CONFIG_PATH
+
 
     data: Dict[str, Any] = {}
     try:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             loaded = json.load(f)
         jsonschema.validate(loaded, CONFIG_SCHEMA)
         data = loaded
@@ -107,10 +132,13 @@ def load_config() -> Config:
     return Config(**merged)
 
 
-def save_config(config: Config) -> None:
-    """Persist ``config`` dataclass to ``CONFIG_PATH``."""
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+def save_config(config: Config, profile: Optional[str] = None) -> None:
+    """Persist ``config`` dataclass to ``profile`` or ``CONFIG_PATH``."""
+    if profile is None:
+        profile = get_active_profile()
+    path = _profile_path(profile) if profile else CONFIG_PATH
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(asdict(config), f, indent=2)
 
 
@@ -147,3 +175,38 @@ class AppConfig:
     def to_dict(self) -> Dict[str, Any]:
         """Return configuration as a plain dictionary."""
         return {field: getattr(self, field) for field in DEFAULTS.keys()}
+
+
+def switch_profile(name: str) -> Config:
+    """Set ``name`` as active and load its configuration."""
+    set_active_profile(name)
+    return load_config(profile=name)
+
+
+def export_profile(name: str, dest: str) -> None:
+    """Write ``name`` profile to ``dest`` path."""
+    src = _profile_path(name)
+    with open(src, "r", encoding="utf-8") as fsrc, open(
+        dest, "w", encoding="utf-8"
+    ) as fdst:
+        fdst.write(fsrc.read())
+
+
+def import_profile(path: str, name: Optional[str] = None) -> str:
+    """Import a profile from ``path`` and save as ``name``."""
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    jsonschema.validate(data, CONFIG_SCHEMA)
+    cfg = Config(**{**DEFAULTS, **data})
+    if name is None:
+        name = os.path.splitext(os.path.basename(path))[0]
+    save_config(cfg, profile=name)
+    return name
+
+
+def delete_profile(name: str) -> None:
+    """Remove the specified profile file."""
+    try:
+        os.remove(_profile_path(name))
+    except FileNotFoundError:
+        pass
