@@ -6,9 +6,14 @@ from kivy.clock import Clock, mainthread
 from kivy.uix.screenmanager import Screen
 
 
-from utils import (count_bettercap_handshakes, fetch_kismet_devices,
-                   get_avg_rssi, get_cpu_temp, get_gps_fix_quality,
-                   service_status)
+import asyncio
+from utils import (
+    fetch_metrics_async,
+    get_avg_rssi,
+    get_cpu_temp,
+    get_gps_fix_quality,
+    service_status,
+)
 
 
 
@@ -30,9 +35,8 @@ class SplitScreen(Screen):
     def _update_metrics(self, _dt):
         """Refresh labels with capture statistics."""
         cpu_temp = get_cpu_temp()
-        aps, clients = fetch_kismet_devices()
+        aps, clients, handshake_count = asyncio.run(fetch_metrics_async())
         bssid_count = len(aps)
-        handshake_count = count_bettercap_handshakes()
         avg_rssi = get_avg_rssi(aps)
         kismet_up = service_status('kismet')
         bettercap_up = service_status('bettercap')

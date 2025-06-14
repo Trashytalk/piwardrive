@@ -69,6 +69,8 @@ class PiWardriveApp(MDApp):
         self.health_monitor = diagnostics.HealthMonitor(
             self.scheduler, self.health_poll_interval
         )
+        if os.getenv("PW_PROFILE"):
+            diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme
 
     def build(self) -> Any:
@@ -148,6 +150,9 @@ class PiWardriveApp(MDApp):
 
     def on_stop(self) -> None:
         """Persist configuration values on application exit."""
+        prof = diagnostics.stop_profiling()
+        if prof:
+            logging.info("Profiling summary:\n%s", prof)
         for f in fields(Config):
             key = f.name
             if hasattr(self, key):

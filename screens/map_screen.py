@@ -85,7 +85,12 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self._aps_event = None
 
-        self._lp_event = None
+        self._lp_touch = None
+        self._long_press_trigger = Clock.create_trigger(
+            self._trigger_long_press,
+            0.5,
+            interval=False,
+        )
 
         self.track_points = []
 
@@ -160,12 +165,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Schedule long press detection."""
 
         if _mapview.collide_point(*touch.pos):
-
-            self._lp_event = Clock.schedule_once(
-
-                lambda dt: self._on_long_press(touch), 0.5
-
-            )
+            self._lp_touch = touch
+            self._long_press_trigger()
 
 
 
@@ -173,11 +174,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         """Cancel long press if the touch moves too far."""
 
-        if self._lp_event and (abs(touch.dx) > dp(10) or abs(touch.dy) > dp(10)):
-
-            Clock.unschedule(self._lp_event)
-
-            self._lp_event = None
+        if self._lp_touch and (abs(touch.dx) > dp(10) or abs(touch.dy) > dp(10)):
+            self._long_press_trigger.cancel()
+            self._lp_touch = None
 
 
 
@@ -185,11 +184,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         """Cancel pending long press on touch release."""
 
-        if self._lp_event:
-
-            Clock.unschedule(self._lp_event)
-
-            self._lp_event = None
+        if self._lp_touch:
+            self._long_press_trigger.cancel()
+            self._lp_touch = None
 
 
 
@@ -202,6 +199,12 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         lat, lon = mv.get_latlon_at(touch.x, touch.y)
 
         self._show_context_menu(lat, lon, touch.pos)
+
+
+    def _trigger_long_press(self, _dt):
+        if self._lp_touch is not None:
+            self._on_long_press(self._lp_touch)
+            self._lp_touch = None
 
 
 

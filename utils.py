@@ -5,6 +5,7 @@
 import glob
 
 import json
+import asyncio
 import logging
 import os
 import subprocess
@@ -17,6 +18,19 @@ from kivy.app import App
 
 import psutil
 import requests
+
+try:
+    import orjson as _json
+except Exception:  # pragma: no cover - optional dependency
+    try:
+        import ujson as _json
+    except Exception:  # pragma: no cover - fallback
+        _json = json
+
+
+def _loads(data: bytes | str):
+    """Parse JSON using the fastest available library."""
+    return _json.loads(data)
 
 
 def report_error(message: str) -> None:
@@ -77,6 +91,36 @@ def get_disk_usage(path='/mnt/ssd'):
         return None
 
 
+def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
+    """Return SMART health status for the device mounted at ``mount_point``."""
+    dev = None
+    try:
+        for part in psutil.disk_partitions(all=False):
+            if part.mountpoint == mount_point:
+                dev = part.device
+                break
+        if not dev:
+            return None
+        proc = subprocess.run(
+            ['smartctl', '-H', dev],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode != 0:
+            return None
+        out = proc.stdout + proc.stderr
+        if 'PASSED' in out:
+            return 'OK'
+        if 'FAILED' in out:
+            return 'FAIL'
+        if 'WARNING' in out:
+            return 'WARN'
+        return out.strip().splitlines()[-1] if out else None
+    except Exception:
+        return None
+
+
 def find_latest_file(directory, pattern='*'):
     """
     Find the latest file matching pattern under directory.
@@ -110,7 +154,11 @@ def run_service_cmd(service, action, attempts: int = 1, delay: float = 0):
         return subprocess.run(cmd, capture_output=True, text=True)
 
     proc = retry_call(_call, attempts=attempts, delay=delay)
-    return proc.returncode == 0, proc.stdout, proc.stderr
+    return (
+        proc.returncode == 0,
+        getattr(proc, 'stdout', ''),
+        getattr(proc, 'stderr', ''),
+    )
 
 
 def service_status(service, attempts: int = 1, delay: float = 0) -> bool:
@@ -155,6 +203,36 @@ def fetch_kismet_devices():
         except Exception as exc:  # pragma: no cover - unexpected
             report_error(f"Kismet API error: {exc}")
     return [], []
+
+
+async def fetch_kismet_devices_async() -> tuple[list, list]:
+    """Asynchronously fetch Kismet device data using ``asyncio``."""
+    urls = [
+        "http://127.0.0.1:2501/kismet/devices/all.json",
+        "http://127.0.0.1:2501/devices/all.json",
+    ]
+    for url in urls:
+        try:
+            resp = await asyncio.to_thread(requests.get, url, timeout=5)
+        except requests.RequestException as exc:
+            report_error(f"Kismet API request failed: {exc}")
+            continue
+        try:
+            if resp.status_code == 200:
+                data = _loads(resp.content)
+                return data.get("access_points", []), data.get("clients", [])
+        except Exception as exc:  # pragma: no cover - JSON parse or other
+            report_error(f"Kismet API error: {exc}")
+    return [], []
+
+
+async def fetch_metrics_async(log_folder: str = '/mnt/ssd/kismet_logs') -> tuple[list, list, int]:
+    """Fetch Kismet devices and BetterCAP handshake count concurrently."""
+    aps_clients = fetch_kismet_devices_async()
+    handshake = asyncio.to_thread(count_bettercap_handshakes, log_folder)
+    aps, clients = await aps_clients
+    count = await handshake
+    return aps, clients, count
 
 
 def count_bettercap_handshakes(log_folder='/mnt/ssd/kismet_logs'):

@@ -9,11 +9,14 @@ from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
+import psutil
 if 'requests' not in sys.modules:
     dummy_requests = mock.Mock()
     dummy_requests.RequestException = Exception
     sys.modules['requests'] = dummy_requests
 import utils
+import asyncio
+from collections import namedtuple
 
 
 def test_find_latest_file_returns_latest():
@@ -158,3 +161,19 @@ def test_fetch_kismet_devices_json_error(monkeypatch):
         aps, clients = utils.fetch_kismet_devices()
         assert aps == [] and clients == []
         assert err.call_count == 2
+
+
+def test_get_smart_status_ok(monkeypatch):
+    Part = namedtuple('Part', 'device mountpoint fstype opts')
+    part = Part('/dev/sda', '/mnt/ssd', 'ext4', '')
+    monkeypatch.setattr(psutil, 'disk_partitions', lambda all=False: [part])
+    proc = mock.Mock(returncode=0, stdout='SMART overall-health self-assessment test result: PASSED\n', stderr='')
+    monkeypatch.setattr(utils.subprocess, 'run', lambda *a, **k: proc)
+    assert utils.get_smart_status('/mnt/ssd') == 'OK'
+
+
+def test_fetch_kismet_devices_async(monkeypatch):
+    resp = mock.Mock(status_code=200, content=b'{"access_points": [1], "clients": [2]}')
+    monkeypatch.setattr(utils.requests, 'get', lambda *a, **k: resp)
+    aps, clients = asyncio.run(utils.fetch_kismet_devices_async())
+    assert aps == [1] and clients == [2]
