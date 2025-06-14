@@ -54,6 +54,13 @@ def test_load_config_bad_json(tmp_path):
     assert asdict(data) == asdict(config.DEFAULT_CONFIG)
 
 
+def test_load_config_schema_violation(tmp_path):
+    cfg_file = setup_temp_config(tmp_path)
+    cfg_file.write_text(json.dumps({"map_poll_gps": "oops"}))
+    data = config.load_config()
+    assert asdict(data) == asdict(config.DEFAULT_CONFIG)
+    
+
 def test_env_override_integer(monkeypatch, tmp_path):
     setup_temp_config(tmp_path)
     monkeypatch.setenv("PW_MAP_POLL_GPS", "42")
