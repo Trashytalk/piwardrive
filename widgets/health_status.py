@@ -3,6 +3,7 @@ from typing import Any
 
 from kivy.app import App
 from kivymd.uix.label import MDLabel
+from localization import _
 
 from .base import DashboardWidget
 
@@ -14,7 +15,7 @@ class HealthStatusWidget(DashboardWidget):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.label = MDLabel(text="Health: N/A")
+        self.label = MDLabel(text=f"{_('health')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
@@ -24,13 +25,15 @@ class HealthStatusWidget(DashboardWidget):
             monitor = getattr(app, "health_monitor", None)
             data = monitor.data if monitor else None
             if not data:
-                self.label.text = "Health: N/A"
+                self.label.text = f"{_('health')}: {_('not_available')}"
                 return
             disk = data["system"]["disk_percent"]
-            net = "OK" if data["network_ok"] else "DOWN"
+            net = _("ok") if data["network_ok"] else _("down")
             services = " ".join(
-                f"{name}:{'OK' if ok else 'DOWN'}" for name, ok in data["services"].items()
+                f"{name}:{_('ok') if ok else _('down')}" for name, ok in data["services"].items()
             )
-            self.label.text = f"Net:{net} SSD:{disk:.0f}% {services}"
+            self.label.text = (
+                f"{_('net')}:{net} {_('ssd')}:{disk:.0f}% {services}"
+            )
         except Exception as exc:
             logging.exception("HealthStatusWidget update failed: %s", exc)

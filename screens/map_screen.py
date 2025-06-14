@@ -921,6 +921,25 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             report_error(f"Prefetch error: {e}")
 
+    def prefetch_visible_region(self):
+        """Download tiles for the current view if offline mode is active."""
+        app = App.get_running_app()
+        if not getattr(app, "map_use_offline", False):
+            Snackbar(text="Enable offline tiles first").open()
+            return
+        mv = self.ids.get("mapview")
+        if mv is None:
+            return
+
+        bbox = mv.get_bbox()
+        folder = os.path.dirname(getattr(app, "offline_tile_path", "")) or "/mnt/ssd/tiles"
+
+        def _worker() -> None:
+            self.prefetch_tiles(tuple(bbox), zoom=mv.zoom, folder=folder)
+            Clock.schedule_once(lambda _dt: Snackbar(text="Prefetch complete").open())
+
+        threading.Thread(target=_worker, daemon=True).start()
+
 
 
     def purge_old_tiles(self, max_age_days=30, folder="/mnt/ssd/tiles"):

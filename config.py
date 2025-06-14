@@ -8,37 +8,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-import jsonschema
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
 ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
-
-CONFIG_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "theme": {"type": "string"},
-        "map_poll_gps": {"type": "integer"},
-        "map_poll_gps_max": {"type": "integer"},
-        "map_poll_aps": {"type": "integer"},
-        "map_show_gps": {"type": "boolean"},
-        "map_show_aps": {"type": "boolean"},
-        "map_cluster_aps": {"type": "boolean"},
-        "map_use_offline": {"type": "boolean"},
-        "kismet_logdir": {"type": "string", "minLength": 1},
-        "bettercap_caplet": {"type": "string", "minLength": 1},
-        "dashboard_layout": {"type": "array"},
-        "debug_mode": {"type": "boolean"},
-        "offline_tile_path": {"type": "string", "minLength": 1},
-        "health_poll_interval": {"type": "integer", "minimum": 1},
-        "log_rotate_interval": {"type": "integer", "minimum": 1},
-        "log_rotate_archives": {"type": "integer", "minimum": 1},
-        "widget_battery_status": {"type": "boolean"},
-        "admin_password_hash": {"type": "string"},
-    },
-    "additionalProperties": False,
-}
 
 
 @dataclass
@@ -69,6 +44,41 @@ DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
 
 
+class FileConfigModel(BaseModel):
+    """Validation model for configuration files."""
+
+    theme: Optional[str] = None
+    map_poll_gps: Optional[int] = None
+    map_poll_gps_max: Optional[int] = None
+    map_poll_aps: Optional[int] = None
+    map_show_gps: Optional[bool] = None
+    map_show_aps: Optional[bool] = None
+    map_cluster_aps: Optional[bool] = None
+    map_use_offline: Optional[bool] = None
+    kismet_logdir: Optional[str] = Field(default=None, min_length=1)
+    bettercap_caplet: Optional[str] = Field(default=None, min_length=1)
+    dashboard_layout: List[Any] = Field(default_factory=list)
+    debug_mode: Optional[bool] = None
+    offline_tile_path: Optional[str] = Field(default=None, min_length=1)
+    health_poll_interval: Optional[int] = Field(default=None, ge=1)
+    log_rotate_interval: Optional[int] = Field(default=None, ge=1)
+    log_rotate_archives: Optional[int] = Field(default=None, ge=1)
+    widget_battery_status: Optional[bool] = None
+    admin_password_hash: Optional[str] = ""
+
+
+class ConfigModel(FileConfigModel):
+    """Extended validation used by :func:`validate_config_data`."""
+
+    map_poll_gps: int = Field(..., gt=0)
+
+    @field_validator("theme")
+    def check_theme(cls, value: str) -> str:
+        if value not in {"Dark", "Light", "Green", "Red"}:
+            raise ValueError(f"Invalid theme: {value}")
+        return value
+
+
 def _parse_env_value(raw: str, default: Any) -> Any:
     """Return ``raw`` converted to the type of ``default``."""
     if isinstance(default, bool):
@@ -92,12 +102,8 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 
 
 def validate_config_data(data: Dict[str, Any]) -> None:
-    """Validate ``data`` against ``CONFIG_SCHEMA`` and custom rules."""
-    jsonschema.validate(data, CONFIG_SCHEMA)
-    if data.get("map_poll_gps", 1) <= 0:
-        raise ValueError("map_poll_gps must be > 0")
-    if data.get("theme") not in {"Dark", "Light", "Green", "Red"}:
-        raise ValueError(f"Invalid theme: {data.get('theme')}")
+    """Validate ``data`` using ``ConfigModel``."""
+    ConfigModel(**data)
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
@@ -156,11 +162,11 @@ def load_config(profile: Optional[str] = None) -> Config:
     try:
         with open(path, "r", encoding="utf-8") as f:
             loaded = json.load(f)
-        jsonschema.validate(loaded, CONFIG_SCHEMA)
+        FileConfigModel(**loaded)
         data = loaded
     except FileNotFoundError:
         pass
-    except (json.JSONDecodeError, jsonschema.ValidationError):
+    except (json.JSONDecodeError, ValidationError):
         pass
     merged = {**DEFAULTS, **data}
     return Config(**merged)
@@ -209,7 +215,7 @@ def import_config(path: str) -> Config:
             data = yaml.safe_load(f) or {}
         else:
             raise ValueError(f"Unsupported config format: {ext}")
-    jsonschema.validate(data, CONFIG_SCHEMA)
+    FileConfigModel(**data)
     merged = {**DEFAULTS, **data}
     return Config(**merged)
 
@@ -269,7 +275,7 @@ def import_profile(path: str, name: Optional[str] = None) -> str:
     """Import a profile from ``path`` and save as ``name``."""
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    jsonschema.validate(data, CONFIG_SCHEMA)
+    FileConfigModel(**data)
     cfg = Config(**{**DEFAULTS, **data})
     if name is None:
         name = os.path.splitext(os.path.basename(path))[0]

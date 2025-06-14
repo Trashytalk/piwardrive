@@ -30,6 +30,8 @@ a profile. Switch via :func:`config.switch_profile` or by editing
 ``active_profile``. Profiles can be exported and imported using
 :func:`config.export_profile` and :func:`config.import_profile`.
 
+An example profile named ``default_profile.json`` is included under ``examples/`` with recommended settings. Copy this file to ``~/.config/piwardrive/profiles`` to bootstrap your own configuration.
+
 All values are validated on load. Invalid entries or environment overrides
 raise ``ValueError`` with details about the offending fields.
 

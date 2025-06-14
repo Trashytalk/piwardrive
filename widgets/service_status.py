@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
+from localization import _
 
 from .base import DashboardWidget
 from utils import service_status
@@ -13,7 +14,7 @@ class ServiceStatusWidget(DashboardWidget):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.label = MDLabel(text="Services: N/A")
+        self.label = MDLabel(text=f"{_('services')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
@@ -22,7 +23,8 @@ class ServiceStatusWidget(DashboardWidget):
             kis = service_status('kismet')
             btc = service_status('bettercap')
             self.label.text = (
-                f"Kismet: {'OK' if kis else 'DOWN'} | BetterCAP: {'OK' if btc else 'DOWN'}"
+                f"{_('kismet')}: { _('ok') if kis else _('down') } | "
+                f"{_('bettercap')}: { _('ok') if btc else _('down') }"
             )
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("ServiceStatusWidget update failed: %s", exc)
