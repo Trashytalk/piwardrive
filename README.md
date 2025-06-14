@@ -13,6 +13,9 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
+* **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
+* **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
+* **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.

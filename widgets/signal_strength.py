@@ -5,7 +5,8 @@ from typing import Any
 from kivymd.uix.label import MDLabel
 
 from .base import DashboardWidget
-from utils import fetch_kismet_devices, get_avg_rssi
+import asyncio
+from utils import fetch_kismet_devices_async, get_avg_rssi
 
 
 class SignalStrengthWidget(DashboardWidget):
@@ -21,7 +22,7 @@ class SignalStrengthWidget(DashboardWidget):
 
     def update(self) -> None:
         try:
-            aps, _ = fetch_kismet_devices()
+            aps, _ = asyncio.run(fetch_kismet_devices_async())
             avg = get_avg_rssi(aps)
             if avg is not None:
                 self.label.text = f"RSSI: {avg:.1f} dBm"

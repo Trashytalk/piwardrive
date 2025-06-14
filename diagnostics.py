@@ -5,6 +5,9 @@ from __future__ import annotations
 import os
 import subprocess
 from datetime import datetime
+import cProfile
+import pstats
+import io
 
 import psutil
 import logging
@@ -12,16 +15,23 @@ import logging
 import utils
 from scheduler import PollScheduler
 
+_PROFILER: cProfile.Profile | None = None
+
 
 def generate_system_report() -> dict:
     """Return a dictionary with basic system metrics."""
-    return {
+    report = {
         "timestamp": datetime.now().isoformat(),
         "cpu_temp": utils.get_cpu_temp(),
         "cpu_percent": psutil.cpu_percent(interval=1),
         "memory_percent": psutil.virtual_memory().percent,
         "disk_percent": psutil.disk_usage('/').percent,
+        "ssd_smart": utils.get_smart_status('/mnt/ssd'),
     }
+    metrics = get_profile_metrics()
+    if metrics:
+        report["profile"] = metrics
+    return report
 
 
 def rotate_log(path: str, max_files: int = 3) -> None:
@@ -33,6 +43,35 @@ def rotate_log(path: str, max_files: int = 3) -> None:
         dst = f"{path}.{i}"
         if os.path.exists(src):
             os.rename(src, dst)
+
+
+def start_profiling() -> None:
+    """Enable global cProfile collection."""
+    global _PROFILER
+    if _PROFILER is None:
+        _PROFILER = cProfile.Profile()
+        _PROFILER.enable()
+
+
+def stop_profiling() -> str | None:
+    """Disable profiling and return a formatted stats string."""
+    global _PROFILER
+    if _PROFILER is None:
+        return None
+    _PROFILER.disable()
+    s = io.StringIO()
+    pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative").print_stats(10)
+    _PROFILER = None
+    return s.getvalue()
+
+
+def get_profile_metrics() -> dict | None:
+    """Return simple metrics from the active profiler."""
+    if _PROFILER is None:
+        return None
+    stats = _PROFILER.getstats()
+    total = sum(rec.totaltime for rec in stats)
+    return {"calls": len(stats), "cumtime": total}
 
 
 def run_network_test(host: str = '8.8.8.8') -> bool:
