@@ -8,6 +8,8 @@ PiWardrive Documentation
    configuration
    widgets
    diagnostics
+   database
    persistence
    gps_polling
    architecture
+
