@@ -3,7 +3,6 @@
 import psutil
 
 from kivy.app import App
-from kivy.clock import Clock
 from kivy.uix.screenmanager import Screen
 from utils import get_cpu_temp, get_smart_status
 
@@ -20,7 +19,7 @@ class StatsScreen(Screen):
         )
 
 
-    def update_stats(self, dt):
+    def update_stats(self, _dt):
         """Refresh temperature, memory and disk usage labels."""
         # compute metrics
         cpu_temp = get_cpu_temp()
