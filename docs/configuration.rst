@@ -14,3 +14,7 @@ See :mod:`config` for defaults and helpers.
 
 All values are validated on load. Invalid entries or environment overrides
 raise ``ValueError`` with details about the offending fields.
+
+You can modify these options from the application's **Settings** screen.
+Each field is exposed via a text input or toggle and saved back to
+``config.json`` for the next launch.

@@ -101,7 +101,7 @@ python main.py
 * **Stats**: detailed system and network metrics.
 * **Split**: two-pane view with the map and a metrics column.
 * **Console**: tail of Kismet and BetterCAP logs.
-* **Settings**: toggle services and theme (placeholder for persistence).
+* **Settings**: built-in configuration editor for adjusting preferences.
 * **Dashboard**: empty workspace for custom widgets.
 
 
