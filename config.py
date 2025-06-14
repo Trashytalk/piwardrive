@@ -15,6 +15,7 @@ CONFIG_SCHEMA = {
     "properties": {
         "theme": {"type": "string"},
         "map_poll_gps": {"type": "integer"},
+        "map_poll_gps_max": {"type": "integer"},
         "map_poll_aps": {"type": "integer"},
         "map_show_gps": {"type": "boolean"},
         "map_show_aps": {"type": "boolean"},
@@ -40,6 +41,7 @@ class Config:
 
     theme: str = "Dark"
     map_poll_gps: int = 10
+    map_poll_gps_max: int = 30
     map_poll_aps: int = 60
     map_show_gps: bool = True
     map_show_aps: bool = True
@@ -114,6 +116,7 @@ class AppConfig:
 
     theme: str = DEFAULTS["theme"]
     map_poll_gps: int = DEFAULTS["map_poll_gps"]
+    map_poll_gps_max: int = DEFAULTS["map_poll_gps_max"]
     map_poll_aps: int = DEFAULTS["map_poll_aps"]
     map_show_gps: bool = DEFAULTS["map_show_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]

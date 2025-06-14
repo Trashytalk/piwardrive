@@ -54,6 +54,7 @@ class DummyApp:
         self.kismet_logdir = "/valid/kismet"
         self.bettercap_caplet = "/valid/caplet"
         self.map_poll_gps = 10
+        self.map_poll_gps_max = 30
         self.offline_tile_path = "/valid/tiles"
         self.map_use_offline = False
         self.theme = "Dark"
@@ -66,6 +67,7 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.kismet_field = SimpleNamespace(text=app.kismet_logdir)
     screen.bcap_field = SimpleNamespace(text=app.bettercap_caplet)
     screen.gps_poll_field = SimpleNamespace(text=str(app.map_poll_gps))
+    screen.gps_poll_max_field = SimpleNamespace(text=str(app.map_poll_gps_max))
     screen.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
     screen.offline_switch = SimpleNamespace(active=app.map_use_offline)
     screen.theme_switch = SimpleNamespace(active=app.theme == "Dark")
@@ -79,12 +81,14 @@ def test_save_settings_invalid_gps(monkeypatch: Any) -> None:
     monkeypatch.setattr(module.App, "get_running_app", lambda: app)
     screen = make_screen(module, app)
     screen.gps_poll_field.text = "-1"
+    screen.gps_poll_max_field.text = "-5"
     errors = []
     monkeypatch.setattr(module, "report_error", lambda msg: errors.append(msg))
     monkeypatch.setattr(module.os.path, "exists", lambda p: True)
     screen.save_settings()
     assert errors and "GPS poll" in errors[0]
     assert app.map_poll_gps == 10
+    assert app.map_poll_gps_max == 30
 
 
 import pytest

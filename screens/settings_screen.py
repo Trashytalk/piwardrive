@@ -82,6 +82,9 @@ class SettingsScreen(Screen):
         self.gps_poll_field = MDTextField(
             text=str(app.map_poll_gps), hint_text="GPS poll rate (s)"
         )
+        self.gps_poll_max_field = MDTextField(
+            text=str(app.map_poll_gps_max), hint_text="GPS poll max (s)"
+        )
 
         self.offline_path_field = MDTextField(
             text=app.offline_tile_path, hint_text="Offline tiles path"
@@ -90,6 +93,7 @@ class SettingsScreen(Screen):
         layout.add_widget(self.kismet_field)
 
         layout.add_widget(self.bcap_field)
+        layout.add_widget(self.gps_poll_max_field)
 
         layout.add_widget(self.gps_poll_field)
 
@@ -150,6 +154,15 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error("GPS poll rate must be a positive integer")
+
+        try:
+            value = int(self.gps_poll_max_field.text)
+            if value > 0:
+                app.map_poll_gps_max = value
+            else:
+                raise ValueError
+        except ValueError:
+            report_error("GPS poll max must be a positive integer")
 
         path = self.offline_path_field.text
         if os.path.exists(path):

@@ -106,6 +106,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self.geofences = []
         self._cluster_capacity = 8
+        self._last_gps = None
+        self._last_time = 0.0
+        self._gps_interval = 0.0
 
 
 
@@ -528,6 +531,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             if lat is not None and lon is not None:
 
                 self._update_map(lat, lon)
+                self._adjust_gps_interval(lat, lon)
 
         except subprocess.TimeoutExpired:
 
@@ -592,6 +596,28 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             mv.add_widget(self.gps_marker)
 
         self._check_geofences(lat, lon)
+
+
+    def _adjust_gps_interval(self, lat: float, lon: float) -> None:
+        """Dynamically adjust GPS polling based on movement speed."""
+        app = App.get_running_app()
+        now = time.time()
+        if self._last_gps is not None and self._last_time:
+            dist = haversine_distance(self._last_gps, (lat, lon))
+            dt = now - self._last_time
+            speed = dist / dt if dt > 0 else 0.0
+        else:
+            speed = 0.0
+        self._last_gps = (lat, lon)
+        self._last_time = now
+        interval = app.map_poll_gps if speed > 1 else app.map_poll_gps_max
+        if interval != self._gps_interval:
+            self._gps_interval = interval
+            Clock.schedule_once(
+                lambda _dt, iv=interval: app.scheduler.schedule(
+                    self._gps_event, lambda dt: self.center_on_gps(), iv
+                )
+            )
 
 
 
