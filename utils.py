@@ -20,6 +20,14 @@ from kivy.app import App
 import psutil
 import requests
 
+ERROR_PREFIX = "E"
+
+
+def format_error(code: int, message: str) -> str:
+    """Return standardized error string like ``[E001] message``."""
+    return f"[{ERROR_PREFIX}{code:03d}] {message}"
+
+
 try:
     import orjson as _json
 except Exception:  # pragma: no cover - optional dependency
@@ -35,7 +43,10 @@ def _loads(data: bytes | str) -> Any:
 
 
 def report_error(message: str) -> None:
-    """Log the error and show an alert via the running app if possible."""
+    """Log the error and show an alert via the running app if possible.
+
+    ``message`` should include a numeric error code prefix like ``[E001]``.
+    """
     logging.error(message)
     try:
         app = App.get_running_app()
@@ -98,12 +109,12 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
     """Return SMART health status for the device mounted at ``mount_point``."""
-    dev = None
     try:
-        for part in psutil.disk_partitions(all=False):
-            if part.mountpoint == mount_point:
-                dev = part.device
-                break
+        dev = next(
+            (p.device for p in psutil.disk_partitions(all=False)
+             if p.mountpoint == mount_point),
+            None,
+        )
         if not dev:
             return None
         proc = subprocess.run(
@@ -115,15 +126,17 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         if proc.returncode != 0:
             return None
         out = proc.stdout + proc.stderr
-        if 'PASSED' in out:
-            return 'OK'
-        if 'FAILED' in out:
-            return 'FAIL'
-        if 'WARNING' in out:
-            return 'WARN'
-        return out.strip().splitlines()[-1] if out else None
+        return _parse_smartctl_output(out)
     except Exception:
         return None
+
+
+def _parse_smartctl_output(output: str) -> str | None:
+    """Map smartctl output to a simple status string."""
+    for key, val in {"PASSED": "OK", "FAILED": "FAIL", "WARNING": "WARN"}.items():
+        if key in output:
+            return val
+    return output.strip().splitlines()[-1] if output else None
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
@@ -154,6 +167,12 @@ def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Run ``sudo systemctl`` for ``service`` with optional retries."""
+
+    from security import validate_service_name
+
+    validate_service_name(service)
+    if action not in {"start", "stop", "restart", "is-active"}:
+        raise ValueError(f"Invalid action: {action}")
 
     cmd = ["sudo", "systemctl", action, service]
 
@@ -197,16 +216,28 @@ def fetch_kismet_devices() -> tuple[list, list]:
         try:
             resp = requests.get(url, timeout=5)
         except requests.RequestException as exc:
-            report_error(f"Kismet API request failed: {exc}")
+            report_error(
+                format_error(
+                    301,
+                    (
+                        f"Kismet API request failed: {exc}. "
+                        "Ensure Kismet is running."
+                    ),
+                )
+            )
             continue
         try:
             if resp.status_code == 200:
                 data = resp.json()
                 return data.get("access_points", []), data.get("clients", [])
         except json.JSONDecodeError as exc:
-            report_error(f"Kismet API JSON decode error: {exc}")
+            report_error(
+                format_error(302, f"Kismet API JSON decode error: {exc}")
+            )
         except Exception as exc:  # pragma: no cover - unexpected
-            report_error(f"Kismet API error: {exc}")
+            report_error(
+                format_error(303, f"Kismet API error: {exc}")
+            )
     return [], []
 
 
@@ -220,14 +251,24 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         try:
             resp = await asyncio.to_thread(requests.get, url, timeout=5)
         except requests.RequestException as exc:
-            report_error(f"Kismet API request failed: {exc}")
+            report_error(
+                format_error(
+                    301,
+                    (
+                        f"Kismet API request failed: {exc}. "
+                        "Ensure Kismet is running."
+                    ),
+                )
+            )
             continue
         try:
             if resp.status_code == 200:
                 data = _loads(resp.content)
                 return data.get("access_points", []), data.get("clients", [])
         except Exception as exc:  # pragma: no cover - JSON parse or other
-            report_error(f"Kismet API error: {exc}")
+            report_error(
+                format_error(303, f"Kismet API error: {exc}")
+            )
     return [], []
 
 

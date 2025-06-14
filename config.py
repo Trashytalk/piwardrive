@@ -1,4 +1,4 @@
-"""Application configuration helpers with env overrides."""
+"""Application configuration helpers with env overrides and validation."""
 
 import json
 import os
@@ -13,22 +13,23 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 CONFIG_SCHEMA = {
     "type": "object",
     "properties": {
-        "theme": {"type": "string"},
-        "map_poll_gps": {"type": "integer"},
-        "map_poll_aps": {"type": "integer"},
+        "theme": {"type": "string", "enum": ["Dark", "Light"]},
+        "map_poll_gps": {"type": "integer", "minimum": 1},
+        "map_poll_aps": {"type": "integer", "minimum": 1},
         "map_show_gps": {"type": "boolean"},
         "map_show_aps": {"type": "boolean"},
         "map_cluster_aps": {"type": "boolean"},
         "map_use_offline": {"type": "boolean"},
-        "kismet_logdir": {"type": "string"},
-        "bettercap_caplet": {"type": "string"},
+        "kismet_logdir": {"type": "string", "minLength": 1},
+        "bettercap_caplet": {"type": "string", "minLength": 1},
         "dashboard_layout": {"type": "array"},
         "debug_mode": {"type": "boolean"},
-        "offline_tile_path": {"type": "string"},
-        "health_poll_interval": {"type": "integer"},
-        "log_rotate_interval": {"type": "integer"},
-        "log_rotate_archives": {"type": "integer"},
+        "offline_tile_path": {"type": "string", "minLength": 1},
+        "health_poll_interval": {"type": "integer", "minimum": 1},
+        "log_rotate_interval": {"type": "integer", "minimum": 1},
+        "log_rotate_archives": {"type": "integer", "minimum": 1},
         "widget_battery_status": {"type": "boolean"},
+        "admin_password_hash": {"type": "string"},
     },
     "additionalProperties": False,
 }
@@ -54,6 +55,7 @@ class Config:
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
     widget_battery_status: bool = False
+    admin_password_hash: str = ""
 
 
 DEFAULT_CONFIG = Config()
@@ -64,24 +66,28 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
     result = dict(cfg)
     for key, default in DEFAULTS.items():
-        env_key = f"PW_{key.upper()}"
-        if env_key in os.environ:
-            raw = os.environ[env_key]
-            if isinstance(default, bool):
-                result[key] = raw.lower() in {"1", "true", "yes", "on"}
-            elif isinstance(default, int):
-                try:
-                    result[key] = int(raw)
-                except ValueError:
-                    pass
-            elif isinstance(default, list):
-                try:
-                    result[key] = json.loads(raw)
-                except json.JSONDecodeError:
-                    result[key] = raw
-            else:
-                result[key] = raw
+        raw = os.getenv(f"PW_{key.upper()}")
+        if raw is not None:
+            result[key] = _parse_env_value(raw, default)
     return result
+
+
+
+def _parse_env_value(raw: str, default: Any) -> Any:
+    """Convert ``raw`` environment value to the type of ``default``."""
+    if isinstance(default, bool):
+        return raw.lower() in {"1", "true", "yes", "on"}
+    if isinstance(default, int):
+        try:
+            return int(raw)
+        except ValueError:
+            return default
+    if isinstance(default, list):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return raw
+    return raw
 
 
 def load_config() -> Config:
@@ -128,12 +134,14 @@ class AppConfig:
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
+    admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
 
     @classmethod
     def load(cls) -> "AppConfig":
         """Load configuration with environment overrides."""
         file_cfg = asdict(load_config())
         merged = _apply_env_overrides(file_cfg)
+        validate_config_data(merged)
         return cls(**merged)
 
     def to_dict(self) -> Dict[str, Any]:
