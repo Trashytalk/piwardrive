@@ -44,16 +44,17 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 
    ```bash
    git clone https://github.com/TRASHYTALK/piwardrive.git
-@@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    ```
 
-3. **Install Python dependencies**:
+2. **Install Python dependencies**:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-@@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
+3. **Configure fstab** (optional):
+
+   ```bash
    /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
    ```
 
