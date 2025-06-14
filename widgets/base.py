@@ -1,4 +1,3 @@
-+4-2
 """Base classes for dashboard widgets with drag-and-drop support."""
 
 from typing import Any

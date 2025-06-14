@@ -1,4 +1,3 @@
-+5-3
 """Widget showing GPS fix quality."""
 
 import logging
