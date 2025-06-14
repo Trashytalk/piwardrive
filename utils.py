@@ -10,10 +10,11 @@ import logging
 import os
 import subprocess
 import time
+import threading
 
 from collections import deque
 from datetime import datetime
-from typing import Any, Callable, Iterable, Sequence, TypeVar
+from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 
 from kivy.app import App
 
@@ -21,6 +22,10 @@ import psutil
 import requests  # type: ignore
 
 ERROR_PREFIX = "E"
+
+_async_loop = asyncio.new_event_loop()
+_async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
+_async_thread.start()
 
 
 def format_error(code: int, message: str) -> str:
@@ -59,6 +64,28 @@ def report_error(message: str) -> None:
 
 
 T = TypeVar("T")
+
+
+def run_async_task(
+    coro: Coroutine[Any, Any, T],
+    callback: Callable[[T], None] | None = None,
+) -> asyncio.Future:
+    """Schedule ``coro`` on the background loop and invoke ``callback``."""
+
+    fut = asyncio.run_coroutine_threadsafe(coro, _async_loop)
+
+    if callback is not None:
+        def _done(f: asyncio.Future) -> None:
+            try:
+                result = f.result()
+            except Exception as exc:  # pragma: no cover - background errors
+                logging.exception("Async task failed: %s", exc)
+            else:
+                callback(result)
+
+        fut.add_done_callback(_done)
+
+    return fut
 
 
 def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
