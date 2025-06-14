@@ -1,0 +1,20 @@
+{
+  "theme": "Dark",
+  "map_poll_gps": 10,
+  "map_poll_gps_max": 30,
+  "map_poll_aps": 60,
+  "map_show_gps": true,
+  "map_show_aps": true,
+  "map_cluster_aps": false,
+  "map_use_offline": false,
+  "kismet_logdir": "/mnt/ssd/kismet_logs",
+  "bettercap_caplet": "/usr/local/etc/bettercap/alfa.cap",
+  "dashboard_layout": [],
+  "debug_mode": false,
+  "offline_tile_path": "/mnt/ssd/tiles/offline.mbtiles",
+  "health_poll_interval": 10,
+  "log_rotate_interval": 3600,
+  "log_rotate_archives": 3,
+  "widget_battery_status": false,
+  "admin_password_hash": ""
+}

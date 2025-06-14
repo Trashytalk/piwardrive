@@ -4,6 +4,7 @@ import logging
 from typing import Any
 from kivy.clock import Clock
 from kivymd.uix.label import MDLabel
+from localization import _
 
 from .base import DashboardWidget
 from utils import fetch_kismet_devices_async, get_avg_rssi, run_async_task
@@ -16,7 +17,7 @@ class SignalStrengthWidget(DashboardWidget):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.label = MDLabel(text="RSSI: N/A")
+        self.label = MDLabel(text=f"{_('rssi')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
@@ -37,5 +38,6 @@ class SignalStrengthWidget(DashboardWidget):
 
         try:
             run_async_task(fetch_kismet_devices_async(), _apply)
+
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("SignalStrengthWidget update failed: %s", exc)

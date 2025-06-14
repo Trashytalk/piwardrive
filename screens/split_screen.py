@@ -14,6 +14,7 @@ from utils import (
     run_async_task,
     service_status,
 )
+from localization import _
 
 
 
@@ -57,3 +58,4 @@ class SplitScreen(Screen):
             self.ids.split_fix_quality_label.text      = f"Fix: {fix_quality}"
 
         run_async_task(fetch_metrics_async(), _apply)
+
