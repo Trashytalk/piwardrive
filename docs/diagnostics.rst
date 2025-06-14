@@ -18,3 +18,10 @@ Profiling can be enabled by setting ``PW_PROFILE=1``. When active, a
 ``profile`` section is added to the system report and a summary is
 logged on exit.  Set ``PW_PROFILE_CALLGRIND=/tmp/out.callgrind`` to
 also export data in a format readable by KCachegrind.
+
+Log Rotation
+~~~~~~~~~~~~
+
+``rotate_logs`` trims log files under ``/var/log`` and any additional paths
+defined in the configuration. Old archives are kept for a limited number of
+cycles to prevent the SSD from filling up on unattended deployments.
