@@ -656,7 +656,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                         size_hint=(None, None),
                         size=(dp(80), dp(20)),
                     )
-
+                )
                 m.ap_data = {
                     "bssid": d.get("bssid"),
                     "ssid": d.get("ssid"),
@@ -849,17 +849,48 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Offline Map Tile Management
 
-    def prefetch_tiles(self, bounds, zoom=16):
+    def prefetch_tiles(self, bounds, zoom=16, folder="/mnt/ssd/tiles"):
 
-        """Download MBTiles covering ``bounds`` (min_lat, min_lon, max_lat, max_lon)."""
+        """Download PNG tiles covering ``bounds`` to ``folder``."""
 
         try:
+            min_lat, min_lon, max_lat, max_lon = bounds
 
-            # Placeholder implementation
+            def deg2num(lat, lon, z):
+                lat_rad = math.radians(lat)
+                n = 2**z
+                x = int((lon + 180.0) / 360.0 * n)
+                y = int(
+                    (
+                        1.0
+                        - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi
+                    )
+                    / 2.0
+                    * n
+                )
+                return x, y
 
-            _ = bounds, zoom
+            zoom = int(zoom)
+            x1, y1 = deg2num(max_lat, min_lon, zoom)
+            x2, y2 = deg2num(min_lat, max_lon, zoom)
+            x_min, x_max = sorted((x1, x2))
+            y_min, y_max = sorted((y1, y2))
 
-        except Exception as e:
+            base_url = "https://tile.openstreetmap.org"
+
+            for x in range(x_min, x_max + 1):
+                for y in range(y_min, y_max + 1):
+                    url = f"{base_url}/{zoom}/{x}/{y}.png"
+                    local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
+                    if os.path.exists(local):
+                        continue
+                    os.makedirs(os.path.dirname(local), exist_ok=True)
+                    resp = requests.get(url, timeout=10)
+                    resp.raise_for_status()
+                    with open(local, "wb") as fh:
+                        fh.write(resp.content)
+
+        except Exception as e:  # pragma: no cover - network errors
 
             report_error(f"Prefetch error: {e}")
 
@@ -872,19 +903,15 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         cutoff = time.time() - max_age_days * 86400
 
         try:
+            if not os.path.isdir(folder):
+                return
 
             for root, _, files in os.walk(folder):
-
                 for f in files:
-
                     path = os.path.join(root, f)
-
                     if os.path.getmtime(path) < cutoff:
-
                         os.remove(path)
-
-        except Exception as e:
-
+        except Exception as e:  # pragma: no cover - filesystem errors
             report_error(f"Tile purge error: {e}")
 
 
@@ -894,43 +921,31 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Ensure tile cache does not exceed ``limit_mb`` megabytes."""
 
         try:
+            if not os.path.isdir(folder):
+                return
 
             files = []
-
             total = 0
 
             for root, _, fns in os.walk(folder):
-
                 for fn in fns:
-
                     path = os.path.join(root, fn)
-
                     size = os.path.getsize(path)
-
                     total += size
-
                     files.append((path, size))
 
             max_bytes = limit_mb * 1024 * 1024
-
             if total <= max_bytes:
-
                 return
 
             files.sort(key=lambda x: os.path.getmtime(x[0]))
 
             for path, size in files:
-
                 os.remove(path)
-
                 total -= size
-
                 if total <= max_bytes:
-
                     break
-
-        except Exception as e:
-
+        except Exception as e:  # pragma: no cover - filesystem errors
             report_error(f"Cache limit error: {e}")
 
 
