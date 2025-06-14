@@ -487,6 +487,25 @@ def point_in_polygon(
     return inside
 
 
+try:  # pragma: no cover - optional C extension for speed
+    from ckml import parse_coords as _parse_coords  # type: ignore
+except Exception:  # pragma: no cover - fallback to Python
+    _parse_coords = None
+
+
+def _parse_coord_text(text: str) -> list[tuple[float, float]]:
+    """Parse a KML ``coordinates`` string into ``(lat, lon)`` tuples."""
+    if _parse_coords:
+        return _parse_coords(text)
+    coords = []
+    for pair in text.strip().split():
+        parts = pair.split(",")
+        lon = float(parts[0])
+        lat = float(parts[1])
+        coords.append((lat, lon))
+    return coords
+
+
 def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
     import zipfile
@@ -500,12 +519,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
             coords_text = placemark.findtext(".//kml:coordinates", namespaces=ns)
             if not coords_text:
                 continue
-            coords = []
-            for pair in coords_text.strip().split():
-                parts = pair.split(",")
-                lon = float(parts[0])
-                lat = float(parts[1])
-                coords.append((lat, lon))
+            coords = _parse_coord_text(coords_text)
             if placemark.find("kml:Point", ns) is not None:
                 feats.append({"name": name, "type": "Point", "coordinates": coords[0]})
             elif placemark.find("kml:LineString", ns) is not None:
