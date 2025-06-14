@@ -1,4 +1,4 @@
-"""Application configuration helpers with env overrides."""
+"""Application configuration helpers with env overrides and validation."""
 
 import json
 import os
@@ -13,21 +13,21 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 CONFIG_SCHEMA = {
     "type": "object",
     "properties": {
-        "theme": {"type": "string"},
-        "map_poll_gps": {"type": "integer"},
-        "map_poll_aps": {"type": "integer"},
+        "theme": {"type": "string", "enum": ["Dark", "Light"]},
+        "map_poll_gps": {"type": "integer", "minimum": 1},
+        "map_poll_aps": {"type": "integer", "minimum": 1},
         "map_show_gps": {"type": "boolean"},
         "map_show_aps": {"type": "boolean"},
         "map_cluster_aps": {"type": "boolean"},
         "map_use_offline": {"type": "boolean"},
-        "kismet_logdir": {"type": "string"},
-        "bettercap_caplet": {"type": "string"},
+        "kismet_logdir": {"type": "string", "minLength": 1},
+        "bettercap_caplet": {"type": "string", "minLength": 1},
         "dashboard_layout": {"type": "array"},
         "debug_mode": {"type": "boolean"},
-        "offline_tile_path": {"type": "string"},
-        "health_poll_interval": {"type": "integer"},
-        "log_rotate_interval": {"type": "integer"},
-        "log_rotate_archives": {"type": "integer"},
+        "offline_tile_path": {"type": "string", "minLength": 1},
+        "health_poll_interval": {"type": "integer", "minimum": 1},
+        "log_rotate_interval": {"type": "integer", "minimum": 1},
+        "log_rotate_archives": {"type": "integer", "minimum": 1},
         "widget_battery_status": {"type": "boolean"},
     },
     "additionalProperties": False,
@@ -84,6 +84,17 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+def validate_config_data(values: Dict[str, Any]) -> None:
+    """Validate configuration ``values`` using :data:`CONFIG_SCHEMA`."""
+    validator = jsonschema.Draft7Validator(CONFIG_SCHEMA)
+    errors = [
+        f"{'/'.join(map(str, e.absolute_path))}: {e.message}"
+        for e in validator.iter_errors(values)
+    ]
+    if errors:
+        raise ValueError("; ".join(errors))
+
+
 def load_config() -> Config:
     """Load configuration from ``CONFIG_PATH`` and return a :class:`Config`."""
 
@@ -134,6 +145,7 @@ class AppConfig:
         """Load configuration with environment overrides."""
         file_cfg = asdict(load_config())
         merged = _apply_env_overrides(file_cfg)
+        validate_config_data(merged)
         return cls(**merged)
 
     def to_dict(self) -> Dict[str, Any]:

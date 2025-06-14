@@ -63,6 +63,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` persists settings between runs.
 * **Env Overrides**: use environment variables like `PW_MAP_POLL_GPS=5`.
+* **Validation**: values are checked on load and invalid settings raise errors.
 * **BetterCAP Caplet**: `/usr/local/etc/bettercap/alfa.cap`
 * **Kismet Config**: `/usr/local/etc/kismet_site.conf`
 * **Systemd Units**:
