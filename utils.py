@@ -31,9 +31,11 @@ def format_error(code: int, message: str) -> str:
 try:
     import orjson as _json  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
+    logging.debug("orjson not available, falling back to ujson")
     try:
         import ujson as _json  # type: ignore
     except Exception:  # pragma: no cover - fallback
+        logging.debug("ujson not available, using json module")
         _json = json  # type: ignore
 
 
