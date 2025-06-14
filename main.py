@@ -9,6 +9,7 @@ from typing import Any
 from scheduler import PollScheduler
 from config import load_config, save_config, Config
 import diagnostics
+from logconfig import setup_logging
 
 from kivy.factory import Factory
 from kivy.lang import Builder
@@ -62,6 +63,7 @@ class PiWardriveApp(MDApp):
         for key, val in asdict(self.config_data).items():
             if hasattr(self, key):
                 setattr(self, key, val)
+        setup_logging(level=logging.DEBUG if self.debug_mode else logging.INFO)
         self.scheduler: PollScheduler = PollScheduler()
         self.theme_cls.theme_style = self.theme
 
