@@ -1,0 +1,26 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          pip install flake8 mypy pytest radon
+      - name: Lint
+        run: flake8 .
+      - name: Type check
+        run: mypy .
+      - name: Complexity check
+        run: python scripts/check_complexity.py
+      - name: Test
+        env:
+          KIVY_NO_ARGS: '1'
+          KIVY_WINDOW: 'mock'
+        run: pytest -q

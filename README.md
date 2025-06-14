@@ -192,3 +192,8 @@ pip install -r requirements-dev.txt
 
 The `requirements-dev.txt` file lists `flake8`, `mypy` and `pytest` which are
 used to lint, type-check and test the project.
+
+Cyclomatic complexity is also checked in CI. The workflow runs
+`scripts/check_complexity.py`, which fails if any function is rated `D` or
+worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
+opening a pull request.
