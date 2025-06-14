@@ -54,8 +54,13 @@ from kivymd.uix.snackbar import Snackbar
 
 from kivymd.uix.textfield import MDTextField
 
-from utils import haversine_distance, polygon_area, load_kml, point_in_polygon
-
+from utils import (
+    haversine_distance,
+    polygon_area,
+    load_kml,
+    point_in_polygon,
+    report_error,
+)
 
 
 
@@ -787,10 +792,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
     # Helpers
 
     def _show_error(self, msg):
-
-        """Show an error message via ``Snackbar``."""
-
-        Snackbar(text=msg, duration=3).open()
+        """Display an error using the central helper."""
+        report_error(msg)
 
 
 
