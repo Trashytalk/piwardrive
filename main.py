@@ -47,6 +47,7 @@ class PiWardriveApp(MDApp):
     map_poll_gps = NumericProperty(10)
     map_poll_gps_max = NumericProperty(30)
     map_poll_aps = NumericProperty(60)
+    map_poll_bt = NumericProperty(60)
     map_show_gps = BooleanProperty(True)
     map_show_aps = BooleanProperty(True)
     map_show_bt = BooleanProperty(False)
@@ -176,27 +177,11 @@ class PiWardriveApp(MDApp):
                 svc, action, attempts=3, delay=1
             )
         except Exception as exc:  # pragma: no cover - subprocess failures
-            utils.report_error(
-                utils.format_error(
-                    1,
-                    (
-                        f"Failed to {action} {svc}: {exc}. "
-                        "Please check the service status."
-                    ),
-                )
-            )
+            utils.report_error(f"Failed to {action} {svc}: {exc}")
             return
         if not success:
             msg = err.strip() if isinstance(err, str) else err
-            utils.report_error(
-                utils.format_error(
-                    1,
-                    (
-                        f"Failed to {action} {svc}: {msg or 'Unknown error'}. "
-                        "Please check the service status."
-                    ),
-                )
-            )
+            utils.report_error(f"Failed to {action} {svc}: {msg or 'Unknown error'}")
             return
         if action in {"start", "restart"} and not utils.ensure_service_running(svc):
             utils.report_error(f"{svc} failed to stay running after {action}")

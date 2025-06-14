@@ -10,5 +10,6 @@ PiWardrive Documentation
    diagnostics
    persistence
    gps_polling
+   bluetooth
    architecture
    workflows
