@@ -38,6 +38,11 @@ Generic Linux
 
 The application can run on most Debian/Ubuntu based systems. Follow the same steps as above and ensure Kivy dependencies are available. Refer to the `Kivy documentation <https://kivy.org/doc/stable/gettingstarted/installation.html>`_ if you encounter build errors.
 
+Before cloning the repository on a fresh Raspberry Pi, expand the filesystem and
+enable SSH for remote access. A quality power supply is required when using
+external Wi‑Fi adapters and an SSD. Insufficient power may lead to USB errors or
+file system corruption.
+
 Troubleshooting
 ---------------
 

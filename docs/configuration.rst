@@ -12,6 +12,11 @@ To enable the optional battery widget set ``widget_battery_status`` to ``true``:
 
 See :mod:`config` for defaults and helpers.
 
+Environment variables are parsed on startup. Any option in ``Config`` can be
+specified as ``PW_<OPTION>``. Boolean variables accept ``1`` or ``0`` while
+strings and integers are used verbatim. Invalid values trigger an early
+``ValueError`` so configuration mistakes are detected before the GUI launches.
+
 Configuration Profiles
 ----------------------
 

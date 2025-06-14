@@ -2,6 +2,32 @@
 
 PiWardrive is a headless Raspberry Pi 5 application that combines war-driving tools (Kismet & BetterCAP) with an interactive Kivy/KivyMD touchscreen interface. It provides real-time mapping of Wi‑Fi access points, GPS tracking, system/network diagnostics, and service controls—all without an X server.
 
+## Architecture Overview
+
+```mermaid
+graph LR
+    A[PiWardriveApp]
+    B[PollScheduler]
+    C[Diagnostics]
+    D[Persistence]
+    E[Screens]
+    F[Widgets]
+    G[External Services]
+
+    A --> B
+    A --> C
+    A --> E
+    B --> C
+    E --> F
+    F --> B
+    C --> D
+    C --> G
+```
+
+The scheduler drives periodic tasks while diagnostics records system health.
+Screens host smaller widgets that render metrics on the dashboard. External
+services like Kismet and BetterCAP are controlled via helper functions.
+
 ## Features
 
 * **Interactive Map**: Online/offline map tiles, AP overlays, long-press context menus.
@@ -99,6 +125,20 @@ python main.py
 
 * **No X Server**: The app renders directly to DRM/framebuffer.
 * **Touch Events**: Mapped via SDL2; verify with `evtest /dev/input/event2`.
+
+### Operational Workflow
+
+```mermaid
+flowchart TD
+    A[Launch Application] --> B[Load Config]
+    B --> C[Start Services]
+    C --> D[Show UI]
+    D --> E[Scheduler Polls Metrics]
+    E --> F[Update Widgets]
+```
+
+The configuration is loaded, optional services are started and the scheduler
+begins polling metrics that feed the widgets shown on screen.
 ## Screen Overview
 
 * **Map**: interactive map with GPS and access point overlays.

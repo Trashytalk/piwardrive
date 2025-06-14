@@ -11,3 +11,4 @@ PiWardrive Documentation
    persistence
    gps_polling
    architecture
+   workflows
