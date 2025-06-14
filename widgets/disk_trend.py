@@ -14,6 +14,7 @@ class DiskUsageTrendWidget(DashboardWidget):
     """Plot SSD disk usage percentage over time."""
 
     def __init__(self, update_interval: int = 5, max_points: int = 60, **kwargs: Any) -> None:
+        """Create disk usage graph and schedule periodic updates."""
         super().__init__(**kwargs)
         self.update_interval = update_interval
         self.max_points = max_points
@@ -40,6 +41,7 @@ class DiskUsageTrendWidget(DashboardWidget):
         self.update()
 
     def update(self) -> None:
+        """Append the latest disk usage percentage to the plot."""
         pct = get_disk_usage("/mnt/ssd")
         if pct is None:
             return

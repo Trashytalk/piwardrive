@@ -20,6 +20,7 @@ class HealthAnalysisWidget(DashboardWidget):
     update_interval = 30.0
 
     def __init__(self, max_records: int = 50, **kwargs: Any) -> None:
+        """Prepare widgets and schedule periodic analysis updates."""
         super().__init__(**kwargs)
         self.max_records = max_records
         self.label = MDLabel(text=f"{_('health_analysis')}: {_('not_available')}")
@@ -34,6 +35,7 @@ class HealthAnalysisWidget(DashboardWidget):
         self.update()
 
     def update(self) -> None:  # pragma: no cover - GUI update
+        """Load recent metrics, compute stats and refresh the view."""
         try:
             records = load_recent_health(self.max_records)
             if not records:

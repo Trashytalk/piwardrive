@@ -24,6 +24,7 @@ class DashboardScreen(Screen):
     """Drag-and-drop dashboard for custom widgets."""
 
     def on_enter(self):
+        """Instantiate widgets on first entry and register them."""
         if not getattr(self, '_init', False):
             self._init = True
             self.layout = FloatLayout()
@@ -32,6 +33,7 @@ class DashboardScreen(Screen):
         self._register_widgets()
 
     def _register_widgets(self):
+        """Register each dashboard widget with the scheduler."""
         app = App.get_running_app()
         for child in self.layout.children:
             try:
@@ -40,11 +42,13 @@ class DashboardScreen(Screen):
                 logging.exception("Failed to register widget %s: %s", child, exc)
 
     def on_leave(self):
+        """Save layout and cancel scheduled widget updates."""
         App.get_running_app().scheduler.cancel_all()
         self.save_layout()
 
 
     def save_layout(self):
+        """Persist current widget positions to the application object."""
         app = App.get_running_app()
         layout = []
         for child in self.layout.children:

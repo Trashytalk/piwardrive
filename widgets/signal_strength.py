@@ -16,6 +16,7 @@ class SignalStrengthWidget(DashboardWidget):
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
+        """Initialize label widget and queue the first RSSI poll."""
         super().__init__(**kwargs)
         self.label = MDLabel(text=f"{_('rssi')}: {_('not_available')}")
         self.add_widget(self.label)

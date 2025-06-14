@@ -10,15 +10,19 @@ from utils import get_disk_usage
 
 
 class StorageUsageWidget(DashboardWidget):
+    """Indicate SSD usage percentage."""
+
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
+        """Set up label widget and trigger initial update."""
         super().__init__(**kwargs)
         self.label = MDLabel(text=f"{_('ssd')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
     def update(self) -> None:
+        """Refresh storage usage value."""
         try:
             pct = get_disk_usage('/mnt/ssd')
             if pct is not None:

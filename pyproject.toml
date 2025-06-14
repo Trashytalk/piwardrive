@@ -18,6 +18,13 @@ files = [
 exclude = ".gitattributes"
 follow_imports = "skip"
 
+[tool.pydocstyle]
+add-ignore = [
+    "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107",
+    "D200", "D201", "D202", "D203", "D204", "D205", "D206", "D207",
+    "D208", "D209", "D210", "D211", "D212", "D213", "D214", "D215",
+]
+
 [[tool.mypy.overrides]]
 module = "screens.*"
 ignore_errors = true

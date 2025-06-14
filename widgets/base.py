@@ -12,10 +12,12 @@ class DashboardWidget(DragBehavior, MDBoxLayout):
     update_interval = 5.0
     
     def __init__(self, **kwargs: Any) -> None:
+        """Initialize draggable widget container."""
         super().__init__(**kwargs)
         self.drag_rectangle = self.x, self.y, self.width, self.height
         self.drag_timeout = 10000000
         self.drag_distance = 0
 
     def on_size(self, *args: Any) -> None:
+        """Update drag area when the widget size changes."""
         self.drag_rectangle = self.x, self.y, self.width, self.height

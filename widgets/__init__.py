@@ -1,6 +1,7 @@
 """Custom widget package for PiWardrive.
 
-Lazy loading wrapper for widget classes with plugin support."""
+Lazy loading wrapper for widget classes with plugin support.
+"""
 
 from importlib import import_module, util
 from pathlib import Path
