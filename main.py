@@ -120,8 +120,9 @@ class PiWardriveApp(MDApp):
 
     def on_start(self) -> None:
         """Initialize screens and navigation on start."""
-        # DEBUG: show which IDs were parsed from KV
-        print("Root IDs:", self.root.ids.keys())
+        # DEBUG: show which IDs were parsed from KV if debug mode is enabled
+        if self.debug_mode:
+            print("Root IDs:", self.root.ids.keys())
         try:
             sm = self.root.ids.sm
         except KeyError:
