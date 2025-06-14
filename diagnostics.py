@@ -8,6 +8,8 @@ from datetime import datetime
 import cProfile
 import pstats
 import io
+import gzip
+import shutil
 
 import psutil
 import logging
@@ -36,14 +38,33 @@ def generate_system_report() -> dict:
 
 
 def rotate_log(path: str, max_files: int = 3) -> None:
-    """Simple log rotation renaming path -> path.1 etc."""
+    """Rotate and gzip ``path`` keeping ``max_files`` archives."""
     if not os.path.exists(path):
         return
-    for i in range(max_files, 0, -1):
-        src = f"{path}.{i-1}" if i > 1 else path
-        dst = f"{path}.{i}"
+
+    # Drop the oldest archive (both compressed or previous uncompressed forms)
+    for ext in (".gz", ""):
+        old = f"{path}.{max_files}{ext}"
+        if os.path.exists(old):
+            os.remove(old)
+
+    # Shift existing archives up by one index
+    for i in range(max_files - 1, 0, -1):
+        src_gz = f"{path}.{i}.gz"
+        dst_gz = f"{path}.{i+1}.gz"
+        if os.path.exists(src_gz):
+            os.rename(src_gz, dst_gz)
+            continue
+        src = f"{path}.{i}"
         if os.path.exists(src):
-            os.rename(src, dst)
+            os.rename(src, dst_gz)
+
+    # Compress the current log as .1.gz
+    tmp = f"{path}.1"
+    os.rename(path, tmp)
+    with open(tmp, "rb") as f_in, gzip.open(f"{tmp}.gz", "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    os.remove(tmp)
 
 
 def start_profiling() -> None:

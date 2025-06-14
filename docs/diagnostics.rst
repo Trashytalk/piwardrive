@@ -23,5 +23,6 @@ Log Rotation
 ~~~~~~~~~~~~
 
 ``rotate_logs`` trims log files under ``/var/log`` and any additional paths
-defined in the configuration. Old archives are kept for a limited number of
-cycles to prevent the SSD from filling up on unattended deployments.
+defined in the configuration. Each rotated file is compressed with ``gzip`` and
+only a limited number of archives are kept to avoid filling the SSD on
+unattended deployments.
