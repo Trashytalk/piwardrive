@@ -3,12 +3,13 @@
 import logging
 import os
 from dataclasses import asdict, fields
-from typing import Any
+from typing import Any, Callable
 
 from scheduler import PollScheduler
 from config import load_config, save_config, Config
 import diagnostics
 import utils
+from di import Container
 from logconfig import setup_logging
 
 from kivy.factory import Factory
@@ -57,18 +58,33 @@ class PiWardriveApp(MDApp):
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        container: Container | None = None,
+        service_cmd_runner: Callable[..., tuple[bool, str, str]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
+        self.container = container or Container()
+        self._run_service_cmd = service_cmd_runner or utils.run_service_cmd
+
         # load persisted configuration
         self.config_data: Config = load_config()
         for key, val in asdict(self.config_data).items():
             if hasattr(self, key):
                 setattr(self, key, val)
         setup_logging(level=logging.DEBUG if self.debug_mode else logging.INFO)
-        self.scheduler: PollScheduler = PollScheduler()
-        self.health_monitor = diagnostics.HealthMonitor(
-            self.scheduler, self.health_poll_interval
-        )
+
+        if not self.container.has("scheduler"):
+            self.container.register_instance("scheduler", PollScheduler())
+        self.scheduler = self.container.resolve("scheduler")
+
+        if not self.container.has("health_monitor"):
+            self.container.register_instance(
+                "health_monitor",
+                diagnostics.HealthMonitor(self.scheduler, self.health_poll_interval),
+            )
+        self.health_monitor = self.container.resolve("health_monitor")
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme
@@ -125,7 +141,7 @@ class PiWardriveApp(MDApp):
     def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service with retries."""
         try:
-            success, _out, err = utils.run_service_cmd(
+            success, _out, err = self._run_service_cmd(
                 svc, action, attempts=3, delay=1
             )
         except Exception as exc:  # pragma: no cover - subprocess failures
