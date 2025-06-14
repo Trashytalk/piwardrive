@@ -60,7 +60,12 @@ def stop_profiling() -> str | None:
         return None
     _PROFILER.disable()
     s = io.StringIO()
-    pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative").print_stats(10)
+    stats = (
+        pstats.Stats(_PROFILER, stream=s)
+        .strip_dirs()
+        .sort_stats("cumulative")
+    )
+    stats.print_stats(10)
     _PROFILER = None
     return s.getvalue()
 

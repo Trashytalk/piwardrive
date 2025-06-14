@@ -226,7 +226,9 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
     return [], []
 
 
-async def fetch_metrics_async(log_folder: str = '/mnt/ssd/kismet_logs') -> tuple[list, list, int]:
+async def fetch_metrics_async(
+    log_folder: str = '/mnt/ssd/kismet_logs',
+) -> tuple[list, list, int]:
     """Fetch Kismet devices and BetterCAP handshake count concurrently."""
     aps_clients = fetch_kismet_devices_async()
     handshake = asyncio.to_thread(count_bettercap_handshakes, log_folder)
