@@ -5,8 +5,31 @@ import os
 from dataclasses import dataclass, asdict, field
 from typing import Any, Dict, List
 
+import jsonschema
+
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
+
+CONFIG_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "theme": {"type": "string"},
+        "map_poll_gps": {"type": "integer"},
+        "map_poll_aps": {"type": "integer"},
+        "map_show_gps": {"type": "boolean"},
+        "map_show_aps": {"type": "boolean"},
+        "map_cluster_aps": {"type": "boolean"},
+        "map_use_offline": {"type": "boolean"},
+        "kismet_logdir": {"type": "string"},
+        "bettercap_caplet": {"type": "string"},
+        "dashboard_layout": {"type": "array"},
+        "debug_mode": {"type": "boolean"},
+        "offline_tile_path": {"type": "string"},
+        "log_rotate_interval": {"type": "integer"},
+        "log_rotate_archives": {"type": "integer"},
+    },
+    "additionalProperties": False,
+}
 
 
 @dataclass
@@ -63,10 +86,12 @@ def load_config() -> Config:
     data: Dict[str, Any] = {}
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            loaded = json.load(f)
+        jsonschema.validate(loaded, CONFIG_SCHEMA)
+        data = loaded
     except FileNotFoundError:
         pass
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, jsonschema.ValidationError):
         pass
     merged = {**DEFAULTS, **data}
     return Config(**merged)
