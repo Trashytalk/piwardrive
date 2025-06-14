@@ -47,7 +47,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
 * **Battery Widget**: Optional dashboard tile showing battery percentage if available.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.
-* **Access Control**: Service commands require `PW_ADMIN_PASSWORD`.
+* **Access Control**: Service commands require `PW_ADMIN_PASSWORD` or will
+  prompt for a password interactively.
 * **Encrypted Secrets**: Passwords stored as PBKDF2 hashes.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 * **Configuration Profiles**: maintain multiple configs under `~/.config/piwardrive/profiles`.

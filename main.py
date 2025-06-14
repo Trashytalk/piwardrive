@@ -163,6 +163,7 @@ class PiWardriveApp(MDApp):
     def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service with retries."""
         import os as _os
+        import getpass as _getpass
         from security import verify_password as _verify
 
         cfg_hash = getattr(
@@ -171,6 +172,11 @@ class PiWardriveApp(MDApp):
             "",
         )
         pw = _os.getenv("PW_ADMIN_PASSWORD")
+        if not pw:
+            try:
+                pw = _getpass.getpass("Password: ")
+            except Exception:  # pragma: no cover - prompt failures
+                pw = ""
         if cfg_hash and not _verify(pw or "", cfg_hash):
             utils.report_error("Unauthorized")
             return
