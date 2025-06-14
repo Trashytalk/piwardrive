@@ -16,6 +16,7 @@ from widgets import (
     CPUTempGraphWidget,
     NetworkThroughputWidget,
     BatteryStatusWidget,
+    HealthAnalysisWidget,
 )
 
 
@@ -68,6 +69,21 @@ class DashboardScreen(Screen):
 
         widgets: list[object] = []
         if app.dashboard_layout:
+
+            cls_map = {
+                'SignalStrengthWidget': SignalStrengthWidget,
+                'GPSStatusWidget': GPSStatusWidget,
+                'HandshakeCounterWidget': HandshakeCounterWidget,
+                'ServiceStatusWidget': ServiceStatusWidget,
+                'StorageUsageWidget': StorageUsageWidget,
+                'HealthStatusWidget': HealthStatusWidget,
+                'DiskUsageTrendWidget': DiskUsageTrendWidget,
+                'CPUTempGraphWidget': CPUTempGraphWidget,
+                'NetworkThroughputWidget': NetworkThroughputWidget,
+                'BatteryStatusWidget': BatteryStatusWidget,
+                'HealthAnalysisWidget': HealthAnalysisWidget,
+            }
+
             for info in app.dashboard_layout:
                 cls = cls_map.get(info.get('cls'))
                 if not cls:
@@ -77,7 +93,25 @@ class DashboardScreen(Screen):
                     widget.pos = pos
                 widgets.append(widget)
         else:
-            widgets = self._create_default_widgets(app)
+            widgets = [
+                SignalStrengthWidget(),
+                GPSStatusWidget(),
+                HandshakeCounterWidget(),
+                ServiceStatusWidget(),
+                StorageUsageWidget(),
+                HealthStatusWidget(),
+            ]
+            if getattr(app, 'widget_disk_trend', False):
+                widgets.append(DiskUsageTrendWidget())
+            if getattr(app, 'widget_cpu_temp', False):
+                widgets.append(CPUTempGraphWidget())
+            if getattr(app, 'widget_net_throughput', False):
+                widgets.append(NetworkThroughputWidget())
+            if getattr(app, 'widget_battery_status', False):
+                widgets.append(BatteryStatusWidget())
+            if getattr(app, 'widget_health_analysis', False):
+                widgets.append(HealthAnalysisWidget())
+
 
         for widget in widgets:
             self.layout.add_widget(widget)
