@@ -56,8 +56,10 @@ class DummyApp:
         self.map_poll_gps = 10
         self.map_poll_gps_max = 30
         self.map_poll_aps = 60
+        self.map_poll_bt = 60
         self.map_show_gps = True
         self.map_show_aps = True
+        self.map_show_bt = False
         self.map_cluster_aps = False
         self.debug_mode = False
         self.offline_tile_path = "/valid/tiles"
@@ -78,6 +80,7 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.gps_poll_field = SimpleNamespace(text=str(app.map_poll_gps))
     screen.gps_poll_max_field = SimpleNamespace(text=str(app.map_poll_gps_max))
     screen.ap_poll_field = SimpleNamespace(text=str(app.map_poll_aps))
+    screen.bt_poll_field = SimpleNamespace(text=str(app.map_poll_bt))
     screen.health_poll_field = SimpleNamespace(text=str(app.health_poll_interval))
     screen.log_rotate_field = SimpleNamespace(text=str(app.log_rotate_interval))
     screen.log_archives_field = SimpleNamespace(text=str(app.log_rotate_archives))
@@ -85,6 +88,7 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.offline_switch = SimpleNamespace(active=app.map_use_offline)
     screen.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
     screen.show_aps_switch = SimpleNamespace(active=app.map_show_aps)
+    screen.show_bt_switch = SimpleNamespace(active=app.map_show_bt)
     screen.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
     screen.debug_switch = SimpleNamespace(active=app.debug_mode)
     screen.battery_switch = SimpleNamespace(active=app.widget_battery_status)
@@ -145,11 +149,13 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     screen = make_screen(module, app)
 
     screen.ap_poll_field.text = "30"
+    screen.bt_poll_field.text = "25"
     screen.health_poll_field.text = "15"
     screen.log_rotate_field.text = "1200"
     screen.log_archives_field.text = "5"
     screen.show_gps_switch.active = False
     screen.show_aps_switch.active = False
+    screen.show_bt_switch.active = True
     screen.cluster_switch.active = True
     screen.debug_switch.active = True
     screen.battery_switch.active = True
@@ -165,11 +171,13 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     screen.save_settings()
 
     assert app.map_poll_aps == 30
+    assert app.map_poll_bt == 25
     assert app.health_poll_interval == 15
     assert app.log_rotate_interval == 1200
     assert app.log_rotate_archives == 5
     assert app.map_show_gps is False
     assert app.map_show_aps is False
+    assert app.map_show_bt is True
     assert app.map_cluster_aps is True
     assert app.debug_mode is True
     assert app.widget_battery_status is True

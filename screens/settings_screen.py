@@ -90,6 +90,10 @@ class SettingsScreen(Screen):
             text=str(app.map_poll_aps), hint_text="AP poll rate (s)"
         )
 
+        self.bt_poll_field = MDTextField(
+            text=str(app.map_poll_bt), hint_text="BT poll rate (s)"
+        )
+
         self.health_poll_field = MDTextField(
             text=str(app.health_poll_interval), hint_text="Health poll (s)"
         )
@@ -113,6 +117,7 @@ class SettingsScreen(Screen):
 
         layout.add_widget(self.gps_poll_field)
         layout.add_widget(self.ap_poll_field)
+        layout.add_widget(self.bt_poll_field)
         layout.add_widget(self.health_poll_field)
         layout.add_widget(self.log_rotate_field)
         layout.add_widget(self.log_archives_field)
@@ -157,6 +162,12 @@ class SettingsScreen(Screen):
         self.show_aps_switch = MDSwitch(active=app.map_show_aps)
         show_aps_row.add_widget(self.show_aps_switch)
         layout.add_widget(show_aps_row)
+
+        show_bt_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
+        show_bt_row.add_widget(MDLabel(text="Show BT", size_hint_x=0.7))
+        self.show_bt_switch = MDSwitch(active=app.map_show_bt)
+        show_bt_row.add_widget(self.show_bt_switch)
+        layout.add_widget(show_bt_row)
 
         cluster_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
         cluster_row.add_widget(MDLabel(text="Cluster APs", size_hint_x=0.7))
@@ -238,6 +249,17 @@ class SettingsScreen(Screen):
             )
 
         try:
+            value = int(self.bt_poll_field.text)
+            if value > 0:
+                app.map_poll_bt = value
+            else:
+                raise ValueError
+        except ValueError:
+            report_error(
+                format_error(210, "BT poll rate must be a positive integer.")
+            )
+
+        try:
             value = int(self.health_poll_field.text)
             if value > 0:
                 app.health_poll_interval = value
@@ -295,6 +317,7 @@ class SettingsScreen(Screen):
         app.theme_cls.theme_style = app.theme
         app.map_show_gps = self.show_gps_switch.active
         app.map_show_aps = self.show_aps_switch.active
+        app.map_show_bt = self.show_bt_switch.active
         app.map_cluster_aps = self.cluster_switch.active
         app.debug_mode = self.debug_switch.active
         app.widget_battery_status = self.battery_switch.active

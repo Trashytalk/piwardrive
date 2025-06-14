@@ -268,6 +268,47 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
         return False
 
 
+def scan_bt_devices() -> list[dict[str, Any]]:
+    """Return nearby Bluetooth devices via ``bluetoothctl``."""
+    try:
+        proc = subprocess.run(
+            ["bluetoothctl", "devices"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except Exception:
+        return []
+
+    devices: list[dict[str, Any]] = []
+    for line in proc.stdout.splitlines():
+        parts = line.strip().split(" ", 2)
+        if len(parts) >= 3 and parts[0] == "Device":
+            addr = parts[1]
+            name = parts[2]
+            info = {"address": addr, "name": name}
+            try:
+                info_proc = subprocess.run(
+                    ["bluetoothctl", "info", addr],
+                    capture_output=True,
+                    text=True,
+                    timeout=3,
+                    check=False,
+                )
+                for il in info_proc.stdout.splitlines():
+                    if "GPS Coordinates:" in il:
+                        vals = il.split(":", 1)[1].strip().split(",")
+                        if len(vals) == 2:
+                            info["lat"] = float(vals[0])
+                            info["lon"] = float(vals[1])
+                        break
+            except Exception:
+                pass
+            devices.append(info)
+    return devices
+
+
 def now_timestamp() -> str:
     """
     Return the current time as a formatted string.

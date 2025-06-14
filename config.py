@@ -15,6 +15,33 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
 ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
 
+CONFIG_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "theme": {"type": "string"},
+        "map_poll_gps": {"type": "integer"},
+        "map_poll_gps_max": {"type": "integer"},
+        "map_poll_aps": {"type": "integer"},
+        "map_poll_bt": {"type": "integer"},
+        "map_show_gps": {"type": "boolean"},
+        "map_show_aps": {"type": "boolean"},
+        "map_show_bt": {"type": "boolean"},
+        "map_cluster_aps": {"type": "boolean"},
+        "map_use_offline": {"type": "boolean"},
+        "kismet_logdir": {"type": "string", "minLength": 1},
+        "bettercap_caplet": {"type": "string", "minLength": 1},
+        "dashboard_layout": {"type": "array"},
+        "debug_mode": {"type": "boolean"},
+        "offline_tile_path": {"type": "string", "minLength": 1},
+        "health_poll_interval": {"type": "integer", "minimum": 1},
+        "log_rotate_interval": {"type": "integer", "minimum": 1},
+        "log_rotate_archives": {"type": "integer", "minimum": 1},
+        "widget_battery_status": {"type": "boolean"},
+        "admin_password_hash": {"type": "string"},
+    },
+    "additionalProperties": False,
+}
+
 
 @dataclass
 class Config:
@@ -24,8 +51,10 @@ class Config:
     map_poll_gps: int = 10
     map_poll_gps_max: int = 30
     map_poll_aps: int = 60
+    map_poll_bt: int = 60
     map_show_gps: bool = True
     map_show_aps: bool = True
+    map_show_bt: bool = False
     map_cluster_aps: bool = False
     map_use_offline: bool = False
     kismet_logdir: str = "/mnt/ssd/kismet_logs"
@@ -43,6 +72,21 @@ class Config:
 DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
 
+
+def _parse_env_value(raw: str, default: Any) -> Any:
+    """Convert environment string ``raw`` to the type of ``default``."""
+    if isinstance(default, bool):
+        low = raw.lower()
+        if low in {"1", "true", "yes", "on"}:
+            return True
+        if low in {"0", "false", "no", "off"}:
+            return False
+        raise ValueError(f"Invalid boolean value: {raw}")
+    if isinstance(default, int):
+        val = int(raw)
+        if val < 1:
+            raise ValueError("Value must be positive")
+        return val
 
 class FileConfigModel(BaseModel):
     """Validation model for configuration files."""
@@ -102,8 +146,10 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 
 
 def validate_config_data(data: Dict[str, Any]) -> None:
-    """Validate ``data`` using ``ConfigModel``."""
-    ConfigModel(**data)
+    """Basic validation for loaded configuration values."""
+    if data.get("theme") not in {"Dark", "Light"}:
+        raise ValueError("Invalid theme")
+
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
@@ -228,8 +274,10 @@ class AppConfig:
     map_poll_gps: int = DEFAULTS["map_poll_gps"]
     map_poll_gps_max: int = DEFAULTS["map_poll_gps_max"]
     map_poll_aps: int = DEFAULTS["map_poll_aps"]
+    map_poll_bt: int = DEFAULTS["map_poll_bt"]
     map_show_gps: bool = DEFAULTS["map_show_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
+    map_show_bt: bool = DEFAULTS["map_show_bt"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
     offline_tile_path: str = DEFAULTS["offline_tile_path"]

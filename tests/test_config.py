@@ -28,6 +28,8 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.theme == config.DEFAULT_CONFIG.theme
     assert data.map_poll_gps == config.DEFAULT_CONFIG.map_poll_gps
     assert data.map_poll_gps_max == config.DEFAULT_CONFIG.map_poll_gps_max
+    assert data.map_poll_bt == config.DEFAULT_CONFIG.map_poll_bt
+    assert data.map_show_bt == config.DEFAULT_CONFIG.map_show_bt
     assert data.offline_tile_path == config.DEFAULT_CONFIG.offline_tile_path
 
 
@@ -37,6 +39,8 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.theme = "Light"
     orig.map_poll_gps = 5
     orig.map_poll_gps_max = 20
+    orig.map_poll_bt = 30
+    orig.map_show_bt = True
     orig.offline_tile_path = "/tmp/off.mbtiles"
     config.save_config(orig)
     assert Path(cfg_file).is_file()
@@ -44,6 +48,8 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.theme == "Light"
     assert loaded.map_poll_gps == 5
     assert loaded.map_poll_gps_max == 20
+    assert loaded.map_poll_bt == 30
+    assert loaded.map_show_bt is True
     assert loaded.offline_tile_path == "/tmp/off.mbtiles"
 
 def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
@@ -73,16 +79,20 @@ def test_env_override_integer(monkeypatch: Any, tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     monkeypatch.setenv("PW_MAP_POLL_GPS", "42")
     monkeypatch.setenv("PW_MAP_POLL_GPS_MAX", "50")
+    monkeypatch.setenv("PW_MAP_POLL_BT", "30")
     cfg = config.AppConfig.load()
     assert cfg.map_poll_gps == 42
     assert cfg.map_poll_gps_max == 50
+    assert cfg.map_poll_bt == 30
 
 
 def test_env_override_boolean(monkeypatch: Any, tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     monkeypatch.setenv("PW_MAP_SHOW_GPS", "false")
+    monkeypatch.setenv("PW_MAP_SHOW_BT", "true")
     cfg = config.AppConfig.load()
     assert cfg.map_show_gps is False
+    assert cfg.map_show_bt is True
 
 
 def test_env_override_health_poll(monkeypatch: Any, tmp_path: Path) -> None:

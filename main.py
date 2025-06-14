@@ -48,6 +48,7 @@ class PiWardriveApp(MDApp):
     map_poll_gps = NumericProperty(10)
     map_poll_gps_max = NumericProperty(30)
     map_poll_aps = NumericProperty(60)
+    map_poll_bt = NumericProperty(60)
     map_show_gps = BooleanProperty(True)
     map_show_aps = BooleanProperty(True)
     map_show_bt = BooleanProperty(False)

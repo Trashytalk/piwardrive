@@ -10,6 +10,7 @@ PiWardrive Documentation
    diagnostics
    persistence
    gps_polling
+   bluetooth
    status_service
    architecture
    deployment

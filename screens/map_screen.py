@@ -21,6 +21,7 @@ import pandas as pd
 import math
 
 from kivy.app import App
+import utils
 
 from kivy.clock import Clock, mainthread
 
@@ -79,10 +80,12 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.gps_marker = None
 
         self.ap_markers = []
+        self.bt_markers = []
 
         self._gps_event = None
 
         self._aps_event = None
+        self._bt_event = None
 
         self._lp_touch = None
         self._long_press_trigger = Clock.create_trigger(
@@ -145,6 +148,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             self._aps_event, lambda dt: self.plot_aps(), app.map_poll_aps
 
         )
+        self._bt_event = "map_bt"
+        app.scheduler.schedule(
+            self._bt_event, lambda dt: self.plot_bt_devices(), app.map_poll_bt
+        )
         # React to zoom level changes by updating clusters
         self.ids.mapview.bind(zoom=self.update_clusters_on_zoom)
 
@@ -162,6 +169,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if self._aps_event:
             app.scheduler.cancel(self._aps_event)
             self._aps_event = None
+        if self._bt_event:
+            app.scheduler.cancel(self._bt_event)
+            self._bt_event = None
 
 # ------------------------------------------------------------------
 
@@ -692,6 +702,39 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             self.update_clusters_on_zoom(mv, mv.zoom)
 
 
+    def plot_bt_devices(self):
+        """Render Bluetooth device markers on the map."""
+        app = App.get_running_app()
+        if not app.map_show_bt:
+            return
+        mv = self.ids.mapview
+        for m in self.bt_markers:
+            mv.remove_widget(m)
+        self.bt_markers.clear()
+        devices = utils.scan_bt_devices()
+        for d in devices:
+            lat = d.get("lat")
+            lon = d.get("lon")
+            if lat is None or lon is None:
+                continue
+            m = MapMarkerPopup(
+                lat=lat,
+                lon=lon,
+                source="widgets/marker-ap.png",
+                anchor_x="center",
+                anchor_y="center",
+            )
+            m.add_widget(
+                Label(
+                    text=d.get("name", d.get("address", "BT")),
+                    size_hint=(None, None),
+                    size=(dp(80), dp(20)),
+                )
+            )
+            mv.add_widget(m)
+            self.bt_markers.append(m)
+
+
 
 
 
@@ -912,10 +955,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                         continue
                     os.makedirs(os.path.dirname(local), exist_ok=True)
                     resp = utils.safe_request(url, timeout=10)
-                    if resp is None:
-                        continue
-                    with open(local, "wb") as fh:
-                        fh.write(resp.content)
+                    if resp:
+                        with open(local, "wb") as fh:
+                            fh.write(resp.content)
+
 
         except Exception as e:  # pragma: no cover - network errors
 
