@@ -1,1 +1,31 @@
-class SettingsScreen: ...
+from __future__ import annotations
+
+from typing import Any
+
+from kivy.uix.screenmanager import Screen
+
+
+class SettingsScreen(Screen):
+    kismet_field: Any
+    bcap_field: Any
+    gps_poll_field: Any
+    gps_poll_max_field: Any
+    ap_poll_field: Any
+    bt_poll_field: Any
+    health_poll_field: Any
+    log_rotate_field: Any
+    log_archives_field: Any
+    offline_path_field: Any
+    theme_switch: Any
+    offline_switch: Any
+    show_gps_switch: Any
+    show_aps_switch: Any
+    show_bt_switch: Any
+    cluster_switch: Any
+    debug_switch: Any
+    battery_switch: Any
+
+    def on_enter(self) -> None: ...
+    def save_settings(self) -> None: ...
+    def _export_logs(self) -> None: ...
+    def prefetch_tiles(self) -> None: ...

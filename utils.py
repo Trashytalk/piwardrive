@@ -15,6 +15,7 @@ import threading
 from collections import deque
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
+from concurrent.futures import Future
 
 from kivy.app import App
 
@@ -69,13 +70,14 @@ T = TypeVar("T")
 def run_async_task(
     coro: Coroutine[Any, Any, T],
     callback: Callable[[T], None] | None = None,
-) -> asyncio.Future:
+) -> Future[T]:
     """Schedule ``coro`` on the background loop and invoke ``callback``."""
 
-    fut = asyncio.run_coroutine_threadsafe(coro, _async_loop)
+    fut: Future[T] = asyncio.run_coroutine_threadsafe(coro, _async_loop)
 
     if callback is not None:
-        def _done(f: asyncio.Future) -> None:
+
+        def _done(f: Future[T]) -> None:
             try:
                 result = f.result()
             except Exception as exc:  # pragma: no cover - background errors
@@ -287,7 +289,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
         if len(parts) >= 3 and parts[0] == "Device":
             addr = parts[1]
             name = parts[2]
-            info = {"address": addr, "name": name}
+            info: dict[str, Any] = {"address": addr, "name": name}
             try:
                 info_proc = subprocess.run(
                     ["bluetoothctl", "info", addr],
