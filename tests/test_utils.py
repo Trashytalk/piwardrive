@@ -179,3 +179,10 @@ def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     monkeypatch.setattr(utils.requests, 'get', lambda *a, **k: resp)
     aps, clients = asyncio.run(utils.fetch_kismet_devices_async())
     assert aps == [1] and clients == [2]
+
+
+def test_polygon_area_triangle() -> None:
+    pts = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0)]
+    area = utils.polygon_area(pts)
+    expected = 111320.0 ** 2 / 2
+    assert abs(area - expected) < expected * 0.05
