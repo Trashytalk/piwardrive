@@ -15,3 +15,4 @@ PiWardrive Documentation
    architecture
    deployment
    workflows
+   ckml_build
