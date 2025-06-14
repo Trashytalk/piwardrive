@@ -29,6 +29,7 @@ CONFIG_SCHEMA = {
         "log_rotate_interval": {"type": "integer"},
         "log_rotate_archives": {"type": "integer"},
         "widget_battery_status": {"type": "boolean"},
+        "admin_password_hash": {"type": "string"},
     },
     "additionalProperties": False,
 }
@@ -54,6 +55,7 @@ class Config:
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
     widget_battery_status: bool = False
+    admin_password_hash: str = ""
 
 
 DEFAULT_CONFIG = Config()
@@ -128,6 +130,7 @@ class AppConfig:
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
+    admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
 
     @classmethod
     def load(cls) -> "AppConfig":

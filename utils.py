@@ -155,6 +155,12 @@ def run_service_cmd(
 ) -> tuple[bool, str, str]:
     """Run ``sudo systemctl`` for ``service`` with optional retries."""
 
+    from security import validate_service_name
+
+    validate_service_name(service)
+    if action not in {"start", "stop", "restart", "is-active"}:
+        raise ValueError(f"Invalid action: {action}")
+
     cmd = ["sudo", "systemctl", action, service]
 
     def _call() -> subprocess.CompletedProcess[str]:
