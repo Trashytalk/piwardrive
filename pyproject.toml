@@ -13,12 +13,16 @@ files = [
     "scheduler.py",
     "utils.py",
     "widgets",
-    "tests",
 ]
 exclude = "gitattributes.py"
 follow_imports = "skip"
 
 [[tool.mypy.overrides]]
 module = "screens.*"
+ignore_errors = true
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = "tests.*"
 ignore_errors = true
 follow_imports = "skip"

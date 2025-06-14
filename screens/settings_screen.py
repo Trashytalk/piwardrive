@@ -4,6 +4,7 @@
 """Settings screen for starting and stopping background services."""
 
 import os
+from dataclasses import fields
 
 from kivy.app import App
 
@@ -22,6 +23,7 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.selectioncontrol import MDSwitch
 from kivymd.uix.snackbar import Snackbar
 from utils import report_error
+from config import Config, save_config
 
 
 class SettingsScreen(Screen):
@@ -158,5 +160,14 @@ class SettingsScreen(Screen):
         app.map_use_offline = self.offline_switch.active
         app.theme = "Dark" if self.theme_switch.active else "Light"
         app.theme_cls.theme_style = app.theme
+
+        for f in fields(Config):
+            key = f.name
+            if hasattr(app, key):
+                setattr(app.config_data, key, getattr(app, key))
+        try:
+            save_config(app.config_data)
+        except OSError as exc:  # pragma: no cover - save failure
+            report_error(f"Failed to save config: {exc}")
 
         Snackbar(text="Settings saved", duration=1).open()

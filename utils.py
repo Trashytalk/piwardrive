@@ -381,7 +381,9 @@ def polygon_area(points: Sequence[tuple[float, float]]) -> float:
     return area * (meter_per_deg ** 2)
 
 
-def point_in_polygon(point: tuple[float, float], polygon: Sequence[tuple[float, float]]) -> bool:
+def point_in_polygon(
+    point: tuple[float, float], polygon: Sequence[tuple[float, float]]
+) -> bool:
     """Return True if ``point`` is inside ``polygon`` using ray casting."""
     lat, lon = point
     inside = False
