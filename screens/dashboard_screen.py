@@ -16,6 +16,7 @@ from widgets import (
     CPUTempGraphWidget,
     NetworkThroughputWidget,
     BatteryStatusWidget,
+    HealthAnalysisWidget,
 )
 
 
@@ -66,6 +67,7 @@ class DashboardScreen(Screen):
                 'CPUTempGraphWidget': CPUTempGraphWidget,
                 'NetworkThroughputWidget': NetworkThroughputWidget,
                 'BatteryStatusWidget': BatteryStatusWidget,
+                'HealthAnalysisWidget': HealthAnalysisWidget,
             }
             for info in app.dashboard_layout:
                 cls = cls_map.get(info.get('cls'))
@@ -92,6 +94,8 @@ class DashboardScreen(Screen):
                 widgets.append(NetworkThroughputWidget())
             if getattr(app, 'widget_battery_status', False):
                 widgets.append(BatteryStatusWidget())
+            if getattr(app, 'widget_health_analysis', False):
+                widgets.append(HealthAnalysisWidget())
 
         for widget in widgets:
             self.layout.add_widget(widget)
