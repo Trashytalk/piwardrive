@@ -13,11 +13,15 @@ import diagnostics
 from kivy.factory import Factory
 from kivy.lang import Builder
 from kivy.properties import (  # pylint: disable=no-name-in-module
-    BooleanProperty, NumericProperty, StringProperty, ListProperty)
+    BooleanProperty, 
+    NumericProperty, 
+    StringProperty, 
+    ListProperty
+)
 from kivymd.app import MDApp
 
 # Trim down HTTP debug logging
-logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 from screens.console_screen import ConsoleScreen  # type: ignore[import]
 from screens.dashboard_screen import DashboardScreen  # type: ignore[import]
@@ -29,24 +33,26 @@ from screens.stats_screen import StatsScreen  # type: ignore[import]
 
 class PiWardriveApp(MDApp):
     """Main application class handling screen setup and helpers."""
-    map_poll_gps     = NumericProperty(10)
-    map_poll_aps     = NumericProperty(60)
-    map_show_gps     = BooleanProperty(True)
-    map_show_aps     = BooleanProperty(True)
-    map_show_bt      = BooleanProperty(False)
-    map_cluster_aps  = BooleanProperty(False)
-    map_fullscreen   = BooleanProperty(False)
-    map_use_offline  = BooleanProperty(False)
-    theme            = StringProperty("Dark")
-    kismet_logdir    = StringProperty("/mnt/ssd/kismet_logs")
+
+    map_poll_gps = NumericProperty(10)
+    map_poll_aps = NumericProperty(60)
+    map_show_gps = BooleanProperty(True)
+    map_show_aps = BooleanProperty(True)
+    map_show_bt = BooleanProperty(False)
+    map_cluster_aps = BooleanProperty(False)
+    map_fullscreen = BooleanProperty(False)
+    map_use_offline = BooleanProperty(False)
+    theme = StringProperty("Dark")
+    kismet_logdir = StringProperty("/mnt/ssd/kismet_logs")
     bettercap_caplet = StringProperty("/usr/local/etc/bettercap/alfa.cap")
     dashboard_layout = ListProperty([])
-    debug_mode       = BooleanProperty(False)
-    widget_disk_trend    = BooleanProperty(True)
-    widget_cpu_temp      = BooleanProperty(True)
+    debug_mode = BooleanProperty(False)
+    widget_disk_trend = BooleanProperty(True)
+    widget_cpu_temp = BooleanProperty(True)
     widget_net_throughput = BooleanProperty(True)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
+
 
 
     def __init__(self, **kwargs: Any) -> None:
@@ -61,7 +67,7 @@ class PiWardriveApp(MDApp):
 
     def build(self) -> Any:
         """Load and return the root widget tree from KV."""
-        root = Builder.load_file('kv/main.kv')
+        root = Builder.load_file("kv/main.kv")
         self.root = root
         return root
 
@@ -79,24 +85,23 @@ class PiWardriveApp(MDApp):
         nav_bar = self.root.ids.nav_bar
 
         # 1) Add all six screens first
-        sm.add_widget(MapScreen(name='Map'))
-        sm.add_widget(StatsScreen(name='Stats'))
-        sm.add_widget(SplitScreen(name='Split'))
-        sm.add_widget(ConsoleScreen(name='Console'))
-        sm.add_widget(SettingsScreen(name='Settings'))
-        sm.add_widget(DashboardScreen(name='Dashboard'))
+        sm.add_widget(MapScreen(name="Map"))
+        sm.add_widget(StatsScreen(name="Stats"))
+        sm.add_widget(SplitScreen(name="Split"))
+        sm.add_widget(ConsoleScreen(name="Console"))
+        sm.add_widget(SettingsScreen(name="Settings"))
+        sm.add_widget(DashboardScreen(name="Dashboard"))
 
         # 2) Now set the initial screen explicitly
-        sm.current = 'Map'
+        sm.current = "Map"
 
         # 3) Build your responsive nav buttons
-        for name in ['Map','Stats','Split','Console','Settings','Dashboard']:
+        for name in ["Map", "Stats", "Split", "Console", "Settings", "Dashboard"]:
             btn = Factory.NavigationButton(
-                text=name,
-                on_release=lambda btn, s=name: self.switch_screen(s)
+                text=name, on_release=lambda btn, s=name: self.switch_screen(s)
             )
             nav_bar.add_widget(btn)
-        for path in ['/var/log/syslog']:
+        for path in ["/var/log/syslog"]:
             ev = f"rotate_{os.path.basename(path)}"
             self.scheduler.schedule(
                 ev,
@@ -108,16 +113,13 @@ class PiWardriveApp(MDApp):
         """Change the active screen."""
         self.root.ids.sm.current = name
 
-
     # 1) Service control with feedback
     def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service."""
-        cmd = ['sudo', 'systemctl', action, svc]
+        cmd = ["sudo", "systemctl", action, svc]
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
-            self.show_alert(
-                f"Failed to {action} {svc}", res.stderr or "Unknown error"
-            )
+            self.show_alert(f"Failed to {action} {svc}", res.stderr or "Unknown error")
 
     def show_alert(self, title: str, text: str) -> None:
         """Display a simple alert dialog with the given title and text."""
@@ -137,8 +139,11 @@ class PiWardriveApp(MDApp):
             key = f.name
             if hasattr(self, key):
                 setattr(self.config_data, key, getattr(self, key))
-        save_config(self.config_data)
+        try:
+            save_config(self.config_data)
+        except OSError as exc:  # pragma: no cover - save failure is non-critical
+            logging.exception("Failed to save config: %s", exc)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     PiWardriveApp().run()
