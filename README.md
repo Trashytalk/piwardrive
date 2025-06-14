@@ -92,3 +92,16 @@ python main.py
 
 * **Tabs**: Swipe or tap top buttons to switch between Map, Stats, Split, Console, Settings, Dashboard.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
+* 
+
+## Error Handling
+* **
+sequenceDiagram
+    participant User
+    participant MapScreen
+    participant report_error
+
+    User->>MapScreen: Triggers action (e.g., load file, fetch GPS)
+    MapScreen->>MapScreen: Exception occurs
+    MapScreen->>report_error: report_error(error_message)
+
