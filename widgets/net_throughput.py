@@ -3,6 +3,7 @@ from typing import Any
 
 from kivy.app import App
 from kivy_garden.graph import Graph, LinePlot
+from localization import _
 import psutil
 
 from .base import DashboardWidget
@@ -23,8 +24,8 @@ class NetworkThroughputWidget(DashboardWidget):
         self.plot_rx: LinePlot = LinePlot(color=[0, 0, 1, 1], line_width=1.5)
         self.plot_tx: LinePlot = LinePlot(color=[1, 0, 0, 1], line_width=1.5)
         self.graph: Graph = Graph(
-            xlabel="Samples",
-            ylabel="KB/s",
+            xlabel=_("samples"),
+            ylabel=_("kbps"),
             x_ticks_minor=5,
             x_grid=True,
             y_grid=True,
