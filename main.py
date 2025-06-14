@@ -121,12 +121,17 @@ class PiWardriveApp(MDApp):
 
     # 1) Service control with feedback
     def control_service(self, svc: str, action: str) -> None:
-        """Run a systemctl command for a given service."""
-        cmd = ["sudo", "systemctl", action, svc]
-        res = subprocess.run(cmd, capture_output=True, text=True)
-        if res.returncode != 0:
+        """Run a systemctl command for a given service with retries."""
+        try:
+            success, _out, err = utils.run_service_cmd(
+                svc, action, attempts=3, delay=1
+            )
+        except Exception as exc:  # pragma: no cover - subprocess failures
+            utils.report_error(f"Failed to {action} {svc}: {exc}")
+            return
+        if not success:
             utils.report_error(
-                f"Failed to {action} {svc}: {res.stderr or 'Unknown error'}"
+                f"Failed to {action} {svc}: {err or 'Unknown error'}"
             )
 
     def show_alert(self, title: str, text: str) -> None:
