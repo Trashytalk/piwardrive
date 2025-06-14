@@ -73,21 +73,6 @@ DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
 
 
-def _parse_env_value(raw: str, default: Any) -> Any:
-    """Convert environment string ``raw`` to the type of ``default``."""
-    if isinstance(default, bool):
-        low = raw.lower()
-        if low in {"1", "true", "yes", "on"}:
-            return True
-        if low in {"0", "false", "no", "off"}:
-            return False
-        raise ValueError(f"Invalid boolean value: {raw}")
-    if isinstance(default, int):
-        val = int(raw)
-        if val < 1:
-            raise ValueError("Value must be positive")
-        return val
-
 class FileConfigModel(BaseModel):
     """Validation model for configuration files."""
 
@@ -148,7 +133,6 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 def validate_config_data(data: Dict[str, Any]) -> None:
     """Validate configuration values using :class:`ConfigModel`."""
     ConfigModel(**data)
-
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
