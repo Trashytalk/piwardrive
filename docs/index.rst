@@ -7,3 +7,4 @@ PiWardrive Documentation
    configuration
    widgets
    diagnostics
+   persistence

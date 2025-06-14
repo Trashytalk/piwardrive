@@ -4,9 +4,11 @@ import logging
 import os
 from dataclasses import asdict, fields
 from typing import Any
+from datetime import datetime
 
 from scheduler import PollScheduler
 from config import load_config, save_config, Config
+from persistence import AppState, load_app_state, save_app_state
 import diagnostics
 import utils
 from logconfig import setup_logging
@@ -56,6 +58,7 @@ class PiWardriveApp(MDApp):
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
+    last_screen = StringProperty("Map")
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -64,6 +67,10 @@ class PiWardriveApp(MDApp):
         for key, val in asdict(self.config_data).items():
             if hasattr(self, key):
                 setattr(self, key, val)
+        self.app_state: AppState = load_app_state()
+        if hasattr(self, "last_screen"):
+            self.last_screen = self.app_state.last_screen
+        self.app_state.last_start = datetime.now().isoformat()
         setup_logging(level=logging.DEBUG if self.debug_mode else logging.INFO)
         self.scheduler: PollScheduler = PollScheduler()
         self.health_monitor = diagnostics.HealthMonitor(
@@ -72,6 +79,11 @@ class PiWardriveApp(MDApp):
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme
+        for f in fields(Config):
+            if hasattr(self.__class__, f.name):
+                self.bind(
+                    **{f.name: lambda _i, v, k=f.name: self._auto_save(k, v)}
+                )
 
     def build(self) -> Any:
         """Load and return the root widget tree from KV."""
@@ -100,8 +112,8 @@ class PiWardriveApp(MDApp):
         sm.add_widget(SettingsScreen(name="Settings"))  # type: ignore[call-arg]
         sm.add_widget(DashboardScreen(name="Dashboard"))  # type: ignore[call-arg]
 
-        # 2) Now set the initial screen explicitly
-        sm.current = "Map"
+        # 2) Now set the initial screen explicitly from persisted state
+        sm.current = self.last_screen
 
         # 3) Build your responsive nav buttons
         for name in ["Map", "Stats", "Split", "Console", "Settings", "Dashboard"]:
@@ -120,6 +132,9 @@ class PiWardriveApp(MDApp):
     def switch_screen(self, name: str) -> None:
         """Change the active screen."""
         self.root.ids.sm.current = name
+        self.last_screen = name
+        self.app_state.last_screen = name
+        save_app_state(self.app_state)
 
     # 1) Service control with feedback
     def control_service(self, svc: str, action: str) -> None:
@@ -149,6 +164,15 @@ class PiWardriveApp(MDApp):
         )
         dialog.open()
 
+    def _auto_save(self, key: str, value: Any) -> None:
+        """Update ``config_data`` and persist to disk."""
+        if hasattr(self.config_data, key):
+            setattr(self.config_data, key, value)
+            try:
+                save_config(self.config_data)
+            except OSError as exc:  # pragma: no cover - write errors
+                logging.exception("Failed to auto-save config: %s", exc)
+
     def on_stop(self) -> None:
         """Persist configuration values on application exit."""
         prof = diagnostics.stop_profiling()
@@ -162,6 +186,10 @@ class PiWardriveApp(MDApp):
             save_config(self.config_data)
         except OSError as exc:  # pragma: no cover - save failure is non-critical
             logging.exception("Failed to save config: %s", exc)
+        try:
+            save_app_state(self.app_state)
+        except OSError as exc:  # pragma: no cover - save failure
+            logging.exception("Failed to save app state: %s", exc)
 
 
 if __name__ == "__main__":
