@@ -3,7 +3,10 @@
 import json
 import os
 from dataclasses import dataclass, asdict, field
+
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
 
 import jsonschema
 
@@ -140,6 +143,44 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(asdict(config), f, indent=2)
+
+
+def export_config(config: Config, path: str) -> None:
+    """Export ``config`` to ``path`` in JSON or YAML format."""
+    ext = Path(path).suffix.lower()
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    data = asdict(config)
+    if ext == ".json":
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    elif ext in {".yaml", ".yml"}:
+        try:
+            import yaml  # type: ignore
+        except Exception as exc:  # pragma: no cover - optional dep
+            raise RuntimeError("PyYAML required for YAML export") from exc
+        with open(path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(data, f, sort_keys=False)
+    else:
+        raise ValueError(f"Unsupported export format: {ext}")
+
+
+def import_config(path: str) -> Config:
+    """Load configuration from ``path`` (JSON or YAML)."""
+    ext = Path(path).suffix.lower()
+    with open(path, "r", encoding="utf-8") as f:
+        if ext == ".json":
+            data = json.load(f)
+        elif ext in {".yaml", ".yml"}:
+            try:
+                import yaml  # type: ignore
+            except Exception as exc:  # pragma: no cover - optional dep
+                raise RuntimeError("PyYAML required for YAML import") from exc
+            data = yaml.safe_load(f) or {}
+        else:
+            raise ValueError(f"Unsupported config format: {ext}")
+    jsonschema.validate(data, CONFIG_SCHEMA)
+    merged = {**DEFAULTS, **data}
+    return Config(**merged)
 
 
 @dataclass

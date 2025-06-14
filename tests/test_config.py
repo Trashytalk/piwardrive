@@ -94,6 +94,25 @@ def test_env_override_battery_widget(monkeypatch: Any, tmp_path: Path) -> None:
     assert cfg.widget_battery_status is True
 
 
+def test_export_import_json(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "out.json"
+    cfg = config.Config(theme="Green", map_poll_gps=7)
+    config.export_config(cfg, str(cfg_file))
+    assert cfg_file.is_file()
+    loaded = config.import_config(str(cfg_file))
+    assert loaded.theme == "Green"
+    assert loaded.map_poll_gps == 7
+
+
+def test_export_import_yaml(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "out.yaml"
+    cfg = config.Config(theme="Red", map_poll_aps=30)
+    config.export_config(cfg, str(cfg_file))
+    assert cfg_file.is_file()
+    loaded = config.import_config(str(cfg_file))
+    assert loaded.theme == "Red"
+    assert loaded.map_poll_aps == 30
+
 def test_profile_roundtrip(tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     cfg = config.Config(theme="Alt")
@@ -115,3 +134,4 @@ def test_import_export_profile(tmp_path: Path) -> None:
     exported = tmp_path / "exp.json"
     config.export_profile(name, str(exported))
     assert exported.is_file()
+
