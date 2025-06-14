@@ -65,7 +65,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 ## Prerequisites
 
 * **OS**: Raspberry Pi OS Bookworm (or Bullseye backports)
-* **Python**: 3.11.2 (virtualenv under `gui-env/`)
+* **Python**: 3.12 (virtualenv under `gui-env/`)
 * **Kivy**: 2.3.1
 * **KivyMD**: 1.1.1
 * **Additional Python libs**: see `requirements.txt`
