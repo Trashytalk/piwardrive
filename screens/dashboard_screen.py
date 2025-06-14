@@ -37,8 +37,8 @@ class DashboardScreen(Screen):
             except Exception as exc:  # pragma: no cover - registration failure
                 logging.exception("Failed to register widget %s: %s", child, exc)
 
-    def on_leave(self):
-        App.get_running_app().scheduler.cancel_all()
+    def on_leave(self):␊
+        App.get_running_app().scheduler.cancel_all()␊
         self.save_layout()
 
 
