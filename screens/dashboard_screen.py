@@ -53,20 +53,21 @@ class DashboardScreen(Screen):
     def load_widgets(self):
         """Instantiate dashboard widgets from config or defaults."""
         app = App.get_running_app()
-        widgets = []
+        cls_map = {
+            'SignalStrengthWidget': SignalStrengthWidget,
+            'GPSStatusWidget': GPSStatusWidget,
+            'HandshakeCounterWidget': HandshakeCounterWidget,
+            'ServiceStatusWidget': ServiceStatusWidget,
+            'StorageUsageWidget': StorageUsageWidget,
+            'HealthStatusWidget': HealthStatusWidget,
+            'DiskUsageTrendWidget': DiskUsageTrendWidget,
+            'CPUTempGraphWidget': CPUTempGraphWidget,
+            'NetworkThroughputWidget': NetworkThroughputWidget,
+            'BatteryStatusWidget': BatteryStatusWidget,
+        }
+
+        widgets: list[object] = []
         if app.dashboard_layout:
-            cls_map = {
-                'SignalStrengthWidget': SignalStrengthWidget,
-                'GPSStatusWidget': GPSStatusWidget,
-                'HandshakeCounterWidget': HandshakeCounterWidget,
-                'ServiceStatusWidget': ServiceStatusWidget,
-                'StorageUsageWidget': StorageUsageWidget,
-                'HealthStatusWidget': HealthStatusWidget,
-                'DiskUsageTrendWidget': DiskUsageTrendWidget,
-                'CPUTempGraphWidget': CPUTempGraphWidget,
-                'NetworkThroughputWidget': NetworkThroughputWidget,
-                'BatteryStatusWidget': BatteryStatusWidget,
-            }
             for info in app.dashboard_layout:
                 cls = cls_map.get(info.get('cls'))
                 if not cls:
@@ -76,22 +77,7 @@ class DashboardScreen(Screen):
                     widget.pos = pos
                 widgets.append(widget)
         else:
-            widgets = [
-                SignalStrengthWidget(),
-                GPSStatusWidget(),
-                HandshakeCounterWidget(),
-                ServiceStatusWidget(),
-                StorageUsageWidget(),
-                HealthStatusWidget(),
-            ]
-            if getattr(app, 'widget_disk_trend', False):
-                widgets.append(DiskUsageTrendWidget())
-            if getattr(app, 'widget_cpu_temp', False):
-                widgets.append(CPUTempGraphWidget())
-            if getattr(app, 'widget_net_throughput', False):
-                widgets.append(NetworkThroughputWidget())
-            if getattr(app, 'widget_battery_status', False):
-                widgets.append(BatteryStatusWidget())
+            widgets = self._create_default_widgets(app)
 
         for widget in widgets:
             self.layout.add_widget(widget)
@@ -99,3 +85,23 @@ class DashboardScreen(Screen):
                 app.scheduler.register_widget(widget)
             except Exception as exc:  # pragma: no cover - registration failure
                 logging.exception('Failed to register widget %s: %s', widget, exc)
+
+    def _create_default_widgets(self, app) -> list:
+        """Return default widgets based on ``app`` settings."""
+        classes = [
+            SignalStrengthWidget,
+            GPSStatusWidget,
+            HandshakeCounterWidget,
+            ServiceStatusWidget,
+            StorageUsageWidget,
+            HealthStatusWidget,
+        ]
+        if getattr(app, 'widget_disk_trend', False):
+            classes.append(DiskUsageTrendWidget)
+        if getattr(app, 'widget_cpu_temp', False):
+            classes.append(CPUTempGraphWidget)
+        if getattr(app, 'widget_net_throughput', False):
+            classes.append(NetworkThroughputWidget)
+        if getattr(app, 'widget_battery_status', False):
+            classes.append(BatteryStatusWidget)
+        return [cls() for cls in classes]

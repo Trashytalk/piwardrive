@@ -66,35 +66,28 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
     result = dict(cfg)
     for key, default in DEFAULTS.items():
-        env_key = f"PW_{key.upper()}"
-        if env_key in os.environ:
-            raw = os.environ[env_key]
-            if isinstance(default, bool):
-                result[key] = raw.lower() in {"1", "true", "yes", "on"}
-            elif isinstance(default, int):
-                try:
-                    result[key] = int(raw)
-                except ValueError:
-                    pass
-            elif isinstance(default, list):
-                try:
-                    result[key] = json.loads(raw)
-                except json.JSONDecodeError:
-                    result[key] = raw
-            else:
-                result[key] = raw
+        raw = os.getenv(f"PW_{key.upper()}")
+        if raw is not None:
+            result[key] = _parse_env_value(raw, default)
     return result
 
 
-def validate_config_data(values: Dict[str, Any]) -> None:
-    """Validate configuration ``values`` using :data:`CONFIG_SCHEMA`."""
-    validator = jsonschema.Draft7Validator(CONFIG_SCHEMA)
-    errors = [
-        f"{'/'.join(map(str, e.absolute_path))}: {e.message}"
-        for e in validator.iter_errors(values)
-    ]
-    if errors:
-        raise ValueError("; ".join(errors))
+
+def _parse_env_value(raw: str, default: Any) -> Any:
+    """Convert ``raw`` environment value to the type of ``default``."""
+    if isinstance(default, bool):
+        return raw.lower() in {"1", "true", "yes", "on"}
+    if isinstance(default, int):
+        try:
+            return int(raw)
+        except ValueError:
+            return default
+    if isinstance(default, list):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return raw
+    return raw
 
 
 def load_config() -> Config:
