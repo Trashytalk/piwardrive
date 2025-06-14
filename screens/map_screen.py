@@ -918,6 +918,23 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Offline Map Tile Management
 
+    @staticmethod
+    def _deg2num(lat: float, lon: float, zoom: int) -> tuple[int, int]:
+        """Convert latitude and longitude to XYZ tile coordinates."""
+        lat_rad = math.radians(lat)
+        n = 2 ** zoom
+        x = int((lon + 180.0) / 360.0 * n)
+        y = int((1.0 - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi) / 2.0 * n)
+        return x, y
+
+    @staticmethod
+    def _download_tile(url: str, local: str) -> None:
+        """Fetch a single tile from ``url`` into ``local``."""
+        resp = utils.safe_request(url, timeout=10)
+        if resp:
+            with open(local, "wb") as fh:
+                fh.write(resp.content)
+
     def prefetch_tiles(self, bounds, zoom=16, folder="/mnt/ssd/tiles"):
 
         """Download PNG tiles covering ``bounds`` to ``folder``."""
@@ -925,23 +942,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         try:
             min_lat, min_lon, max_lat, max_lon = bounds
 
-            def deg2num(lat, lon, z):
-                lat_rad = math.radians(lat)
-                n = 2**z
-                x = int((lon + 180.0) / 360.0 * n)
-                y = int(
-                    (
-                        1.0
-                        - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi
-                    )
-                    / 2.0
-                    * n
-                )
-                return x, y
-
             zoom = int(zoom)
-            x1, y1 = deg2num(max_lat, min_lon, zoom)
-            x2, y2 = deg2num(min_lat, max_lon, zoom)
+            # Convert bounding box corners to tile numbers
+            x1, y1 = self._deg2num(max_lat, min_lon, zoom)
+            x2, y2 = self._deg2num(min_lat, max_lon, zoom)
             x_min, x_max = sorted((x1, x2))
             y_min, y_max = sorted((y1, y2))
 
@@ -954,10 +958,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     if os.path.exists(local):
                         continue
                     os.makedirs(os.path.dirname(local), exist_ok=True)
-                    resp = utils.safe_request(url, timeout=10)
-                    if resp:
-                        with open(local, "wb") as fh:
-                            fh.write(resp.content)
+                    # Download the tile if it doesn't already exist
+                    self._download_tile(url, local)
 
 
         except Exception as e:  # pragma: no cover - network errors
@@ -1244,23 +1246,28 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if not self.ap_markers:
             return
 
-        # grid based clustering -- bigger cells when zoomed out
+        # Calculate grid cell size so that fewer clusters are formed when
+        # zoomed out and more clusters when zoomed in. ``_cluster_capacity``
+        # controls how many markers may occupy a cell before collapsing.
         cell_size = 360 / (2 ** zoom * self._cluster_capacity)
-        clusters: dict[tuple[int, int], list] = {}
-        for m in self.ap_markers:
-            key = (int(m.lat / cell_size), int(m.lon / cell_size))
-            clusters.setdefault(key, []).append(m)
 
+        # Group markers by their grid cell
+        clusters: dict[tuple[int, int], list] = {}
+        for marker in self.ap_markers:
+            key = (int(marker.lat / cell_size), int(marker.lon / cell_size))
+            clusters.setdefault(key, []).append(marker)
+
+        # Replace each group of markers by their averaged position
         for group in clusters.values():
             if len(group) <= 1:
                 continue
-            lat = sum(x.lat for x in group) / len(group)
-            lon = sum(x.lon for x in group) / len(group)
-            for m in group:
-                m.lat = lat
-                m.lon = lon
+            lat = sum(m.lat for m in group) / len(group)
+            lon = sum(m.lon for m in group) / len(group)
+            for marker in group:
+                marker.lat = lat
+                marker.lon = lon
 
-        # separate any exact overlaps for readability
+        # Spread markers that still overlap exactly
         self.spiderfy_markers()
 
 
