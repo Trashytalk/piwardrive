@@ -22,6 +22,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Battery Widget**: Optional dashboard tile showing battery percentage if available.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
+* **Configuration Profiles**: maintain multiple configs under `~/.config/piwardrive/profiles`.
 
 ## Hardware Prerequisites
 
@@ -71,6 +72,7 @@ For detailed instructions and troubleshooting steps see ``docs/installation.rst`
 
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` persists settings between runs.
+* **Profiles**: alternate configs live in `~/.config/piwardrive/profiles`.
 * **Env Overrides**: use environment variables like `PW_MAP_POLL_GPS=5`.
 * **BetterCAP Caplet**: `/usr/local/etc/bettercap/alfa.cap`
 * **Kismet Config**: `/usr/local/etc/kismet_site.conf`
