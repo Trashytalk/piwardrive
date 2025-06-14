@@ -44,17 +44,43 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 
    ```bash
    git clone https://github.com/TRASHYTALK/piwardrive.git
-@@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
+   cd piwardrive
+   ```
+
+2. **Install system packages** (Debian/Ubuntu):
+
+   ```bash
+   sudo apt-get install kismet gpsd bettercap evtest git build-essential cmake
    ```
 
 3. **Install Python dependencies**:
 
    ```bash
+   python3 -m venv gui-env
+   source gui-env/bin/activate
+   pip install \
+       kivy==2.3.1 kivymd==1.1.1 \
+       kivy_garden.mapview==1.0.6 kivy_garden.graph==0.4.0 \
+       requests requests-cache psutil pandas scipy jsonschema ujson
+   ```
+
+   Or simply run:
+
+   ```bash
    pip install -r requirements.txt
    ```
 
-@@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving t
+4. **Mount the SSD**:
+
+   ```
    /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
+   ```
+
+5. **Headless environments**: source the helper script to set `KIVY_NO_ARGS` and
+   `KIVY_WINDOW` for running without a display:
+
+   ```bash
+   source scripts/setup-headless.sh
    ```
 
 ## Configuration
