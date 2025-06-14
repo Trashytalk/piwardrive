@@ -16,6 +16,8 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
 * **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
+  Use `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` to export callgrind data for
+  analysis in KCachegrind.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
 * **Battery Widget**: Optional dashboard tile showing battery percentage if available.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.

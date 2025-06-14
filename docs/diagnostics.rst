@@ -16,4 +16,5 @@ message and displays a dialog via the running application if available.
 
 Profiling can be enabled by setting ``PW_PROFILE=1``. When active, a
 ``profile`` section is added to the system report and a summary is
-logged on exit.
+logged on exit.  Set ``PW_PROFILE_CALLGRIND=/tmp/out.callgrind`` to
+also export data in a format readable by KCachegrind.
