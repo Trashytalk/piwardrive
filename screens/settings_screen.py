@@ -1,14 +1,9 @@
 ## settings_screen.py
 
 
-
 """Settings screen for starting and stopping background services."""
 
-
-
-
-
-
+import os
 
 from kivy.app import App
 
@@ -25,29 +20,14 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.textfield import MDTextField
 
 from kivymd.uix.selectioncontrol import MDSwitch
-
-
-
-
-
-
-
+from kivymd.uix.snackbar import Snackbar
+from utils import report_error
 
 
 class SettingsScreen(Screen):
-
-
-
     """Placeholder for various application settings."""
 
-
-
-
-
-
-
     def on_enter(self):
-
         """Create service control buttons on first entry."""
 
         if getattr(self, "_initialized", False):
@@ -56,28 +36,16 @@ class SettingsScreen(Screen):
 
         self._initialized = True
 
-
-
         layout = MDBoxLayout(
-
             orientation="vertical",
-
             padding=dp(10),
-
             spacing=dp(10),
-
             size_hint=(1, 1),
-
         )
 
-
-
-         for svc, label in [
-
+        for svc, label in [
             ("kismet.service", "Kismet"),
-
             ("bettercap.service", "BetterCAP"),
-
         ]:
 
             row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
@@ -87,34 +55,35 @@ class SettingsScreen(Screen):
             for action in ("start", "stop", "restart"):
 
                 row.add_widget(
-
                     MDRaisedButton(
-
                         text=action.capitalize(),
-
-                        on_release=lambda _btn, s=svc, a=action: App.get_running_app().control_service(s, a),
-
+                        on_release=lambda _btn, s=svc, a=action: App.get_running_app().control_service(
+                            s, a
+                        ),
                     )
-
                 )
 
             layout.add_widget(row)
 
-        
-
         app = App.get_running_app()
-
-
 
         # Config fields
 
-        self.kismet_field = MDTextField(text=app.kismet_logdir, hint_text="Kismet log dir")
+        self.kismet_field = MDTextField(
+            text=app.kismet_logdir, hint_text="Kismet log dir"
+        )
 
-        self.bcap_field = MDTextField(text=app.bettercap_caplet, hint_text="BetterCAP caplet")
+        self.bcap_field = MDTextField(
+            text=app.bettercap_caplet, hint_text="BetterCAP caplet"
+        )
 
-        self.gps_poll_field = MDTextField(text=str(app.map_poll_gps), hint_text="GPS poll rate (s)")
+        self.gps_poll_field = MDTextField(
+            text=str(app.map_poll_gps), hint_text="GPS poll rate (s)"
+        )
 
-        self.offline_path_field = MDTextField(text=app.offline_tile_path, hint_text="Offline tiles path")
+        self.offline_path_field = MDTextField(
+            text=app.offline_tile_path, hint_text="Offline tiles path"
+        )
 
         layout.add_widget(self.kismet_field)
 
@@ -124,13 +93,11 @@ class SettingsScreen(Screen):
 
         layout.add_widget(self.offline_path_field)
 
-
-
         # Toggles
 
         theme_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
 
-        theme_row.add_widget(MDLabel(text="Dark Theme", size_hint_x=.7))
+        theme_row.add_widget(MDLabel(text="Dark Theme", size_hint_x=0.7))
 
         self.theme_switch = MDSwitch(active=app.theme == "Dark")
 
@@ -138,11 +105,9 @@ class SettingsScreen(Screen):
 
         layout.add_widget(theme_row)
 
-
-
         offline_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
 
-        offline_row.add_widget(MDLabel(text="Offline Tiles", size_hint_x=.7))
+        offline_row.add_widget(MDLabel(text="Offline Tiles", size_hint_x=0.7))
 
         self.offline_switch = MDSwitch(active=app.map_use_offline)
 
@@ -150,42 +115,48 @@ class SettingsScreen(Screen):
 
         layout.add_widget(offline_row)
 
-
-
-        save_btn = MDRaisedButton(text="Save", on_release=lambda *_: self.save_settings())
+        save_btn = MDRaisedButton(
+            text="Save", on_release=lambda *_: self.save_settings()
+        )
 
         layout.add_widget(save_btn)
 
-
-
         self.add_widget(layout)
 
-
-
     def save_settings(self):
-
         """Persist settings back to the app instance."""
 
         app = App.get_running_app()
 
-        app.kismet_logdir = self.kismet_field.text
+        path = self.kismet_field.text
+        if os.path.exists(path):
+            app.kismet_logdir = path
+        else:
+            report_error(f"Invalid Kismet log dir: {path}")
 
-        app.bettercap_caplet = self.bcap_field.text
+        path = self.bcap_field.text
+        if os.path.exists(path):
+            app.bettercap_caplet = path
+        else:
+            report_error(f"Invalid BetterCAP caplet: {path}")
 
         try:
-
-            app.map_poll_gps = int(self.gps_poll_field.text)
-
+            value = int(self.gps_poll_field.text)
+            if value > 0:
+                app.map_poll_gps = value
+            else:
+                raise ValueError
         except ValueError:
+            report_error("GPS poll rate must be a positive integer")
 
-            pass
-
-        app.offline_tile_path = self.offline_path_field.text
+        path = self.offline_path_field.text
+        if os.path.exists(path):
+            app.offline_tile_path = path
+        else:
+            report_error(f"Invalid offline tile path: {path}")
 
         app.map_use_offline = self.offline_switch.active
-
         app.theme = "Dark" if self.theme_switch.active else "Light"
-
         app.theme_cls.theme_style = app.theme
 
         Snackbar(text="Settings saved", duration=1).open()

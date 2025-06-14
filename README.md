@@ -92,3 +92,20 @@ python main.py
 
 * **Tabs**: Swipe or tap top buttons to switch between Map, Stats, Split, Console, Settings, Dashboard.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
+* 
+
+## Error Handling
+* **
+sequenceDiagram
+    participant Test
+    participant control_service
+    participant subprocess
+    participant report_error
+
+    Test->>control_service: Call with simulated failure
+    control_service->>subprocess: Run command
+    subprocess-->>control_service: Return failure (non-zero code)
+    control_service->>report_error: report_error(error_message)
+
+    
+

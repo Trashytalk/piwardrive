@@ -56,7 +56,9 @@ def test_run_service_cmd_success():
     mock_proc = mock.Mock(returncode=0, stdout='ok', stderr='')
     with mock.patch('utils.subprocess.run', return_value=mock_proc) as run_mock:
         success, out, err = utils.run_service_cmd('kismet', 'start')
-        run_mock.assert_called_once_with(['sudo', 'systemctl', 'start', 'kismet'], capture_output=True, text=True)
+        run_mock.assert_called_once_with(
+            ['sudo', 'systemctl', 'start', 'kismet'], capture_output=True, text=True
+        )
         assert success is True
         assert out == 'ok'
         assert err == ''
@@ -64,11 +66,41 @@ def test_run_service_cmd_success():
 
 def test_run_service_cmd_failure():
     mock_proc = mock.Mock(returncode=1, stdout='', stderr='error')
-    with mock.patch('utils.subprocess.run', return_value=mock_proc):
+    with mock.patch('utils.subprocess.run', return_value=mock_proc) as run_mock:
         success, out, err = utils.run_service_cmd('kismet', 'start')
+        run_mock.assert_called_once()
         assert success is False
         assert out == ''
         assert err == 'error'
+
+
+def test_run_service_cmd_retries_until_success():
+    results = [
+        OSError('boom'),
+        mock.Mock(returncode=0, stdout='ok', stderr=''),
+    ]
+
+    def side_effect(*_args, **_kwargs):
+        res = results.pop(0)
+        if isinstance(res, Exception):
+            raise res
+        return res
+
+    with mock.patch('utils.subprocess.run', side_effect=side_effect) as run_mock:
+        success, out, err = utils.run_service_cmd('kismet', 'start', attempts=2, delay=0)
+        assert run_mock.call_count == 2
+        assert success is True
+        assert out == 'ok'
+        assert err == ''
+
+
+def test_service_status_passes_retry_params():
+    with mock.patch(
+        'utils.run_service_cmd',
+        return_value=(True, 'active', '')
+    ) as run_mock:
+        assert utils.service_status('kismet', attempts=2, delay=0.5) is True
+        run_mock.assert_called_once_with('kismet', 'is-active', attempts=2, delay=0.5)
 
 
 def test_point_in_polygon_basic():
