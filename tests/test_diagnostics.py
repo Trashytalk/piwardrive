@@ -5,9 +5,10 @@ from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import diagnostics
+from typing import Any
 
 
-def test_generate_system_report_includes_temp(monkeypatch):
+def test_generate_system_report_includes_temp(monkeypatch: Any) -> None:
     monkeypatch.setattr('diagnostics.psutil.cpu_percent', lambda interval: 1)
     monkeypatch.setattr('diagnostics.psutil.virtual_memory', lambda: mock.Mock(percent=2))
     monkeypatch.setattr('diagnostics.psutil.disk_usage', lambda path: mock.Mock(percent=3))
@@ -15,7 +16,7 @@ def test_generate_system_report_includes_temp(monkeypatch):
     result = diagnostics.generate_system_report()
     assert result['cpu_temp'] == 42.0
 
-def test_self_test_returns_extra_info():
+def test_self_test_returns_extra_info() -> None:
     mock_stats = {'eth0': mock.Mock(isup=True)}
     mock_usb_proc = mock.Mock(returncode=0, stdout='dev1\ndev2\n')
     sys_metrics = {'ok': True, 'cpu_temp': 50.0}
