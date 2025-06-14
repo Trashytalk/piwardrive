@@ -14,6 +14,7 @@ import logging
 
 import utils
 from scheduler import PollScheduler
+from interfaces import DataCollector, SelfTestCollector
 
 _PROFILER: cProfile.Profile | None = None
 
@@ -117,11 +118,17 @@ def self_test() -> dict:
 
 
 class HealthMonitor:
-    """Background poller for :func:`self_test` results."""
+    """Background poller for metric collectors."""
 
-    def __init__(self, scheduler: 'PollScheduler', interval: float = 10.0) -> None:
+    def __init__(
+        self,
+        scheduler: 'PollScheduler',
+        interval: float = 10.0,
+        collector: DataCollector | None = None,
+    ) -> None:
         self._scheduler = scheduler
         self._interval = interval
+        self._collector: DataCollector = collector or SelfTestCollector()
         self.data: dict | None = None
         self._event = "health_monitor"
         scheduler.schedule(self._event, lambda dt: self._poll(), interval)
@@ -129,7 +136,7 @@ class HealthMonitor:
 
     def _poll(self) -> None:
         try:
-            self.data = self_test()
+            self.data = self._collector.collect()
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
