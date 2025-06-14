@@ -220,3 +220,4 @@ def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
     with mock.patch.object(utils, "report_error") as rep:
         assert utils.ensure_service_running("svc") is True
         rep.assert_called_once()
+

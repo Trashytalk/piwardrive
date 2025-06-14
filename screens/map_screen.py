@@ -1224,3 +1224,4 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Rotate ``marker`` to indicate relative ``bearing``."""
 
         marker.rotation = bearing
+
