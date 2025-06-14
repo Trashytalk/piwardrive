@@ -221,3 +221,24 @@ def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
         assert utils.ensure_service_running("svc") is True
         rep.assert_called_once()
 
+
+def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
+    output = "Device AA:BB:CC:DD:EE:FF Foo\n"
+    info = "GPS Coordinates: 1.0,2.0\n"
+    procs = [
+        mock.Mock(returncode=0, stdout=output, stderr=""),
+        mock.Mock(returncode=0, stdout=info, stderr=""),
+    ]
+
+    def fake_run(*args: Any, **kwargs: Any):
+        return procs.pop(0)
+
+    monkeypatch.setattr(utils.subprocess, "run", fake_run)
+    devices = utils.scan_bt_devices()
+    assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
+
+
+def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
+    monkeypatch.setattr(utils.subprocess, "run", mock.Mock(side_effect=OSError()))
+    assert utils.scan_bt_devices() == []
+
