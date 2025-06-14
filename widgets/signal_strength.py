@@ -2,11 +2,11 @@
 
 import logging
 from typing import Any
+from kivy.clock import Clock
 from kivymd.uix.label import MDLabel
 
 from .base import DashboardWidget
-import asyncio
-from utils import fetch_kismet_devices_async, get_avg_rssi
+from utils import fetch_kismet_devices_async, get_avg_rssi, run_async_task
 
 
 class SignalStrengthWidget(DashboardWidget):
@@ -21,12 +21,21 @@ class SignalStrengthWidget(DashboardWidget):
         self.update()
 
     def update(self) -> None:
-        try:
-            aps, _ = asyncio.run(fetch_kismet_devices_async())
+        """Schedule an asynchronous RSSI refresh."""
+
+        def _apply(result: tuple[list, list]) -> None:
+            aps, _ = result
             avg = get_avg_rssi(aps)
-            if avg is not None:
-                self.label.text = f"RSSI: {avg:.1f} dBm"
-            else:
-                self.label.text = "RSSI: N/A"
+
+            def _set(_dt: float) -> None:
+                if avg is not None:
+                    self.label.text = f"RSSI: {avg:.1f} dBm"
+                else:
+                    self.label.text = "RSSI: N/A"
+
+            Clock.schedule_once(_set, 0)
+
+        try:
+            run_async_task(fetch_kismet_devices_async(), _apply)
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("SignalStrengthWidget update failed: %s", exc)
