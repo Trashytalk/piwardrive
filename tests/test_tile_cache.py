@@ -52,11 +52,14 @@ def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
         def raise_for_status(self):
             pass
 
-    def fake_get(url, timeout=10):
+    def fake_req(url, timeout=10):
         called.append(url)
         return FakeResp(url)
 
-    monkeypatch.setattr("screens.map_screen.requests.get", fake_get)
+    monkeypatch.setattr(
+        "screens.map_screen.utils.safe_request",
+        lambda url, timeout=10: fake_req(url, timeout),
+    )
     bounds = (0.0, 0.0, 1.0, 1.0)
     screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
     assert len(called) == 2

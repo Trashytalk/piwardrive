@@ -15,6 +15,7 @@ import time
 
 
 import requests
+import utils
 
 import pandas as pd
 
@@ -58,7 +59,6 @@ from utils import (
     load_kml,
     point_in_polygon,
     report_error,
-    format_error,
 )
 
 
@@ -124,9 +124,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             except Exception as e:
 
-                report_error(
-                    format_error(101, f"Offline tiles error: {e}. Verify the tile source path.")
-                )
+                report_error(f"Offline tiles error: {e}")
 
         self._gps_event = "map_gps"
 
@@ -398,9 +396,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(
-                format_error(102, f"GPX load error: {e}. Ensure the file exists and is valid.")
-            )
+            report_error(f"GPX load error: {e}")
 
 
 
@@ -490,9 +486,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(
-                format_error(103, f"KML load error: {e}. Ensure the file path is correct.")
-            )
+            report_error(f"KML load error: {e}")
 
 
 
@@ -538,15 +532,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except subprocess.TimeoutExpired:
 
-            report_error(
-                format_error(104, "GPS lock timed out. Move to an open area for better signal.")
-            )
+            report_error("GPS lock timed out")
 
         except Exception as e:
 
-            report_error(
-                format_error(105, f"GPS error: {e}")
-            )
+            report_error(f"GPS error: {e}")
 
 
 
@@ -631,18 +621,13 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-        try:
-            resp = requests.get("http://127.0.0.1:2501/devices/all.json", timeout=5)
-            resp.raise_for_status()
-            data = resp.json()
-        except requests.RequestException as e:
-            self._show_error(f"AP overlay request error: {e}")
+        resp = utils.safe_request("http://127.0.0.1:2501/devices/all.json")
+        if resp is None:
             return
+        try:
+            data = resp.json()
         except json.JSONDecodeError as e:
             self._show_error(f"AP overlay JSON decode error: {e}")
-            return
-        except Exception as e:  # pragma: no cover - unexpected
-            self._show_error(f"AP overlay error: {e}")
             return
 
         for d in data.get("devices", []):
@@ -894,16 +879,15 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     if os.path.exists(local):
                         continue
                     os.makedirs(os.path.dirname(local), exist_ok=True)
-                    resp = requests.get(url, timeout=10)
-                    resp.raise_for_status()
+                    resp = utils.safe_request(url, timeout=10)
+                    if resp is None:
+                        continue
                     with open(local, "wb") as fh:
                         fh.write(resp.content)
 
         except Exception as e:  # pragma: no cover - network errors
 
-            report_error(
-                format_error(106, f"Prefetch error: {e}. Check network connectivity.")
-            )
+            report_error(f"Prefetch error: {e}")
 
 
 
@@ -923,9 +907,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     if os.path.getmtime(path) < cutoff:
                         os.remove(path)
         except Exception as e:  # pragma: no cover - filesystem errors
-            report_error(
-                format_error(107, f"Tile purge error: {e}. Check file permissions.")
-            )
+            report_error(f"Tile purge error: {e}")
 
 
 
@@ -959,9 +941,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 if total <= max_bytes:
                     break
         except Exception as e:  # pragma: no cover - filesystem errors
-            report_error(
-                format_error(108, f"Cache limit error: {e}. Check disk space and permissions.")
-            )
+            report_error(f"Cache limit error: {e}")
 
 
 
@@ -1128,9 +1108,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(
-                format_error(109, f"Export error: {e}. Verify that the path is writable.")
-            )
+            report_error(f"Export error: {e}")
 
 
 
@@ -1158,9 +1136,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(
-                format_error(110, f"PDF export error: {e}. Ensure img2pdf is installed and the path is writable.")
-            )
+            report_error(f"PDF export error: {e}")
 
 
 
@@ -1248,3 +1224,4 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Rotate ``marker`` to indicate relative ``bearing``."""
 
         marker.rotation = bearing
+

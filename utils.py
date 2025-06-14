@@ -74,6 +74,49 @@ def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
     raise RuntimeError("Unreachable")
 
 
+def safe_request(
+    url: str,
+    *,
+    attempts: int = 3,
+    timeout: float = 5,
+    fallback: Callable[[], T] | None = None,
+    **kwargs: Any,
+) -> T | Any | None:
+    """Return ``requests.get(url)`` with retries and optional fallback."""
+
+    def _get() -> Any:
+        return requests.get(url, timeout=timeout, **kwargs)
+
+    try:
+        resp = retry_call(_get, attempts=attempts, delay=1)
+        resp.raise_for_status()
+        return resp
+    except Exception as exc:  # pragma: no cover - network errors
+        report_error(f"Request error for {url}: {exc}")
+        if fallback is not None:
+            try:
+                return fallback()
+            except Exception as exc2:  # pragma: no cover - fallback failed
+                report_error(f"Fallback for {url} failed: {exc2}")
+        return None
+
+
+def ensure_service_running(
+    service: str, *, attempts: int = 3, delay: float = 1.0
+) -> bool:
+    """Ensure ``service`` is active, attempting a restart if not."""
+
+    if service_status(service):
+        return True
+
+    report_error(f"{service} service not active, attempting restart")
+    ok, _out, err = run_service_cmd(service, "restart", attempts=attempts, delay=delay)
+    if not ok:
+        msg = err.strip() if isinstance(err, str) else err
+        report_error(f"Failed to restart {service}: {msg or 'Unknown error'}")
+    return ok and service_status(service)
+
+
 def get_cpu_temp() -> float | None:
     """
     Read the Raspberry Pi CPU temperature from sysfs.

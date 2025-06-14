@@ -196,6 +196,9 @@ class PiWardriveApp(MDApp):
                     ),
                 )
             )
+            return
+        if action in {"start", "restart"} and not utils.ensure_service_running(svc):
+            utils.report_error(f"{svc} failed to stay running after {action}")
 
     def show_alert(self, title: str, text: str) -> None:
         """Display a simple alert dialog with the given title and text."""

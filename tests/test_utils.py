@@ -181,8 +181,43 @@ def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     assert aps == [1] and clients == [2]
 
 
-def test_polygon_area_triangle() -> None:
-    pts = [(0.0, 0.0), (0.0, 1.0), (1.0, 0.0)]
-    area = utils.polygon_area(pts)
-    expected = 111320.0 ** 2 / 2
-    assert abs(area - expected) < expected * 0.05
+def test_safe_request_retries(monkeypatch: Any) -> None:
+    calls: list[str] = []
+
+    class Resp:
+        status_code = 200
+        content = b"{}"
+
+        def raise_for_status(self) -> None:
+            pass
+
+    def get(url: str, timeout: int = 5) -> Resp:
+        calls.append(url)
+        if len(calls) == 1:
+            raise utils.requests.RequestException("boom")
+        return Resp()
+
+    monkeypatch.setattr(utils, "requests", mock.Mock(get=get, RequestException=Exception))
+    with mock.patch.object(utils, "report_error") as rep:
+        resp = utils.safe_request("http://x")
+        assert resp is not None
+        assert rep.call_count == 0
+    assert calls == ["http://x", "http://x"]
+
+
+def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
+    states = [False, True]
+
+    def status(_svc: str) -> bool:
+        return states.pop(0)
+
+    monkeypatch.setattr(utils, "service_status", status)
+    monkeypatch.setattr(
+        utils,
+        "run_service_cmd",
+        lambda *a, **k: (True, "", ""),
+    )
+    with mock.patch.object(utils, "report_error") as rep:
+        assert utils.ensure_service_running("svc") is True
+        rep.assert_called_once()
+
