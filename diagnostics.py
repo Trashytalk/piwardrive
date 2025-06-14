@@ -14,6 +14,7 @@ import logging
 
 import utils
 from scheduler import PollScheduler
+from persistence import HealthRecord, save_health_record
 
 _PROFILER: cProfile.Profile | None = None
 
@@ -130,6 +131,16 @@ class HealthMonitor:
     def _poll(self) -> None:
         try:
             self.data = self_test()
+            sys = self.data.get("system", {}) if isinstance(self.data, dict) else {}
+            save_health_record(
+                HealthRecord(
+                    timestamp=sys.get("timestamp", datetime.now().isoformat()),
+                    cpu_temp=sys.get("cpu_temp"),
+                    cpu_percent=sys.get("cpu_percent", 0.0),
+                    memory_percent=sys.get("memory_percent", 0.0),
+                    disk_percent=sys.get("disk_percent", 0.0),
+                )
+            )
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
