@@ -73,3 +73,10 @@ def test_env_override_boolean(monkeypatch, tmp_path):
     monkeypatch.setenv("PW_MAP_SHOW_GPS", "false")
     cfg = config.AppConfig.load()
     assert cfg.map_show_gps is False
+
+
+def test_env_override_health_poll(monkeypatch, tmp_path):
+    setup_temp_config(tmp_path)
+    monkeypatch.setenv("PW_HEALTH_POLL_INTERVAL", "5")
+    cfg = config.AppConfig.load()
+    assert cfg.health_poll_interval == 5
