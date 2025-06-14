@@ -11,6 +11,7 @@ from widgets import (
     HandshakeCounterWidget,
     ServiceStatusWidget,
     StorageUsageWidget,
+    HealthStatusWidget,
     DiskUsageTrendWidget,
     CPUTempGraphWidget,
     NetworkThroughputWidget,
@@ -38,7 +39,7 @@ class DashboardScreen(Screen):
 
     def on_leave(self):
         App.get_running_app().scheduler.cancel_all()
- self.save_layout()
+        self.save_layout()
 
 
     def save_layout(self):
@@ -59,6 +60,7 @@ class DashboardScreen(Screen):
                 'HandshakeCounterWidget': HandshakeCounterWidget,
                 'ServiceStatusWidget': ServiceStatusWidget,
                 'StorageUsageWidget': StorageUsageWidget,
+                'HealthStatusWidget': HealthStatusWidget,
                 'DiskUsageTrendWidget': DiskUsageTrendWidget,
                 'CPUTempGraphWidget': CPUTempGraphWidget,
                 'NetworkThroughputWidget': NetworkThroughputWidget,
@@ -78,6 +80,7 @@ class DashboardScreen(Screen):
                 HandshakeCounterWidget(),
                 ServiceStatusWidget(),
                 StorageUsageWidget(),
+                HealthStatusWidget(),
             ]
             if getattr(app, 'widget_disk_trend', False):
                 widgets.append(DiskUsageTrendWidget())
