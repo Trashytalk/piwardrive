@@ -18,7 +18,7 @@ from typing import Any, Callable, Iterable, Sequence, TypeVar
 from kivy.app import App
 
 import psutil
-import requests
+import requests  # type: ignore
 
 ERROR_PREFIX = "E"
 
@@ -29,12 +29,12 @@ def format_error(code: int, message: str) -> str:
 
 
 try:
-    import orjson as _json
+    import orjson as _json  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     try:
-        import ujson as _json
+        import ujson as _json  # type: ignore
     except Exception:  # pragma: no cover - fallback
-        _json = json
+        _json = json  # type: ignore
 
 
 def _loads(data: bytes | str) -> Any:
