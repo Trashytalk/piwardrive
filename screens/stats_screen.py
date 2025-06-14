@@ -20,7 +20,7 @@ class StatsScreen(Screen):
         )
 
 
-    def update_stats(self, dt):
+    def update_stats(self, _dt):
         """Refresh temperature, memory and disk usage labels."""
         # compute metrics
         cpu_temp = get_cpu_temp()
