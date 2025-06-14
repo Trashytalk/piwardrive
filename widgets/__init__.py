@@ -17,6 +17,7 @@ _MODULE_MAP: Dict[str, str] = {
     "NetworkThroughputWidget": "net_throughput",
     "HealthStatusWidget": "health_status",
     "BatteryStatusWidget": "battery_status",
+    "HealthAnalysisWidget": "health_analysis",
 }
 
 
@@ -41,4 +42,5 @@ __all__: list[str] = [
     "NetworkThroughputWidget",
     "HealthStatusWidget",
     "BatteryStatusWidget",
+    "HealthAnalysisWidget",
 ]

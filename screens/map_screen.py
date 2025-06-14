@@ -112,6 +112,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
+
     def on_enter(self):  # pylint: disable=arguments-differ
 
         """Start GPS and AP polling when entering the screen."""
@@ -533,6 +534,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 self._update_map(lat, lon)
                 self._adjust_gps_interval(lat, lon)
 
+
         except subprocess.TimeoutExpired:
 
             report_error("GPS lock timed out")
@@ -618,7 +620,6 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     self._gps_event, lambda dt: self.center_on_gps(), iv
                 )
             )
-
 
 
     # AP overlay

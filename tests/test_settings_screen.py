@@ -55,8 +55,17 @@ class DummyApp:
         self.bettercap_caplet = "/valid/caplet"
         self.map_poll_gps = 10
         self.map_poll_gps_max = 30
+        self.map_poll_aps = 60
+        self.map_show_gps = True
+        self.map_show_aps = True
+        self.map_cluster_aps = False
+        self.debug_mode = False
         self.offline_tile_path = "/valid/tiles"
         self.map_use_offline = False
+        self.health_poll_interval = 10
+        self.log_rotate_interval = 3600
+        self.log_rotate_archives = 3
+        self.widget_battery_status = False
         self.theme = "Dark"
         self.theme_cls = SimpleNamespace(theme_style="Dark")
         self.config_data = config.Config()
@@ -68,8 +77,17 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.bcap_field = SimpleNamespace(text=app.bettercap_caplet)
     screen.gps_poll_field = SimpleNamespace(text=str(app.map_poll_gps))
     screen.gps_poll_max_field = SimpleNamespace(text=str(app.map_poll_gps_max))
+    screen.ap_poll_field = SimpleNamespace(text=str(app.map_poll_aps))
+    screen.health_poll_field = SimpleNamespace(text=str(app.health_poll_interval))
+    screen.log_rotate_field = SimpleNamespace(text=str(app.log_rotate_interval))
+    screen.log_archives_field = SimpleNamespace(text=str(app.log_rotate_archives))
     screen.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
     screen.offline_switch = SimpleNamespace(active=app.map_use_offline)
+    screen.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
+    screen.show_aps_switch = SimpleNamespace(active=app.map_show_aps)
+    screen.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
+    screen.debug_switch = SimpleNamespace(active=app.debug_mode)
+    screen.battery_switch = SimpleNamespace(active=app.widget_battery_status)
     screen.theme_switch = SimpleNamespace(active=app.theme == "Dark")
     screen.theme_cls = SimpleNamespace(theme_style=app.theme)
     return screen
@@ -118,3 +136,41 @@ def test_save_settings_invalid_paths(monkeypatch: Any, field: str, attr: str) ->
     screen.save_settings()
     assert errors
     assert getattr(app, attr) != "/invalid"
+
+
+def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
+    module = load_screen(monkeypatch)
+    app = DummyApp()
+    monkeypatch.setattr(module.App, "get_running_app", lambda: app)
+    screen = make_screen(module, app)
+
+    screen.ap_poll_field.text = "30"
+    screen.health_poll_field.text = "15"
+    screen.log_rotate_field.text = "1200"
+    screen.log_archives_field.text = "5"
+    screen.show_gps_switch.active = False
+    screen.show_aps_switch.active = False
+    screen.cluster_switch.active = True
+    screen.debug_switch.active = True
+    screen.battery_switch.active = True
+
+    monkeypatch.setattr(module.os.path, "exists", lambda p: True)
+    saved = {}
+
+    def fake_save(cfg: config.Config) -> None:
+        saved.update(cfg.__dict__)
+
+    monkeypatch.setattr(module, "save_config", fake_save)
+
+    screen.save_settings()
+
+    assert app.map_poll_aps == 30
+    assert app.health_poll_interval == 15
+    assert app.log_rotate_interval == 1200
+    assert app.log_rotate_archives == 5
+    assert app.map_show_gps is False
+    assert app.map_show_aps is False
+    assert app.map_cluster_aps is True
+    assert app.debug_mode is True
+    assert app.widget_battery_status is True
+    assert saved

@@ -3,14 +3,20 @@
 import logging
 import os
 from dataclasses import asdict, fields
-from typing import Any
+
+from typing import Any, Callable
 from datetime import datetime
+
 
 from scheduler import PollScheduler
 from config import load_config, save_config, Config
+
+from security import hash_password, verify_password
 from persistence import AppState, load_app_state, save_app_state
+
 import diagnostics
 import utils
+from di import Container
 from logconfig import setup_logging
 
 from kivy.factory import Factory
@@ -56,27 +62,44 @@ class PiWardriveApp(MDApp):
     widget_cpu_temp = BooleanProperty(True)
     widget_net_throughput = BooleanProperty(True)
     widget_battery_status = BooleanProperty(False)
+    widget_health_analysis = BooleanProperty(True)
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
     last_screen = StringProperty("Map")
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        container: Container | None = None,
+        service_cmd_runner: Callable[..., tuple[bool, str, str]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
+        self.container = container or Container()
+        self._run_service_cmd = service_cmd_runner or utils.run_service_cmd
+
         # load persisted configuration
         self.config_data: Config = load_config()
         for key, val in asdict(self.config_data).items():
             if hasattr(self, key):
                 setattr(self, key, val)
-        self.app_state: AppState = load_app_state()
-        if hasattr(self, "last_screen"):
-            self.last_screen = self.app_state.last_screen
-        self.app_state.last_start = datetime.now().isoformat()
+
+        pw = os.getenv("PW_ADMIN_PASSWORD")
+        if pw and not self.config_data.admin_password_hash:
+            self.config_data.admin_password_hash = hash_password(pw)
+
         setup_logging(level=logging.DEBUG if self.debug_mode else logging.INFO)
-        self.scheduler: PollScheduler = PollScheduler()
-        self.health_monitor = diagnostics.HealthMonitor(
-            self.scheduler, self.health_poll_interval
-        )
+
+        if not self.container.has("scheduler"):
+            self.container.register_instance("scheduler", PollScheduler())
+        self.scheduler = self.container.resolve("scheduler")
+
+        if not self.container.has("health_monitor"):
+            self.container.register_instance(
+                "health_monitor",
+                diagnostics.HealthMonitor(self.scheduler, self.health_poll_interval),
+            )
+        self.health_monitor = self.container.resolve("health_monitor")
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme
@@ -140,18 +163,43 @@ class PiWardriveApp(MDApp):
     # 1) Service control with feedback
     def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service with retries."""
+        import os as _os
+        from security import verify_password as _verify
+
+        cfg_hash = getattr(getattr(self, "config_data", None), "admin_password_hash", "")
+        pw = _os.getenv("PW_ADMIN_PASSWORD")
+        if cfg_hash and not _verify(pw or "", cfg_hash):
+            utils.report_error("Unauthorized")
+            return
         try:
-            success, _out, err = utils.run_service_cmd(
+            success, _out, err = self._run_service_cmd(
                 svc, action, attempts=3, delay=1
             )
         except Exception as exc:  # pragma: no cover - subprocess failures
-            utils.report_error(f"Failed to {action} {svc}: {exc}")
+            utils.report_error(
+                utils.format_error(
+                    1,
+                    (
+                        f"Failed to {action} {svc}: {exc}. "
+                        "Please check the service status."
+                    ),
+                )
+            )
             return
         if not success:
             msg = err.strip() if isinstance(err, str) else err
             utils.report_error(
-                f"Failed to {action} {svc}: {msg or 'Unknown error'}"
+                utils.format_error(
+                    1,
+                    (
+                        f"Failed to {action} {svc}: {msg or 'Unknown error'}. "
+                        "Please check the service status."
+                    ),
+                )
             )
+            return
+        if action in {"start", "restart"} and not utils.ensure_service_running(svc):
+            utils.report_error(f"{svc} failed to stay running after {action}")
 
     def show_alert(self, title: str, text: str) -> None:
         """Display a simple alert dialog with the given title and text."""

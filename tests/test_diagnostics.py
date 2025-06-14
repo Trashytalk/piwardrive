@@ -29,3 +29,14 @@ def test_self_test_returns_extra_info() -> None:
         assert result['interfaces'] == {'eth0': True}
         assert result['usb'] == ['dev1', 'dev2']
         assert result['services'] == {'kismet': True, 'bettercap': False, 'gpsd': True}
+
+
+def test_stop_profiling_writes_callgrind(tmp_path: Any) -> None:
+    path = tmp_path / 'out.callgrind'
+    os.environ['PW_PROFILE_CALLGRIND'] = str(path)
+    diagnostics.start_profiling()
+    sum(range(10))
+    summary = diagnostics.stop_profiling()
+    assert summary is not None
+    assert path.exists()
+    os.environ.pop('PW_PROFILE_CALLGRIND')
