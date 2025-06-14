@@ -140,6 +140,12 @@ class SettingsScreen(Screen):
 
         layout.add_widget(offline_row)
 
+        prefetch_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
+        prefetch_row.add_widget(MDLabel(text="Prefetch Tiles", size_hint_x=0.7))
+        prefetch_btn = MDRaisedButton(text="Fetch", on_release=lambda *_: self.prefetch_tiles())
+        prefetch_row.add_widget(prefetch_btn)
+        layout.add_widget(prefetch_row)
+
         show_gps_row = MDBoxLayout(spacing=dp(8), size_hint_y=None, height=dp(48))
         show_gps_row.add_widget(MDLabel(text="Show GPS", size_hint_x=0.7))
         self.show_gps_switch = MDSwitch(active=app.map_show_gps)
@@ -303,3 +309,13 @@ class SettingsScreen(Screen):
             )
 
         Snackbar(text="Settings saved", duration=1).open()
+
+    def prefetch_tiles(self) -> None:
+        """Trigger tile prefetch on the map screen."""
+        app = App.get_running_app()
+        try:
+            map_screen = app.root.ids.sm.get_screen("Map")
+        except Exception:
+            report_error("Map screen unavailable")
+            return
+        map_screen.prefetch_visible_region()
