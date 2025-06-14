@@ -58,6 +58,7 @@ from utils import (
     load_kml,
     point_in_polygon,
     report_error,
+    format_error,
 )
 
 
@@ -123,7 +124,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             except Exception as e:
 
-                report_error(f"Offline tiles error: {e}")
+                report_error(
+                    format_error(101, f"Offline tiles error: {e}. Verify the tile source path.")
+                )
 
         self._gps_event = "map_gps"
 
@@ -395,7 +398,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(f"GPX load error: {e}")
+            report_error(
+                format_error(102, f"GPX load error: {e}. Ensure the file exists and is valid.")
+            )
 
 
 
@@ -485,7 +490,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(f"KML load error: {e}")
+            report_error(
+                format_error(103, f"KML load error: {e}. Ensure the file path is correct.")
+            )
 
 
 
@@ -531,11 +538,15 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except subprocess.TimeoutExpired:
 
-            report_error("GPS lock timed out")
+            report_error(
+                format_error(104, "GPS lock timed out. Move to an open area for better signal.")
+            )
 
         except Exception as e:
 
-            report_error(f"GPS error: {e}")
+            report_error(
+                format_error(105, f"GPS error: {e}")
+            )
 
 
 
@@ -890,7 +901,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:  # pragma: no cover - network errors
 
-            report_error(f"Prefetch error: {e}")
+            report_error(
+                format_error(106, f"Prefetch error: {e}. Check network connectivity.")
+            )
 
 
 
@@ -910,7 +923,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     if os.path.getmtime(path) < cutoff:
                         os.remove(path)
         except Exception as e:  # pragma: no cover - filesystem errors
-            report_error(f"Tile purge error: {e}")
+            report_error(
+                format_error(107, f"Tile purge error: {e}. Check file permissions.")
+            )
 
 
 
@@ -944,7 +959,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 if total <= max_bytes:
                     break
         except Exception as e:  # pragma: no cover - filesystem errors
-            report_error(f"Cache limit error: {e}")
+            report_error(
+                format_error(108, f"Cache limit error: {e}. Check disk space and permissions.")
+            )
 
 
 
@@ -1111,7 +1128,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(f"Export error: {e}")
+            report_error(
+                format_error(109, f"Export error: {e}. Verify that the path is writable.")
+            )
 
 
 
@@ -1139,7 +1158,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            report_error(f"PDF export error: {e}")
+            report_error(
+                format_error(110, f"PDF export error: {e}. Ensure img2pdf is installed and the path is writable.")
+            )
 
 
 
