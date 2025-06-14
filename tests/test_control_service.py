@@ -33,5 +33,7 @@ def test_control_service_reports_error(monkeypatch: Any) -> None:
         _run_service_cmd=lambda *_a, **_k: (False, '', 'oops')
     )
     with mock.patch.object(utils, 'report_error') as rep:
+
         func(dummy, 'svc', 'start')
     rep.assert_called_once_with('Failed to start svc: oops')
+
