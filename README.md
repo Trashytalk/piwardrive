@@ -12,6 +12,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`.
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`.
+* **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 
 ## Hardware Prerequisites
@@ -38,7 +39,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    ```bash
    git clone https://github.com/TRASHYTALK/piwardrive.git
    cd piwardrive
-@@ -45,50 +46,51 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
+@@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    source gui-env/bin/activate
    pip install --upgrade pip setuptools
    ```
