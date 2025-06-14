@@ -15,7 +15,6 @@ import time
 
 
 import requests
-import utils
 
 import pandas as pd
 
@@ -621,13 +620,18 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-        resp = utils.safe_request("http://127.0.0.1:2501/devices/all.json")
-        if resp is None:
-            return
         try:
+            resp = requests.get("http://127.0.0.1:2501/devices/all.json", timeout=5)
+            resp.raise_for_status()
             data = resp.json()
+        except requests.RequestException as e:
+            self._show_error(f"AP overlay request error: {e}")
+            return
         except json.JSONDecodeError as e:
             self._show_error(f"AP overlay JSON decode error: {e}")
+            return
+        except Exception as e:  # pragma: no cover - unexpected
+            self._show_error(f"AP overlay error: {e}")
             return
 
         for d in data.get("devices", []):
@@ -879,9 +883,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     if os.path.exists(local):
                         continue
                     os.makedirs(os.path.dirname(local), exist_ok=True)
-                    resp = utils.safe_request(url, timeout=10)
-                    if resp is None:
-                        continue
+                    resp = requests.get(url, timeout=10)
+                    resp.raise_for_status()
                     with open(local, "wb") as fh:
                         fh.write(resp.content)
 
@@ -1224,4 +1227,3 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Rotate ``marker`` to indicate relative ``bearing``."""
 
         marker.rotation = bearing
-
