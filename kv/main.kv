@@ -1,5 +1,6 @@
 #:import dp kivy.metrics.dp
 #:import Graph kivy_garden.graph.Graph
+#:import _ localization._
 
 <Separator@Widget>:
     size_hint_y: None
@@ -53,17 +54,17 @@ BoxLayout:
 
         MDLabel:
             id: cpu_label
-            text: 'CPU: N/A'
+            text: f'{_("cpu")}: {_("not_available")}'
             size_hint_x: 1
             halign: 'center'
         MDLabel:
             id: mem_label
-            text: 'Mem: N/A'
+            text: f'{_("mem")}: {_("not_available")}'
             size_hint_x: 1
             halign: 'center'
         MDLabel:
             id: disk_label
-            text: 'SSD: N/A'
+            text: f'{_("ssd")}: {_("not_available")}'
             size_hint_x: 1
             halign: 'center'
 
@@ -85,49 +86,49 @@ BoxLayout:
                 height: self.minimum_height
 
                 MDLabel:
-                    text: 'System'
+                    text: _("system")
                     font_style: 'H5'
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: cpu_temp_label
-                    text: 'CPU Temp: N/A°C'
+                    text: f"{_('cpu_temp')}: {_('not_available')}°C"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: cpu_load_label
-                    text: 'CPU Load: N/A%'
+                    text: f"{_('cpu_load')}: {_('not_available')}%"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: mem_usage_label
-                    text: 'Memory Usage: N/A%'
+                    text: f"{_('memory_usage')}: {_('not_available')}%"
                     size_hint_y: None
                     height: self.texture_size[1]
                 Separator:
                 MDLabel:
-                    text: 'Storage'
+                    text: _("storage")
                     font_style: 'H6'
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: disk_usage_label
-                    text: 'Disk Usage: N/A%'
+                    text: f"{_('disk_usage')}: {_('not_available')}%"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: disk_health_label
-                    text: 'SSD Health: N/A'
+                    text: f"{_('ssd_health')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: ssd_iops_label
-                    text: 'SSD I/O: N/A ops/s'
+                    text: f"{_('ssd_iops')}: {_('not_available')} ops/s"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: inode_free_label
-                    text: 'Free Inodes: N/A'
+                    text: f"{_('free_inodes')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
 
@@ -138,28 +139,28 @@ BoxLayout:
                 height: self.minimum_height
 
                 MDLabel:
-                    text: 'Network/GPS'
+                    text: _("network_gps")
                     font_style: 'H5'
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: kismet_count_label
-                    text: 'APs: N/A'
+                    text: f"{_('aps')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: bettercap_count_label
-                    text: 'Handshakes: N/A'
+                    text: f"{_('handshakes')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: gps_accuracy_label
-                    text: 'Accuracy: N/A m'
+                    text: f"{_('accuracy')}: {_('not_available')} m"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: gps_fix_label
-                    text: 'Fix: N/A'
+                    text: f"{_('fix')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
 
@@ -171,8 +172,8 @@ BoxLayout:
 
                 Graph:
                     id: cpu_graph
-                    xlabel: 'Time'
-                    ylabel: 'Load'
+                    xlabel: _("time")
+                    ylabel: _("load")
                     x_ticks_minor: 5
                     x_grid: True
                     y_grid: True
@@ -186,11 +187,11 @@ BoxLayout:
 
                     MDLabel:
                         id: kismet_status_label
-                        text: 'Kismet: N/A'
+                        text: f"{_('kismet')}: {_('not_available')}"
                         halign: 'left'
                     MDLabel:
                         id: bettercap_status_label
-                        text: 'BetterCAP: N/A'
+                        text: f"{_('bettercap')}: {_('not_available')}"
                         halign: 'left'
 
 # Split Screen layout
@@ -216,22 +217,22 @@ BoxLayout:
 
                 MDLabel:
                     id: split_cpu_label
-                    text: 'CPU: N/A'
+                    text: f"{_('cpu')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: split_bssid_label
-                    text: 'BSSIDs: N/A'
+                    text: f"{_('bssids')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: split_handshake_label
-                    text: 'Handshakes: N/A'
+                    text: f"{_('handshakes')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: split_rssi_label
-                    text: 'Avg RSSI: N/A'
+                    text: f"{_('avg_rssi')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
 
@@ -239,17 +240,17 @@ BoxLayout:
 
                 MDLabel:
                     id: split_kismet_uptime_label
-                    text: 'Kismet: N/A'
+                    text: f"{_('kismet')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: split_bettercap_uptime_label
-                    text: 'BetterCAP: N/A'
+                    text: f"{_('bettercap')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
                 MDLabel:
                     id: split_fix_quality_label
-                    text: 'Fix: N/A'
+                    text: f"{_('fix')}: {_('not_available')}"
                     size_hint_y: None
                     height: self.texture_size[1]
 

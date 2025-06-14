@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
+from localization import _
 
 from .base import DashboardWidget
 from utils import get_disk_usage
@@ -13,7 +14,7 @@ class StorageUsageWidget(DashboardWidget):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.label = MDLabel(text="SSD: N/A")
+        self.label = MDLabel(text=f"{_('ssd')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
@@ -21,8 +22,8 @@ class StorageUsageWidget(DashboardWidget):
         try:
             pct = get_disk_usage('/mnt/ssd')
             if pct is not None:
-                self.label.text = f"SSD: {pct:.0f}%"
+                self.label.text = f"{_('ssd')}: {pct:.0f}%"
             else:
-                self.label.text = "SSD: N/A"
+                self.label.text = f"{_('ssd')}: {_('not_available')}"
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("StorageUsageWidget update failed: %s", exc)

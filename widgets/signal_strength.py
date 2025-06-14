@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
+from localization import _
 
 from .base import DashboardWidget
 import asyncio
@@ -16,7 +17,7 @@ class SignalStrengthWidget(DashboardWidget):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.label = MDLabel(text="RSSI: N/A")
+        self.label = MDLabel(text=f"{_('rssi')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
@@ -25,8 +26,8 @@ class SignalStrengthWidget(DashboardWidget):
             aps, _ = asyncio.run(fetch_kismet_devices_async())
             avg = get_avg_rssi(aps)
             if avg is not None:
-                self.label.text = f"RSSI: {avg:.1f} dBm"
+                self.label.text = f"{_('rssi')}: {avg:.1f} dBm"
             else:
-                self.label.text = "RSSI: N/A"
+                self.label.text = f"{_('rssi')}: {_('not_available')}"
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("SignalStrengthWidget update failed: %s", exc)
