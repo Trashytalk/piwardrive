@@ -15,33 +15,6 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
 ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
 
-CONFIG_SCHEMA = {
-    "type": "object",
-    "properties": {
-        "theme": {"type": "string"},
-        "map_poll_gps": {"type": "integer"},
-        "map_poll_gps_max": {"type": "integer"},
-        "map_poll_aps": {"type": "integer"},
-        "map_poll_bt": {"type": "integer"},
-        "map_show_gps": {"type": "boolean"},
-        "map_show_aps": {"type": "boolean"},
-        "map_show_bt": {"type": "boolean"},
-        "map_cluster_aps": {"type": "boolean"},
-        "map_use_offline": {"type": "boolean"},
-        "kismet_logdir": {"type": "string", "minLength": 1},
-        "bettercap_caplet": {"type": "string", "minLength": 1},
-        "dashboard_layout": {"type": "array"},
-        "debug_mode": {"type": "boolean"},
-        "offline_tile_path": {"type": "string", "minLength": 1},
-        "health_poll_interval": {"type": "integer", "minimum": 1},
-        "log_rotate_interval": {"type": "integer", "minimum": 1},
-        "log_rotate_archives": {"type": "integer", "minimum": 1},
-        "widget_battery_status": {"type": "boolean"},
-        "admin_password_hash": {"type": "string"},
-    },
-    "additionalProperties": False,
-}
-
 
 @dataclass
 class Config:
