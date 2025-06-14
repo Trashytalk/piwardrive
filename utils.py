@@ -356,29 +356,30 @@ def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> floa
 
 
 def polygon_area(points: Sequence[tuple[float, float]]) -> float:
-    """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""
+    """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
     if len(points) < 3:
         return 0.0
+
     import math
 
-    # approximate using equirectangular projection around centroid
-    lat0 = sum(p[0] for p in points) / len(points)
-    lon0 = sum(p[1] for p in points) / len(points)
+    n = len(points)
+    lat0 = sum(p[0] for p in points) / n
+    lon0 = sum(p[1] for p in points) / n
     cos_lat0 = math.cos(math.radians(lat0))
 
     def project(p: tuple[float, float]) -> tuple[float, float]:
-        x = (p[1] - lon0) * cos_lat0
-        y = p[0] - lat0
-        return x, y
+        return (p[1] - lon0) * cos_lat0, p[0] - lat0
 
     verts = [project(p) for p in points]
+    prev_x, prev_y = verts[-1]
     area = 0.0
-    for (x1, y1), (x2, y2) in zip(verts, verts[1:] + verts[:1]):
-        area += x1 * y2 - x2 * y1
+    for x, y in verts:
+        area += prev_x * y - x * prev_y
+        prev_x, prev_y = x, y
+
     area = abs(area) / 2
-    # convert degrees^2 to meters^2 using approximate size of degree
     meter_per_deg = 111320.0
-    return area * (meter_per_deg ** 2)
+    return area * (meter_per_deg**2)
 
 
 def point_in_polygon(
