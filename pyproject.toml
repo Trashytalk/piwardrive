@@ -14,7 +14,7 @@ files = [
     "utils.py",
     "widgets",
 ]
-exclude = "gitattributes.py"
+exclude = ".gitattributes"
 follow_imports = "skip"
 
 [[tool.mypy.overrides]]

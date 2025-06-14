@@ -47,13 +47,9 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    cd piwardrive
    ```
 
-2. **Install system packages** (Debian/Ubuntu):
-
-   ```bash
-   sudo apt-get install kismet gpsd bettercap evtest git build-essential cmake
    ```
 
-3. **Install Python dependencies**:
+2. **Install Python dependencies**:
 
    ```bash
    python3 -m venv gui-env
@@ -70,9 +66,11 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
    pip install -r requirements.txt
    ```
 
-4. **Mount the SSD**:
 
-   ```
+3. **Configure fstab** (optional):
+
+   ```bash
+
    /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
    ```
 
@@ -147,3 +145,14 @@ sequenceDiagram
 
 See [docs/](docs/) for configuration guides and widget details. Run `pytest` to execute the test suite and
 use `flake8` and `mypy` to lint and type-check the codebase.
+
+## Contributing
+
+Install development dependencies with:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+The `requirements-dev.txt` file lists `flake8`, `mypy` and `pytest` which are
+used to lint, type-check and test the project.
