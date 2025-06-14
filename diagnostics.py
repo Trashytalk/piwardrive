@@ -16,6 +16,7 @@ def generate_system_report() -> dict:
     """Return a dictionary with basic system metrics."""
     return {
         "timestamp": datetime.now().isoformat(),
+        "cpu_temp": utils.get_cpu_temp(),
         "cpu_percent": psutil.cpu_percent(interval=1),
         "memory_percent": psutil.virtual_memory().percent,
         "disk_percent": psutil.disk_usage('/').percent,
