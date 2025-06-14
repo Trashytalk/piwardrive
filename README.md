@@ -140,13 +140,8 @@ Error messages are prefixed with codes like `[E001]` to aid troubleshooting.
 See [docs/](docs/) for configuration guides and widget details. Run `pytest` to execute the test suite and
 use `flake8` and `mypy` to lint and type-check the codebase.
 
-## Contributing
 
-Install development dependencies with:
+## License
 
-```bash
-pip install -r requirements-dev.txt
-```
+This project is licensed under the [MIT License](LICENSE).
 
-The `requirements-dev.txt` file lists `flake8`, `mypy` and `pytest` which are
-used to lint, type-check and test the project.
