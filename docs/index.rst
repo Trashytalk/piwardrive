@@ -10,5 +10,6 @@ PiWardrive Documentation
    diagnostics
    persistence
    gps_polling
+   status_service
    architecture
    workflows
