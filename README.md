@@ -97,11 +97,15 @@ python main.py
 ## Error Handling
 * **
 sequenceDiagram
-    participant User
-    participant MapScreen
+    participant Test
+    participant control_service
+    participant subprocess
     participant report_error
 
-    User->>MapScreen: Triggers action (e.g., load file, fetch GPS)
-    MapScreen->>MapScreen: Exception occurs
-    MapScreen->>report_error: report_error(error_message)
+    Test->>control_service: Call with simulated failure
+    control_service->>subprocess: Run command
+    subprocess-->>control_service: Return failure (non-zero code)
+    control_service->>report_error: report_error(error_message)
+
+    
 
