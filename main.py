@@ -2,7 +2,6 @@
 
 import logging
 import os
-import subprocess
 from dataclasses import asdict, fields
 from typing import Any
 
