@@ -18,15 +18,23 @@ from typing import Any, Callable, Iterable, Sequence, TypeVar
 from kivy.app import App
 
 import psutil
-import requests
+import requests  # type: ignore
+
+ERROR_PREFIX = "E"
+
+
+def format_error(code: int, message: str) -> str:
+    """Return standardized error string like ``[E001] message``."""
+    return f"[{ERROR_PREFIX}{code:03d}] {message}"
+
 
 try:
-    import orjson as _json
+    import orjson as _json  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
     try:
-        import ujson as _json
+        import ujson as _json  # type: ignore
     except Exception:  # pragma: no cover - fallback
-        _json = json
+        _json = json  # type: ignore
 
 
 def _loads(data: bytes | str) -> Any:
@@ -35,7 +43,10 @@ def _loads(data: bytes | str) -> Any:
 
 
 def report_error(message: str) -> None:
-    """Log the error and show an alert via the running app if possible."""
+    """Log the error and show an alert via the running app if possible.
+
+    ``message`` should include a numeric error code prefix like ``[E001]``.
+    """
     logging.error(message)
     try:
         app = App.get_running_app()
@@ -61,6 +72,49 @@ def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
     if last_exc is not None:
         raise last_exc
     raise RuntimeError("Unreachable")
+
+
+def safe_request(
+    url: str,
+    *,
+    attempts: int = 3,
+    timeout: float = 5,
+    fallback: Callable[[], T] | None = None,
+    **kwargs: Any,
+) -> T | Any | None:
+    """Return ``requests.get(url)`` with retries and optional fallback."""
+
+    def _get() -> Any:
+        return requests.get(url, timeout=timeout, **kwargs)
+
+    try:
+        resp = retry_call(_get, attempts=attempts, delay=1)
+        resp.raise_for_status()
+        return resp
+    except Exception as exc:  # pragma: no cover - network errors
+        report_error(f"Request error for {url}: {exc}")
+        if fallback is not None:
+            try:
+                return fallback()
+            except Exception as exc2:  # pragma: no cover - fallback failed
+                report_error(f"Fallback for {url} failed: {exc2}")
+        return None
+
+
+def ensure_service_running(
+    service: str, *, attempts: int = 3, delay: float = 1.0
+) -> bool:
+    """Ensure ``service`` is active, attempting a restart if not."""
+
+    if service_status(service):
+        return True
+
+    report_error(f"{service} service not active, attempting restart")
+    ok, _out, err = run_service_cmd(service, "restart", attempts=attempts, delay=delay)
+    if not ok:
+        msg = err.strip() if isinstance(err, str) else err
+        report_error(f"Failed to restart {service}: {msg or 'Unknown error'}")
+    return ok and service_status(service)
 
 
 def get_cpu_temp() -> float | None:
@@ -98,12 +152,12 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
     """Return SMART health status for the device mounted at ``mount_point``."""
-    dev = None
     try:
-        for part in psutil.disk_partitions(all=False):
-            if part.mountpoint == mount_point:
-                dev = part.device
-                break
+        dev = next(
+            (p.device for p in psutil.disk_partitions(all=False)
+             if p.mountpoint == mount_point),
+            None,
+        )
         if not dev:
             return None
         proc = subprocess.run(
@@ -115,15 +169,17 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         if proc.returncode != 0:
             return None
         out = proc.stdout + proc.stderr
-        if 'PASSED' in out:
-            return 'OK'
-        if 'FAILED' in out:
-            return 'FAIL'
-        if 'WARNING' in out:
-            return 'WARN'
-        return out.strip().splitlines()[-1] if out else None
+        return _parse_smartctl_output(out)
     except Exception:
         return None
+
+
+def _parse_smartctl_output(output: str) -> str | None:
+    """Map smartctl output to a simple status string."""
+    for key, val in {"PASSED": "OK", "FAILED": "FAIL", "WARNING": "WARN"}.items():
+        if key in output:
+            return val
+    return output.strip().splitlines()[-1] if output else None
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
@@ -154,6 +210,12 @@ def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Run ``sudo systemctl`` for ``service`` with optional retries."""
+
+    from security import validate_service_name
+
+    validate_service_name(service)
+    if action not in {"start", "stop", "restart", "is-active"}:
+        raise ValueError(f"Invalid action: {action}")
 
     cmd = ["sudo", "systemctl", action, service]
 
@@ -197,16 +259,28 @@ def fetch_kismet_devices() -> tuple[list, list]:
         try:
             resp = requests.get(url, timeout=5)
         except requests.RequestException as exc:
-            report_error(f"Kismet API request failed: {exc}")
+            report_error(
+                format_error(
+                    301,
+                    (
+                        f"Kismet API request failed: {exc}. "
+                        "Ensure Kismet is running."
+                    ),
+                )
+            )
             continue
         try:
             if resp.status_code == 200:
                 data = resp.json()
                 return data.get("access_points", []), data.get("clients", [])
         except json.JSONDecodeError as exc:
-            report_error(f"Kismet API JSON decode error: {exc}")
+            report_error(
+                format_error(302, f"Kismet API JSON decode error: {exc}")
+            )
         except Exception as exc:  # pragma: no cover - unexpected
-            report_error(f"Kismet API error: {exc}")
+            report_error(
+                format_error(303, f"Kismet API error: {exc}")
+            )
     return [], []
 
 
@@ -220,14 +294,24 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         try:
             resp = await asyncio.to_thread(requests.get, url, timeout=5)
         except requests.RequestException as exc:
-            report_error(f"Kismet API request failed: {exc}")
+            report_error(
+                format_error(
+                    301,
+                    (
+                        f"Kismet API request failed: {exc}. "
+                        "Ensure Kismet is running."
+                    ),
+                )
+            )
             continue
         try:
             if resp.status_code == 200:
                 data = _loads(resp.content)
                 return data.get("access_points", []), data.get("clients", [])
         except Exception as exc:  # pragma: no cover - JSON parse or other
-            report_error(f"Kismet API error: {exc}")
+            report_error(
+                format_error(303, f"Kismet API error: {exc}")
+            )
     return [], []
 
 
@@ -356,29 +440,30 @@ def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> floa
 
 
 def polygon_area(points: Sequence[tuple[float, float]]) -> float:
-    """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""
+    """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
     if len(points) < 3:
         return 0.0
+
     import math
 
-    # approximate using equirectangular projection around centroid
-    lat0 = sum(p[0] for p in points) / len(points)
-    lon0 = sum(p[1] for p in points) / len(points)
+    n = len(points)
+    lat0 = sum(p[0] for p in points) / n
+    lon0 = sum(p[1] for p in points) / n
     cos_lat0 = math.cos(math.radians(lat0))
 
     def project(p: tuple[float, float]) -> tuple[float, float]:
-        x = (p[1] - lon0) * cos_lat0
-        y = p[0] - lat0
-        return x, y
+        return (p[1] - lon0) * cos_lat0, p[0] - lat0
 
     verts = [project(p) for p in points]
+    prev_x, prev_y = verts[-1]
     area = 0.0
-    for (x1, y1), (x2, y2) in zip(verts, verts[1:] + verts[:1]):
-        area += x1 * y2 - x2 * y1
+    for x, y in verts:
+        area += prev_x * y - x * prev_y
+        prev_x, prev_y = x, y
+
     area = abs(area) / 2
-    # convert degrees^2 to meters^2 using approximate size of degree
     meter_per_deg = 111320.0
-    return area * (meter_per_deg ** 2)
+    return area * (meter_per_deg**2)
 
 
 def point_in_polygon(

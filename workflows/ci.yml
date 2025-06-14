@@ -12,11 +12,13 @@ jobs:
       - name: Install deps
         run: |
           pip install -r requirements.txt
-          pip install flake8 mypy pytest
+          pip install flake8 mypy pytest radon
       - name: Lint
         run: flake8 .
       - name: Type check
         run: mypy .
+      - name: Complexity check
+        run: python scripts/check_complexity.py
       - name: Test
         env:
           KIVY_NO_ARGS: '1'
