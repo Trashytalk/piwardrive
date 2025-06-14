@@ -616,14 +616,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             mv.remove_widget(m)
 
         self.ap_markers.clear()
-
-
-
-        if app.map_cluster_aps:
-
-            self._show_not_implemented("AP clustering")
-
-            return
+        clustering = app.map_cluster_aps
 
 
 
@@ -665,6 +658,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 }
                 mv.add_widget(m)
                 self.ap_markers.append(m)
+
+        if clustering:
+            # group nearby markers based on current zoom level
+            self.update_clusters_on_zoom(mv, mv.zoom)
 
 
 
@@ -1011,11 +1008,6 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-    def update_tilt(self, pitch, roll):
-
-        """Placeholder for pitch/roll 3D tilt effect."""
-
-        _ = pitch, roll  # not implemented
 
 
 
