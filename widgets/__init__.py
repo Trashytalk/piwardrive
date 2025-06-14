@@ -3,8 +3,9 @@
 """Lazy loading wrapper for widget classes."""
 
 from importlib import import_module
+from typing import Any, Dict
 
-_MODULE_MAP = {
+_MODULE_MAP: Dict[str, str] = {
     "LogViewer": "log_viewer",
     "SignalStrengthWidget": "signal_strength",
     "GPSStatusWidget": "gps_status",
@@ -18,7 +19,7 @@ _MODULE_MAP = {
 }
 
 
-def __getattr__(name):
+def __getattr__(name: str) -> Any:
     if name in _MODULE_MAP:
         module = import_module(f".{_MODULE_MAP[name]}", __name__)
         attr = getattr(module, name)
@@ -27,7 +28,7 @@ def __getattr__(name):
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-__all__ = [
+__all__: list[str] = [
     "LogViewer",
     "SignalStrengthWidget",
     "GPSStatusWidget",

@@ -26,8 +26,8 @@ class LogViewer(ScrollView):
         self.label.bind(texture_size=self._update_height)
         self.add_widget(self.label)
         self.bind(width=self._update_text_size)
-        self._filter_re = None
-        self._error_re = re.compile(self.error_regex, re.IGNORECASE)
+        self._filter_re: re.Pattern[str] | None = None
+        self._error_re: re.Pattern[str] = re.compile(self.error_regex, re.IGNORECASE)
         self.bind(filter_regex=self._compile_filter)
         self.bind(error_regex=self._compile_error)
         Clock.schedule_interval(self._refresh, self.poll_interval)
@@ -49,7 +49,7 @@ class LogViewer(ScrollView):
     def _update_height(self, _instance: Any, _value: Any) -> None:
         self.label.height = self.label.texture_size[1]
         # keep scrolled to bottom after update
-        self.scroll_y = 0
+        self.scroll_y = 0.0
 
     def _refresh(self, _dt: float) -> None:
         lines = tail_file(self.log_path, self.max_lines)
@@ -68,7 +68,7 @@ class LogViewer(ScrollView):
         for idx in range(len(lines) - 1, -1, -1):
             if self._error_re.search(lines[idx]):
                 if len(lines) > 1:
-                    self.scroll_y = 1 - idx / max(len(lines) - 1, 1)
+                    self.scroll_y = 1.0 - idx / max(len(lines) - 1, 1)
                 else:
                     self.scroll_y = 1
                 break

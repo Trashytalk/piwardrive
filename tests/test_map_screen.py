@@ -1,5 +1,6 @@
 from unittest import mock
-from types import SimpleNamespace
+from types import SimpleNamespace, ModuleType
+from typing import Any, cast
 import os
 import sys
 import pytest
@@ -10,15 +11,12 @@ os.environ.setdefault("KIVY_NO_ARGS", "1")
 os.environ.setdefault("KIVY_WINDOW", "mock")
 
 # Provide dummy mapview module to avoid heavy imports
-sys.modules.setdefault(
-    "kivy_garden.mapview",
-    SimpleNamespace(
-        MapMarker=object,
-        MapMarkerPopup=object,
-        MBTilesMapSource=object,
-        LineMapLayer=object,
-    ),
-)
+dummy_mapview = ModuleType("kivy_garden.mapview")
+dummy_mapview.MapMarker = object  # type: ignore[attr-defined]
+dummy_mapview.MapMarkerPopup = object  # type: ignore[attr-defined]
+dummy_mapview.MBTilesMapSource = object  # type: ignore[attr-defined]
+dummy_mapview.LineMapLayer = object  # type: ignore[attr-defined]
+sys.modules.setdefault("kivy_garden.mapview", dummy_mapview)
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -27,13 +25,13 @@ from kivy.app import App
 
 
 class DummyScheduler:
-    def __init__(self):
-        self.events = {}
+    def __init__(self) -> None:
+        self.events: dict[str, tuple[Any, int]] = {}
 
-    def schedule(self, name, callback, interval):
+    def schedule(self, name: str, callback: Any, interval: int) -> None:
         self.events[name] = (callback, interval)
 
-    def cancel(self, name):
+    def cancel(self, name: str) -> None:
         self.events.pop(name, None)
 
 
@@ -43,14 +41,14 @@ class DummyApp:
     map_poll_gps = 1
     map_poll_aps = 2
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.scheduler = DummyScheduler()
 
 
-def test_on_enter_and_on_leave(monkeypatch):
+def test_on_enter_and_on_leave(monkeypatch: Any) -> None:
     app = DummyApp()
     monkeypatch.setattr(App, "get_running_app", lambda: app)
-    screen = MapScreen()
+    screen = cast(Any, MapScreen())
     screen.ids = {"mapview": mock.Mock()}
 
     screen.on_enter()

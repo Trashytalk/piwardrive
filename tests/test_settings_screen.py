@@ -2,12 +2,13 @@ import importlib
 import os
 import sys
 from types import SimpleNamespace, ModuleType
+from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-def load_screen(monkeypatch):
-    modules = {
+def load_screen(monkeypatch: Any) -> ModuleType:
+    modules: dict[str, Any] = {
         "kivy.app": ModuleType("kivy.app"),
         "kivy.metrics": ModuleType("kivy.metrics"),
         "kivy.uix.screenmanager": ModuleType("kivy.uix.screenmanager"),
@@ -30,10 +31,10 @@ def load_screen(monkeypatch):
     modules["kivymd.uix.selectioncontrol"].MDSwitch = object
 
     class DummySnackbar:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def open(self):
+        def open(self) -> None:
             pass
 
     modules["kivymd.uix.snackbar"].Snackbar = DummySnackbar
@@ -47,7 +48,7 @@ def load_screen(monkeypatch):
 
 
 class DummyApp:
-    def __init__(self):
+    def __init__(self) -> None:
         self.kismet_logdir = "/valid/kismet"
         self.bettercap_caplet = "/valid/caplet"
         self.map_poll_gps = 10
@@ -57,7 +58,7 @@ class DummyApp:
         self.theme_cls = SimpleNamespace(theme_style="Dark")
 
 
-def make_screen(module, app):
+def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen = module.SettingsScreen()
     screen.kismet_field = SimpleNamespace(text=app.kismet_logdir)
     screen.bcap_field = SimpleNamespace(text=app.bettercap_caplet)
@@ -69,7 +70,7 @@ def make_screen(module, app):
     return screen
 
 
-def test_save_settings_invalid_gps(monkeypatch):
+def test_save_settings_invalid_gps(monkeypatch: Any) -> None:
     module = load_screen(monkeypatch)
     app = DummyApp()
     monkeypatch.setattr(module.App, "get_running_app", lambda: app)
@@ -94,7 +95,7 @@ import pytest
         ("offline_path_field", "offline_tile_path"),
     ],
 )
-def test_save_settings_invalid_paths(monkeypatch, field, attr):
+def test_save_settings_invalid_paths(monkeypatch: Any, field: str, attr: str) -> None:
     module = load_screen(monkeypatch)
     app = DummyApp()
     monkeypatch.setattr(module.App, "get_running_app", lambda: app)
@@ -103,7 +104,7 @@ def test_save_settings_invalid_paths(monkeypatch, field, attr):
     errors = []
     monkeypatch.setattr(module, "report_error", lambda msg: errors.append(msg))
 
-    def fake_exists(path):
+    def fake_exists(path: str) -> bool:
         return not path.startswith("/invalid")
 
     monkeypatch.setattr(module.os.path, "exists", fake_exists)

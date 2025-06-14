@@ -16,8 +16,8 @@ class DiskUsageTrendWidget(DashboardWidget):
         super().__init__(**kwargs)
         self.update_interval = update_interval
         self.max_points = max_points
-        self.index = 0
-        self.data = []
+        self.index: int = 0
+        self.data: list[tuple[int, float]] = []
         self.plot = LinePlot(color=[0, 1, 0, 1], line_width=1.5)
         self.graph = Graph(
             xlabel="Samples",
@@ -32,7 +32,7 @@ class DiskUsageTrendWidget(DashboardWidget):
         )
         self.graph.add_plot(self.plot)
         self.add_widget(self.graph)
-        self._event_name = f"disk_trend_{id(self)}"
+        self._event_name: str = f"disk_trend_{id(self)}"
         App.get_running_app().scheduler.schedule(
             self._event_name, lambda dt: self.update(), self.update_interval
         )

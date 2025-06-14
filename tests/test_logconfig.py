@@ -3,9 +3,10 @@ import logging
 import os
 
 from logconfig import setup_logging
+from typing import Any
 
 
-def test_setup_logging_writes_json(tmp_path):
+def test_setup_logging_writes_json(tmp_path: Any) -> None:
     log_file = tmp_path / "test.log"
     setup_logging(log_file=str(log_file), level=logging.INFO)
     logging.info("hello")
