@@ -11,5 +11,7 @@ PiWardrive Documentation
    persistence
    gps_polling
    bluetooth
+   status_service
    architecture
+   deployment
    workflows

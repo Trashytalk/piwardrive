@@ -5,7 +5,6 @@ import hashlib
 import os
 import re
 import secrets
-from typing import Any
 
 from cryptography.fernet import Fernet
 

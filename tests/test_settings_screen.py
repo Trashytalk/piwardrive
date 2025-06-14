@@ -182,3 +182,25 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert app.debug_mode is True
     assert app.widget_battery_status is True
     assert saved
+
+
+def test_export_logs_button(monkeypatch: Any) -> None:
+    module = load_screen(monkeypatch)
+    app = DummyApp()
+    called = {}
+    def fake_export() -> str:
+        called['ok'] = True
+        return '/tmp/logs.txt'
+    app.export_logs = fake_export
+    monkeypatch.setattr(module.App, 'get_running_app', lambda: app)
+    outputs = {}
+    class DummySnackbar:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            outputs['text'] = kwargs.get('text') or (args[0] if args else '')
+        def open(self) -> None:
+            outputs['opened'] = True
+    monkeypatch.setattr(module, 'Snackbar', DummySnackbar)
+    screen = make_screen(module, app)
+    screen._export_logs()
+    assert called.get('ok') is True
+    assert outputs.get('opened') is True

@@ -37,7 +37,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Service Management**: Start/stop and configure Kismet & BetterCAP from the GUI.
 * **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`.
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
-* **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`.
+* **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog` and
+  compress archives.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
@@ -112,7 +113,7 @@ For detailed instructions and troubleshooting steps see ``docs/installation.rst`
   * `kismet.service`
   * `bettercap.service`
   * (Optional) `piwardrive.service` to autostart the app.
-* **Log Rotation**: rotate files like `/var/log/syslog` every `log_rotate_interval` seconds and keep `log_rotate_archives` backups.
+* **Log Rotation**: rotate files like `/var/log/syslog` every `log_rotate_interval` seconds, compressing each archive and keeping `log_rotate_archives` backups.
 * **Health Poll Interval**: adjust `health_poll_interval` to control how often the monitor collects metrics.
 
 ## Running the App

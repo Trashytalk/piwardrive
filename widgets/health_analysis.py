@@ -7,6 +7,7 @@ from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.image import Image
 from kivymd.uix.label import MDLabel
+from localization import _
 
 from .base import DashboardWidget
 from persistence import load_recent_health
@@ -21,7 +22,7 @@ class HealthAnalysisWidget(DashboardWidget):
     def __init__(self, max_records: int = 50, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.max_records = max_records
-        self.label = MDLabel(text="Health Analysis: N/A")
+        self.label = MDLabel(text=f"{_('health_analysis')}: {_('not_available')}")
         self.image = Image(size_hint_y=None, height=dp(150))
         self.add_widget(self.label)
         self.add_widget(self.image)
@@ -36,14 +37,14 @@ class HealthAnalysisWidget(DashboardWidget):
         try:
             records = load_recent_health(self.max_records)
             if not records:
-                self.label.text = "Health Analysis: N/A"
+                self.label.text = f"{_('health_analysis')}: {_('not_available')}"
                 return
             stats = compute_health_stats(records)
             self.label.text = (
-                f"Temp:{stats['temp_avg']:.1f}°C "
-                f"CPU:{stats['cpu_avg']:.0f}% "
-                f"Mem:{stats['mem_avg']:.0f}% "
-                f"Disk:{stats['disk_avg']:.0f}%"
+                f"{_('temp')}:{stats['temp_avg']:.1f}°C "
+                f"{_('cpu')}:{stats['cpu_avg']:.0f}% "
+                f"{_('mem')}:{stats['mem_avg']:.0f}% "
+                f"{_('disk')}:{stats['disk_avg']:.0f}%"
             )
             plot_cpu_temp(records, self._tmp.name)
             self.image.source = self._tmp.name

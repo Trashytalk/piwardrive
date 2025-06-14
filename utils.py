@@ -10,10 +10,11 @@ import logging
 import os
 import subprocess
 import time
+import threading
 
 from collections import deque
 from datetime import datetime
-from typing import Any, Callable, Iterable, Sequence, TypeVar
+from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 
 from kivy.app import App
 
@@ -21,6 +22,10 @@ import psutil
 import requests  # type: ignore
 
 ERROR_PREFIX = "E"
+
+_async_loop = asyncio.new_event_loop()
+_async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
+_async_thread.start()
 
 
 def format_error(code: int, message: str) -> str:
@@ -31,9 +36,11 @@ def format_error(code: int, message: str) -> str:
 try:
     import orjson as _json  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
+    logging.debug("orjson not available, falling back to ujson")
     try:
         import ujson as _json  # type: ignore
     except Exception:  # pragma: no cover - fallback
+        logging.debug("ujson not available, using json module")
         _json = json  # type: ignore
 
 
@@ -57,6 +64,28 @@ def report_error(message: str) -> None:
 
 
 T = TypeVar("T")
+
+
+def run_async_task(
+    coro: Coroutine[Any, Any, T],
+    callback: Callable[[T], None] | None = None,
+) -> asyncio.Future:
+    """Schedule ``coro`` on the background loop and invoke ``callback``."""
+
+    fut = asyncio.run_coroutine_threadsafe(coro, _async_loop)
+
+    if callback is not None:
+        def _done(f: asyncio.Future) -> None:
+            try:
+                result = f.result()
+            except Exception as exc:  # pragma: no cover - background errors
+                logging.exception("Async task failed: %s", exc)
+            else:
+                callback(result)
+
+        fut.add_done_callback(_done)
+
+    return fut
 
 
 def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
@@ -526,6 +555,25 @@ def point_in_polygon(
     return inside
 
 
+try:  # pragma: no cover - optional C extension for speed
+    from ckml import parse_coords as _parse_coords  # type: ignore
+except Exception:  # pragma: no cover - fallback to Python
+    _parse_coords = None
+
+
+def _parse_coord_text(text: str) -> list[tuple[float, float]]:
+    """Parse a KML ``coordinates`` string into ``(lat, lon)`` tuples."""
+    if _parse_coords:
+        return _parse_coords(text)
+    coords = []
+    for pair in text.strip().split():
+        parts = pair.split(",")
+        lon = float(parts[0])
+        lat = float(parts[1])
+        coords.append((lat, lon))
+    return coords
+
+
 def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
     import zipfile
@@ -539,12 +587,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
             coords_text = placemark.findtext(".//kml:coordinates", namespaces=ns)
             if not coords_text:
                 continue
-            coords = []
-            for pair in coords_text.strip().split():
-                parts = pair.split(",")
-                lon = float(parts[0])
-                lat = float(parts[1])
-                coords.append((lat, lon))
+            coords = _parse_coord_text(coords_text)
             if placemark.find("kml:Point", ns) is not None:
                 feats.append({"name": name, "type": "Point", "coordinates": coords[0]})
             elif placemark.find("kml:LineString", ns) is not None:

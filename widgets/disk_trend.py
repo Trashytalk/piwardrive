@@ -4,6 +4,7 @@ from typing import Any
 
 from kivy.app import App
 from kivy_garden.graph import Graph, LinePlot
+from localization import _
 
 from .base import DashboardWidget
 from utils import get_disk_usage
@@ -20,7 +21,7 @@ class DiskUsageTrendWidget(DashboardWidget):
         self.data: list[tuple[int, float]] = []
         self.plot = LinePlot(color=[0, 1, 0, 1], line_width=1.5)
         self.graph = Graph(
-            xlabel="Samples",
+            xlabel=_("samples"),
             ylabel="%",
             x_ticks_minor=5,
             x_grid=True,

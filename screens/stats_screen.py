@@ -5,6 +5,7 @@ import psutil
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from utils import get_cpu_temp, get_smart_status
+from localization import _
 
 
 class StatsScreen(Screen):
@@ -41,8 +42,16 @@ class StatsScreen(Screen):
 
 
         # update text
-        cpu_lbl.text  = f"CPU: {cpu_temp:.1f}°C" if cpu_temp is not None else "CPU: N/A"
-        mem_lbl.text  = f"Mem: {mem_pct:.0f}%"    if mem_pct  is not None else "Mem: N/A"
-        disk_lbl.text = f"SSD: {disk_pct:.0f}%"   if disk_pct is not None else "SSD: N/A"
+        cpu_lbl.text  = (
+            f"{_('cpu')}: {cpu_temp:.1f}°C" if cpu_temp is not None else f"{_('cpu')}: {_('not_available')}"
+        )
+        mem_lbl.text  = (
+            f"{_('mem')}: {mem_pct:.0f}%" if mem_pct is not None else f"{_('mem')}: {_('not_available')}"
+        )
+        disk_lbl.text = (
+            f"{_('ssd')}: {disk_pct:.0f}%" if disk_pct is not None else f"{_('ssd')}: {_('not_available')}"
+        )
         if health_lbl is not None:
-            health_lbl.text = f"SSD Health: {smart}" if smart else "SSD Health: N/A"
+            health_lbl.text = (
+                f"{_('ssd_health')}: {smart}" if smart else f"{_('ssd_health')}: {_('not_available')}"
+            )

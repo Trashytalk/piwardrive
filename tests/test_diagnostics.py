@@ -1,6 +1,7 @@
 """Tests for system diagnostics helpers."""
 import os
 import sys
+import gzip
 from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -40,3 +41,23 @@ def test_stop_profiling_writes_callgrind(tmp_path: Any) -> None:
     assert summary is not None
     assert path.exists()
     os.environ.pop('PW_PROFILE_CALLGRIND')
+
+
+def test_rotate_log_gz(tmp_path: Any) -> None:
+    log = tmp_path / 'test.log'
+    log.write_text('first')
+    diagnostics.rotate_log(str(log), max_files=2)
+    gz1 = tmp_path / 'test.log.1.gz'
+    assert gz1.is_file()
+    with gzip.open(gz1, 'rt') as fh:
+        assert fh.read() == 'first'
+
+    log.write_text('second')
+    diagnostics.rotate_log(str(log), max_files=2)
+    gz2 = tmp_path / 'test.log.2.gz'
+    assert gz1.is_file()
+    assert gz2.is_file()
+
+    log.write_text('third')
+    diagnostics.rotate_log(str(log), max_files=2)
+    assert (tmp_path / 'test.log.3.gz').exists() is False

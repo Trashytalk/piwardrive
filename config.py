@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-import jsonschema
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
@@ -87,6 +87,61 @@ def _parse_env_value(raw: str, default: Any) -> Any:
         if val < 1:
             raise ValueError("Value must be positive")
         return val
+
+class FileConfigModel(BaseModel):
+    """Validation model for configuration files."""
+
+    theme: Optional[str] = None
+    map_poll_gps: Optional[int] = None
+    map_poll_gps_max: Optional[int] = None
+    map_poll_aps: Optional[int] = None
+    map_show_gps: Optional[bool] = None
+    map_show_aps: Optional[bool] = None
+    map_cluster_aps: Optional[bool] = None
+    map_use_offline: Optional[bool] = None
+    kismet_logdir: Optional[str] = Field(default=None, min_length=1)
+    bettercap_caplet: Optional[str] = Field(default=None, min_length=1)
+    dashboard_layout: List[Any] = Field(default_factory=list)
+    debug_mode: Optional[bool] = None
+    offline_tile_path: Optional[str] = Field(default=None, min_length=1)
+    health_poll_interval: Optional[int] = Field(default=None, ge=1)
+    log_rotate_interval: Optional[int] = Field(default=None, ge=1)
+    log_rotate_archives: Optional[int] = Field(default=None, ge=1)
+    widget_battery_status: Optional[bool] = None
+    admin_password_hash: Optional[str] = ""
+
+
+class ConfigModel(FileConfigModel):
+    """Extended validation used by :func:`validate_config_data`."""
+
+    map_poll_gps: int = Field(..., gt=0)
+
+    @field_validator("theme")
+    def check_theme(cls, value: str) -> str:
+        if value not in {"Dark", "Light", "Green", "Red"}:
+            raise ValueError(f"Invalid theme: {value}")
+        return value
+
+
+def _parse_env_value(raw: str, default: Any) -> Any:
+    """Return ``raw`` converted to the type of ``default``."""
+    if isinstance(default, bool):
+        return raw.lower() in {"1", "true", "yes", "on"}
+    if isinstance(default, int):
+        try:
+            return int(raw)
+        except ValueError:
+            return default
+    if isinstance(default, float):
+        try:
+            return float(raw)
+        except ValueError:
+            return default
+    if isinstance(default, list):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return default
     return raw
 
 
@@ -94,6 +149,7 @@ def validate_config_data(data: Dict[str, Any]) -> None:
     """Basic validation for loaded configuration values."""
     if data.get("theme") not in {"Dark", "Light"}:
         raise ValueError("Invalid theme")
+
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
@@ -104,7 +160,6 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
         if raw is not None:
             result[key] = _parse_env_value(raw, default)
     return result
-
 
 
 def _profile_path(name: str) -> str:
@@ -149,16 +204,15 @@ def load_config(profile: Optional[str] = None) -> Config:
         profile = get_active_profile()
     path = _profile_path(profile) if profile else CONFIG_PATH
 
-
     data: Dict[str, Any] = {}
     try:
         with open(path, "r", encoding="utf-8") as f:
             loaded = json.load(f)
-        jsonschema.validate(loaded, CONFIG_SCHEMA)
+        FileConfigModel(**loaded)
         data = loaded
     except FileNotFoundError:
         pass
-    except (json.JSONDecodeError, jsonschema.ValidationError):
+    except (json.JSONDecodeError, ValidationError):
         pass
     merged = {**DEFAULTS, **data}
     return Config(**merged)
@@ -207,7 +261,7 @@ def import_config(path: str) -> Config:
             data = yaml.safe_load(f) or {}
         else:
             raise ValueError(f"Unsupported config format: {ext}")
-    jsonschema.validate(data, CONFIG_SCHEMA)
+    FileConfigModel(**data)
     merged = {**DEFAULTS, **data}
     return Config(**merged)
 
@@ -269,7 +323,7 @@ def import_profile(path: str, name: Optional[str] = None) -> str:
     """Import a profile from ``path`` and save as ``name``."""
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    jsonschema.validate(data, CONFIG_SCHEMA)
+    FileConfigModel(**data)
     cfg = Config(**{**DEFAULTS, **data})
     if name is None:
         name = os.path.splitext(os.path.basename(path))[0]
