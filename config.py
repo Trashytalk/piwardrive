@@ -28,8 +28,10 @@ class Config:
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
 
+
 DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
+
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
@@ -68,12 +70,13 @@ def load_config() -> Config:
         pass
     merged = {**DEFAULTS, **data}
     return Config(**merged)
-   
-def save_config(config: Dict[str, Any]) -> None:
-    """Persist ``config`` dictionary to ``CONFIG_PATH``."""
+
+
+def save_config(config: Config) -> None:
+    """Persist ``config`` dataclass to ``CONFIG_PATH``."""
     os.makedirs(CONFIG_DIR, exist_ok=True)
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=2)
+        json.dump(asdict(config), f, indent=2)
 
 @dataclass
 class AppConfig:
