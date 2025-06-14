@@ -52,6 +52,7 @@ from kivymd.uix.snackbar import Snackbar
 
 from kivymd.uix.textfield import MDTextField
 
+import utils
 from utils import (
     haversine_distance,
     polygon_area,
@@ -910,8 +911,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     if os.path.exists(local):
                         continue
                     os.makedirs(os.path.dirname(local), exist_ok=True)
-                    resp = requests.get(url, timeout=10)
-                    resp.raise_for_status()
+                    resp = utils.safe_request(url, timeout=10)
+                    if resp is None:
+                        continue
                     with open(local, "wb") as fh:
                         fh.write(resp.content)
 

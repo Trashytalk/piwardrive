@@ -5,14 +5,13 @@ import os
 from dataclasses import asdict, fields
 
 from typing import Any, Callable
-from datetime import datetime
 
 
 from scheduler import PollScheduler
 from config import load_config, save_config, Config
 
-from security import hash_password, verify_password
-from persistence import AppState, load_app_state, save_app_state
+from security import hash_password
+from persistence import save_app_state
 
 import diagnostics
 import utils
@@ -166,7 +165,11 @@ class PiWardriveApp(MDApp):
         import os as _os
         from security import verify_password as _verify
 
-        cfg_hash = getattr(getattr(self, "config_data", None), "admin_password_hash", "")
+        cfg_hash = getattr(
+            getattr(self, "config_data", None),
+            "admin_password_hash",
+            "",
+        )
         pw = _os.getenv("PW_ADMIN_PASSWORD")
         if cfg_hash and not _verify(pw or "", cfg_hash):
             utils.report_error("Unauthorized")
@@ -176,27 +179,11 @@ class PiWardriveApp(MDApp):
                 svc, action, attempts=3, delay=1
             )
         except Exception as exc:  # pragma: no cover - subprocess failures
-            utils.report_error(
-                utils.format_error(
-                    1,
-                    (
-                        f"Failed to {action} {svc}: {exc}. "
-                        "Please check the service status."
-                    ),
-                )
-            )
+            utils.report_error(f"Failed to {action} {svc}: {exc}")
             return
         if not success:
             msg = err.strip() if isinstance(err, str) else err
-            utils.report_error(
-                utils.format_error(
-                    1,
-                    (
-                        f"Failed to {action} {svc}: {msg or 'Unknown error'}. "
-                        "Please check the service status."
-                    ),
-                )
-            )
+            utils.report_error(f"Failed to {action} {svc}: {msg or 'Unknown error'}")
             return
         if action in {"start", "restart"} and not utils.ensure_service_running(svc):
             utils.report_error(f"{svc} failed to stay running after {action}")

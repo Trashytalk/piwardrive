@@ -69,6 +69,37 @@ DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
 
 
+def _parse_env_value(raw: str, default: Any) -> Any:
+    """Return ``raw`` converted to the type of ``default``."""
+    if isinstance(default, bool):
+        return raw.lower() in {"1", "true", "yes", "on"}
+    if isinstance(default, int):
+        try:
+            return int(raw)
+        except ValueError:
+            return default
+    if isinstance(default, float):
+        try:
+            return float(raw)
+        except ValueError:
+            return default
+    if isinstance(default, list):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return default
+    return raw
+
+
+def validate_config_data(data: Dict[str, Any]) -> None:
+    """Validate ``data`` against ``CONFIG_SCHEMA`` and custom rules."""
+    jsonschema.validate(data, CONFIG_SCHEMA)
+    if data.get("map_poll_gps", 1) <= 0:
+        raise ValueError("map_poll_gps must be > 0")
+    if data.get("theme") not in {"Dark", "Light", "Green", "Red"}:
+        raise ValueError(f"Invalid theme: {data.get('theme')}")
+
+
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
     result = dict(cfg)
@@ -77,7 +108,6 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
         if raw is not None:
             result[key] = _parse_env_value(raw, default)
     return result
-
 
 
 def _profile_path(name: str) -> str:
@@ -121,7 +151,6 @@ def load_config(profile: Optional[str] = None) -> Config:
     if profile is None:
         profile = get_active_profile()
     path = _profile_path(profile) if profile else CONFIG_PATH
-
 
     data: Dict[str, Any] = {}
     try:
