@@ -3,12 +3,16 @@ import os
 import sys
 import tempfile
 import zipfile
+import json
 
 from unittest import mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
-sys.modules.setdefault('requests', mock.Mock())
+if 'requests' not in sys.modules:
+    dummy_requests = mock.Mock()
+    dummy_requests.RequestException = Exception
+    sys.modules['requests'] = dummy_requests
 import utils
 
 
@@ -100,3 +104,25 @@ def test_load_kmz_parses_features(tmp_path):
         zf.writestr('doc.kml', kml_content)
     feats = utils.load_kml(str(kmz_path))
     assert feats and feats[0]['type'] == 'Point'
+
+
+def test_fetch_kismet_devices_request_exception(monkeypatch):
+    monkeypatch.setattr(
+        utils.requests,
+        'get',
+        mock.Mock(side_effect=utils.requests.RequestException('boom')),
+    )
+    with mock.patch('utils.report_error') as err:
+        aps, clients = utils.fetch_kismet_devices()
+        assert aps == [] and clients == []
+        assert err.call_count == 2
+
+
+def test_fetch_kismet_devices_json_error(monkeypatch):
+    resp = mock.Mock(status_code=200)
+    resp.json.side_effect = json.JSONDecodeError('bad', 'doc', 0)
+    monkeypatch.setattr(utils.requests, 'get', mock.Mock(return_value=resp))
+    with mock.patch('utils.report_error') as err:
+        aps, clients = utils.fetch_kismet_devices()
+        assert aps == [] and clients == []
+        assert err.call_count == 2
