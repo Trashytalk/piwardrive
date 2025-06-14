@@ -146,9 +146,8 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 
 
 def validate_config_data(data: Dict[str, Any]) -> None:
-    """Basic validation for loaded configuration values."""
-    if data.get("theme") not in {"Dark", "Light"}:
-        raise ValueError("Invalid theme")
+    """Validate configuration values using :class:`ConfigModel`."""
+    ConfigModel(**data)
 
 
 
