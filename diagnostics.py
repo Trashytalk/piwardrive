@@ -14,7 +14,9 @@ import logging
 
 import utils
 from scheduler import PollScheduler
+from interfaces import DataCollector, SelfTestCollector
 from persistence import HealthRecord, save_health_record
+
 
 _PROFILER: cProfile.Profile | None = None
 
@@ -126,11 +128,17 @@ def self_test() -> dict:
 
 
 class HealthMonitor:
-    """Background poller for :func:`self_test` results."""
+    """Background poller for metric collectors."""
 
-    def __init__(self, scheduler: 'PollScheduler', interval: float = 10.0) -> None:
+    def __init__(
+        self,
+        scheduler: 'PollScheduler',
+        interval: float = 10.0,
+        collector: DataCollector | None = None,
+    ) -> None:
         self._scheduler = scheduler
         self._interval = interval
+        self._collector: DataCollector = collector or SelfTestCollector()
         self.data: dict | None = None
         self._event = "health_monitor"
         scheduler.schedule(self._event, lambda dt: self._poll(), interval)
@@ -138,17 +146,9 @@ class HealthMonitor:
 
     def _poll(self) -> None:
         try:
-            self.data = self_test()
-            sys = self.data.get("system", {}) if isinstance(self.data, dict) else {}
-            save_health_record(
-                HealthRecord(
-                    timestamp=sys.get("timestamp", datetime.now().isoformat()),
-                    cpu_temp=sys.get("cpu_temp"),
-                    cpu_percent=sys.get("cpu_percent", 0.0),
-                    memory_percent=sys.get("memory_percent", 0.0),
-                    disk_percent=sys.get("disk_percent", 0.0),
-                )
-            )
+
+            self.data = self._collector.collect()
+
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
