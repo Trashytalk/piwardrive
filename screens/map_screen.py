@@ -119,7 +119,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             except Exception as e:
 
-                Snackbar(text=f"Offline tiles error: {e}").open()
+                report_error(f"Offline tiles error: {e}")
 
         self._gps_event = "map_gps"
 
@@ -146,20 +146,16 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         app = App.get_running_app()
 
         if self._gps_event:
-
             app.scheduler.cancel(self._gps_event)
-
             self._gps_event = None
-             if self._aps_event:
-
+        if self._aps_event:
             app.scheduler.cancel(self._aps_event)
-
             self._aps_event = None
 
 # ------------------------------------------------------------------
 
     # Touch handlers
-     def _map_touch_down(self, _mapview, touch):
+    def _map_touch_down(self, _mapview, touch):
 
         """Schedule long press detection."""
 
@@ -395,7 +391,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            Snackbar(text=f"GPX load error: {e}").open()
+            report_error(f"GPX load error: {e}")
 
 
 
@@ -485,7 +481,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            Snackbar(text=f"KML load error: {e}").open()
+            report_error(f"KML load error: {e}")
 
 
 
@@ -531,11 +527,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except subprocess.TimeoutExpired:
 
-            self._show_error("GPS lock timed out")
+            report_error("GPS lock timed out")
 
         except Exception as e:
 
-            self._show_error(f"GPS error: {e}")
+            report_error(f"GPS error: {e}")
 
 
 
@@ -681,7 +677,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            self._show_error(f"AP overlay error: {e}")
+            report_error(f"AP overlay error: {e}")
 
 
 
@@ -790,12 +786,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
     # Helpers
-
-    def _show_error(self, msg):
-        """Display an error using the central helper."""
-        report_error(msg)
-
-
+
 
     def _show_not_implemented(self, feature_name):
 
@@ -881,7 +872,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            self._show_error(f"Prefetch error: {e}")
+            report_error(f"Prefetch error: {e}")
 
 
 
@@ -905,7 +896,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            self._show_error(f"Tile purge error: {e}")
+            report_error(f"Tile purge error: {e}")
 
 
 
@@ -951,7 +942,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            self._show_error(f"Cache limit error: {e}")
+            report_error(f"Cache limit error: {e}")
 
 
 
@@ -1123,7 +1114,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            self._show_error(f"Export error: {e}")
+            report_error(f"Export error: {e}")
 
 
 
@@ -1151,7 +1142,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         except Exception as e:
 
-            self._show_error(f"PDF export error: {e}")
+            report_error(f"PDF export error: {e}")
 
 
 
