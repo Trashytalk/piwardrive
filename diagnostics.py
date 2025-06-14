@@ -15,6 +15,8 @@ import logging
 import utils
 from scheduler import PollScheduler
 from interfaces import DataCollector, SelfTestCollector
+from persistence import HealthRecord, save_health_record
+
 
 _PROFILER: cProfile.Profile | None = None
 
@@ -67,6 +69,14 @@ def stop_profiling() -> str | None:
         .sort_stats("cumulative")
     )
     stats.print_stats(10)
+    path = os.getenv("PW_PROFILE_CALLGRIND")
+    if path:
+        try:
+            import pyprof2calltree
+
+            pyprof2calltree.convert(stats, path)
+        except Exception as exc:  # pragma: no cover - optional
+            logging.exception("Failed to export callgrind data: %s", exc)
     _PROFILER = None
     return s.getvalue()
 
@@ -136,7 +146,9 @@ class HealthMonitor:
 
     def _poll(self) -> None:
         try:
+
             self.data = self._collector.collect()
+
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
