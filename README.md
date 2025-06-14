@@ -159,6 +159,22 @@ begins polling metrics that feed the widgets shown on screen.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
 * **Context Menu**: Save waypoints, load GPX/KML tracks and measure distances.
 
+## Widget Plugins
+
+PiWardrive searches ``~/.config/piwardrive/plugins`` for additional widget
+modules on startup. Any subclasses of ``DashboardWidget`` defined in that
+directory are imported automatically and exposed from the :mod:`widgets`
+package. A minimal plugin looks like::
+
+    # ~/.config/piwardrive/plugins/my_widget.py
+    from widgets.base import DashboardWidget
+
+    class ExtraWidget(DashboardWidget):
+        pass
+
+Once the file is created, ``ExtraWidget`` can be added to the dashboard like any
+other built-in widget.
+
 ## Error Handling
 The application reports errors consistently using `utils.report_error`. The sequence below illustrates how
 `control_service` surfaces failures:
