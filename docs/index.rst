@@ -8,3 +8,4 @@ PiWardrive Documentation
    widgets
    diagnostics
    persistence
+   architecture

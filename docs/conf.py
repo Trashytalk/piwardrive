@@ -1,6 +1,9 @@
 project = 'PiWardrive'
 author = 'TRASHYTALK'
-extensions = ['sphinx.ext.autodoc']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.graphviz',
+]
 html_theme = 'alabaster'
 
 import os
