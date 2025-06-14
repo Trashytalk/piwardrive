@@ -131,8 +131,9 @@ class PiWardriveApp(MDApp):
             utils.report_error(f"Failed to {action} {svc}: {exc}")
             return
         if not success:
+            msg = err.strip() if isinstance(err, str) else err
             utils.report_error(
-                f"Failed to {action} {svc}: {err or 'Unknown error'}"
+                f"Failed to {action} {svc}: {msg or 'Unknown error'}"
             )
 
     def show_alert(self, title: str, text: str) -> None:
