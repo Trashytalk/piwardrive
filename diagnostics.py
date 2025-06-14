@@ -7,8 +7,10 @@ import subprocess
 from datetime import datetime
 
 import psutil
+import logging
 
 import utils
+from scheduler import PollScheduler
 
 def generate_system_report() -> dict:
     """Return a dictionary with basic system metrics."""
@@ -66,3 +68,24 @@ def self_test() -> dict:
         'usb': list_usb_devices(),
         'services': get_service_statuses(),
     }
+
+
+class HealthMonitor:
+    """Background poller for :func:`self_test` results."""
+
+    def __init__(self, scheduler: 'PollScheduler', interval: float = 10.0) -> None:
+        self._scheduler = scheduler
+        self._interval = interval
+        self.data: dict | None = None
+        self._event = "health_monitor"
+        scheduler.schedule(self._event, lambda dt: self._poll(), interval)
+        self._poll()
+
+    def _poll(self) -> None:
+        try:
+            self.data = self_test()
+        except Exception as exc:  # pragma: no cover - diagnostics best-effort
+            logging.exception("HealthMonitor poll failed: %s", exc)
+
+    def stop(self) -> None:
+        self._scheduler.cancel(self._event)
