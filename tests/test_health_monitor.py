@@ -23,4 +23,5 @@ def test_health_monitor_polls_self_test():
     with mock.patch('diagnostics.self_test', return_value={'system': {'disk_percent': 42}, 'network_ok': True, 'services': {}}):
         mon = diagnostics.HealthMonitor(sched, interval=5)
         assert sched.scheduled[0][0] == 'health_monitor'
+        assert sched.scheduled[0][1] == 5
         assert mon.data['system']['disk_percent'] == 42
