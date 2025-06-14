@@ -1,6 +1,7 @@
 import subprocess
 from typing import List, Dict
 
+
 def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
     """Scan for nearby Bluetooth devices using ``hcitool``."""
     cmd = ["hcitool", "scan"]
