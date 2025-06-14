@@ -15,15 +15,14 @@ from logconfig import setup_logging
 from kivy.factory import Factory
 from kivy.lang import Builder
 from kivy.properties import (  # pylint: disable=no-name-in-module
-    BooleanProperty, 
-    NumericProperty, 
-    StringProperty, 
+    BooleanProperty,
+    NumericProperty,
+    StringProperty,
     ListProperty
 )
 from kivymd.app import MDApp
 
 # Trim down HTTP debug logging
-logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 from screens.console_screen import ConsoleScreen  # type: ignore[import]
 from screens.dashboard_screen import DashboardScreen  # type: ignore[import]
@@ -31,6 +30,8 @@ from screens.map_screen import MapScreen  # type: ignore[import]
 from screens.settings_screen import SettingsScreen  # type: ignore[import]
 from screens.split_screen import SplitScreen  # type: ignore[import]
 from screens.stats_screen import StatsScreen  # type: ignore[import]
+
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 
 class PiWardriveApp(MDApp):
@@ -55,8 +56,6 @@ class PiWardriveApp(MDApp):
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
-
-
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -123,10 +122,12 @@ class PiWardriveApp(MDApp):
     # 1) Service control with feedback
     def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service."""
-        cmd = ["sudo", "systemctl", action, svc]␊
-        res = subprocess.run(cmd, capture_output=True, text=True)␊
-        if res.returncode != 0:␊
-            utils.report_error(f"Failed to {action} {svc}: {res.stderr or 'Unknown error'}")
+        cmd = ["sudo", "systemctl", action, svc]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            utils.report_error(
+                f"Failed to {action} {svc}: {res.stderr or 'Unknown error'}"
+            )
 
     def show_alert(self, title: str, text: str) -> None:
         """Display a simple alert dialog with the given title and text."""

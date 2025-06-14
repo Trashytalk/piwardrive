@@ -105,6 +105,7 @@ def save_config(config: Config) -> None:
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(asdict(config), f, indent=2)
 
+
 @dataclass
 class AppConfig:
     """Typed configuration container."""
@@ -124,7 +125,7 @@ class AppConfig:
     health_poll_interval: int = DEFAULTS["health_poll_interval"]
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
-    
+
     @classmethod
     def load(cls) -> "AppConfig":
         """Load configuration with environment overrides."""

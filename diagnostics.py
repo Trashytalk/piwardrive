@@ -12,6 +12,7 @@ import logging
 import utils
 from scheduler import PollScheduler
 
+
 def generate_system_report() -> dict:
     """Return a dictionary with basic system metrics."""
     return {
@@ -39,6 +40,7 @@ def run_network_test(host: str = '8.8.8.8') -> bool:
     proc = subprocess.run(['ping', '-c', '1', host], capture_output=True)
     return proc.returncode == 0
 
+
 def get_interface_status() -> dict:
     """Return mapping of network interface names to ``isup`` booleans."""
     return {name: stats.isup for name, stats in psutil.net_if_stats().items()}
@@ -57,7 +59,6 @@ def get_service_statuses(services: tuple[str, ...] | list[str] | None = None) ->
     if services is None:
         services = ('kismet', 'bettercap', 'gpsd')
     return {svc: utils.service_status(svc) for svc in services}
-
 
 
 def self_test() -> dict:

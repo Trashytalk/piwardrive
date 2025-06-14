@@ -3,14 +3,15 @@
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
 import glob
+
 import json
 import logging
 import os
 import subprocess
 import time
+
 from collections import deque
 from datetime import datetime
-from typing import Any
 
 from kivy.app import App
 
@@ -27,6 +28,7 @@ def report_error(message: str) -> None:
             app.show_alert("Error", message)
     except Exception as exc:  # pragma: no cover - app may not be running
         logging.exception("Failed to display error alert: %s", exc)
+
 
 def retry_call(func, attempts=3, delay=0):
     """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""
@@ -53,7 +55,6 @@ def get_cpu_temp():
         return float(temp_str) / 1000.0
     except Exception:
         return None
-
 
 
 def get_mem_usage():
@@ -245,9 +246,12 @@ def haversine_distance(p1, p2):
     phi2 = math.radians(lat2)
     d_phi = math.radians(lat2 - lat1)
     d_lambda = math.radians(lon2 - lon1)
-    a = math.sin(d_phi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    a = (
+        math.sin(d_phi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    
+
     return r * c
 
 
@@ -299,7 +303,6 @@ def load_kml(path):
     import zipfile
     import xml.etree.ElementTree as ET
 
-
     def _parse(root):
         ns = {"kml": root.tag.split("}")[0].strip("{")}
         feats = []
@@ -317,11 +320,14 @@ def load_kml(path):
             if placemark.find("kml:Point", ns) is not None:
                 feats.append({"name": name, "type": "Point", "coordinates": coords[0]})
             elif placemark.find("kml:LineString", ns) is not None:
-                feats.append({"name": name, "type": "LineString", "coordinates": coords})
+                feats.append({
+                    "name": name,
+                    "type": "LineString",
+                    "coordinates": coords,
+                })
             elif placemark.find("kml:Polygon", ns) is not None:
                 feats.append({"name": name, "type": "Polygon", "coordinates": coords})
         return feats
-
 
     if path.lower().endswith(".kmz"):
         with zipfile.ZipFile(path) as zf:
