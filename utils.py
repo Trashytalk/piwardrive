@@ -98,12 +98,12 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
     """Return SMART health status for the device mounted at ``mount_point``."""
-    dev = None
     try:
-        for part in psutil.disk_partitions(all=False):
-            if part.mountpoint == mount_point:
-                dev = part.device
-                break
+        dev = next(
+            (p.device for p in psutil.disk_partitions(all=False)
+             if p.mountpoint == mount_point),
+            None,
+        )
         if not dev:
             return None
         proc = subprocess.run(
@@ -115,15 +115,17 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         if proc.returncode != 0:
             return None
         out = proc.stdout + proc.stderr
-        if 'PASSED' in out:
-            return 'OK'
-        if 'FAILED' in out:
-            return 'FAIL'
-        if 'WARNING' in out:
-            return 'WARN'
-        return out.strip().splitlines()[-1] if out else None
+        return _parse_smartctl_output(out)
     except Exception:
         return None
+
+
+def _parse_smartctl_output(output: str) -> str | None:
+    """Map smartctl output to a simple status string."""
+    for key, val in {"PASSED": "OK", "FAILED": "FAIL", "WARNING": "WARN"}.items():
+        if key in output:
+            return val
+    return output.strip().splitlines()[-1] if output else None
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:

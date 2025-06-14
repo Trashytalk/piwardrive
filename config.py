@@ -64,24 +64,27 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
     result = dict(cfg)
     for key, default in DEFAULTS.items():
-        env_key = f"PW_{key.upper()}"
-        if env_key in os.environ:
-            raw = os.environ[env_key]
-            if isinstance(default, bool):
-                result[key] = raw.lower() in {"1", "true", "yes", "on"}
-            elif isinstance(default, int):
-                try:
-                    result[key] = int(raw)
-                except ValueError:
-                    pass
-            elif isinstance(default, list):
-                try:
-                    result[key] = json.loads(raw)
-                except json.JSONDecodeError:
-                    result[key] = raw
-            else:
-                result[key] = raw
+        raw = os.getenv(f"PW_{key.upper()}")
+        if raw is not None:
+            result[key] = _parse_env_value(raw, default)
     return result
+
+
+def _parse_env_value(raw: str, default: Any) -> Any:
+    """Convert ``raw`` environment value to the type of ``default``."""
+    if isinstance(default, bool):
+        return raw.lower() in {"1", "true", "yes", "on"}
+    if isinstance(default, int):
+        try:
+            return int(raw)
+        except ValueError:
+            return default
+    if isinstance(default, list):
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return raw
+    return raw
 
 
 def load_config() -> Config:
