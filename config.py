@@ -25,6 +25,7 @@ CONFIG_SCHEMA = {
         "dashboard_layout": {"type": "array"},
         "debug_mode": {"type": "boolean"},
         "offline_tile_path": {"type": "string"},
+        "health_poll_interval": {"type": "integer"},
         "log_rotate_interval": {"type": "integer"},
         "log_rotate_archives": {"type": "integer"},
     },
@@ -48,6 +49,7 @@ class Config:
     dashboard_layout: List[Any] = field(default_factory=list)
     debug_mode: bool = False
     offline_tile_path: str = "/mnt/ssd/tiles/offline.mbtiles"
+    health_poll_interval: int = 10
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
 
@@ -119,6 +121,7 @@ class AppConfig:
     bettercap_caplet: str = DEFAULTS["bettercap_caplet"]
     dashboard_layout: List[Any] = field(default_factory=list)
     debug_mode: bool = DEFAULTS["debug_mode"]
+    health_poll_interval: int = DEFAULTS["health_poll_interval"]
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     
