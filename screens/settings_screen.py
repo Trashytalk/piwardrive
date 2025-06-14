@@ -180,7 +180,12 @@ class SettingsScreen(Screen):
             text="Save", on_release=lambda *_: self.save_settings()
         )
 
+        export_btn = MDRaisedButton(
+            text="Export Logs", on_release=lambda *_: self._export_logs()
+        )
+
         layout.add_widget(save_btn)
+        layout.add_widget(export_btn)
 
         self.add_widget(layout)
 
@@ -309,6 +314,12 @@ class SettingsScreen(Screen):
             )
 
         Snackbar(text="Settings saved", duration=1).open()
+
+    def _export_logs(self) -> None:
+        app = App.get_running_app()
+        path = app.export_logs()
+        if path:
+            Snackbar(text=f"Logs exported to {path}", duration=1).open()
 
     def prefetch_tiles(self) -> None:
         """Trigger tile prefetch on the map screen."""

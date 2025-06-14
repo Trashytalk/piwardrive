@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 from dataclasses import asdict, fields
 
 from typing import Any, Callable
@@ -17,6 +18,7 @@ import diagnostics
 import utils
 from di import Container
 from logconfig import setup_logging
+import exception_handler
 
 from kivy.factory import Factory
 from kivy.lang import Builder
@@ -88,6 +90,7 @@ class PiWardriveApp(MDApp):
             self.config_data.admin_password_hash = hash_password(pw)
 
         setup_logging(level=logging.DEBUG if self.debug_mode else logging.INFO)
+        exception_handler.install()
 
         if not self.container.has("scheduler"):
             self.container.register_instance("scheduler", PollScheduler())
@@ -199,6 +202,24 @@ class PiWardriveApp(MDApp):
             buttons=[],
         )
         dialog.open()
+
+    def export_logs(self, path: str | None = None, lines: int = 200) -> str:
+        """Write the last ``lines`` from ``app.log`` to ``path`` and return it."""
+        from logconfig import DEFAULT_LOG_PATH
+
+        if path is None:
+            ts = int(time.time())
+            path = os.path.join(os.path.expanduser("~"), f"piwardrive-logs-{ts}.txt")
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write("\n".join(utils.tail_file(DEFAULT_LOG_PATH, lines)))
+            logging.info("Exported logs to %s", path)
+            return path
+        except Exception as exc:  # pragma: no cover - file errors
+            logging.exception("Failed to export logs: %s", exc)
+            utils.report_error(f"Failed to export logs: {exc}")
+            return ""
 
     def _auto_save(self, key: str, value: Any) -> None:
         """Update ``config_data`` and persist to disk."""
