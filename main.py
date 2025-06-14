@@ -144,12 +144,26 @@ class PiWardriveApp(MDApp):
                 svc, action, attempts=3, delay=1
             )
         except Exception as exc:  # pragma: no cover - subprocess failures
-            utils.report_error(f"Failed to {action} {svc}: {exc}")
+            utils.report_error(
+                utils.format_error(
+                    1,
+                    (
+                        f"Failed to {action} {svc}: {exc}. "
+                        "Please check the service status."
+                    ),
+                )
+            )
             return
         if not success:
             msg = err.strip() if isinstance(err, str) else err
             utils.report_error(
-                f"Failed to {action} {svc}: {msg or 'Unknown error'}"
+                utils.format_error(
+                    1,
+                    (
+                        f"Failed to {action} {svc}: {msg or 'Unknown error'}. "
+                        "Please check the service status."
+                    ),
+                )
             )
 
     def show_alert(self, title: str, text: str) -> None:

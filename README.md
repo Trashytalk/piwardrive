@@ -126,6 +126,7 @@ sequenceDiagram
 ```
 
 `report_error` logs the message and shows a dialog if the GUI is running.
+Error messages are prefixed with codes like `[E001]` to aid troubleshooting.
 
 ## Documentation & Tests
 
