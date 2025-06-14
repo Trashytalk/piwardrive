@@ -101,22 +101,27 @@ def tail_file(path, lines=50):
         return []
 
 
-def run_service_cmd(service, action):
-    """
-    Run `sudo systemctl <action> <service>`, capturing output.
-    Returns a tuple (success: bool, stdout: str, stderr: str).
-    """
-    cmd = ['sudo', 'systemctl', action, service]
-    proc = subprocess.run(cmd, capture_output=True, text=True)
+def run_service_cmd(service, action, attempts: int = 1, delay: float = 0):
+    """Run ``sudo systemctl`` for ``service`` with optional retries."""
+
+    cmd = ["sudo", "systemctl", action, service]
+
+    def _call():
+        return subprocess.run(cmd, capture_output=True, text=True)
+
+    proc = retry_call(_call, attempts=attempts, delay=delay)
     return proc.returncode == 0, proc.stdout, proc.stderr
 
 
-def service_status(service):
-    """
-    Return True if the given systemd service is active (running).
-    """
-    ok, out, err = run_service_cmd(service, 'is-active')
-    return ok and out.strip() == 'active'
+def service_status(service, attempts: int = 1, delay: float = 0) -> bool:
+    """Return ``True`` if the ``systemd`` service is active."""
+    try:
+        ok, out, _err = run_service_cmd(
+            service, "is-active", attempts=attempts, delay=delay
+        )
+        return ok and out.strip() == "active"
+    except Exception:
+        return False
 
 
 def now_timestamp():
