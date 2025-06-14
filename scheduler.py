@@ -1,14 +1,14 @@
 """Simple polling scheduler built on ``kivy.clock.Clock``."""
 
 from typing import Callable, Dict, Any
-from kivy.clock import Clock
+from kivy.clock import Clock, ClockEvent
 
 
 class PollScheduler:
     """Manage named periodic callbacks via :class:`~kivy.clock.Clock`."""
 
     def __init__(self) -> None:
-        self._events: Dict[str, Clock] = {}
+        self._events: Dict[str, ClockEvent] = {}
 
     def schedule(self, name: str, callback: Callable, interval: float) -> None:
         """Register ``callback`` to run every ``interval`` seconds."""
