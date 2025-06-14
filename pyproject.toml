@@ -11,6 +11,7 @@ files = [
     "config.py",
     "diagnostics.py",
     "scheduler.py",
+    "service.py",
     "utils.py",
     "widgets",
 ]
