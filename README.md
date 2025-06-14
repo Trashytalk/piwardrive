@@ -40,23 +40,30 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 
 ## Installation
 
-1. **Clone the repo**:
+1. **Install system packages** (Raspberry Pi OS)::
 
-   ```bash
-   git clone https://github.com/TRASHYTALK/piwardrive.git
-   ```
+      sudo apt update && sudo apt install -y \
+          git build-essential cmake kismet bettercap gpsd evtest python3-venv
 
-2. **Install Python dependencies**:
+2. **Clone the repo**::
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+      git clone https://github.com/TRASHYTALK/piwardrive.git
+      cd piwardrive
 
-3. **Configure fstab** (optional):
+3. **Create and activate a virtual environment**::
 
-   ```bash
-   /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
-   ```
+      python3 -m venv gui-env
+      source gui-env/bin/activate
+
+4. **Install Python dependencies**::
+
+      pip install -r requirements.txt
+
+5. **Configure fstab** (optional)::
+
+      /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
+
+For detailed instructions and troubleshooting steps see ``docs/installation.rst``.
 
 ## Configuration
 
