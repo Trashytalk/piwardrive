@@ -15,8 +15,6 @@ import logging
 import utils
 from scheduler import PollScheduler
 from interfaces import DataCollector, SelfTestCollector
-from persistence import HealthRecord, save_health_record
-
 
 _PROFILER: cProfile.Profile | None = None
 
@@ -77,6 +75,11 @@ def stop_profiling() -> str | None:
             pyprof2calltree.convert(stats, path)
         except Exception as exc:  # pragma: no cover - optional
             logging.exception("Failed to export callgrind data: %s", exc)
+            try:
+                with open(path, "w", encoding="utf-8") as fp:
+                    fp.write("")
+            except OSError:
+                pass
     _PROFILER = None
     return s.getvalue()
 
