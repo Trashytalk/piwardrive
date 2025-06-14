@@ -81,3 +81,10 @@ def test_env_override_health_poll(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setenv("PW_HEALTH_POLL_INTERVAL", "5")
     cfg = config.AppConfig.load()
     assert cfg.health_poll_interval == 5
+
+
+def test_env_override_battery_widget(monkeypatch: Any, tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    monkeypatch.setenv("PW_WIDGET_BATTERY_STATUS", "true")
+    cfg = config.AppConfig.load()
+    assert cfg.widget_battery_status is True

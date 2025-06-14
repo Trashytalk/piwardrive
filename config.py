@@ -28,6 +28,7 @@ CONFIG_SCHEMA = {
         "health_poll_interval": {"type": "integer"},
         "log_rotate_interval": {"type": "integer"},
         "log_rotate_archives": {"type": "integer"},
+        "widget_battery_status": {"type": "boolean"},
     },
     "additionalProperties": False,
 }
@@ -52,6 +53,7 @@ class Config:
     health_poll_interval: int = 10
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
+    widget_battery_status: bool = False
 
 
 DEFAULT_CONFIG = Config()
@@ -125,6 +127,7 @@ class AppConfig:
     health_poll_interval: int = DEFAULTS["health_poll_interval"]
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
+    widget_battery_status: bool = DEFAULTS["widget_battery_status"]
 
     @classmethod
     def load(cls) -> "AppConfig":

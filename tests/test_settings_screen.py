@@ -6,6 +6,8 @@ from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import config
+
 
 def load_screen(monkeypatch: Any) -> ModuleType:
     modules: dict[str, Any] = {
@@ -56,6 +58,7 @@ class DummyApp:
         self.map_use_offline = False
         self.theme = "Dark"
         self.theme_cls = SimpleNamespace(theme_style="Dark")
+        self.config_data = config.Config()
 
 
 def make_screen(module: ModuleType, app: DummyApp) -> Any:

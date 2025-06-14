@@ -15,6 +15,7 @@ from widgets import (
     DiskUsageTrendWidget,
     CPUTempGraphWidget,
     NetworkThroughputWidget,
+    BatteryStatusWidget,
 )
 
 
@@ -64,6 +65,7 @@ class DashboardScreen(Screen):
                 'DiskUsageTrendWidget': DiskUsageTrendWidget,
                 'CPUTempGraphWidget': CPUTempGraphWidget,
                 'NetworkThroughputWidget': NetworkThroughputWidget,
+                'BatteryStatusWidget': BatteryStatusWidget,
             }
             for info in app.dashboard_layout:
                 cls = cls_map.get(info.get('cls'))
@@ -88,6 +90,8 @@ class DashboardScreen(Screen):
                 widgets.append(CPUTempGraphWidget())
             if getattr(app, 'widget_net_throughput', False):
                 widgets.append(NetworkThroughputWidget())
+            if getattr(app, 'widget_battery_status', False):
+                widgets.append(BatteryStatusWidget())
 
         for widget in widgets:
             self.layout.add_widget(widget)
