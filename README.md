@@ -18,6 +18,7 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
 * **Battery Widget**: Optional dashboard tile showing battery percentage if available.
+* **Scheduled Backups**: Periodically archive configuration and logs for easy restore.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 

@@ -29,6 +29,8 @@ CONFIG_SCHEMA = {
         "log_rotate_interval": {"type": "integer"},
         "log_rotate_archives": {"type": "integer"},
         "widget_battery_status": {"type": "boolean"},
+        "backup_dir": {"type": "string"},
+        "backup_interval": {"type": "integer"},
     },
     "additionalProperties": False,
 }
@@ -54,6 +56,8 @@ class Config:
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
     widget_battery_status: bool = False
+    backup_dir: str = os.path.join(CONFIG_DIR, "backups")
+    backup_interval: int = 86400
 
 
 DEFAULT_CONFIG = Config()
@@ -128,6 +132,8 @@ class AppConfig:
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
+    backup_dir: str = DEFAULTS["backup_dir"]
+    backup_interval: int = DEFAULTS["backup_interval"]
 
     @classmethod
     def load(cls) -> "AppConfig":
