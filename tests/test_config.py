@@ -1,11 +1,12 @@
 """Tests for the configuration module."""
+
 import json
 import os
 import sys
 from pathlib import Path
 from dataclasses import asdict
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import config
 
 
@@ -30,12 +31,21 @@ def test_save_and_load_roundtrip(tmp_path):
     orig.theme = "Light"
     orig.map_poll_gps = 5
     orig.offline_tile_path = "/tmp/off.mbtiles"
-    config.save_config(asdict(orig))
+    config.save_config(orig)
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
     assert loaded.theme == "Light"
     assert loaded.map_poll_gps == 5
     assert loaded.offline_tile_path == "/tmp/off.mbtiles"
+
+def test_save_config_dataclass_roundtrip(tmp_path):
+    cfg_file = setup_temp_config(tmp_path)
+    cfg = config.Config(theme="Blue")
+    config.save_config(cfg)
+    assert Path(cfg_file).is_file()
+    loaded = config.load_config()
+    assert loaded.theme == "Blue"
+    
 
 def test_load_config_bad_json(tmp_path):
     cfg_file = setup_temp_config(tmp_path)
