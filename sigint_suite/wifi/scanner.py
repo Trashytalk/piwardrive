@@ -1,6 +1,7 @@
 import subprocess
 from typing import List, Dict
 
+
 def scan_wifi(interface: str = "wlan0") -> List[Dict[str, str]]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
     cmd = ["sudo", "iwlist", interface, "scanning"]

@@ -28,5 +28,6 @@ def translate(key: str) -> str:
         lang = _translations.get(_current, {})
     return lang.get(key, key)
 
+
 # Convenience alias for use in code and KV files
 _ = translate
