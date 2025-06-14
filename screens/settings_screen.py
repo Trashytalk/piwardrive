@@ -339,6 +339,7 @@ class SettingsScreen(Screen):
         Snackbar(text="Settings saved", duration=1).open()
 
     def _export_logs(self) -> None:
+        """Export service logs via the application helper."""
         app = App.get_running_app()
         path = app.export_logs()
         if path:

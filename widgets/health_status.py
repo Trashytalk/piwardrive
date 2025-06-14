@@ -1,3 +1,5 @@
+"""Widget summarizing the results of the periodic health monitor."""
+
 import logging
 from typing import Any
 
@@ -14,12 +16,14 @@ class HealthStatusWidget(DashboardWidget):
     update_interval = 10.0
 
     def __init__(self, **kwargs: Any) -> None:
+        """Create widget label and trigger the first update."""
         super().__init__(**kwargs)
         self.label = MDLabel(text=f"{_('health')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
     def update(self) -> None:  # pragma: no cover - GUI update
+        """Refresh the widget with the latest health metrics."""
         try:
             app = App.get_running_app()
             monitor = getattr(app, "health_monitor", None)

@@ -12,9 +12,11 @@ jobs:
       - name: Install deps
         run: |
           pip install -r requirements.txt
-          pip install flake8 mypy pytest radon
+          pip install flake8 mypy pytest radon pydocstyle
       - name: Lint
         run: flake8 .
+      - name: Docstrings
+        run: pydocstyle screens widgets
       - name: Type check
         run: mypy .
       - name: Complexity check

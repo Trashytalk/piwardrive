@@ -14,6 +14,7 @@ class CPUTempGraphWidget(DashboardWidget):
     """Display CPU temperature history using a line graph."""
 
     def __init__(self, update_interval: int = 5, max_points: int = 60, **kwargs: Any) -> None:
+        """Initialize graph components and schedule updates."""
         super().__init__(**kwargs)
         self.update_interval = update_interval
         self.max_points = max_points
@@ -40,6 +41,7 @@ class CPUTempGraphWidget(DashboardWidget):
         self.update()
 
     def update(self) -> None:
+        """Append the latest temperature reading to the plot."""
         temp = get_cpu_temp()
         if temp is None:
             return

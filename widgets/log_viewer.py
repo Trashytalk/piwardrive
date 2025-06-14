@@ -21,6 +21,7 @@ class LogViewer(ScrollView):
     error_regex = StringProperty("error")
 
     def __init__(self, **kwargs: Any) -> None:
+        """Set up label widget and schedule periodic log refresh."""
         super().__init__(**kwargs)
         self.label = Label(size_hint_y=None, halign="left", valign="top")
         self.label.bind(texture_size=self._update_height)

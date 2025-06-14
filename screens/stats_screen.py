@@ -11,7 +11,6 @@ from localization import _
 class StatsScreen(Screen):
     """Display basic system metrics in the diagnostics bar."""
 
-
     def __init__(self, **kwargs):
         """Schedule periodic stat updates."""
         super().__init__(**kwargs)

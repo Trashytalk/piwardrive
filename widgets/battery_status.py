@@ -15,12 +15,14 @@ class BatteryStatusWidget(DashboardWidget):
     update_interval = 30.0
 
     def __init__(self, **kwargs: Any) -> None:
+        """Create label widget and display initial reading."""
         super().__init__(**kwargs)
         self.label = MDLabel(text=f"{_('battery')}: {_('not_available')}")
         self.add_widget(self.label)
         self.update()
 
     def update(self) -> None:
+        """Poll the battery state and update the label."""
         try:
             batt = psutil.sensors_battery()
             if batt is None:

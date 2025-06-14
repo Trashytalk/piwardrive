@@ -9,6 +9,7 @@ class ConsoleScreen(Screen):
     """Display real-time logs from Kismet or other services."""
 
     def __init__(self, **kwargs):
+        """Instantiate the log viewer widget."""
         super().__init__(**kwargs)
         self.log_widget = LogViewer()
         self.add_widget(self.log_widget)
