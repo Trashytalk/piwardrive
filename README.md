@@ -95,10 +95,13 @@ python main.py
 
 * **Tabs**: Swipe or tap top buttons to switch between Map, Stats, Split, Console, Settings, Dashboard.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
-* 
+* **Context Menu**: Save waypoints, load GPX/KML tracks and measure distances.
 
 ## Error Handling
-* **
+The application reports errors consistently using `utils.report_error`. The sequence below illustrates how
+`control_service` surfaces failures:
+
+```mermaid
 sequenceDiagram
     participant Test
     participant control_service
@@ -109,6 +112,11 @@ sequenceDiagram
     control_service->>subprocess: Run command
     subprocess-->>control_service: Return failure (non-zero code)
     control_service->>report_error: report_error(error_message)
+```
 
-    
+`report_error` logs the message and shows a dialog if the GUI is running.
 
+## Documentation & Tests
+
+See [docs/](docs/) for configuration guides and widget details. Run `pytest` to execute the test suite and
+use `flake8` and `mypy` to lint and type-check the codebase.
