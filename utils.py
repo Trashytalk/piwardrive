@@ -20,6 +20,14 @@ from kivy.app import App
 import psutil
 import requests
 
+ERROR_PREFIX = "E"
+
+
+def format_error(code: int, message: str) -> str:
+    """Return standardized error string like ``[E001] message``."""
+    return f"[{ERROR_PREFIX}{code:03d}] {message}"
+
+
 try:
     import orjson as _json
 except Exception:  # pragma: no cover - optional dependency
@@ -35,7 +43,10 @@ def _loads(data: bytes | str) -> Any:
 
 
 def report_error(message: str) -> None:
-    """Log the error and show an alert via the running app if possible."""
+    """Log the error and show an alert via the running app if possible.
+
+    ``message`` should include a numeric error code prefix like ``[E001]``.
+    """
     logging.error(message)
     try:
         app = App.get_running_app()
@@ -203,16 +214,28 @@ def fetch_kismet_devices() -> tuple[list, list]:
         try:
             resp = requests.get(url, timeout=5)
         except requests.RequestException as exc:
-            report_error(f"Kismet API request failed: {exc}")
+            report_error(
+                format_error(
+                    301,
+                    (
+                        f"Kismet API request failed: {exc}. "
+                        "Ensure Kismet is running."
+                    ),
+                )
+            )
             continue
         try:
             if resp.status_code == 200:
                 data = resp.json()
                 return data.get("access_points", []), data.get("clients", [])
         except json.JSONDecodeError as exc:
-            report_error(f"Kismet API JSON decode error: {exc}")
+            report_error(
+                format_error(302, f"Kismet API JSON decode error: {exc}")
+            )
         except Exception as exc:  # pragma: no cover - unexpected
-            report_error(f"Kismet API error: {exc}")
+            report_error(
+                format_error(303, f"Kismet API error: {exc}")
+            )
     return [], []
 
 
@@ -226,14 +249,24 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         try:
             resp = await asyncio.to_thread(requests.get, url, timeout=5)
         except requests.RequestException as exc:
-            report_error(f"Kismet API request failed: {exc}")
+            report_error(
+                format_error(
+                    301,
+                    (
+                        f"Kismet API request failed: {exc}. "
+                        "Ensure Kismet is running."
+                    ),
+                )
+            )
             continue
         try:
             if resp.status_code == 200:
                 data = _loads(resp.content)
                 return data.get("access_points", []), data.get("clients", [])
         except Exception as exc:  # pragma: no cover - JSON parse or other
-            report_error(f"Kismet API error: {exc}")
+            report_error(
+                format_error(303, f"Kismet API error: {exc}")
+            )
     return [], []
 
 
@@ -362,29 +395,30 @@ def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> floa
 
 
 def polygon_area(points: Sequence[tuple[float, float]]) -> float:
-    """Compute planar area for a polygon of ``(lat, lon)`` points in square meters."""
+    """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
     if len(points) < 3:
         return 0.0
+
     import math
 
-    # approximate using equirectangular projection around centroid
-    lat0 = sum(p[0] for p in points) / len(points)
-    lon0 = sum(p[1] for p in points) / len(points)
+    n = len(points)
+    lat0 = sum(p[0] for p in points) / n
+    lon0 = sum(p[1] for p in points) / n
     cos_lat0 = math.cos(math.radians(lat0))
 
     def project(p: tuple[float, float]) -> tuple[float, float]:
-        x = (p[1] - lon0) * cos_lat0
-        y = p[0] - lat0
-        return x, y
+        return (p[1] - lon0) * cos_lat0, p[0] - lat0
 
     verts = [project(p) for p in points]
+    prev_x, prev_y = verts[-1]
     area = 0.0
-    for (x1, y1), (x2, y2) in zip(verts, verts[1:] + verts[:1]):
-        area += x1 * y2 - x2 * y1
+    for x, y in verts:
+        area += prev_x * y - x * prev_y
+        prev_x, prev_y = x, y
+
     area = abs(area) / 2
-    # convert degrees^2 to meters^2 using approximate size of degree
     meter_per_deg = 111320.0
-    return area * (meter_per_deg ** 2)
+    return area * (meter_per_deg**2)
 
 
 def point_in_polygon(

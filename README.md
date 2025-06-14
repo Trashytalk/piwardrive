@@ -16,6 +16,8 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
 * **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
+  Use `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` to export callgrind data for
+  analysis in KCachegrind.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
 * **Battery Widget**: Optional dashboard tile showing battery percentage if available.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.
@@ -42,29 +44,37 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 
 ## Installation
 
-1. **Clone the repo**:
+1. **Install system packages** (Raspberry Pi OS)::
 
-   ```bash
-   git clone https://github.com/TRASHYTALK/piwardrive.git
-   ```
+      sudo apt update && sudo apt install -y \
+          git build-essential cmake kismet bettercap gpsd evtest python3-venv
 
-2. **Install Python dependencies**:
+2. **Clone the repo**::
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+      git clone https://github.com/TRASHYTALK/piwardrive.git
+      cd piwardrive
 
-3. **Configure fstab** (optional):
+3. **Create and activate a virtual environment**::
 
-   ```bash
-   /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
-   ```
+      python3 -m venv gui-env
+      source gui-env/bin/activate
+
+4. **Install Python dependencies**::
+
+      pip install -r requirements.txt
+
+5. **Configure fstab** (optional)::
+
+      /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
+
+For detailed instructions and troubleshooting steps see ``docs/installation.rst``.
 
 ## Configuration
 
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` persists settings between runs.
 * **Env Overrides**: use environment variables like `PW_MAP_POLL_GPS=5`.
+* **Validation**: values are checked on load and invalid settings raise errors.
 * **BetterCAP Caplet**: `/usr/local/etc/bettercap/alfa.cap`
 * **Kismet Config**: `/usr/local/etc/kismet_site.conf`
 * **Systemd Units**:
@@ -119,6 +129,7 @@ sequenceDiagram
 ```
 
 `report_error` logs the message and shows a dialog if the GUI is running.
+Error messages are prefixed with codes like `[E001]` to aid troubleshooting.
 
 ## Documentation & Tests
 
