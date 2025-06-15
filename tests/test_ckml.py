@@ -1,6 +1,6 @@
 import os, sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import ckml
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from piwardrive import ckml
 
 
 def test_parse_coords_simple() -> None:

@@ -6,8 +6,8 @@ from unittest import mock
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import r_integration
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from piwardrive import r_integration
 
 if importlib.util.find_spec("rpy2") is None:
     pytest.skip("rpy2 is not installed", allow_module_level=True)

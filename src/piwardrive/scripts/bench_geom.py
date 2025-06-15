@@ -1,7 +1,7 @@
 import logging
 import timeit
 
-import utils
+from .. import utils
 
 try:
     import cgeom

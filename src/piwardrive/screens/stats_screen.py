@@ -4,8 +4,8 @@ import psutil
 
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from utils import get_cpu_temp, get_smart_status, require_id
-from localization import _
+from ..utils import get_cpu_temp, get_smart_status, require_id
+from ..localization import _
 
 
 class StatsScreen(Screen):

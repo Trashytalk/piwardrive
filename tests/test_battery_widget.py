@@ -3,7 +3,7 @@ import sys
 from types import ModuleType
 from typing import Any
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object
@@ -28,7 +28,7 @@ modules["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {})
 for name, mod in modules.items():
     sys.modules[name] = mod
 
-import widgets.battery_status as bs
+import piwardrive.widgets.battery_status as bs
 
 class DummyBattery:
     def __init__(self, percent: float, plugged: bool) -> None:

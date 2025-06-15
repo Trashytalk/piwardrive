@@ -3,10 +3,10 @@
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
-from localization import _
+from ..localization import _
 
 from .base import DashboardWidget
-from utils import get_disk_usage
+from ..utils import get_disk_usage
 
 
 class StorageUsageWidget(DashboardWidget):

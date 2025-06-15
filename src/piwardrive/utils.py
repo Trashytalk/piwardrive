@@ -9,7 +9,7 @@ import asyncio
 import logging
 import os
 import subprocess
-from gpsd_client import client as gps_client
+from .gpsd_client import client as gps_client
 import time
 import threading
 
@@ -302,7 +302,7 @@ def _run_service_cmd_sync(
     """Synchronous DBus implementation used as a fallback."""
 
     import dbus
-    from security import validate_service_name
+    from .security import validate_service_name
 
     validate_service_name(service)
     if action not in {"start", "stop", "restart", "is-active"}:
@@ -342,7 +342,7 @@ async def _run_service_cmd_async(
 ) -> tuple[bool, str, str]:
     """Async DBus implementation using ``dbus-fast``."""
 
-    from security import validate_service_name
+    from .security import validate_service_name
 
     validate_service_name(service)
     if action not in {"start", "stop", "restart", "is-active"}:

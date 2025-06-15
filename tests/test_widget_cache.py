@@ -4,7 +4,7 @@ import importlib
 from pathlib import Path
 from types import ModuleType
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 
 def test_widget_plugin_cache(tmp_path, monkeypatch):
@@ -12,7 +12,7 @@ def test_widget_plugin_cache(tmp_path, monkeypatch):
     plugin_dir.mkdir(parents=True)
     plugin_file = plugin_dir / "plug1.py"
     plugin_file.write_text(
-        "from widgets.base import DashboardWidget\n"
+        "from piwardrive.widgets.base import DashboardWidget\n"
         "class W1(DashboardWidget):\n"
         "    pass\n"
     )
@@ -26,8 +26,8 @@ def test_widget_plugin_cache(tmp_path, monkeypatch):
     mods["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {})
     for n, m in mods.items():
         sys.modules[n] = m
-    sys.modules.pop("widgets", None)
-    widgets = importlib.import_module("widgets")
+    sys.modules.pop("piwardrive.widgets", None)
+    widgets = importlib.import_module("piwardrive.widgets")
 
     call_count = 0
     orig_spec = importlib.util.spec_from_file_location
@@ -44,7 +44,7 @@ def test_widget_plugin_cache(tmp_path, monkeypatch):
     widgets.clear_plugin_cache()
     plugin_file2 = plugin_dir / "plug2.py"
     plugin_file2.write_text(
-        "from widgets.base import DashboardWidget\n"
+        "from piwardrive.widgets.base import DashboardWidget\n"
         "class W2(DashboardWidget):\n"
         "    pass\n"
     )

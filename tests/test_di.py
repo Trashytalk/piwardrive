@@ -3,8 +3,8 @@ import sys
 from unittest import mock
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from di import Container
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from piwardrive.di import Container
 
 
 def test_register_instance_and_resolve() -> None:

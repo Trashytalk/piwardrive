@@ -5,7 +5,7 @@ from types import ModuleType
 from typing import Any
 
 os.environ.setdefault("KIVY_NO_ARGS", "1")
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 
 def load_screen(monkeypatch: Any):
@@ -37,9 +37,9 @@ def load_screen(monkeypatch: Any):
     mods["kivymd.uix.textfield"].MDTextField = object
     for n, m in mods.items():
         monkeypatch.setitem(sys.modules, n, m)
-    if "screens.map_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "screens.map_screen")
-    return importlib.import_module("screens.map_screen").MapScreen
+    if "piwardrive.screens.map_screen" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.screens.map_screen")
+    return importlib.import_module("piwardrive.screens.map_screen").MapScreen
 
 
 def make_screen(MapScreen: Any) -> Any:

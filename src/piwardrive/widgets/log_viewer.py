@@ -8,7 +8,7 @@ import re
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 
-from utils import tail_file
+from ..utils import tail_file
 
 
 class LogViewer(ScrollView):

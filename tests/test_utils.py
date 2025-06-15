@@ -11,7 +11,7 @@ from types import ModuleType
 from unittest import mock
 import types
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 sys.modules.setdefault('psutil', mock.Mock())
 aiohttp_mod = types.SimpleNamespace(
     ClientSession=object,
@@ -24,7 +24,7 @@ if 'requests' not in sys.modules:
     dummy_requests = mock.Mock()
     dummy_requests.RequestException = Exception
     sys.modules['requests'] = dummy_requests
-import utils
+from piwardrive import utils
 import asyncio
 from collections import namedtuple
 

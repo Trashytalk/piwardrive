@@ -3,10 +3,10 @@
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
-from localization import _
+from ..localization import _
 
 from .base import DashboardWidget
-from utils import count_bettercap_handshakes
+from ..utils import count_bettercap_handshakes
 
 
 class HandshakeCounterWidget(DashboardWidget):

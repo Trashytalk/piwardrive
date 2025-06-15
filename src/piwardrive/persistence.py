@@ -7,7 +7,7 @@ import aiosqlite
 from dataclasses import dataclass, asdict
 from typing import List, Optional
 
-import config
+from . import config
 
 
 def _db_path() -> str:

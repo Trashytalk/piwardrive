@@ -3,10 +3,10 @@ import sys
 from types import ModuleType
 from pathlib import Path
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-import analysis
-from persistence import HealthRecord
+from piwardrive import analysis
+from piwardrive.persistence import HealthRecord
 
 
 def test_compute_health_stats() -> None:

@@ -12,21 +12,21 @@ license = {file = "LICENSE"}
 authors = [{name = "PiWardrive contributors"}]
 
 [project.scripts]
-piwardrive = "main:main"
-piwardrive-service = "service:main"
+piwardrive = "piwardrive.main:main"
+piwardrive-service = "piwardrive.service:main"
 
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
 disallow_untyped_defs = true
 files = [
-    "main.py",
-    "config.py",
-    "diagnostics.py",
-    "scheduler.py",
-    "service.py",
-    "utils.py",
-    "widgets",
+    "src/piwardrive/main.py",
+    "src/piwardrive/config.py",
+    "src/piwardrive/diagnostics.py",
+    "src/piwardrive/scheduler.py",
+    "src/piwardrive/service.py",
+    "src/piwardrive/utils.py",
+    "src/piwardrive/widgets",
 ]
 exclude = ".gitattributes"
 follow_imports = "skip"
@@ -39,7 +39,7 @@ add-ignore = [
 ]
 
 [[tool.mypy.overrides]]
-module = "screens.*"
+module = "piwardrive.screens.*"
 ignore_errors = true
 follow_imports = "skip"
 

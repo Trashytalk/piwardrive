@@ -5,7 +5,7 @@ import sys
 from types import ModuleType, SimpleNamespace
 from typing import Any
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 
 def load_scheduler(monkeypatch: Any):
@@ -31,9 +31,9 @@ def load_scheduler(monkeypatch: Any):
     app_mod.App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
     monkeypatch.setitem(sys.modules, "kivy.clock", clk_mod)
     monkeypatch.setitem(sys.modules, "kivy.app", app_mod)
-    if "scheduler" in sys.modules:
-        monkeypatch.delitem(sys.modules, "scheduler")
-    sched = importlib.import_module("scheduler")
+    if "piwardrive.scheduler" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.scheduler")
+    sched = importlib.import_module("piwardrive.scheduler")
     return sched, clock
 
 

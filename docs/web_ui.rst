@@ -19,6 +19,6 @@ Authentication
 The API routes support optional HTTP basic authentication. Set the environment
 variable ``PW_API_PASSWORD_HASH`` to a password hash created with::
 
-   python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypass
+   python -c "from piwardrive import security,sys;print(security.hash_password(sys.argv[1]))" mypass
 
 to require a password. When the variable is not set, the endpoints are public.

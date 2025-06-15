@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from logging import Logger
-from config import CONFIG_DIR
+from .config import CONFIG_DIR
 
 DEFAULT_LOG_PATH = os.path.join(CONFIG_DIR, "app.log")
 

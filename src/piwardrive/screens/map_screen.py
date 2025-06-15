@@ -7,7 +7,7 @@ import json
 import os
 
 
-from gpsd_client import client as gps_client
+from ..gpsd_client import client as gps_client
 
 
 import threading
@@ -26,7 +26,7 @@ import csv
 import math
 
 from kivy.app import App
-import utils
+from .. import utils
 
 from kivy.clock import Clock, mainthread
 
@@ -59,7 +59,7 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
-from utils import (
+from ..utils import (
     haversine_distance,
     polygon_area,
     load_kml,

@@ -15,11 +15,11 @@ import psutil
 import logging
 import asyncio
 
-import utils
-from scheduler import PollScheduler
-from interfaces import DataCollector, SelfTestCollector
-from persistence import HealthRecord, save_health_record
-from utils import run_async_task
+from . import utils
+from .scheduler import PollScheduler
+from .interfaces import DataCollector, SelfTestCollector
+from .persistence import HealthRecord, save_health_record
+from .utils import run_async_task
 
 _PROFILER: cProfile.Profile | None = None
 

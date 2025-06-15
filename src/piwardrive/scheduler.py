@@ -26,7 +26,7 @@ except Exception:  # pragma: no cover - fallback stubs for tests
     ClockEvent = _DummyEvent
 
 
-import utils
+from . import utils
 
 
 class PollScheduler:

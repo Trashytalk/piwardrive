@@ -5,7 +5,7 @@ from typing import Any
 
 from kivy.app import App
 from kivymd.uix.label import MDLabel
-from localization import _
+from ..localization import _
 
 from .base import DashboardWidget
 

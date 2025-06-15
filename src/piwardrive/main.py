@@ -9,17 +9,17 @@ from dataclasses import asdict, fields
 from typing import Any, Callable
 
 
-from scheduler import PollScheduler
-from config import load_config, save_config, Config
+from .scheduler import PollScheduler
+from .config import load_config, save_config, Config
 
-from security import hash_password
-from persistence import save_app_state
+from .security import hash_password
+from .persistence import save_app_state
 
-import diagnostics
-import utils
-from di import Container
-from logconfig import setup_logging
-import exception_handler
+from . import diagnostics
+from . import utils
+from .di import Container
+from .logconfig import setup_logging
+from . import exception_handler
 
 from kivy.factory import Factory
 from kivy.lang import Builder
@@ -177,7 +177,7 @@ class PiWardriveApp(MDApp):
         """Run a systemctl command for a given service with retries."""
         import os as _os
         import getpass as _getpass
-        from security import verify_password as _verify
+        from .security import verify_password as _verify
 
         cfg_hash = getattr(
             getattr(self, "config_data", None),
@@ -221,7 +221,7 @@ class PiWardriveApp(MDApp):
 
     def export_logs(self, path: str | None = None, lines: int = 200) -> str:
         """Write the last ``lines`` from ``app.log`` to ``path`` and return it."""
-        from logconfig import DEFAULT_LOG_PATH
+        from .logconfig import DEFAULT_LOG_PATH
 
         if path is None:
             ts = int(time.time())

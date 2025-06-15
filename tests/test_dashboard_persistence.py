@@ -5,7 +5,7 @@ from types import ModuleType
 from typing import Any
 
 os.environ.setdefault("KIVY_NO_ARGS", "1")
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 
 def load_screen(monkeypatch: Any):
@@ -45,9 +45,9 @@ def load_screen(monkeypatch: Any):
 
     for n, m in {**modules, "widgets": widgets_mod}.items():
         monkeypatch.setitem(sys.modules, n, m)
-    if "screens.dashboard_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "screens.dashboard_screen")
-    DashboardScreen = importlib.import_module("screens.dashboard_screen").DashboardScreen
+    if "piwardrive.screens.dashboard_screen" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.screens.dashboard_screen")
+    DashboardScreen = importlib.import_module("piwardrive.screens.dashboard_screen").DashboardScreen
     return DashboardScreen, widgets_mod, modules["kivy.uix.floatlayout"].FloatLayout
 
 

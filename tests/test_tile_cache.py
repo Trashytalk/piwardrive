@@ -48,8 +48,8 @@ modules["kivy_garden.mapview"] = SimpleNamespace(
 for name, mod in modules.items():
     sys.modules[name] = mod
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from screens.map_screen import MapScreen  # noqa: E402
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from piwardrive.screens.map_screen import MapScreen  # noqa: E402
 
 
 def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
@@ -67,7 +67,7 @@ def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
         return FakeResp(url)
 
     monkeypatch.setattr(
-        "screens.map_screen.utils.safe_request",
+        "piwardrive.screens.map_screen.utils.safe_request",
         lambda url, timeout=10: fake_req(url, timeout),
     )
     bounds = (0.0, 0.0, 1.0, 1.0)

@@ -5,7 +5,7 @@ from statistics import mean, fmean
 import math
 import pandas as pd
 
-from persistence import HealthRecord
+from .persistence import HealthRecord
 
 try:  # optional dependency
     import pandas as pd  # type: ignore

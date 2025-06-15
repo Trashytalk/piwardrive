@@ -4,9 +4,9 @@ import sys
 from types import SimpleNamespace, ModuleType
 from typing import Any
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-import config
+from piwardrive import config
 
 
 def load_screen(monkeypatch: Any) -> ModuleType:
@@ -44,9 +44,9 @@ def load_screen(monkeypatch: Any) -> ModuleType:
     for name, mod in modules.items():
         monkeypatch.setitem(sys.modules, name, mod)
 
-    if "screens.settings_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "screens.settings_screen", raising=False)
-    return importlib.import_module("screens.settings_screen")
+    if "piwardrive.screens.settings_screen" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.screens.settings_screen", raising=False)
+    return importlib.import_module("piwardrive.screens.settings_screen")
 
 
 class DummyApp:

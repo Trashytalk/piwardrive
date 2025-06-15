@@ -3,10 +3,10 @@
 import logging
 from typing import Any
 from kivymd.uix.label import MDLabel
-from localization import _
+from ..localization import _
 
 from .base import DashboardWidget
-from utils import get_gps_fix_quality
+from ..utils import get_gps_fix_quality
 
 
 class GPSStatusWidget(DashboardWidget):

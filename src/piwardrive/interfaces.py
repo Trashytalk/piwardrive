@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-from gpsd_client import client as gps_client
+from .gpsd_client import client as gps_client
 
-import diagnostics
-import utils
+from . import diagnostics
+from . import utils
 
 
 class MapService(Protocol):

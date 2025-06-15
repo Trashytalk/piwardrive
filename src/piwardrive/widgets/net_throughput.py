@@ -3,7 +3,7 @@ from typing import Any
 
 from kivy.app import App
 from kivy_garden.graph import Graph, LinePlot
-from localization import _
+from ..localization import _
 import psutil
 
 from .base import DashboardWidget

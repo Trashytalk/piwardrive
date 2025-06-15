@@ -12,10 +12,10 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import asyncio
 
 
-from logconfig import DEFAULT_LOG_PATH
-from persistence import load_recent_health
-from security import sanitize_path, verify_password
-from utils import (
+from .logconfig import DEFAULT_LOG_PATH
+from .persistence import load_recent_health
+from .security import sanitize_path, verify_password
+from .utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,

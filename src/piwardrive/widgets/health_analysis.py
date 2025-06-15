@@ -7,12 +7,12 @@ from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.image import Image
 from kivymd.uix.label import MDLabel
-from localization import _
+from ..localization import _
 
 from .base import DashboardWidget
-from persistence import load_recent_health
-from utils import run_async_task
-from analysis import compute_health_stats, plot_cpu_temp
+from ..persistence import load_recent_health
+from ..utils import run_async_task
+from ..analysis import compute_health_stats, plot_cpu_temp
 
 
 class HealthAnalysisWidget(DashboardWidget):

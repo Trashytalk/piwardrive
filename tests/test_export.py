@@ -6,8 +6,8 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import export as exp
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from piwardrive import export as exp
 
 
 def test_filter_records() -> None:

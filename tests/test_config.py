@@ -9,8 +9,8 @@ from pathlib import Path
 from dataclasses import asdict
 from typing import Any
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import config
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+from piwardrive import config
 
 
 def setup_temp_config(tmp_path: Path) -> Path:

@@ -9,8 +9,8 @@ from typing import Any
 from kivy.app import App
 from kivymd.uix.snackbar import Snackbar
 
-from config import Config, save_config
-from utils import report_error, format_error, ErrorCode
+from ..config import Config, save_config
+from ..utils import report_error, format_error, ErrorCode
 
 
 class SettingsScreen:

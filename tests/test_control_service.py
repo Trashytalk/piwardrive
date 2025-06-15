@@ -5,19 +5,19 @@ from types import SimpleNamespace, ModuleType
 from unittest import mock
 
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules['aiohttp'] = aiohttp_mod
-import utils
-import security
+from piwardrive import utils
+from piwardrive import security
 from typing import Any, Callable, cast
 
 
 def _load_control_service() -> Callable[[Any, str, str], Any]:
-    src = open(os.path.join(os.path.dirname(__file__), '..', 'main.py')).read()
+    src = open(os.path.join(os.path.dirname(__file__), '..', 'src', 'piwardrive', 'main.py')).read()
     mod = ast.parse(src)
     func_node = None
     for node in mod.body:

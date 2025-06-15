@@ -5,13 +5,13 @@ import gzip
 from unittest import mock
 from types import ModuleType
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules['aiohttp'] = aiohttp_mod
-import diagnostics
+from piwardrive import diagnostics
 from typing import Any
 
 

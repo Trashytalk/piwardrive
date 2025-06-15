@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 from typing import Any, Dict, Optional
 
-from utils import format_error, report_error
+from ..utils import format_error, report_error
 
 from .base import DashboardWidget
 
