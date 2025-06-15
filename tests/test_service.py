@@ -40,7 +40,7 @@ def test_widget_metrics_endpoint() -> None:
         mock.patch("service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
-        mock.patch("service.service_status", side_effect=[True, False]),
+        mock.patch("service.service_status_async", side_effect=[True, False]),
     ):
         client = TestClient(service.app)
         resp = client.get("/widget-metrics")

@@ -127,6 +127,7 @@ class PiWardriveApp(MDApp):
         sm = utils.require_id(self.root, "sm")
         nav_bar = utils.require_id(self.root, "nav_bar")
 
+
         logging.debug("Root IDs: %s", list(self.root.ids.keys()))
 
         try:

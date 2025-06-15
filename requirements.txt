@@ -24,4 +24,5 @@ uvicorn>=0.26
 httpx>=0.28
 aiohttp>=3.12
 aiosqlite>=0.19
+dbus-fast>=2.44
 dbus-python>=1.3
