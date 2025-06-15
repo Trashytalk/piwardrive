@@ -155,6 +155,18 @@ flowchart TD
 
 The configuration is loaded, optional services are started and the scheduler
 begins polling metrics that feed the widgets shown on screen.
+
+## Mobile Builds
+
+Build scripts for Android and iOS are provided. Ensure the prerequisites
+listed in [docs/mobile_build.rst](docs/mobile_build.rst) are installed and
+run one of:
+
+```bash
+./scripts/build_android.sh  # Android APK
+./scripts/build_ios.sh      # iOS project
+```
+
 ## Screen Overview
 
 * **Map**: interactive map with GPS and access point overlays.
