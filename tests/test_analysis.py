@@ -40,3 +40,14 @@ def test_plot_cpu_temp_creates_file(tmp_path: Path, monkeypatch) -> None:
     analysis.plot_cpu_temp(records, str(path))
     assert path.is_file()
     path.unlink()
+
+
+def test_plot_cpu_temp_plotly_backend(tmp_path: Path) -> None:
+    path = tmp_path / "temp_plotly.png"
+    records = [
+        HealthRecord("2024-01-01T00:00:00", 40.0, 10.0, 50.0, 20.0),
+        HealthRecord("2024-01-01T01:00:00", 50.0, 20.0, 40.0, 30.0),
+    ]
+    analysis.plot_cpu_temp(records, str(path), backend="plotly")
+    assert path.is_file()
+    path.unlink()
