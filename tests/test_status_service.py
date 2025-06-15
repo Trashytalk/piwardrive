@@ -2,6 +2,13 @@ import asyncio
 from dataclasses import asdict
 from httpx import AsyncClient, ASGITransport
 
+import sys
+from types import ModuleType
+aiohttp_mod = ModuleType('aiohttp')
+aiohttp_mod.ClientSession = object
+aiohttp_mod.ClientTimeout = lambda *a, **k: None
+aiohttp_mod.ClientError = Exception
+sys.modules['aiohttp'] = aiohttp_mod
 import service
 from persistence import HealthRecord
 

@@ -31,6 +31,9 @@ import psutil
 import requests  # type: ignore
 import aiohttp
 
+GPSPIPE_CACHE_SECONDS = 2.0  # cache ttl in seconds
+_GPSPIPE_CACHE: dict[str, Any] = {"timestamp": 0.0, "data": None}
+
 
 class ErrorCode(IntEnum):
     """Enumerate application error codes."""
@@ -49,6 +52,7 @@ class ErrorCode(IntEnum):
     KISMET_API_REQUEST_FAILED = 301
     KISMET_API_JSON_ERROR = 302
     KISMET_API_ERROR = 303
+
 
 ERROR_PREFIX = "E"
 
@@ -465,14 +469,62 @@ def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     return len(glob.glob(pattern))
 
 
-def get_gps_accuracy() -> float | None:
-    """Return horizontal GPS accuracy in meters or ``None`` on failure."""
-    return gps_client.get_accuracy()
+def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
+    """Return cached gpspipe data or refresh if stale."""
+    if not force_refresh and _GPSPIPE_CACHE["data"] is not None:
+        age = time.time() - _GPSPIPE_CACHE["timestamp"]
+        if age <= GPSPIPE_CACHE_SECONDS:
+            return _GPSPIPE_CACHE["data"]
+
+    try:
+        proc = subprocess.run(
+            ['gpspipe', '-w', '-n', '10'],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        data: dict[str, Any] = {}
+        for line in proc.stdout.splitlines():
+            if not line.strip().startswith('{'):
+                continue
+            rec = json.loads(line)
+            if 'epx' in rec:
+                data['epx'] = rec.get('epx')
+            if 'epy' in rec:
+                data['epy'] = rec.get('epy')
+            if 'mode' in rec:
+                data['mode'] = rec.get('mode')
+            if all(k in data for k in ('epx', 'epy', 'mode')):
+                break
+        if data:
+            _GPSPIPE_CACHE['timestamp'] = time.time()
+            _GPSPIPE_CACHE['data'] = data
+            return data
+    except Exception:
+        pass
+    return _GPSPIPE_CACHE.get('data')
 
 
-def get_gps_fix_quality() -> str:
-    """Return GPS fix quality string (``'2D'``, ``'3D'``, etc.)."""
-    return gps_client.get_fix_quality()
+def get_gps_accuracy(force_refresh: bool = False) -> float | None:
+    """Return GPS accuracy from cached gpspipe data."""
+    data = _get_cached_gps_data(force_refresh)
+    if not data:
+        return None
+    epx = data.get('epx')
+    epy = data.get('epy')
+    if epx is not None and epy is not None:
+        return max(epx, epy)
+    return None
+
+
+def get_gps_fix_quality(force_refresh: bool = False) -> str:
+    """Return human readable GPS fix quality from cached data."""
+    mode_map = {1: 'No Fix', 2: '2D', 3: '3D', 4: 'DGPS'}
+    data = _get_cached_gps_data(force_refresh)
+    if not data:
+        return 'Unknown'
+    mode = data.get('mode')
+    return mode_map.get(mode, str(mode))
 
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
@@ -491,11 +543,9 @@ def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
         return None
 
 
-def parse_latest_gps_accuracy() -> float | None:
-    """
-    Alias for get_gps_accuracy for backward compatibility.
-    """
-    return get_gps_accuracy()
+def parse_latest_gps_accuracy(force_refresh: bool = False) -> float | None:
+    """Alias for :func:`get_gps_accuracy`."""
+    return get_gps_accuracy(force_refresh=force_refresh)
 
 
 def tail_log_file(path: str, lines: int = 50) -> list[str]:

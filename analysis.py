@@ -4,6 +4,11 @@ from typing import List, Dict
 from statistics import mean
 from persistence import HealthRecord
 
+try:  # optional dependency
+    import pandas as pd  # type: ignore
+except Exception:  # pragma: no cover - fallback when pandas missing
+    pd = None
+
 
 def compute_health_stats(records: List[HealthRecord]) -> Dict[str, float]:
     """Return average metrics for the given health ``records``."""
@@ -33,57 +38,41 @@ def plot_cpu_temp(records: List[HealthRecord], path: str, backend: str = "matplo
     """
     if not records:
         return
-    df = pd.DataFrame([asdict(r) for r in records])
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-    df.sort_values("timestamp", inplace=True)
-    df["rolling"] = df["cpu_temp"].rolling(window=5, min_periods=1).mean()
+
+    if pd is not None:
+        df = pd.DataFrame([asdict(r) for r in records])
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df.sort_values("timestamp", inplace=True)
+        df["rolling"] = df["cpu_temp"].rolling(window=5, min_periods=1).mean()
+        times = list(df["timestamp"])
+        temps = list(df["cpu_temp"])
+        rolling = list(df["rolling"])
+    else:  # pragma: no cover - used without pandas
+        from datetime import datetime
+
+        recs = sorted(records, key=lambda r: datetime.fromisoformat(r.timestamp))
+        times = [datetime.fromisoformat(r.timestamp) for r in recs]
+        temps = [r.cpu_temp for r in recs]
+        rolling = []
+        for i in range(len(temps)):
+            window = [t for t in temps[max(0, i - 4) : i + 1] if t is not None]
+            rolling.append(mean(window) if window else float("nan"))
 
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    from datetime import datetime
-
-    data = [
-        (datetime.fromisoformat(r.timestamp), r.cpu_temp)
-        for r in records
-    ]
-    data.sort(key=lambda x: x[0])
-
-    times = [t for t, _ in data]
-    temps = [v if v is not None else float("nan") for _, v in data]
-
-    rolling = []
-    for i in range(len(temps)):
-        window = [t for t in temps[max(0, i - 4) : i + 1] if not (t != t)]
-        if window:
-            rolling.append(mean(window))
-        else:
-            rolling.append(float("nan"))
-    recs = sorted(records, key=lambda r: datetime.fromisoformat(r.timestamp))
-    times = [datetime.fromisoformat(r.timestamp) for r in recs]
-    temps = [r.cpu_temp for r in recs]
-
-    rolling = []
-    for i in range(len(temps)):
-        window = [t for t in temps[max(0, i - 4) : i + 1] if t is not None and not math.isnan(t)]
-        rolling.append(fmean(window) if window else math.nan)
 
 
-
-    if backend == "plotly":
+    if backend == "plotly" and pd is not None:
         try:
             import plotly.graph_objects as go
         except Exception:
             backend = "matplotlib"  # fallback if plotly not available
         else:
             fig = go.Figure()
-            fig.add_trace(
-                go.Scattergl(x=df["timestamp"], y=df["cpu_temp"], name="Temp")
-            )
-            fig.add_trace(
-                go.Scattergl(x=df["timestamp"], y=df["rolling"], name="Avg")
-            )
+            fig.add_trace(go.Scattergl(x=times, y=temps, name="Temp"))
+            fig.add_trace(go.Scattergl(x=times, y=rolling, name="Avg"))
             fig.write_image(path)
             return
 

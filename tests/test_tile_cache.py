@@ -19,7 +19,11 @@ modules = {
     "kivymd.uix.progressbar": ModuleType("kivymd.uix.progressbar"),
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
+    "aiohttp": ModuleType("aiohttp"),
 }
+modules["aiohttp"].ClientSession = object
+modules["aiohttp"].ClientTimeout = lambda *a, **k: None
+modules["aiohttp"].ClientError = Exception
 modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
 modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
 modules["kivy.clock"].mainthread = lambda f: f
@@ -42,7 +46,7 @@ modules["kivy_garden.mapview"] = SimpleNamespace(
 )
 
 for name, mod in modules.items():
-    sys.modules.setdefault(name, mod)
+    sys.modules[name] = mod
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from screens.map_screen import MapScreen  # noqa: E402
