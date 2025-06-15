@@ -209,10 +209,12 @@ Run `pytest` to execute the test suite and use `flake8` and `mypy` to lint and t
 
 ## Contributing
 
-Install development dependencies with:
+Install project and development dependencies and run the tests locally with:
 
 ```bash
+pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pytest
 ```
 
 The `requirements-dev.txt` file lists `flake8`, `mypy` and `pytest` which are
