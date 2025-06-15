@@ -10,6 +10,11 @@ To enable the optional battery widget set ``widget_battery_status`` to ``true``:
 
    PW_WIDGET_BATTERY_STATUS=1 python main.py
 
+Set ``PW_ADMIN_PASSWORD`` to allow privileged service actions without being
+prompted for a password::
+
+   PW_ADMIN_PASSWORD=secret python main.py
+
 See :mod:`config` for defaults and helpers.
 
 Environment variables are parsed on startup. Any option in ``Config`` can be
