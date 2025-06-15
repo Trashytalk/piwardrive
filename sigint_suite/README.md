@@ -10,10 +10,12 @@ the main PiWardrive UI when you only need quick scans or exports.
 - **wifi** – discover Wi-Fi access points using `iwlist`. Set the
   `IWLIST_CMD` environment variable to override the `iwlist` executable and
   `IW_PRIV_CMD` to change the privilege wrapper (default ``sudo``).
-- **cellular.band_scanner** – placeholder for cellular band scanning utilities.
+- **cellular.band_scanner** – scan available cellular bands via an external
+  command specified by ``BAND_SCAN_CMD``.
 - **cellular.imsi_catcher** – stub for future IMSI catcher logic.
 - **cellular.parsers** – parsers for raw cellular output.
-- **cellular.tower_tracker** – track cell towers encountered during scans.
+- **cellular.tower_tracker** – maintain a SQLite database of observed cell
+  towers and expose simple query helpers.
 - **dashboard** – minimal dashboard integration.
 - **enrichment** – routines to enrich captured data.
 - **exports** – helpers for writing results to JSON/CSV files.
