@@ -5,6 +5,7 @@
 
 import os
 from dataclasses import fields
+from typing import Any
 
 from kivy.app import App
 
@@ -22,7 +23,7 @@ from kivymd.uix.textfield import MDTextField
 
 from kivymd.uix.selectioncontrol import MDSwitch
 from kivymd.uix.snackbar import Snackbar
-from utils import report_error, format_error
+from utils import report_error, format_error, ErrorCode
 from config import Config, save_config
 
 
@@ -211,7 +212,8 @@ class SettingsScreen(Screen):
         else:
             report_error(
                 format_error(
-                    201, f"Invalid Kismet log dir: {path}. Please provide an existing path."
+                    ErrorCode.INVALID_KISMET_LOG_DIR,
+                    f"Invalid Kismet log dir: {path}. Please provide an existing path.",
                 )
             )
 
@@ -221,7 +223,7 @@ class SettingsScreen(Screen):
         else:
             report_error(
                 format_error(
-                    202,
+                    ErrorCode.INVALID_BETTERCAP_CAPLET,
                     f"Invalid BetterCAP caplet: {path}. Provide a valid file path.",
                 )
             )
@@ -234,7 +236,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(203, "GPS poll rate must be a positive integer. Enter a value greater than 0.")
+                format_error(
+                    ErrorCode.GPS_POLL_RATE_INVALID,
+                    "GPS poll rate must be a positive integer. Enter a value greater than 0.",
+                )
             )
 
         try:
@@ -245,7 +250,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(206, "AP poll rate must be a positive integer. Enter a value greater than 0.")
+                format_error(
+                    ErrorCode.AP_POLL_RATE_INVALID,
+                    "AP poll rate must be a positive integer. Enter a value greater than 0.",
+                )
             )
 
         try:
@@ -256,7 +264,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(210, "BT poll rate must be a positive integer.")
+                format_error(
+                    ErrorCode.BT_POLL_RATE_INVALID,
+                    "BT poll rate must be a positive integer.",
+                )
             )
 
         try:
@@ -267,7 +278,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(207, "Health poll must be a positive integer.")
+                format_error(
+                    ErrorCode.HEALTH_POLL_INVALID,
+                    "Health poll must be a positive integer.",
+                )
             )
 
         try:
@@ -278,7 +292,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(208, "Log rotate interval must be positive.")
+                format_error(
+                    ErrorCode.LOG_ROTATE_INVALID,
+                    "Log rotate interval must be positive.",
+                )
             )
 
         try:
@@ -289,7 +306,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(209, "Log archives must be a positive integer.")
+                format_error(
+                    ErrorCode.LOG_ARCHIVES_INVALID,
+                    "Log archives must be a positive integer.",
+                )
             )
 
         try:
@@ -307,50 +327,7 @@ class SettingsScreen(Screen):
         else:
             report_error(
                 format_error(
-                    204,
+                    ErrorCode.INVALID_OFFLINE_TILE_PATH,
                     f"Invalid offline tile path: {path}. Please provide an existing directory.",
                 )
             )
-
-        app.map_use_offline = self.offline_switch.active
-        app.theme = "Dark" if self.theme_switch.active else "Light"
-        app.theme_cls.theme_style = app.theme
-        app.map_show_gps = self.show_gps_switch.active
-        app.map_show_aps = self.show_aps_switch.active
-        app.map_show_bt = self.show_bt_switch.active
-        app.map_cluster_aps = self.cluster_switch.active
-        app.debug_mode = self.debug_switch.active
-        app.widget_battery_status = self.battery_switch.active
-
-        for f in fields(Config):
-            key = f.name
-            if hasattr(app, key):
-                setattr(app.config_data, key, getattr(app, key))
-        try:
-            save_config(app.config_data)
-        except OSError as exc:  # pragma: no cover - save failure
-            report_error(
-                format_error(
-                    205,
-                    f"Failed to save config: {exc}. Check file permissions.",
-                )
-            )
-
-        Snackbar(text="Settings saved", duration=1).open()
-
-    def _export_logs(self) -> None:
-        """Export service logs via the application helper."""
-        app = App.get_running_app()
-        path = app.export_logs()
-        if path:
-            Snackbar(text=f"Logs exported to {path}", duration=1).open()
-
-    def prefetch_tiles(self) -> None:
-        """Trigger tile prefetch on the map screen."""
-        app = App.get_running_app()
-        try:
-            map_screen = app.root.ids.sm.get_screen("Map")
-        except Exception:
-            report_error("Map screen unavailable")
-            return
-        map_screen.prefetch_visible_region()

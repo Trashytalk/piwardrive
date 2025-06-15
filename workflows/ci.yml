@@ -13,6 +13,11 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install flake8 mypy pytest radon pydocstyle
+      - name: Build extension
+        run: |
+          pip install build
+          python -m build
+          pip install dist/*.whl
       - name: Lint
         run: flake8 .
       - name: Docstrings
