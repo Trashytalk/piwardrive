@@ -299,7 +299,7 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
 def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Synchronous DBus implementation used as a fallback."""
+    """Execute DBus service commands synchronously as a fallback."""
 
     import dbus
     from security import validate_service_name
@@ -416,7 +416,7 @@ async def _run_service_cmd_async(
 def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Synchronous wrapper for :func:`_run_service_cmd_async`."""
+    """Run ``_run_service_cmd_async`` in a synchronous context."""
 
     fut = run_async_task(
         _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
@@ -438,7 +438,7 @@ async def service_status_async(
 
 
 def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
-    """Synchronous wrapper for :func:`service_status_async`."""
+    """Check a service's status using the asynchronous helper."""
     fut = run_async_task(
         service_status_async(service, attempts=attempts, delay=delay)
     )
@@ -513,7 +513,7 @@ def now_timestamp() -> str:
 
 
 def fetch_kismet_devices() -> tuple[list, list]:
-    """Synchronously fetch Kismet devices using the async helper."""
+    """Synchronize Kismet device data using the async helper."""
 
     fut = run_async_task(fetch_kismet_devices_async())
     return fut.result()
