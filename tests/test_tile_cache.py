@@ -3,6 +3,17 @@ import sys
 import time
 from types import ModuleType, SimpleNamespace
 
+
+class DummySession:
+    def __init__(self, *a, **k) -> None:
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
 os.environ.setdefault("KIVY_NO_ARGS", "1")
 os.environ.setdefault("KIVY_WINDOW", "mock")
 
@@ -21,7 +32,7 @@ modules = {
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
     "aiohttp": ModuleType("aiohttp"),
 }
-modules["aiohttp"].ClientSession = object
+modules["aiohttp"].ClientSession = DummySession
 modules["aiohttp"].ClientTimeout = lambda *a, **k: None
 modules["aiohttp"].ClientError = Exception
 modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
@@ -49,6 +60,8 @@ for name, mod in modules.items():
     sys.modules[name] = mod
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+if "screens.map_screen" in sys.modules:
+    del sys.modules["screens.map_screen"]
 from screens.map_screen import MapScreen  # noqa: E402
 
 
@@ -56,20 +69,13 @@ def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
     screen = MapScreen()
     called = []
 
-    class FakeResp:
-        def __init__(self, url):
-            self.content = b"data"
-        def raise_for_status(self):
-            pass
-
-    def fake_req(url, timeout=10):
+    async def fake_dl(_session, url, local):
         called.append(url)
-        return FakeResp(url)
+        os.makedirs(os.path.dirname(local), exist_ok=True)
+        with open(local, "wb") as fh:
+            fh.write(b"data")
 
-    monkeypatch.setattr(
-        "screens.map_screen.utils.safe_request",
-        lambda url, timeout=10: fake_req(url, timeout),
-    )
+    monkeypatch.setattr(screen, "_download_tile_async", fake_dl)
     bounds = (0.0, 0.0, 1.0, 1.0)
     screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
     assert len(called) == 2
