@@ -6,6 +6,7 @@ import os
 from types import SimpleNamespace
 from typing import Any
 
+import asyncio
 from kivy.app import App
 from kivymd.uix.snackbar import Snackbar
 
@@ -119,7 +120,7 @@ class SettingsScreen:
     # ------------------------------------------------------------------
     def _export_logs(self) -> None:  # pragma: no cover - simple wrapper
         app = App.get_running_app()
-        path = app.export_logs()
+        path = asyncio.run(app.export_logs())
         Snackbar(text=f"Exported {path}").open()
 
             report_error(
@@ -140,10 +141,10 @@ class SettingsScreen:
 
         save_config(app.config_data)
 
-    def _export_logs(self) -> None:
+    async def _export_logs(self) -> None:
         """Export application logs to a file and show notification."""
         app = App.get_running_app()
-        path = app.export_logs()
+        path = await app.export_logs()
         if path:
             Snackbar(text=f"Exported {path}").open()
 

@@ -184,11 +184,12 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert saved
 
 
-def test_export_logs_button(monkeypatch: Any) -> None:
+@pytest.mark.asyncio
+async def test_export_logs_button(monkeypatch: Any) -> None:
     module = load_screen(monkeypatch)
     app = DummyApp()
     called = {}
-    def fake_export() -> str:
+    async def fake_export() -> str:
         called['ok'] = True
         return '/tmp/logs.txt'
     app.export_logs = fake_export
@@ -201,6 +202,6 @@ def test_export_logs_button(monkeypatch: Any) -> None:
             outputs['opened'] = True
     monkeypatch.setattr(module, 'Snackbar', DummySnackbar)
     screen = make_screen(module, app)
-    screen._export_logs()
+    await screen._export_logs()
     assert called.get('ok') is True
     assert outputs.get('opened') is True

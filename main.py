@@ -218,7 +218,7 @@ class PiWardriveApp(MDApp):
         )
         dialog.open()
 
-    def export_logs(self, path: str | None = None, lines: int = 200) -> str:
+    async def export_logs(self, path: str | None = None, lines: int = 200) -> str:
         """Write the last ``lines`` from ``app.log`` to ``path`` and return it."""
         from logconfig import DEFAULT_LOG_PATH
 
@@ -227,8 +227,13 @@ class PiWardriveApp(MDApp):
             path = os.path.join(os.path.expanduser("~"), f"piwardrive-logs-{ts}.txt")
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write("\n".join(utils.tail_file(DEFAULT_LOG_PATH, lines)))
+            data = "\n".join(utils.tail_file(DEFAULT_LOG_PATH, lines))
+
+            def _write(p: str, content: str) -> None:
+                with open(p, "w", encoding="utf-8") as fh:
+                    fh.write(content)
+
+            await asyncio.to_thread(_write, path, data)
             logging.info("Exported logs to %s", path)
             return path
         except Exception as exc:  # pragma: no cover - file errors
