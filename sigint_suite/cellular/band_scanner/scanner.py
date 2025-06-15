@@ -3,6 +3,8 @@ import shlex
 import subprocess
 from typing import List, Dict, Optional
 
+from sigint_suite.cellular.parsers import parse_band_output
+
 
 def scan_bands(cmd: Optional[str] = None) -> List[Dict[str, str]]:
     """Scan for cellular bands and return a list of records.
@@ -19,13 +21,7 @@ def scan_bands(cmd: Optional[str] = None) -> List[Dict[str, str]]:
     except Exception:
         return []
 
-    records: List[Dict[str, str]] = []
-    for line in output.splitlines():
-        parts = [p.strip() for p in line.split(",")]
-        if len(parts) >= 3:
-            band, channel, rssi = parts[:3]
-            records.append({"band": band, "channel": channel, "rssi": rssi})
-    return records
+    return parse_band_output(output)
 
 
 def main() -> None:

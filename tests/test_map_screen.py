@@ -12,6 +12,7 @@ modules = {
     "kivy.metrics": ModuleType("kivy.metrics"),
     "kivy.uix.label": ModuleType("kivy.uix.label"),
     "kivy.uix.screenmanager": ModuleType("kivy.uix.screenmanager"),
+    "kivy.animation": ModuleType("kivy.animation"),
     "kivymd.uix.dialog": ModuleType("kivymd.uix.dialog"),
     "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
     "kivymd.uix.snackbar": ModuleType("kivymd.uix.snackbar"),
@@ -21,6 +22,7 @@ modules = {
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
     "gps": ModuleType("gps"),
 }
+modules["kivy.animation"].Animation = object
 
 aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object

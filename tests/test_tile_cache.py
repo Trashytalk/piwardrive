@@ -23,6 +23,7 @@ modules = {
     "kivy.metrics": ModuleType("kivy.metrics"),
     "kivy.uix.label": ModuleType("kivy.uix.label"),
     "kivy.uix.screenmanager": ModuleType("kivy.uix.screenmanager"),
+    "kivy.animation": ModuleType("kivy.animation"),
     "kivymd.uix.dialog": ModuleType("kivymd.uix.dialog"),
     "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
     "kivymd.uix.snackbar": ModuleType("kivymd.uix.snackbar"),
@@ -33,6 +34,7 @@ modules = {
     "aiohttp": ModuleType("aiohttp"),
     "gps": ModuleType("gps"),
 }
+modules["kivy.animation"].Animation = object
 modules["aiohttp"].ClientSession = DummySession
 modules["aiohttp"].ClientTimeout = lambda *a, **k: None
 modules["aiohttp"].ClientError = Exception
