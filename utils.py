@@ -93,6 +93,23 @@ def report_error(message: str) -> None:
 T = TypeVar("T")
 
 
+def require_id(widget: Any, name: str) -> Any:
+    """Return ``widget.ids[name]`` or raise with context.
+
+    The available IDs are logged before raising ``RuntimeError`` if the lookup
+    fails. The error message reminds the caller to ensure ``kv/main.kv`` is
+    consistent with the code.
+    """
+    try:
+        return widget.ids[name]
+    except KeyError as exc:  # pragma: no cover - UI errors
+        ids = list(widget.ids.keys())
+        logging.error("ID '%s' not found; available IDs: %s", name, ids)
+        raise RuntimeError(
+            f"ID '{name}' not found. Ensure kv/main.kv matches. Available IDs: {ids}"
+        ) from exc
+
+
 def run_async_task(
     coro: Coroutine[Any, Any, T],
     callback: Callable[[T], None] | None = None,

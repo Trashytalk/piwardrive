@@ -4,7 +4,7 @@ import psutil
 
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from utils import get_cpu_temp, get_smart_status
+from utils import get_cpu_temp, get_smart_status, require_id
 from localization import _
 
 
@@ -30,9 +30,9 @@ class StatsScreen(Screen):
 
         # fetch root diagnostics bar labels
         root = App.get_running_app().root
-        cpu_lbl  = root.ids.cpu_label
-        mem_lbl  = root.ids.mem_label
-        disk_lbl = root.ids.disk_label
+        cpu_lbl = require_id(root, "cpu_label")
+        mem_lbl = require_id(root, "mem_label")
+        disk_lbl = require_id(root, "disk_label")
 
         if 'disk_health_label' in self.ids:
             health_lbl = self.ids.disk_health_label
