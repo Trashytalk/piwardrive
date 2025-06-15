@@ -6,7 +6,7 @@ import json
 
 import os
 
-import subprocess
+from gpsd_client import client as gps_client
 
 import threading
 
@@ -529,31 +529,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Fetch GPS coordinates in a thread and center the map."""
 
         try:
-
-            proc = subprocess.run(
-
-                ["gpspipe", "-w", "-n", "1"], capture_output=True, text=True, timeout=5
-
-            )
-
-            line = proc.stdout.strip().splitlines()[0]
-
-            data = json.loads(line)
-
-            lat, lon = data.get("lat"), data.get("lon")
-
-            if lat is not None and lon is not None:
-
+            pos = gps_client.get_position()
+            if pos:
+                lat, lon = pos
                 self._update_map(lat, lon)
                 self._adjust_gps_interval(lat, lon)
-
-
-        except subprocess.TimeoutExpired:
-
-            report_error("GPS lock timed out")
-
-        except Exception as e:
-
+            else:
+                report_error("GPS lock timed out")
+        except Exception as e:  # pragma: no cover - unexpected
             report_error(f"GPS error: {e}")
 
 

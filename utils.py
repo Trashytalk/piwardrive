@@ -9,6 +9,7 @@ import asyncio
 import logging
 import os
 import subprocess
+from gpsd_client import client as gps_client
 import time
 import threading
 
@@ -458,46 +459,13 @@ def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
 
 
 def get_gps_accuracy() -> float | None:
-    """
-    Read GPS accuracy from gpspipe output (epx/epy fields).
-    Returns max(epx, epy) in meters, or None on failure.
-    """
-    try:
-        proc = subprocess.run(
-            ['gpspipe', '-w', '-n', '10'],
-            capture_output=True, text=True, timeout=5
-        )
-        for line in proc.stdout.splitlines():
-            if 'epx' in line:
-                rec = json.loads(line)
-                epx = rec.get('epx')
-                epy = rec.get('epy')
-                if epx is not None and epy is not None:
-                    return max(epx, epy)
-    except Exception:
-        pass
-    return None
+    """Return horizontal GPS accuracy in meters or ``None`` on failure."""
+    return gps_client.get_accuracy()
 
 
 def get_gps_fix_quality() -> str:
-    """
-    Read GPS fix quality (mode) from gpspipe output.
-    Returns a string like 'No Fix', '2D', '3D', or 'DGPS'.
-    """
-    mode_map = {1: 'No Fix', 2: '2D', 3: '3D', 4: 'DGPS'}
-    try:
-        proc = subprocess.run(
-            ['gpspipe', '-w', '-n', '10'],
-            capture_output=True, text=True, timeout=5
-        )
-        for line in proc.stdout.splitlines():
-            if 'mode' in line:
-                rec = json.loads(line)
-                mode = rec.get('mode')
-                return mode_map.get(mode, str(mode))
-    except Exception:
-        pass
-    return 'Unknown'
+    """Return GPS fix quality string (``'2D'``, ``'3D'``, etc.)."""
+    return gps_client.get_fix_quality()
 
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
