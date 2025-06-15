@@ -11,6 +11,7 @@ PiWardrive Documentation
    persistence
    gps_polling
    bluetooth
+   geofencing
    status_service
    architecture
    function_flows
