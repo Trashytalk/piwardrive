@@ -16,7 +16,10 @@ def test_status_endpoint_returns_recent_records() -> None:
         memory_percent=3.0,
         disk_percent=4.0,
     )
-    with mock.patch('service.load_recent_health', return_value=[rec]):
+    async def _mock(_: int) -> list:
+        return [rec]
+
+    with mock.patch('service.load_recent_health', _mock):
         client = TestClient(service.app)
         resp = client.get('/status')
         assert resp.status_code == 200

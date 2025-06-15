@@ -37,10 +37,10 @@ def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
 
 
 @app.get("/status")
-def get_status(limit: int = 5, _auth: None = Depends(_check_auth)) -> list[dict]:
-
+async def get_status(limit: int = 5) -> list[dict]:
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
-    records = await asyncio.to_thread(load_recent_health, limit)
+    records = await load_recent_health(limit)
+
     return [asdict(rec) for rec in records]
 
 

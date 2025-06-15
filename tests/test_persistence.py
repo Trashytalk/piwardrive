@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import config
 import persistence
+import asyncio
 
 
 def setup_tmp(tmp_path: Path) -> None:
@@ -21,14 +22,14 @@ def test_save_and_load_health_record(tmp_path: Path) -> None:
         memory_percent=3.0,
         disk_percent=4.0,
     )
-    persistence.save_health_record(rec)
-    rows = persistence.load_recent_health(1)
+    asyncio.run(persistence.save_health_record(rec))
+    rows = asyncio.run(persistence.load_recent_health(1))
     assert rows and rows[0].cpu_temp == 1.0
 
 
 def test_save_and_load_app_state(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
     state = persistence.AppState(last_screen="Stats", last_start="now")
-    persistence.save_app_state(state)
-    loaded = persistence.load_app_state()
+    asyncio.run(persistence.save_app_state(state))
+    loaded = asyncio.run(persistence.load_app_state())
     assert loaded.last_screen == "Stats"

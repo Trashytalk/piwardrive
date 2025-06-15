@@ -20,4 +20,5 @@ cryptography>=42.0
 fastapi>=0.110
 uvicorn>=0.26
 httpx>=0.28
+aiosqlite>=0.19
 dbus-python>=1.3
