@@ -13,11 +13,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install flake8 mypy pytest radon pydocstyle
-      - name: Build extension
-        run: |
-          pip install build
-          python -m build
-          pip install dist/*.whl
+          pip install -e .
       - name: Lint
         run: flake8 .
       - name: Docstrings
@@ -31,6 +27,18 @@ jobs:
           KIVY_NO_ARGS: '1'
           KIVY_WINDOW: 'mock'
         run: pytest -q
+  package:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build wheel
+        run: |
+          pip install build
+          python -m build
   mobile:
     runs-on: ubuntu-latest
     steps:
