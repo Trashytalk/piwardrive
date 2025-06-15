@@ -21,6 +21,12 @@ modules = {
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
 }
 
+aiohttp_mod = ModuleType("aiohttp")
+aiohttp_mod.ClientSession = object
+aiohttp_mod.ClientTimeout = lambda *a, **k: None
+aiohttp_mod.ClientError = Exception
+sys.modules["aiohttp"] = aiohttp_mod
+
 modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
 modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
 modules["kivy.clock"].mainthread = lambda f: f

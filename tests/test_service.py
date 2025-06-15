@@ -1,8 +1,14 @@
 import sys
 from dataclasses import asdict
 from unittest import mock
+from types import ModuleType
 
 sys.path.insert(0, '.')
+aiohttp_mod = ModuleType('aiohttp')
+aiohttp_mod.ClientSession = object
+aiohttp_mod.ClientTimeout = lambda *a, **k: None
+aiohttp_mod.ClientError = Exception
+sys.modules['aiohttp'] = aiohttp_mod
 import service
 import persistence
 from fastapi.testclient import TestClient

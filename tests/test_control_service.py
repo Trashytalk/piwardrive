@@ -1,11 +1,16 @@
 import ast
 import os
 import subprocess
-from types import SimpleNamespace
+from types import SimpleNamespace, ModuleType
 from unittest import mock
 
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+aiohttp_mod = ModuleType('aiohttp')
+aiohttp_mod.ClientSession = object
+aiohttp_mod.ClientTimeout = lambda *a, **k: None
+aiohttp_mod.ClientError = Exception
+sys.modules['aiohttp'] = aiohttp_mod
 import utils
 import security
 from typing import Any, Callable, cast

@@ -77,6 +77,11 @@ for name, mod in modules.items():
 os.environ.setdefault("KIVY_NO_ARGS", "1")
 os.environ.setdefault("KIVY_WINDOW", "mock")
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+aiohttp_mod = ModuleType("aiohttp")
+aiohttp_mod.ClientSession = object
+aiohttp_mod.ClientTimeout = lambda *a, **k: None
+aiohttp_mod.ClientError = Exception
+sys.modules["aiohttp"] = aiohttp_mod
 from widgets.log_viewer import LogViewer
 from typing import Any
 

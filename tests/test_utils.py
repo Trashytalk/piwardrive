@@ -12,6 +12,12 @@ import types
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
+aiohttp_mod = types.SimpleNamespace(
+    ClientSession=object,
+    ClientError=Exception,
+    ClientTimeout=lambda *a, **k: None,
+)
+sys.modules['aiohttp'] = aiohttp_mod
 import psutil
 if 'requests' not in sys.modules:
     dummy_requests = mock.Mock()
@@ -305,4 +311,23 @@ def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
 def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
     monkeypatch.setattr(utils.subprocess, "run", mock.Mock(side_effect=OSError()))
     assert utils.scan_bt_devices() == []
+
+
+def test_gpspipe_cache(monkeypatch: Any) -> None:
+    proc1 = mock.Mock(returncode=0, stdout='{"mode": 2, "epx": 1, "epy": 2}\n')
+    proc2 = mock.Mock(returncode=0, stdout='{"mode": 3, "epx": 4, "epy": 5}\n')
+    procs = [proc1, proc2]
+
+    def fake_run(*_a: Any, **_k: Any) -> Any:
+        return procs.pop(0)
+
+    monkeypatch.setattr(utils.subprocess, "run", fake_run)
+    utils._GPSPIPE_CACHE = {"timestamp": 0.0, "data": None}
+
+    assert utils.get_gps_accuracy() == 2
+    assert utils.get_gps_fix_quality() == "2D"
+    assert len(procs) == 1  # subprocess.run called once
+
+    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    assert len(procs) == 0
 
