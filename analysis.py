@@ -1,9 +1,8 @@
 
 from dataclasses import asdict
 from typing import List, Dict
-from statistics import mean, fmean
+from statistics import fmean
 import math
-import pandas as pd
 
 from persistence import HealthRecord
 
@@ -24,15 +23,17 @@ def compute_health_stats(records: List[HealthRecord]) -> Dict[str, float]:
     disk = [r.disk_percent for r in records]
 
     stats = {
-        "temp_avg": float(mean(temps)) if temps else float("nan"),
-        "cpu_avg": float(mean(cpu)),
-        "mem_avg": float(mean(mem)),
-        "disk_avg": float(mean(disk)),
+        "temp_avg": float(fmean(temps)) if temps else math.nan,
+        "cpu_avg": float(fmean(cpu)),
+        "mem_avg": float(fmean(mem)),
+        "disk_avg": float(fmean(disk)),
     }
     return stats
 
 
-def plot_cpu_temp(records: List[HealthRecord], path: str, backend: str = "matplotlib") -> None:
+def plot_cpu_temp(
+    records: List[HealthRecord], path: str, backend: str = "matplotlib"
+) -> None:
     """Plot CPU temperature history to ``path``.
 
     ``backend`` may be ``"matplotlib"`` (default) or ``"plotly"`` for a GPU
@@ -59,13 +60,7 @@ def plot_cpu_temp(records: List[HealthRecord], path: str, backend: str = "matplo
         rolling = []
         for i in range(len(temps)):
             window = [t for t in temps[max(0, i - 4) : i + 1] if t is not None]
-            rolling.append(mean(window) if window else float("nan"))
-
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-
+            rolling.append(fmean(window) if window else math.nan)
 
     if backend == "plotly" and pd is not None:
         try:
