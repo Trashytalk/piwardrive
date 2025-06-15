@@ -48,9 +48,15 @@ class GPSDClient:
         if not pkt:
             return None
         try:
-            return pkt.position()  # type: ignore[no-any-return]
+            if hasattr(pkt, "position"):
+                return pkt.position()  # type: ignore[no-any-return]
+            lat = getattr(pkt, "lat", None)
+            lon = getattr(pkt, "lon", None)
+            if lat is not None and lon is not None:
+                return float(lat), float(lon)
         except Exception:
-            return None
+            pass
+        return None
 
     def get_accuracy(self) -> float | None:
         pkt = self._get_packet()
