@@ -117,7 +117,17 @@ For detailed instructions and troubleshooting steps see ``docs/installation.rst`
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` persists settings between runs.
 * **Profiles**: alternate configs live in `~/.config/piwardrive/profiles`.
-* **Env Overrides**: use environment variables like `PW_MAP_POLL_GPS=5`.
+* **Env Overrides**: configure any option via `PW_<KEY>` variables.
+  Common examples:
+  * `PW_MAP_POLL_GPS=5` – poll gpsd every 5s when moving
+  * `PW_MAP_POLL_GPS_MAX=30` – maximum delay while stationary
+  * `PW_MAP_POLL_BT=15` – Bluetooth scan interval
+  * `PW_MAP_SHOW_BT=1` – display Bluetooth markers
+  * `PW_WIDGET_BATTERY_STATUS=1` – enable battery widget
+  * `PW_HEALTH_POLL_INTERVAL=5` – diagnostic poll rate
+  * `PW_PROFILE_NAME=car_rig` – load the `car_rig` profile
+  * `PW_API_PASSWORD_HASH=<hash>` – protect HTTP API endpoints
+  See [docs/configuration.rst](docs/configuration.rst) for all settings.
 * **GPS Polling**: `map_poll_gps` is the fastest interval while
   `map_poll_gps_max` sets the slowest interval when stationary.
 * **Validation**: values are checked on load and invalid settings raise errors.
@@ -204,6 +214,14 @@ resulting ``.so`` (or ``.pyd`` on Windows) in the plugin directory or within a
 package. Ensure the extension is built against the same Python version that
 runs PiWardrive and that ``build-essential`` and the Python development headers
 are installed.
+
+### Available Hooks
+
+Every plugin widget must provide an ``update()`` method. The
+``PollScheduler`` calls this hook every ``update_interval`` seconds and it may
+either execute synchronously or return a coroutine for asynchronous work.
+Widgets typically create their UI in ``__init__`` and can override
+``on_size`` to update the draggable area when resized.
 
 ## Error Handling
 The application reports errors consistently using `utils.report_error`. The sequence below illustrates how

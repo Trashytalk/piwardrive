@@ -18,7 +18,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
-import pandas as pd
+import csv
 
 import math
 
@@ -56,8 +56,6 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
-
-import utils
 from utils import (
     haversine_distance,
     polygon_area,
@@ -1240,8 +1238,24 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         data = [getattr(m, "ap_data", {}) for m in self.ap_markers]
 
         try:
+            if data:
+                fieldnames = list(data[0].keys())
+                with open(path, "w", newline="", encoding="utf-8") as fh:
+                    writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(data)
+            else:
+                open(path, "w", encoding="utf-8").close()
 
-            pd.DataFrame(data).to_csv(path, index=False)
+            if not data:
+                open(path, "w", encoding="utf-8").close()
+            else:
+                fieldnames = sorted({k for d in data for k in d.keys()})
+                with open(path, "w", encoding="utf-8", newline="") as fh:
+                    writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(data)
+
 
             Snackbar(text=f"Exported {path}").open()
 
