@@ -2,7 +2,7 @@ import json
 import xml.etree.ElementTree as ET
 from typing import Any, Iterable, Mapping, Sequence
 
-import pandas as pd
+import csv
 
 EXPORT_FORMATS = ("csv", "json", "gpx", "kml")
 
@@ -39,7 +39,15 @@ def export_records(
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unsupported format: {fmt}")
     if fmt == "csv":
-        pd.DataFrame(records).to_csv(path, index=False)
+        rows = list(records)
+        if not rows:
+            open(path, "w", encoding="utf-8").close()
+        else:
+            fieldnames = fields or list(rows[0].keys())
+            with open(path, "w", encoding="utf-8", newline="") as fh:
+                writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
     elif fmt == "json":
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(list(records), fh)
