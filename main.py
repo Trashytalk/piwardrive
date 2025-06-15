@@ -123,7 +123,7 @@ class PiWardriveApp(MDApp):
         """Initialize screens and navigation on start."""
         # DEBUG: show which IDs were parsed from KV if debug mode is enabled
         if self.debug_mode:
-            print("Root IDs:", self.root.ids.keys())
+            logging.debug("Root IDs: %s", self.root.ids.keys())
         try:
             sm = self.root.ids.sm
         except KeyError:
