@@ -124,6 +124,7 @@ class PiWardriveApp(MDApp):
         # DEBUG: show which IDs were parsed from KV if debug mode is enabled
         if self.debug_mode:
             logging.debug("Root IDs: %s", list(self.root.ids.keys()))
+
         try:
             sm = self.root.ids.sm
         except KeyError:

@@ -12,7 +12,7 @@ package.domain = org.piwardrive
 source.dir = .
 
 # (list) Application requirements
-requirements = python3,kivy,kivymd,kivy_garden.mapview,kivy_garden.graph,requests,requests-cache,psutil,pandas,scipy,pydantic,ujson,PyYAML,numpy,matplotlib,cryptography,fastapi,uvicorn,httpx
+requirements = python3,kivy,kivymd,kivy_garden.mapview,kivy_garden.graph,requests,requests-cache,psutil,scipy,pydantic,ujson,PyYAML,matplotlib,cryptography,fastapi,uvicorn,httpx
 
 # (str) Application version
 version = 0.1
