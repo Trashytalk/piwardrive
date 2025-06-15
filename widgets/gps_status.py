@@ -2,7 +2,9 @@
 
 import logging
 from typing import Any
+from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
+from kivymd.uix.card import MDCard
 from localization import _
 
 from .base import DashboardWidget
@@ -17,8 +19,12 @@ class GPSStatusWidget(DashboardWidget):
     def __init__(self, **kwargs: Any) -> None:
         """Create label widget and request the first update."""
         super().__init__(**kwargs)
-        self.label = MDLabel(text=f"{_('gps')}: {_('not_available')}")
-        self.add_widget(self.label)
+        self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
+        self.label = MDLabel(
+            text=f"{_('gps')}: {_('not_available')}", halign="center"
+        )
+        self.card.add_widget(self.label)
+        self.add_widget(self.card)
         self.update()
 
     def update(self) -> None:
