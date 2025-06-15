@@ -32,3 +32,11 @@ orjson>=3.8
 pandas>=2.0
 pyprof2calltree>=1.4
 rpy2>=3.6
+flake8
+mypy
+pytest
+radon
+pydocstyle
+fastapi
+httpx
+gps>=3.0
