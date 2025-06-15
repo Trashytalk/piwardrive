@@ -277,7 +277,8 @@ polling.
 
 ### `persistence.py`
 Defines `HealthRecord` and `AppState` dataclasses and provides async functions
-for saving and loading them via a small SQLite database.
+for saving and loading them via a small SQLite database. Connections are cached
+per event loop so the schema is initialised only once.
 
 ### `scheduler.py`
 Supplies `PollScheduler` and `AsyncScheduler` classes for periodic callbacks.
