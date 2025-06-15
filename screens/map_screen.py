@@ -18,7 +18,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
-import pandas as pd
+import csv
 
 import math
 
@@ -1240,8 +1240,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         data = [getattr(m, "ap_data", {}) for m in self.ap_markers]
 
         try:
-
-            pd.DataFrame(data).to_csv(path, index=False)
+            if data:
+                fieldnames = list(data[0].keys())
+                with open(path, "w", newline="", encoding="utf-8") as fh:
+                    writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(data)
+            else:
+                open(path, "w", encoding="utf-8").close()
 
             Snackbar(text=f"Exported {path}").open()
 
