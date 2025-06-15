@@ -70,7 +70,7 @@ def get_logs(
     return {"path": safe, "lines": tail_file(safe, lines)}
 
 
-def main() -> None:
+async def main() -> None:
 
     import uvicorn
 

@@ -6,7 +6,18 @@ import asyncio
 import inspect
 import logging
 from typing import Any, Awaitable, Callable, Dict
-from kivy.clock import Clock, ClockEvent
+try:
+    from kivy.clock import Clock, ClockEvent
+except Exception:  # pragma: no cover - allow running without Kivy
+    class _DummyClock:
+        def schedule_interval(self, callback: Callable, interval: float) -> Any:
+            return type("Event", (), {"callback": callback})()
+
+        def unschedule(self, _ev: Any) -> None:
+            pass
+
+    Clock = _DummyClock()
+    ClockEvent = object
 
 import utils
 
