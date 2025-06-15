@@ -29,6 +29,7 @@ from kivy.app import App
 import utils
 
 from kivy.clock import Clock, mainthread
+from kivy.animation import Animation
 
 from kivy.metrics import dp
 
@@ -1016,7 +1017,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         def progress(done: int, total: int) -> None:
             def _update(_dt):
-                progress_bar.value = done / total * 100
+                target = done / total * 100 if total else 100
+                Animation.cancel_all(progress_bar)
+                Animation(value=target, duration=0.2).start(progress_bar)
                 progress_label.text = f"{done}/{total}"
                 if done >= total:
                     dialog.dismiss()
