@@ -20,7 +20,7 @@ from utils import (
     get_avg_rssi,
     get_cpu_temp,
     get_gps_fix_quality,
-    service_status,
+    service_status_async,
     tail_file,
 )
 
@@ -56,8 +56,8 @@ async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
         "bssid_count": len(aps),
         "handshake_count": handshakes,
         "avg_rssi": get_avg_rssi(aps),
-        "kismet_running": service_status("kismet"),
-        "bettercap_running": service_status("bettercap"),
+        "kismet_running": await service_status_async("kismet"),
+        "bettercap_running": await service_status_async("bettercap"),
         "gps_fix": get_gps_fix_quality(),
     }
 

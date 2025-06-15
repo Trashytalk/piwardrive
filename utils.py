@@ -281,10 +281,10 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
         return []
 
 
-def run_service_cmd(
+def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Control ``service`` via systemd's DBus API."""
+    """Synchronous DBus implementation used as a fallback."""
 
     import dbus
     from security import validate_service_name
@@ -322,15 +322,112 @@ def run_service_cmd(
         return False, "", str(exc)
 
 
-def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
+async def _run_service_cmd_async(
+    service: str, action: str, attempts: int = 1, delay: float = 0
+) -> tuple[bool, str, str]:
+    """Async DBus implementation using ``dbus-fast``."""
+
+    from security import validate_service_name
+
+    validate_service_name(service)
+    if action not in {"start", "stop", "restart", "is-active"}:
+        raise ValueError(f"Invalid action: {action}")
+
+    svc_name = f"{service}.service"
+
+    try:
+        from dbus_fast.aio import MessageBus
+        from dbus_fast import BusType
+    except Exception:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            None, lambda: _run_service_cmd_sync(service, action, attempts, delay)
+        )
+
+    async def _call() -> tuple[bool, str, str]:
+        bus = MessageBus(bus_type=BusType.SYSTEM)
+        await bus.connect()
+        try:
+            intro = await bus.introspect(
+                "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
+            )
+            obj = bus.get_proxy_object(
+                "org.freedesktop.systemd1", "/org/freedesktop/systemd1", intro
+            )
+            manager = obj.get_interface("org.freedesktop.systemd1.Manager")
+
+            if action == "start":
+                await manager.call_start_unit(svc_name, "replace")
+                return True, "", ""
+            if action == "stop":
+                await manager.call_stop_unit(svc_name, "replace")
+                return True, "", ""
+            if action == "restart":
+                await manager.call_restart_unit(svc_name, "replace")
+                return True, "", ""
+
+            unit_path = await manager.call_get_unit(svc_name)
+            uintro = await bus.introspect("org.freedesktop.systemd1", unit_path)
+            unit = bus.get_proxy_object(
+                "org.freedesktop.systemd1", unit_path, uintro
+            )
+            props = unit.get_interface("org.freedesktop.DBus.Properties")
+            state = await props.call_get(
+                "org.freedesktop.systemd1.Unit", "ActiveState"
+            )
+            return True, str(state), ""
+        finally:
+            bus.disconnect()
+
+    async def _retry() -> tuple[bool, str, str]:
+        last_exc: Exception | None = None
+        for _ in range(attempts):
+            try:
+                return await _call()
+            except Exception as exc:
+                last_exc = exc
+                if delay:
+                    await asyncio.sleep(delay)
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("Unreachable")
+
+    try:
+        return await _retry()
+    except Exception as exc:  # pragma: no cover - DBus failures
+        return False, "", str(exc)
+
+
+def run_service_cmd(
+    service: str, action: str, attempts: int = 1, delay: float = 0
+) -> tuple[bool, str, str]:
+    """Synchronous wrapper for :func:`_run_service_cmd_async`."""
+
+    fut = run_async_task(
+        _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
+    )
+    return fut.result()
+
+
+async def service_status_async(
+    service: str, attempts: int = 1, delay: float = 0
+) -> bool:
     """Return ``True`` if the ``systemd`` service is active."""
     try:
-        ok, out, _err = run_service_cmd(
+        ok, out, _err = await _run_service_cmd_async(
             service, "is-active", attempts=attempts, delay=delay
         )
         return ok and out.strip() == "active"
     except Exception:
         return False
+
+
+def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
+    """Synchronous wrapper for :func:`service_status_async`."""
+    fut = run_async_task(
+        service_status_async(service, attempts=attempts, delay=delay)
+    )
+    return fut.result()
 
 
 def scan_bt_devices() -> list[dict[str, Any]]:

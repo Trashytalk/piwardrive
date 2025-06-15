@@ -65,36 +65,47 @@ def test_tail_file_missing_returns_empty_list() -> None:
 
 def _patch_dbus(monkeypatch: Any, manager: Any, props: Any) -> None:
     class Bus:
-        def get_object(self, service: str, path: str) -> Any:
-            return 'mgr' if path == '/org/freedesktop/systemd1' else 'unit'
+        def __init__(self, *a: Any, **k: Any) -> None:
+            pass
+        async def connect(self) -> None:
+            pass
 
-    def system_bus() -> Bus:
-        return Bus()
+        async def introspect(self, service: str, path: str) -> str:
+            return "intro"
 
-    def interface(obj: str, iface: str) -> Any:
-        return manager if obj == 'mgr' else props
+        def get_proxy_object(self, service: str, path: str, _intro: str) -> Any:
+            class Obj:
+                def get_interface(self, iface: str) -> Any:
+                    return manager if "Manager" in iface else props
 
-    dbus_mod = types.SimpleNamespace(SystemBus=system_bus, Interface=interface, DBusException=Exception)
-    monkeypatch.setitem(sys.modules, 'dbus', dbus_mod)
+            return Obj()
+
+        def disconnect(self) -> None:
+            pass
+
+    aio_mod = types.SimpleNamespace(MessageBus=Bus)
+    dbus_mod = types.SimpleNamespace(aio=aio_mod, BusType=types.SimpleNamespace(SYSTEM=1))
+    monkeypatch.setitem(sys.modules, 'dbus_fast', dbus_mod)
+    monkeypatch.setitem(sys.modules, 'dbus_fast.aio', aio_mod)
 
 
 def test_run_service_cmd_success(monkeypatch: Any) -> None:
-    mgr = mock.Mock()
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock())
     props = mock.Mock()
     _patch_dbus(monkeypatch, mgr, props)
 
     success, out, err = utils.run_service_cmd('kismet', 'start')
-    mgr.StartUnit.assert_called_once_with('kismet.service', 'replace')
+    mgr.call_start_unit.assert_called_once_with('kismet.service', 'replace')
     assert success is True and out == '' and err == ''
 
 
 def test_run_service_cmd_failure(monkeypatch: Any) -> None:
-    mgr = mock.Mock(StartUnit=mock.Mock(side_effect=Exception('err')))
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock(side_effect=Exception('err')))
     props = mock.Mock()
     _patch_dbus(monkeypatch, mgr, props)
 
     success, out, err = utils.run_service_cmd('kismet', 'start')
-    mgr.StartUnit.assert_called_once()
+    mgr.call_start_unit.assert_called_once()
     assert success is False and out == '' and 'err' in err
 
 
@@ -106,22 +117,22 @@ def test_run_service_cmd_retries_until_success(monkeypatch: Any) -> None:
         if isinstance(res, Exception):
             raise res
 
-    mgr = mock.Mock(StartUnit=mock.Mock(side_effect=start_side))
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock(side_effect=start_side))
     props = mock.Mock()
     _patch_dbus(monkeypatch, mgr, props)
 
     success, out, err = utils.run_service_cmd('kismet', 'start', attempts=2, delay=0)
-    assert mgr.StartUnit.call_count == 2
+    assert mgr.call_start_unit.call_count == 2
     assert success is True and out == '' and err == ''
 
 
 def test_service_status_passes_retry_params() -> None:
-    with mock.patch(
-        'utils.run_service_cmd',
-        return_value=(True, 'active', '')
-    ) as run_mock:
+    async def _svc(_: str, attempts: int = 1, delay: float = 0) -> bool:
+        assert attempts == 2 and delay == 0.5
+        return True
+
+    with mock.patch('utils.service_status_async', _svc):
         assert utils.service_status('kismet', attempts=2, delay=0.5) is True
-        run_mock.assert_called_once_with('kismet', 'is-active', attempts=2, delay=0.5)
 
 
 def test_point_in_polygon_basic() -> None:
