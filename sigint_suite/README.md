@@ -7,7 +7,9 @@ the main PiWardrive UI when you only need quick scans or exports.
 ## Modules
 
 - **bluetooth** – scan nearby Bluetooth devices via `hcitool`.
-- **wifi** – discover Wi-Fi access points using `iwlist`.
+- **wifi** – discover Wi-Fi access points using `iwlist`. Set the
+  `IWLIST_CMD` environment variable to override the `iwlist` executable and
+  `IW_PRIV_CMD` to change the privilege wrapper (default ``sudo``).
 - **cellular.band_scanner** – placeholder for cellular band scanning utilities.
 - **cellular.imsi_catcher** – stub for future IMSI catcher logic.
 - **cellular.parsers** – parsers for raw cellular output.
@@ -31,6 +33,9 @@ scan and stores the results under `exports/`.
 By default the JSON files `wifi.json` and `bluetooth.json` are written to
 `sigint_suite/exports/`. Set the `EXPORT_DIR` environment variable to override
 this location.
+
+Use `IWLIST_CMD` to specify an alternate `iwlist` path and `IW_PRIV_CMD` to
+change the privilege helper for Wi-Fi scans.
 
 ## Dependencies
 
