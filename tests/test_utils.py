@@ -160,22 +160,48 @@ def test_load_kmz_parses_features(tmp_path: Any) -> None:
 
 
 def test_fetch_kismet_devices_request_exception(monkeypatch: Any) -> None:
-    monkeypatch.setattr(
-        utils.requests,
-        'get',
-        mock.Mock(side_effect=utils.requests.RequestException('boom')),
-    )
-    with mock.patch('utils.report_error') as err:
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+        def get(self, _url: str, **_k: Any):
+            raise utils.aiohttp.ClientError("boom")
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+
+    with mock.patch("utils.report_error") as err:
         aps, clients = utils.fetch_kismet_devices()
         assert aps == [] and clients == []
         assert err.call_count == 2
 
 
 def test_fetch_kismet_devices_json_error(monkeypatch: Any) -> None:
-    resp = mock.Mock(status_code=200)
-    resp.json.side_effect = json.JSONDecodeError('bad', 'doc', 0)
-    monkeypatch.setattr(utils.requests, 'get', mock.Mock(return_value=resp))
-    with mock.patch('utils.report_error') as err:
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return "invalid json"
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any) -> FakeResp:
+            return FakeResp()
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+
+    with mock.patch("utils.report_error") as err:
         aps, clients = utils.fetch_kismet_devices()
         assert aps == [] and clients == []
         assert err.call_count == 2
@@ -191,8 +217,30 @@ def test_get_smart_status_ok(monkeypatch: Any) -> None:
 
 
 def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
-    resp = mock.Mock(status_code=200, content=b'{"access_points": [1], "clients": [2]}')
-    monkeypatch.setattr(utils.requests, 'get', lambda *a, **k: resp)
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return '{"access_points": [1], "clients": [2]}'
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any) -> FakeResp:
+            return FakeResp()
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+
     aps, clients = asyncio.run(utils.fetch_kismet_devices_async())
     assert aps == [1] and clients == [2]
 

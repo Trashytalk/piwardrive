@@ -22,6 +22,7 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
+import aiohttp
 
 
 class ErrorCode(IntEnum):
@@ -358,80 +359,59 @@ def now_timestamp() -> str:
 
 
 def fetch_kismet_devices() -> tuple[list, list]:
-    """
-    Query Kismet REST API for devices. Returns (access_points, clients).
-    Tries both /kismet/devices/all.json and /devices/all.json endpoints.
-    """
-    urls = [
-        "http://127.0.0.1:2501/kismet/devices/all.json",
-        "http://127.0.0.1:2501/devices/all.json",
-    ]
-    for url in urls:
-        try:
-            resp = requests.get(url, timeout=5)
-        except requests.RequestException as exc:
-            report_error(
-                format_error(
-                    ErrorCode.KISMET_API_REQUEST_FAILED,
-                    (
-                        f"Kismet API request failed: {exc}. "
-                        "Ensure Kismet is running."
-                    ),
-                )
-            )
-            continue
-        try:
-            if resp.status_code == 200:
-                data = resp.json()
-                return data.get("access_points", []), data.get("clients", [])
-        except json.JSONDecodeError as exc:
-            report_error(
-                format_error(
-                    ErrorCode.KISMET_API_JSON_ERROR,
-                    f"Kismet API JSON decode error: {exc}",
-                )
-            )
-        except Exception as exc:  # pragma: no cover - unexpected
-            report_error(
-                format_error(
-                    ErrorCode.KISMET_API_ERROR,
-                    f"Kismet API error: {exc}",
-                )
-            )
-    return [], []
+    """Synchronously fetch Kismet devices using the async helper."""
+
+    fut = run_async_task(fetch_kismet_devices_async())
+    return fut.result()
 
 
 async def fetch_kismet_devices_async() -> tuple[list, list]:
-    """Asynchronously fetch Kismet device data using ``asyncio``."""
+    """Asynchronously fetch Kismet device data using ``aiohttp``."""
+
     urls = [
         "http://127.0.0.1:2501/kismet/devices/all.json",
         "http://127.0.0.1:2501/devices/all.json",
     ]
-    for url in urls:
-        try:
-            resp = await asyncio.to_thread(requests.get, url, timeout=5)
-        except requests.RequestException as exc:
-            report_error(
-                format_error(
-                    ErrorCode.KISMET_API_REQUEST_FAILED,
-                    (
-                        f"Kismet API request failed: {exc}. "
-                        "Ensure Kismet is running."
-                    ),
+    timeout = aiohttp.ClientTimeout(total=5)
+
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for url in urls:
+            try:
+                async with session.get(url) as resp:
+                    if resp.status == 200:
+                        text = await resp.text()
+                        try:
+                            data = _loads(text)
+                        except Exception as exc:  # pragma: no cover - JSON error
+                            report_error(
+                                format_error(
+                                    ErrorCode.KISMET_API_JSON_ERROR,
+                                    f"Kismet API JSON decode error: {exc}",
+                                )
+                            )
+                            continue
+                        return (
+                            data.get("access_points", []),
+                            data.get("clients", []),
+                        )
+            except aiohttp.ClientError as exc:
+                report_error(
+                    format_error(
+                        ErrorCode.KISMET_API_REQUEST_FAILED,
+                        (
+                            f"Kismet API request failed: {exc}. "
+                            "Ensure Kismet is running."
+                        ),
+                    )
                 )
-            )
-            continue
-        try:
-            if resp.status_code == 200:
-                data = _loads(resp.content)
-                return data.get("access_points", []), data.get("clients", [])
-        except Exception as exc:  # pragma: no cover - JSON parse or other
-            report_error(
-                format_error(
-                    ErrorCode.KISMET_API_ERROR,
-                    f"Kismet API error: {exc}",
+            except Exception as exc:  # pragma: no cover - unexpected
+                report_error(
+                    format_error(
+                        ErrorCode.KISMET_API_ERROR,
+                        f"Kismet API error: {exc}",
+                    )
                 )
-            )
+
     return [], []
 
 
