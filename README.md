@@ -282,6 +282,12 @@ The Sphinx documentation under [docs/](docs/) provides detailed guides for each 
 * [function_flows](docs/function_flows.rst) – diagrams of key functions
 
 Run `pytest` to execute the test suite and use `flake8` and `mypy` to lint and type-check the codebase.
+Tests can also be executed inside the Docker image provided in this repository:
+
+```bash
+docker compose build
+docker compose run --rm tests
+```
 
 ## Module Reference
 
@@ -391,6 +397,11 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 pip install .
 pytest
+```
+Alternatively run the suite in Docker:
+
+```bash
+docker compose run --rm tests
 ```
 
 The `requirements-dev.txt` file includes tools like `flake8`, `mypy` and
