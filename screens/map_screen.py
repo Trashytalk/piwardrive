@@ -18,7 +18,8 @@ import time
 
 import gps
 import requests
-from concurrent.futures import ThreadPoolExecutor
+import asyncio
+import aiohttp
 from typing import Callable
 
 import csv
@@ -933,12 +934,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         return x, y
 
     @staticmethod
-    def _download_tile(url: str, local: str) -> None:
-        """Fetch a single tile from ``url`` into ``local``."""
-        resp = utils.safe_request(url, timeout=10)
-        if resp:
-            with open(local, "wb") as fh:
-                fh.write(resp.content)
+    async def _download_tile_async(session: aiohttp.ClientSession, url: str, local: str) -> None:
+        """Fetch a single tile from ``url`` into ``local`` asynchronously."""
+        async with session.get(url) as resp:
+            resp.raise_for_status()
+            data = await resp.read()
+        os.makedirs(os.path.dirname(local), exist_ok=True)
+        with open(local, "wb") as fh:
+            fh.write(data)
 
     def prefetch_tiles(
         self,
@@ -946,7 +949,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         zoom: int = 16,
         folder: str = "/mnt/ssd/tiles",
         *,
-        concurrency: int = 5,
+        concurrency: int | None = None,
         progress_cb: Callable[[int, int], None] | None = None,
     ) -> None:
 
@@ -973,21 +976,26 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             total = len(tasks)
             completed = 0
-            lock = threading.Lock()
 
-            def _task(item: tuple[str, str]) -> None:
-                nonlocal completed
-                url, local = item
-                if not os.path.exists(local):
-                    os.makedirs(os.path.dirname(local), exist_ok=True)
-                    self._download_tile(url, local)
-                with lock:
-                    completed += 1
-                    if progress_cb:
-                        progress_cb(completed, total)
+            async def _run() -> None:
+                sem = asyncio.Semaphore(concurrency or os.cpu_count() or 4)
+                timeout = aiohttp.ClientTimeout(total=10)
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    async def _task(url: str, local: str) -> None:
+                        nonlocal completed
+                        async with sem:
+                            if not os.path.exists(local):
+                                await self._download_tile_async(session, url, local)
+                        completed += 1
+                        if progress_cb:
+                            progress_cb(completed, total)
 
-            with ThreadPoolExecutor(max_workers=max(1, concurrency)) as ex:
-                ex.map(_task, tasks)
+                    await asyncio.gather(
+                        *[asyncio.create_task(_task(u, l)) for u, l in tasks]
+                    )
+
+            fut = utils.run_async_task(_run())
+            fut.result()
 
 
         except Exception as e:  # pragma: no cover - network errors
