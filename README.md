@@ -205,6 +205,14 @@ package. Ensure the extension is built against the same Python version that
 runs PiWardrive and that ``build-essential`` and the Python development headers
 are installed.
 
+### Available Hooks
+
+Every plugin widget must provide an ``update()`` method. The
+``PollScheduler`` calls this hook every ``update_interval`` seconds and it may
+either execute synchronously or return a coroutine for asynchronous work.
+Widgets typically create their UI in ``__init__`` and can override
+``on_size`` to update the draggable area when resized.
+
 ## Error Handling
 The application reports errors consistently using `utils.report_error`. The sequence below illustrates how
 `control_service` surfaces failures:
