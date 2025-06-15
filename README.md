@@ -331,6 +331,22 @@ npm run dev    # start Vite dev server
 
 The dev server proxies API requests to `http://localhost:8000`. Set `PW_API_PASSWORD_HASH` to require a password for the backend routes.
 
+## R Integration
+
+PiWardrive can optionally analyze health metrics using R. The helper
+[scripts/health_summary.R](scripts/health_summary.R) reads a CSV or JSON file of
+`HealthRecord` rows, returning average CPU temperature, CPU usage, memory usage
+and disk usage. It may also generate a CPU temperature plot. Call
+`r_integration.health_summary` from Python to run the R code via `rpy2`.
+
+Install the dependencies with:
+
+```bash
+pip install rpy2
+sudo apt install r-base
+Rscript -e "install.packages(c('ggplot2','jsonlite'), repos='https://cloud.r-project.org')"
+```
+
 ## Contributing
 
 Install project and development dependencies and run the tests locally with:
