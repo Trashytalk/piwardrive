@@ -19,3 +19,6 @@ venv/
 
 # logs
 logs/
+
+build/
+ckml*.so
