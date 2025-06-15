@@ -94,14 +94,16 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
       pip install -r requirements.txt
 
-5. **Compile the C extension**::
+5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
+
+6. **Compile the C extension**::
 
       cd piwardrive
       python setup.py build_ext --inplace
 
    See ``docs/ckml_build.rst`` for more detail.
 
-6. **Configure fstab** (optional)::
+7. **Configure fstab** (optional)::
 
       /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
 
