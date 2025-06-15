@@ -22,7 +22,7 @@ from kivymd.uix.textfield import MDTextField
 
 from kivymd.uix.selectioncontrol import MDSwitch
 from kivymd.uix.snackbar import Snackbar
-from utils import report_error, format_error
+from utils import report_error, format_error, ErrorCode
 from config import Config, save_config
 
 
@@ -211,7 +211,8 @@ class SettingsScreen(Screen):
         else:
             report_error(
                 format_error(
-                    201, f"Invalid Kismet log dir: {path}. Please provide an existing path."
+                    ErrorCode.INVALID_KISMET_LOG_DIR,
+                    f"Invalid Kismet log dir: {path}. Please provide an existing path.",
                 )
             )
 
@@ -221,7 +222,7 @@ class SettingsScreen(Screen):
         else:
             report_error(
                 format_error(
-                    202,
+                    ErrorCode.INVALID_BETTERCAP_CAPLET,
                     f"Invalid BetterCAP caplet: {path}. Provide a valid file path.",
                 )
             )
@@ -234,7 +235,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(203, "GPS poll rate must be a positive integer. Enter a value greater than 0.")
+                format_error(
+                    ErrorCode.GPS_POLL_RATE_INVALID,
+                    "GPS poll rate must be a positive integer. Enter a value greater than 0.",
+                )
             )
 
         try:
@@ -245,7 +249,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(206, "AP poll rate must be a positive integer. Enter a value greater than 0.")
+                format_error(
+                    ErrorCode.AP_POLL_RATE_INVALID,
+                    "AP poll rate must be a positive integer. Enter a value greater than 0.",
+                )
             )
 
         try:
@@ -256,7 +263,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(210, "BT poll rate must be a positive integer.")
+                format_error(
+                    ErrorCode.BT_POLL_RATE_INVALID,
+                    "BT poll rate must be a positive integer.",
+                )
             )
 
         try:
@@ -267,7 +277,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(207, "Health poll must be a positive integer.")
+                format_error(
+                    ErrorCode.HEALTH_POLL_INVALID,
+                    "Health poll must be a positive integer.",
+                )
             )
 
         try:
@@ -278,7 +291,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(208, "Log rotate interval must be positive.")
+                format_error(
+                    ErrorCode.LOG_ROTATE_INVALID,
+                    "Log rotate interval must be positive.",
+                )
             )
 
         try:
@@ -289,7 +305,10 @@ class SettingsScreen(Screen):
                 raise ValueError
         except ValueError:
             report_error(
-                format_error(209, "Log archives must be a positive integer.")
+                format_error(
+                    ErrorCode.LOG_ARCHIVES_INVALID,
+                    "Log archives must be a positive integer.",
+                )
             )
 
         try:
@@ -307,7 +326,7 @@ class SettingsScreen(Screen):
         else:
             report_error(
                 format_error(
-                    204,
+                    ErrorCode.INVALID_OFFLINE_TILE_PATH,
                     f"Invalid offline tile path: {path}. Please provide an existing directory.",
                 )
             )
@@ -331,7 +350,7 @@ class SettingsScreen(Screen):
         except OSError as exc:  # pragma: no cover - save failure
             report_error(
                 format_error(
-                    205,
+                    ErrorCode.CONFIG_SAVE_FAILED,
                     f"Failed to save config: {exc}. Check file permissions.",
                 )
             )
