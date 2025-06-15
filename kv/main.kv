@@ -1,6 +1,7 @@
 #:import dp kivy.metrics.dp
 #:import Graph kivy_garden.graph.Graph
 #:import _ localization._
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
 
 <Separator@Widget>:
     size_hint_y: None
@@ -30,6 +31,7 @@ BoxLayout:
     # Main screens area
     ScreenManager:
         id: sm
+        transition: FadeTransition(duration=0.3)
         MapScreen:
             name: 'Map'
         StatsScreen:

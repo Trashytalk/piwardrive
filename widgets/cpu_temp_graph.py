@@ -3,6 +3,7 @@
 from typing import Any
 
 from kivy.app import App
+from kivy.animation import Animation
 from kivy_garden.graph import Graph, LinePlot
 from localization import _
 
@@ -51,3 +52,7 @@ class CPUTempGraphWidget(DashboardWidget):
             self.data.pop(0)
         self.plot.points = self.data
         self.graph.xmax = max(self.index, self.max_points)
+        # fade in new data subtly
+        self.graph.opacity = 0.7
+        Animation.cancel_all(self.graph)
+        Animation(opacity=1, duration=0.2).start(self.graph)
