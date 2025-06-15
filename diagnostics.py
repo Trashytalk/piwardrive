@@ -29,7 +29,7 @@ def generate_system_report() -> dict:
     report = {
         "timestamp": datetime.now().isoformat(),
         "cpu_temp": utils.get_cpu_temp(),
-        "cpu_percent": psutil.cpu_percent(interval=1),
+        "cpu_percent": psutil.cpu_percent(interval=None),
         "memory_percent": psutil.virtual_memory().percent,
         "disk_percent": psutil.disk_usage('/').percent,
         "ssd_smart": utils.get_smart_status('/mnt/ssd'),
