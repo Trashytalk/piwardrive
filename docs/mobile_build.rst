@@ -6,7 +6,7 @@ This guide explains how to package PiWardrive for Android and iOS.
 Prerequisites
 -------------
 
-* **Android**: Python 3.12, Java JDK 17, Android SDK/NDK and
+* **Android**: Python 3.10 or later, Java JDK 17, Android SDK/NDK and
   ``buildozer`` (``pip install buildozer``).
 * **iOS**: macOS with Xcode installed and ``kivy-ios``
   (``pip install kivy-ios sh pbxproj cookiecutter``).

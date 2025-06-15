@@ -28,7 +28,7 @@ SD Card Image
 Docker Container
 ~~~~~~~~~~~~~~~~
 
-1. Start from ``python:3.11-bullseye`` and install the same system packages with ``apt``.
+1. Start from ``python:3.10-bullseye`` and install the same system packages with ``apt``.
 2. Copy the project into ``/app`` and run ``pip install -r requirements.txt``.
 3. Set ``WORKDIR /app`` and define ``CMD ["python", "main.py"]``.
 4. Map the host's USB devices (Wi‑Fi adapter, GPS dongle) into the container when running ``docker run``.
