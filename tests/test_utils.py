@@ -63,6 +63,16 @@ def test_tail_file_missing_returns_empty_list() -> None:
     assert result == []
 
 
+def test_tail_file_handles_large_file(tmp_path: Any) -> None:
+    path = tmp_path / 'large.txt'
+    with open(path, 'w') as f:
+        for i in range(1000):
+            f.write(f'line{i}\n')
+
+    result = utils.tail_file(str(path), lines=5)
+    assert result == [f'line{i}' for i in range(995, 1000)]
+
+
 def _patch_dbus(monkeypatch: Any, manager: Any, props: Any) -> None:
     class Bus:
         def get_object(self, service: str, path: str) -> Any:
