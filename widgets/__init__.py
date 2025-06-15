@@ -6,7 +6,9 @@ Lazy loading wrapper for widget classes with plugin support.
 from importlib import import_module, util
 from pathlib import Path
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+from utils import format_error, report_error
 
 from .base import DashboardWidget
 
@@ -49,12 +51,36 @@ def _load_plugins() -> None:
     plugin_dir = Path.home() / ".config" / "piwardrive" / "plugins"
     if not plugin_dir.is_dir():
         return
-    for path in plugin_dir.glob("*.py"):
-        spec = util.spec_from_file_location(f"_plugin_{path.stem}", path)
+    for path in plugin_dir.iterdir():
+        module: Optional[object] = None
+        load_path: Path | None = None
+        if path.is_file() and path.suffix in {".py", ".so", ".pyd"}:
+            mod_name = path.name.split(".")[0]
+            load_path = path
+        elif path.is_dir():
+            mod_name = path.name
+            if (path / "__init__.py").exists():
+                load_path = path / "__init__.py"
+            else:
+                so_files = list(path.glob("*.so")) + list(path.glob("*.pyd"))
+                if so_files:
+                    load_path = so_files[0]
+        if load_path is None:
+            continue
+        spec = util.spec_from_file_location(mod_name, load_path)
         if spec and spec.loader:
-            module = util.module_from_spec(spec)
-            sys.modules[spec.name] = module
-            spec.loader.exec_module(module)
+            try:
+                module = util.module_from_spec(spec)
+                sys.modules[spec.name] = module
+                spec.loader.exec_module(module)
+            except Exception as exc:  # pragma: no cover - import errors
+                report_error(
+                    format_error(
+                        401,
+                        f"Failed to load plugin {load_path.name}: {exc}",
+                    )
+                )
+                continue
             for name, obj in vars(module).items():
                 if (
                     isinstance(obj, type)

@@ -16,6 +16,9 @@ modules = {
     "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
     "kivymd.uix.snackbar": ModuleType("kivymd.uix.snackbar"),
     "kivymd.uix.textfield": ModuleType("kivymd.uix.textfield"),
+    "kivymd.uix.progressbar": ModuleType("kivymd.uix.progressbar"),
+    "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
+    "kivymd.uix.label": ModuleType("kivymd.uix.label"),
 }
 modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
 modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
@@ -27,6 +30,9 @@ modules["kivymd.uix.dialog"].MDDialog = object
 modules["kivymd.uix.menu"].MDDropdownMenu = object
 modules["kivymd.uix.snackbar"].Snackbar = type("Snackbar", (), {"__init__": lambda self, *a, **k: None, "open": lambda self: None})
 modules["kivymd.uix.textfield"].MDTextField = object
+modules["kivymd.uix.progressbar"].MDProgressBar = object
+modules["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {"__init__": lambda self, *a, **k: None, "add_widget": lambda self, *a, **k: None})
+modules["kivymd.uix.label"].MDLabel = type("MDLabel", (), {"__init__": lambda self, *a, **k: None})
 
 modules["kivy_garden.mapview"] = SimpleNamespace(
     MapMarker=object,
