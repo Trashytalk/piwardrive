@@ -182,6 +182,12 @@ package. A minimal plugin looks like::
 Once the file is created, ``ExtraWidget`` can be added to the dashboard like any
 other built-in widget.
 
+Compiled extensions built with PyO3 or Cython are supported as well. Place the
+resulting ``.so`` (or ``.pyd`` on Windows) in the plugin directory or within a
+package. Ensure the extension is built against the same Python version that
+runs PiWardrive and that ``build-essential`` and the Python development headers
+are installed.
+
 ## Error Handling
 The application reports errors consistently using `utils.report_error`. The sequence below illustrates how
 `control_service` surfaces failures:
