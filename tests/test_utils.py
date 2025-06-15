@@ -382,21 +382,41 @@ def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
     assert utils.scan_bt_devices() == []
 
 
-def test_gpspipe_cache(monkeypatch: Any) -> None:
-    proc1 = mock.Mock(returncode=0, stdout='{"mode": 2, "epx": 1, "epy": 2}\n')
-    proc2 = mock.Mock(returncode=0, stdout='{"mode": 3, "epx": 4, "epy": 5}\n')
-    procs = [proc1, proc2]
+def test_gpsd_cache(monkeypatch: Any) -> None:
+    acc_mock = mock.Mock(side_effect=[2, 5])
+    fix_mock = mock.Mock(side_effect=["2D", "3D"])
 
-    def fake_run(*_a: Any, **_k: Any) -> Any:
-        return procs.pop(0)
+    monkeypatch.setattr(utils.gps_client, "get_accuracy", acc_mock)
+    monkeypatch.setattr(utils.gps_client, "get_fix_quality", fix_mock)
 
-    monkeypatch.setattr(utils.subprocess, "run", fake_run)
-    utils._GPSPIPE_CACHE = {"timestamp": 0.0, "data": None}
+    utils._GPSD_CACHE = {"timestamp": 0.0, "accuracy": None, "fix": "Unknown"}
 
     assert utils.get_gps_accuracy() == 2
     assert utils.get_gps_fix_quality() == "2D"
-    assert len(procs) == 1  # subprocess.run called once
+    assert acc_mock.call_count == 1  # gpsd queried once
+    assert fix_mock.call_count == 1
 
     assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
-    assert len(procs) == 0
+    assert acc_mock.call_count == 2
+    assert fix_mock.call_count == 2
+
+
+def test_count_bettercap_handshakes(tmp_path: Any) -> None:
+    log_dir = tmp_path
+    d1 = log_dir / "2024-01-01_bettercap"
+    d2 = log_dir / "2024-01-02_bettercap"
+    other = log_dir / "misc"
+    d1.mkdir()
+    d2.mkdir()
+    other.mkdir()
+    (d1 / "a.pcap").write_text("x")
+    (d1 / "ignore.txt").write_text("x")
+    (d2 / "b.pcap").write_text("x")
+    (other / "c.pcap").write_text("x")
+    assert utils.count_bettercap_handshakes(str(log_dir)) == 2
+
+
+def test_count_bettercap_handshakes_missing(tmp_path: Any) -> None:
+    missing = tmp_path / "nope"
+    assert utils.count_bettercap_handshakes(str(missing)) == 0
 

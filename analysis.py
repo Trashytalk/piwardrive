@@ -1,3 +1,4 @@
+"""Compute summary statistics and graphs for system health records."""
 
 from dataclasses import asdict
 from typing import List, Dict

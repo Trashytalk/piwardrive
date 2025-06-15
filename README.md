@@ -98,7 +98,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
-6. **Compile the C extension**::
+6. **Compile the C extensions** (``ckml`` and ``cgeom``)::
 
 
       pip install build
@@ -277,7 +277,8 @@ polling.
 
 ### `persistence.py`
 Defines `HealthRecord` and `AppState` dataclasses and provides async functions
-for saving and loading them via a small SQLite database.
+for saving and loading them via a small SQLite database. Connections are cached
+per event loop so the schema is initialised only once.
 
 ### `scheduler.py`
 Supplies `PollScheduler` and `AsyncScheduler` classes for periodic callbacks.
@@ -303,7 +304,8 @@ verification, plus simple encryption helpers.
 Configures JSON-formatted logging, writing to `~/.config/piwardrive/app.log`.
 
 ### `localization.py`
-Offers a lightweight translation mechanism where missing keys fall back to the
+Offers a lightweight translation mechanism that caches parsed locale files so
+switching languages doesn't reread JSON from disk. Missing keys fall back to the
 original text.
 
 ### `service.py`
@@ -331,6 +333,22 @@ npm run dev    # start Vite dev server
 
 The dev server proxies API requests to `http://localhost:8000`. Set `PW_API_PASSWORD_HASH` to require a password for the backend routes.
 
+## R Integration
+
+PiWardrive can optionally analyze health metrics using R. The helper
+[scripts/health_summary.R](scripts/health_summary.R) reads a CSV or JSON file of
+`HealthRecord` rows, returning average CPU temperature, CPU usage, memory usage
+and disk usage. It may also generate a CPU temperature plot. Call
+`r_integration.health_summary` from Python to run the R code via `rpy2`.
+
+Install the dependencies with:
+
+```bash
+pip install rpy2
+sudo apt install r-base
+Rscript -e "install.packages(c('ggplot2','jsonlite'), repos='https://cloud.r-project.org')"
+```
+
 ## Contributing
 
 Install project and development dependencies and run the tests locally with:
@@ -350,3 +368,5 @@ Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or
 worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
 opening a pull request.
+
+Please ensure you comply with all local laws and obtain proper authorization before conducting any wireless or Bluetooth scans. The authors are not responsible for any misuse of this software.

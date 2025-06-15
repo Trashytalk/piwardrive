@@ -2,6 +2,8 @@
 #:import Graph kivy_garden.graph.Graph
 #:import _ localization._
 #:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:import MDCard kivymd.uix.card.MDCard
+
 
 <Separator@Widget>:
     size_hint_y: None
@@ -82,8 +84,10 @@ BoxLayout:
             spacing: dp(8)
 
             # System & Storage
-            MDBoxLayout:
+            MDCard:
                 orientation: 'vertical'
+                padding: dp(8)
+                radius: [8]
                 size_hint_y: None
                 height: self.minimum_height
 
@@ -135,8 +139,10 @@ BoxLayout:
                     height: self.texture_size[1]
 
             # Network & GPS
-            MDBoxLayout:
+            MDCard:
                 orientation: 'vertical'
+                padding: dp(8)
+                radius: [8]
                 size_hint_y: None
                 height: self.minimum_height
 
@@ -167,8 +173,10 @@ BoxLayout:
                     height: self.texture_size[1]
 
             # Graph & Services
-            MDBoxLayout:
+            MDCard:
                 orientation: 'vertical'
+                padding: dp(8)
+                radius: [8]
                 size_hint_y: None
                 height: self.minimum_height
 

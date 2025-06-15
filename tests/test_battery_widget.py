@@ -18,6 +18,7 @@ modules = {
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
     "kivy.uix.behaviors": ModuleType("kivy.uix.behaviors"),
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
+    "kivymd.uix.card": ModuleType("kivymd.uix.card"),
 }
 modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
 modules["kivy.metrics"].dp = lambda x: x
@@ -25,6 +26,7 @@ modules["kivy.metrics"].sp = lambda x: x
 modules["kivy.uix.behaviors"].DragBehavior = type("DragBehavior", (), {})
 modules["kivymd.uix.label"].MDLabel = type("MDLabel", (), {"__init__": lambda self, **kw: None, "text": ""})
 modules["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {})
+modules["kivymd.uix.card"].MDCard = type("MDCard", (), {})
 for name, mod in modules.items():
     sys.modules[name] = mod
 

@@ -12,8 +12,8 @@ import subprocess
 from gpsd_client import client as gps_client
 import time
 import threading
+import mmap
 
-from collections import deque
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 from concurrent.futures import Future
@@ -31,8 +31,12 @@ import psutil
 import requests  # type: ignore
 import aiohttp
 
-GPSPIPE_CACHE_SECONDS = 2.0  # cache ttl in seconds
-_GPSPIPE_CACHE: dict[str, Any] = {"timestamp": 0.0, "data": None}
+GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
+_GPSD_CACHE: dict[str, Any] = {
+    "timestamp": 0.0,
+    "accuracy": None,
+    "fix": "Unknown",
+}
 
 
 class ErrorCode(IntEnum):
@@ -273,25 +277,20 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
-    """Return the last ``lines`` from ``path`` efficiently."""
+    """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
     try:
         with open(path, "rb") as f:
-            f.seek(0, os.SEEK_END)
-            position = f.tell()
-            block_size = 4096
-            data = bytearray()
-            line_count = 0
-
-            while position > 0 and line_count <= lines:
-                read_size = block_size if position >= block_size else position
-                position -= read_size
-                f.seek(position)
-                block = f.read(read_size)
-                data[:0] = block
-                line_count = data.count(b"\n")
-
-            text = data.decode("utf-8", errors="ignore")
-            return text.splitlines()[-lines:]
+            with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
+                pos = mm.size()
+                for _ in range(lines + 1):
+                    new_pos = mm.rfind(b"\n", 0, pos)
+                    if new_pos == -1:
+                        pos = -1
+                        break
+                    pos = new_pos
+                start = 0 if pos < 0 else pos + 1
+                text = mm[start:]
+                return text.decode("utf-8", errors="ignore").splitlines()[-lines:]
     except Exception:
         return []
 
@@ -506,13 +505,13 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
     timeout = aiohttp.ClientTimeout(total=5)
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        for url in urls:
+        async def _fetch(url: str) -> dict | None:
             try:
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         text = await resp.text()
                         try:
-                            data = _loads(text)
+                            return _loads(text)
                         except Exception as exc:  # pragma: no cover - JSON error
                             report_error(
                                 format_error(
@@ -520,11 +519,6 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                                     f"Kismet API JSON decode error: {exc}",
                                 )
                             )
-                            continue
-                        return (
-                            data.get("access_points", []),
-                            data.get("clients", []),
-                        )
             except aiohttp.ClientError as exc:
                 report_error(
                     format_error(
@@ -542,6 +536,15 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                         f"Kismet API error: {exc}",
                     )
                 )
+            return None
+
+        results = await asyncio.gather(*(_fetch(url) for url in urls))
+        for data in results:
+            if data is not None:
+                return (
+                    data.get("access_points", []),
+                    data.get("clients", []),
+                )
 
     return [], []
 
@@ -558,69 +561,57 @@ async def fetch_metrics_async(
 
 
 def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
-    """
-    Count .pcap handshake files in BetterCAP log directories.
-    """
-    pattern = os.path.join(log_folder, '*_bettercap', '*.pcap')
-    return len(glob.glob(pattern))
+    """Count ``.pcap`` handshake files in BetterCAP log directories."""
+    count = 0
+    try:
+        for entry in os.scandir(log_folder):
+            if entry.is_dir() and entry.name.endswith('_bettercap'):
+                try:
+                    for file in os.scandir(entry.path):
+                        if file.is_file() and file.name.endswith('.pcap'):
+                            count += 1
+                except OSError:
+                    continue
+    except OSError:
+        return 0
+    return count
 
 
 def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
-    """Return cached gpspipe data or refresh if stale."""
-    if not force_refresh and _GPSPIPE_CACHE["data"] is not None:
-        age = time.time() - _GPSPIPE_CACHE["timestamp"]
-        if age <= GPSPIPE_CACHE_SECONDS:
-            return _GPSPIPE_CACHE["data"]
+    """Return cached GPSD data or refresh if stale."""
+    if not force_refresh and _GPSD_CACHE["accuracy"] is not None:
+        age = time.time() - _GPSD_CACHE["timestamp"]
+        if age <= GPSD_CACHE_SECONDS:
+            return _GPSD_CACHE
 
     try:
-        proc = subprocess.run(
-            ['gpspipe', '-w', '-n', '10'],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        data: dict[str, Any] = {}
-        for line in proc.stdout.splitlines():
-            if not line.strip().startswith('{'):
-                continue
-            rec = json.loads(line)
-            if 'epx' in rec:
-                data['epx'] = rec.get('epx')
-            if 'epy' in rec:
-                data['epy'] = rec.get('epy')
-            if 'mode' in rec:
-                data['mode'] = rec.get('mode')
-            if all(k in data for k in ('epx', 'epy', 'mode')):
-                break
-        if data:
-            _GPSPIPE_CACHE['timestamp'] = time.time()
-            _GPSPIPE_CACHE['data'] = data
-            return data
+        accuracy = gps_client.get_accuracy()
+        fix = gps_client.get_fix_quality()
+        if accuracy is None and fix == "Unknown":
+            return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
+
+        _GPSD_CACHE["timestamp"] = time.time()
+        _GPSD_CACHE["accuracy"] = accuracy
+        _GPSD_CACHE["fix"] = fix
+        return _GPSD_CACHE
     except Exception:
-        pass
-    return _GPSPIPE_CACHE.get('data')
+        return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
 
 
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:
-    """Return GPS accuracy from cached gpspipe data."""
+    """Return GPS accuracy from cached GPSD data."""
     data = _get_cached_gps_data(force_refresh)
     if not data:
         return None
-    epx = data.get('epx')
-    epy = data.get('epy')
-    if epx is not None and epy is not None:
-        return max(epx, epy)
-    return None
+    return data.get("accuracy")
 
 
 def get_gps_fix_quality(force_refresh: bool = False) -> str:
     """Return human readable GPS fix quality from cached data."""
-    mode_map = {1: 'No Fix', 2: '2D', 3: '3D', 4: 'DGPS'}
     data = _get_cached_gps_data(force_refresh)
     if not data:
-        return 'Unknown'
-    mode = data.get('mode')
-    return mode_map.get(mode, str(mode))
+        return "Unknown"
+    return str(data.get("fix", "Unknown"))
 
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
