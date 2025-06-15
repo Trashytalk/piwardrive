@@ -8,6 +8,9 @@ import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
+import asyncio
+
+
 from logconfig import DEFAULT_LOG_PATH
 from persistence import load_recent_health
 from security import sanitize_path, verify_password
@@ -35,8 +38,9 @@ def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
 
 @app.get("/status")
 def get_status(limit: int = 5, _auth: None = Depends(_check_auth)) -> list[dict]:
+
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
-    records = load_recent_health(limit)
+    records = await asyncio.to_thread(load_recent_health, limit)
     return [asdict(rec) for rec in records]
 
 
@@ -67,10 +71,13 @@ def get_logs(
 
 
 def main() -> None:
+
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000)
+    server = uvicorn.Server(config)
+    await server.serve()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

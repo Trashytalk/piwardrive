@@ -20,9 +20,10 @@ SD Card Image
        source gui-env/bin/activate
        pip install -r requirements.txt
 
-4. Enable ``kismet``, ``bettercap`` and ``gpsd`` via ``systemctl`` so they start on boot.
-5. (Optional) create ``piwardrive.service`` to autostart ``python /home/pi/piwardrive/main.py``.
-6. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
+4. Enable ``kismet``, ``bettercap`` and ``gpsd`` so they start on boot (``systemctl enable <svc>``).
+5. Grant your user permission to manage systemd units over DBus by creating a ``polkit`` rule allowing ``org.freedesktop.systemd1.manage-units``.
+6. (Optional) create ``piwardrive.service`` to autostart ``python /home/pi/piwardrive/main.py``.
+7. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
 
 Docker Container
 ~~~~~~~~~~~~~~~~

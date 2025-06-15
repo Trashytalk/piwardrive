@@ -240,23 +240,42 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
 def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Run ``sudo systemctl`` for ``service`` with optional retries."""
+    """Control ``service`` via systemd's DBus API."""
 
+    import dbus
     from security import validate_service_name
 
     validate_service_name(service)
     if action not in {"start", "stop", "restart", "is-active"}:
         raise ValueError(f"Invalid action: {action}")
 
-    cmd = ["sudo", "systemctl", action, service]
+    svc_name = f"{service}.service"
 
-    def _call() -> subprocess.CompletedProcess[str]:
-        return subprocess.run(cmd, capture_output=True, text=True)
+    def _call() -> tuple[bool, str, str]:
+        bus = dbus.SystemBus()
+        systemd = bus.get_object("org.freedesktop.systemd1", "/org/freedesktop/systemd1")
+        manager = dbus.Interface(systemd, "org.freedesktop.systemd1.Manager")
 
-    proc = retry_call(_call, attempts=attempts, delay=delay)
-    out = getattr(proc, "stdout", "")
-    err = getattr(proc, "stderr", "")
-    return proc.returncode == 0, out, err
+        if action == "start":
+            manager.StartUnit(svc_name, "replace")
+            return True, "", ""
+        if action == "stop":
+            manager.StopUnit(svc_name, "replace")
+            return True, "", ""
+        if action == "restart":
+            manager.RestartUnit(svc_name, "replace")
+            return True, "", ""
+
+        unit_path = manager.GetUnit(svc_name)
+        unit = bus.get_object("org.freedesktop.systemd1", unit_path)
+        props = dbus.Interface(unit, "org.freedesktop.DBus.Properties")
+        state = props.Get("org.freedesktop.systemd1.Unit", "ActiveState")
+        return True, str(state), ""
+
+    try:
+        return retry_call(_call, attempts=attempts, delay=delay)
+    except Exception as exc:  # pragma: no cover - DBus failures
+        return False, "", str(exc)
 
 
 def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
@@ -491,7 +510,7 @@ def get_recent_bssids(limit: int = 5) -> list[str]:
         return []
 
 
-def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> float:
+def _haversine_distance_py(p1: tuple[float, float], p2: tuple[float, float]) -> float:
     """Return great-circle distance between two ``(lat, lon)`` points in meters."""
     import math
 
@@ -511,7 +530,7 @@ def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> floa
     return r * c
 
 
-def polygon_area(points: Sequence[tuple[float, float]]) -> float:
+def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
     """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
     if len(points) < 3:
         return 0.0
@@ -538,7 +557,7 @@ def polygon_area(points: Sequence[tuple[float, float]]) -> float:
     return area * (meter_per_deg**2)
 
 
-def point_in_polygon(
+def _point_in_polygon_py(
     point: tuple[float, float], polygon: Sequence[tuple[float, float]]
 ) -> bool:
     """Return True if ``point`` is inside ``polygon`` using ray casting."""
@@ -555,6 +574,22 @@ def point_in_polygon(
             if lat < intersect:
                 inside = not inside
     return inside
+
+
+try:  # pragma: no cover - optional geometry C extension for speed
+    from cgeom import (
+        haversine_distance as _haversine_distance_c,  # type: ignore
+        polygon_area as _polygon_area_c,  # type: ignore
+        point_in_polygon as _point_in_polygon_c,  # type: ignore
+    )
+except Exception:  # pragma: no cover - extension not built
+    _haversine_distance_c = None
+    _polygon_area_c = None
+    _point_in_polygon_c = None
+
+haversine_distance = _haversine_distance_c or _haversine_distance_py
+polygon_area = _polygon_area_c or _polygon_area_py
+point_in_polygon = _point_in_polygon_c or _point_in_polygon_py
 
 
 try:  # pragma: no cover - optional C extension for speed

@@ -2,9 +2,11 @@ Building the CKML Extension
 ===========================
 
 PiWardrive ships with a small C extension ``ckml`` used by the GUI.
-Compile it from the project root using ``setuptools``::
+Build the project from the repository root using ``python -m build``::
 
-    python setup.py build_ext --inplace
+    pip install build
+    python -m build
+    pip install dist/*.whl
 
-The ``--inplace`` flag places the compiled module next to ``ckml.c`` so
-imports succeed without further configuration.
+The resulting wheel contains the compiled module so imports succeed without
+additional configuration.

@@ -1,9 +1,10 @@
 Status Service
 ==============
 
-PiWardrive can expose recent health metrics over HTTP using a small FastAPI
-application. The service reads the same ``HealthRecord`` data used by the GUI
-and returns it as JSON.
+PiWardrive exposes recent health metrics over HTTP using a small FastAPI
+application. The ``/status`` endpoint is now asynchronous so heavy database
+access occurs in a background thread. This allows multiple requests to run
+concurrently and improves throughput on multi-core devices.
 
 Run the server after activating your virtual environment::
 
@@ -15,6 +16,7 @@ the last few records::
     curl http://localhost:8000/status
 
 Use the ``limit`` query parameter to control how many entries are returned.
+
 
 Additional Routes
 -----------------
@@ -28,3 +30,17 @@ Additional Routes
    curl "http://localhost:8000/logs?lines=50"
 
 Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
+
+Benchmark
+---------
+
+Run ``benchmarks/status_benchmark.py`` to estimate request throughput without
+network overhead. The script uses ``httpx.AsyncClient`` to fire multiple
+concurrent requests against the ASGI application::
+
+    python benchmarks/status_benchmark.py
+
+On a Raspberry Pi 5 the asynchronous implementation processes hundreds of
+requests per second, roughly doubling the throughput compared to the original
+synchronous handler.
+

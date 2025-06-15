@@ -8,6 +8,7 @@ import json
 from typing import Any
 
 from unittest import mock
+import types
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
@@ -57,46 +58,56 @@ def test_tail_file_missing_returns_empty_list() -> None:
     assert result == []
 
 
-def test_run_service_cmd_success() -> None:
-    mock_proc = mock.Mock(returncode=0, stdout='ok', stderr='')
-    with mock.patch('utils.subprocess.run', return_value=mock_proc) as run_mock:
-        success, out, err = utils.run_service_cmd('kismet', 'start')
-        run_mock.assert_called_once_with(
-            ['sudo', 'systemctl', 'start', 'kismet'], capture_output=True, text=True
-        )
-        assert success is True
-        assert out == 'ok'
-        assert err == ''
+def _patch_dbus(monkeypatch: Any, manager: Any, props: Any) -> None:
+    class Bus:
+        def get_object(self, service: str, path: str) -> Any:
+            return 'mgr' if path == '/org/freedesktop/systemd1' else 'unit'
+
+    def system_bus() -> Bus:
+        return Bus()
+
+    def interface(obj: str, iface: str) -> Any:
+        return manager if obj == 'mgr' else props
+
+    dbus_mod = types.SimpleNamespace(SystemBus=system_bus, Interface=interface, DBusException=Exception)
+    monkeypatch.setitem(sys.modules, 'dbus', dbus_mod)
 
 
-def test_run_service_cmd_failure() -> None:
-    mock_proc = mock.Mock(returncode=1, stdout='', stderr='error')
-    with mock.patch('utils.subprocess.run', return_value=mock_proc) as run_mock:
-        success, out, err = utils.run_service_cmd('kismet', 'start')
-        run_mock.assert_called_once()
-        assert success is False
-        assert out == ''
-        assert err == 'error'
+def test_run_service_cmd_success(monkeypatch: Any) -> None:
+    mgr = mock.Mock()
+    props = mock.Mock()
+    _patch_dbus(monkeypatch, mgr, props)
+
+    success, out, err = utils.run_service_cmd('kismet', 'start')
+    mgr.StartUnit.assert_called_once_with('kismet.service', 'replace')
+    assert success is True and out == '' and err == ''
 
 
-def test_run_service_cmd_retries_until_success() -> None:
-    results = [
-        OSError('boom'),
-        mock.Mock(returncode=0, stdout='ok', stderr=''),
-    ]
+def test_run_service_cmd_failure(monkeypatch: Any) -> None:
+    mgr = mock.Mock(StartUnit=mock.Mock(side_effect=Exception('err')))
+    props = mock.Mock()
+    _patch_dbus(monkeypatch, mgr, props)
 
-    def side_effect(*_args: Any, **_kwargs: Any) -> Any:
-        res = results.pop(0)
+    success, out, err = utils.run_service_cmd('kismet', 'start')
+    mgr.StartUnit.assert_called_once()
+    assert success is False and out == '' and 'err' in err
+
+
+def test_run_service_cmd_retries_until_success(monkeypatch: Any) -> None:
+    calls = [OSError('boom'), None]
+
+    def start_side(*_a: Any, **_k: Any) -> None:
+        res = calls.pop(0)
         if isinstance(res, Exception):
             raise res
-        return res
 
-    with mock.patch('utils.subprocess.run', side_effect=side_effect) as run_mock:
-        success, out, err = utils.run_service_cmd('kismet', 'start', attempts=2, delay=0)
-        assert run_mock.call_count == 2
-        assert success is True
-        assert out == 'ok'
-        assert err == ''
+    mgr = mock.Mock(StartUnit=mock.Mock(side_effect=start_side))
+    props = mock.Mock()
+    _patch_dbus(monkeypatch, mgr, props)
+
+    success, out, err = utils.run_service_cmd('kismet', 'start', attempts=2, delay=0)
+    assert mgr.StartUnit.call_count == 2
+    assert success is True and out == '' and err == ''
 
 
 def test_service_status_passes_retry_params() -> None:
