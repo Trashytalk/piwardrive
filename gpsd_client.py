@@ -1,3 +1,5 @@
+"""Thread-safe client for ``gpsd`` with helpers for common queries."""
+
 import logging
 import threading
 
