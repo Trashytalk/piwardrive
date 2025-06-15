@@ -169,7 +169,11 @@ class HealthMonitor:
         self._collector: DataCollector = collector or SelfTestCollector()
         self.data: dict | None = None
         self._event = "health_monitor"
-        scheduler.schedule(self._event, lambda dt: run_async_task(self._poll()), interval)
+        scheduler.schedule(
+            self._event,
+            lambda dt: run_async_task(self._poll()),
+            interval,
+        )
         asyncio.run(self._poll())
 
     async def _poll(self) -> None:

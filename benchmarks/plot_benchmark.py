@@ -1,13 +1,10 @@
-import os
-import sys
 import time
 from pathlib import Path
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import pandas as pd
 
 from analysis import plot_cpu_temp
 from persistence import HealthRecord
-import pandas as pd
 
 
 def generate_records(n: int = 1000):
