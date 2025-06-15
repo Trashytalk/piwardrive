@@ -17,7 +17,13 @@ from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 from concurrent.futures import Future
 
-from kivy.app import App
+try:  # pragma: no cover - allow running without Kivy
+    from kivy.app import App
+except Exception:
+    class App:
+        @staticmethod
+        def get_running_app() -> None:
+            return None
 from enum import IntEnum
 
 import psutil

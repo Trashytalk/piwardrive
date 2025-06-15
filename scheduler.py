@@ -6,7 +6,25 @@ import asyncio
 import inspect
 import logging
 from typing import Any, Awaitable, Callable, Dict
-from kivy.clock import Clock, ClockEvent
+try:  # pragma: no cover - optional Kivy dependency
+    from kivy.clock import Clock, ClockEvent
+except Exception:  # pragma: no cover - fallback stubs for tests
+    class _DummyEvent:
+        def cancel(self) -> None:
+            pass
+
+    class _DummyClock:
+        @staticmethod
+        def schedule_interval(callback, interval):
+            return _DummyEvent()
+
+        @staticmethod
+        def unschedule(event):
+            pass
+
+    Clock = _DummyClock()
+    ClockEvent = _DummyEvent
+
 
 import utils
 

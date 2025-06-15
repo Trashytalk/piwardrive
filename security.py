@@ -13,7 +13,10 @@ _ALLOWED_SERVICE_RE = re.compile(r"^[\w.-]+$")
 
 def sanitize_path(path: str) -> str:
     """Return a normalized path without unsafe segments."""
-    return os.path.normpath(path)
+    normalized = os.path.normpath(path)
+    if ".." in normalized.split(os.sep):
+        raise ValueError(f"Unsafe path: {path}")
+    return normalized
 
 
 def validate_service_name(name: str) -> None:

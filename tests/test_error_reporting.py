@@ -11,7 +11,7 @@ from typing import Any
 
 def test_report_error_logs_and_alerts(caplog: Any) -> None:
     app = mock.Mock()
-    with mock.patch('kivy.app.App.get_running_app', return_value=app):
+    with mock.patch('utils.App.get_running_app', return_value=app):
         with caplog.at_level(logging.ERROR):
             report_error("boom")
     assert app.show_alert.call_count == 1
