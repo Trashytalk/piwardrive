@@ -98,7 +98,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
-6. **Compile the C extension**::
+6. **Compile the C extensions** (``ckml`` and ``cgeom``)::
 
 
       pip install build

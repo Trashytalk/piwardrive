@@ -1,8 +1,8 @@
 Building the CKML Extension
 ===========================
 
-PiWardrive ships with a small C extension ``ckml`` used by the GUI. It must be
-compiled when building the project.
+PiWardrive ships with two small C extensions ``ckml`` and ``cgeom`` used by the
+GUI. They are compiled automatically when building the project.
 
 Prerequisites
 -------------
@@ -22,6 +22,9 @@ The wheel is written to ``dist/``. An example output path is::
 Install the wheel with::
 
     pip install dist/*.whl
+
+Both ``ckml`` and ``cgeom`` will be built into the wheel, providing native
+implementations for geometry and KML parsing.
 
 Troubleshooting
 ---------------
