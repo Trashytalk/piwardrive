@@ -131,6 +131,7 @@ For detailed instructions and troubleshooting steps see ``docs/installation.rst`
   * `PW_HEALTH_POLL_INTERVAL=5` – diagnostic poll rate
   * `PW_PROFILE_NAME=car_rig` – load the `car_rig` profile
   * `PW_API_PASSWORD_HASH=<hash>` – protect HTTP API endpoints
+  * `PW_ADMIN_PASSWORD=<pass>` – enables privileged service actions
   See [docs/configuration.rst](docs/configuration.rst) for all settings.
 * **GPS Polling**: `map_poll_gps` is the fastest interval while
   `map_poll_gps_max` sets the slowest interval when stationary.
