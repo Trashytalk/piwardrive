@@ -510,13 +510,13 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
     timeout = aiohttp.ClientTimeout(total=5)
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
-        for url in urls:
+        async def _fetch(url: str) -> dict | None:
             try:
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         text = await resp.text()
                         try:
-                            data = _loads(text)
+                            return _loads(text)
                         except Exception as exc:  # pragma: no cover - JSON error
                             report_error(
                                 format_error(
@@ -524,11 +524,6 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                                     f"Kismet API JSON decode error: {exc}",
                                 )
                             )
-                            continue
-                        return (
-                            data.get("access_points", []),
-                            data.get("clients", []),
-                        )
             except aiohttp.ClientError as exc:
                 report_error(
                     format_error(
@@ -545,6 +540,15 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                         ErrorCode.KISMET_API_ERROR,
                         f"Kismet API error: {exc}",
                     )
+                )
+            return None
+
+        results = await asyncio.gather(*(_fetch(url) for url in urls))
+        for data in results:
+            if data is not None:
+                return (
+                    data.get("access_points", []),
+                    data.get("clients", []),
                 )
 
     return [], []
