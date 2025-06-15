@@ -12,6 +12,7 @@ PiWardrive Documentation
    gps_polling
    tile_cache
    bluetooth
+   geofencing
    status_service
    architecture
    function_flows
