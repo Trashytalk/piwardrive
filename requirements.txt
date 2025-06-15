@@ -26,7 +26,8 @@ aiohttp>=3.12
 aiosqlite>=0.19
 dbus-fast>=2.44
 dbus-python>=1.3
-pybluez>=0.23
+## pybluez>=0.23
+## Re-enable this after testing is done. It is breaking the environment
 gps>=3.0
 orjson>=3.8
 pandas>=2.0
