@@ -6,7 +6,6 @@ import json
 
 import os
 
-import subprocess
 
 import threading
 
@@ -14,6 +13,7 @@ import time
 
 
 
+import gps
 import requests
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
@@ -115,6 +115,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._last_gps = None
         self._last_time = 0.0
         self._gps_interval = 0.0
+        try:
+            self._gps_client = gps.gps(mode=gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
+        except Exception:  # pragma: no cover - gpsd unavailable
+            self._gps_client = None
+        self._http = requests.Session()
 
 
 
@@ -527,33 +532,18 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
     def _fetch_and_center(self):
 
         """Fetch GPS coordinates in a thread and center the map."""
-
+        if self._gps_client is None:
+            return
         try:
-
-            proc = subprocess.run(
-
-                ["gpspipe", "-w", "-n", "1"], capture_output=True, text=True, timeout=5
-
-            )
-
-            line = proc.stdout.strip().splitlines()[0]
-
-            data = json.loads(line)
-
-            lat, lon = data.get("lat"), data.get("lon")
-
+            report = self._gps_client.next()
+            lat = getattr(report, "lat", None)
+            lon = getattr(report, "lon", None)
             if lat is not None and lon is not None:
-
                 self._update_map(lat, lon)
                 self._adjust_gps_interval(lat, lon)
-
-
-        except subprocess.TimeoutExpired:
-
+        except StopIteration:
             report_error("GPS lock timed out")
-
         except Exception as e:
-
             report_error(f"GPS error: {e}")
 
 
@@ -661,7 +651,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
         try:
-            resp = requests.get("http://127.0.0.1:2501/devices/all.json", timeout=5)
+            resp = self._http.get("http://127.0.0.1:2501/devices/all.json", timeout=5)
             resp.raise_for_status()
             data = resp.json()
         except requests.RequestException as e:

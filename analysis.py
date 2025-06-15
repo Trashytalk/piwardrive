@@ -1,7 +1,9 @@
 
 from dataclasses import asdict
 from typing import List, Dict
-from statistics import mean
+from statistics import mean, fmean
+import math
+import pandas as pd
 from persistence import HealthRecord
 
 

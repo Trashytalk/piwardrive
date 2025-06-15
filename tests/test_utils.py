@@ -6,6 +6,7 @@ import zipfile
 import json
 
 from typing import Any
+from types import ModuleType
 
 from unittest import mock
 import types
@@ -287,22 +288,32 @@ def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
 
 
 def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
-    output = "Device AA:BB:CC:DD:EE:FF Foo\n"
-    info = "GPS Coordinates: 1.0,2.0\n"
-    procs = [
-        mock.Mock(returncode=0, stdout=output, stderr=""),
-        mock.Mock(returncode=0, stdout=info, stderr=""),
-    ]
+    bt_mod = ModuleType("bluetooth")
+    bt_mod.discover_devices = lambda *a, **k: [("AA:BB:CC:DD:EE:FF", "Foo")]
+    monkeypatch.setitem(sys.modules, "bluetooth", bt_mod)
 
-    def fake_run(*args: Any, **kwargs: Any):
-        return procs.pop(0)
+    class Props:
+        def Get(self, iface: str, prop: str) -> str:
+            assert iface == "org.bluez.Device1" and prop == "GPSCoordinates"
+            return "1.0,2.0"
 
-    monkeypatch.setattr(utils.subprocess, "run", fake_run)
+    class Bus:
+        def get_object(self, service: str, path: str) -> str:
+            return "dev"
+
+    def interface(obj: str, iface: str) -> Props:
+        return Props()
+
+    dbus_mod = types.SimpleNamespace(SystemBus=lambda: Bus(), Interface=interface, DBusException=Exception)
+    monkeypatch.setitem(sys.modules, "dbus", dbus_mod)
+
     devices = utils.scan_bt_devices()
     assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
 
 
 def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
-    monkeypatch.setattr(utils.subprocess, "run", mock.Mock(side_effect=OSError()))
+    bt_mod = ModuleType("bluetooth")
+    bt_mod.discover_devices = mock.Mock(side_effect=OSError())
+    monkeypatch.setitem(sys.modules, "bluetooth", bt_mod)
     assert utils.scan_bt_devices() == []
 

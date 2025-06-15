@@ -334,43 +334,39 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
 
 
 def scan_bt_devices() -> list[dict[str, Any]]:
-    """Return nearby Bluetooth devices via ``bluetoothctl``."""
+    """Return nearby Bluetooth devices using :mod:`pybluez`."""
     try:
-        proc = subprocess.run(
-            ["bluetoothctl", "devices"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
+        from bluetooth import discover_devices  # type: ignore
+    except Exception:  # pragma: no cover - optional dependency missing
+        return []
+
+    try:
+        found = discover_devices(duration=5, lookup_names=True)
     except Exception:
         return []
 
     devices: list[dict[str, Any]] = []
-    for line in proc.stdout.splitlines():
-        parts = line.strip().split(" ", 2)
-        if len(parts) >= 3 and parts[0] == "Device":
-            addr = parts[1]
-            name = parts[2]
-            info: dict[str, Any] = {"address": addr, "name": name}
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+    except Exception:
+        bus = None
+
+    for addr, name in found:
+        info: dict[str, Any] = {"address": addr, "name": name}
+        if bus is not None:
             try:
-                info_proc = subprocess.run(
-                    ["bluetoothctl", "info", addr],
-                    capture_output=True,
-                    text=True,
-                    timeout=3,
-                    check=False,
-                )
-                for il in info_proc.stdout.splitlines():
-                    if "GPS Coordinates:" in il:
-                        vals = il.split(":", 1)[1].strip().split(",")
-                        if len(vals) == 2:
-                            info["lat"] = float(vals[0])
-                            info["lon"] = float(vals[1])
-                        break
+                path = f"/org/bluez/hci0/dev_{addr.replace(':', '_')}"
+                obj = bus.get_object("org.bluez", path)
+                props = dbus.Interface(obj, "org.freedesktop.DBus.Properties")
+                gps = props.Get("org.bluez.Device1", "GPSCoordinates")
+                vals = str(gps).split(",")
+                if len(vals) == 2:
+                    info["lat"] = float(vals[0])
+                    info["lon"] = float(vals[1])
             except Exception:
                 pass
-            devices.append(info)
+        devices.append(info)
     return devices
 
 
