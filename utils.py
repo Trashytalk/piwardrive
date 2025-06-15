@@ -268,15 +268,25 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
-    """
-    Tail last N lines from a file.
-    """
+    """Return the last ``lines`` from ``path`` efficiently."""
     try:
-        with open(path, 'rb') as f:
-            lines_deque: deque[str] = deque(maxlen=lines)
-            for line in f:
-                lines_deque.append(line.decode('utf-8', errors='ignore').rstrip())
-        return list(lines_deque)
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            position = f.tell()
+            block_size = 4096
+            data = bytearray()
+            line_count = 0
+
+            while position > 0 and line_count <= lines:
+                read_size = block_size if position >= block_size else position
+                position -= read_size
+                f.seek(position)
+                block = f.read(read_size)
+                data[:0] = block
+                line_count = data.count(b"\n")
+
+            text = data.decode("utf-8", errors="ignore")
+            return text.splitlines()[-lines:]
     except Exception:
         return []
 
