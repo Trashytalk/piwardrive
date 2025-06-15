@@ -6,6 +6,7 @@ import zipfile
 import json
 
 from typing import Any
+from types import ModuleType
 
 from unittest import mock
 import types
@@ -335,6 +336,26 @@ def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
 
 
 def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
+    bt_mod = ModuleType("bluetooth")
+    bt_mod.discover_devices = lambda *a, **k: [("AA:BB:CC:DD:EE:FF", "Foo")]
+    monkeypatch.setitem(sys.modules, "bluetooth", bt_mod)
+
+    class Props:
+        def Get(self, iface: str, prop: str) -> str:
+            assert iface == "org.bluez.Device1" and prop == "GPSCoordinates"
+            return "1.0,2.0"
+
+    class Bus:
+        def get_object(self, service: str, path: str) -> str:
+            return "dev"
+
+    def interface(obj: str, iface: str) -> Props:
+        return Props()
+
+    dbus_mod = types.SimpleNamespace(SystemBus=lambda: Bus(), Interface=interface, DBusException=Exception)
+    monkeypatch.setitem(sys.modules, "dbus", dbus_mod)
+
+
     objs = {
         "/dev": {
             "org.bluez.Device1": {
@@ -346,12 +367,18 @@ def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
     }
 
     _patch_bt_dbus(monkeypatch, objs)
+
     devices = utils.scan_bt_devices()
     assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
 
 
 def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
+    bt_mod = ModuleType("bluetooth")
+    bt_mod.discover_devices = mock.Mock(side_effect=OSError())
+    monkeypatch.setitem(sys.modules, "bluetooth", bt_mod)
+
     _patch_bt_dbus(monkeypatch, {}, exc=True)
+
     assert utils.scan_bt_devices() == []
 
 

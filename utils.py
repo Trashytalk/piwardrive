@@ -446,19 +446,40 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
 
 
 def scan_bt_devices() -> list[dict[str, Any]]:
-    """Return nearby Bluetooth devices via DBus."""
+    """Return nearby Bluetooth devices using :mod:`pybluez`."""
+    try:
+        from bluetooth import discover_devices  # type: ignore
+    except Exception:  # pragma: no cover - optional dependency missing
+        return []
 
     try:
-        import dbus  # type: ignore
+        found = discover_devices(duration=5, lookup_names=True)
 
-        bus = dbus.SystemBus()
-        obj = bus.get_object("org.bluez", "/")
-        manager = dbus.Interface(obj, "org.freedesktop.DBus.ObjectManager")
-        objects = manager.GetManagedObjects()
     except Exception:
         return []
 
     devices: list[dict[str, Any]] = []
+    try:
+        import dbus
+        bus = dbus.SystemBus()
+    except Exception:
+        bus = None
+
+    for addr, name in found:
+        info: dict[str, Any] = {"address": addr, "name": name}
+        if bus is not None:
+            try:
+                path = f"/org/bluez/hci0/dev_{addr.replace(':', '_')}"
+                obj = bus.get_object("org.bluez", path)
+                props = dbus.Interface(obj, "org.freedesktop.DBus.Properties")
+                gps = props.Get("org.bluez.Device1", "GPSCoordinates")
+                vals = str(gps).split(",")
+                if len(vals) == 2:
+                    info["lat"] = float(vals[0])
+                    info["lon"] = float(vals[1])
+            except Exception:
+                pass
+        devices.append(info)
     for ifaces in objects.values():
         dev = ifaces.get("org.bluez.Device1")
         if not dev:
@@ -479,6 +500,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
                     pass
 
         devices.append(info)
+
 
     return devices
 
