@@ -558,11 +558,20 @@ async def fetch_metrics_async(
 
 
 def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
-    """
-    Count .pcap handshake files in BetterCAP log directories.
-    """
-    pattern = os.path.join(log_folder, '*_bettercap', '*.pcap')
-    return len(glob.glob(pattern))
+    """Count ``.pcap`` handshake files in BetterCAP log directories."""
+    count = 0
+    try:
+        for entry in os.scandir(log_folder):
+            if entry.is_dir() and entry.name.endswith('_bettercap'):
+                try:
+                    for file in os.scandir(entry.path):
+                        if file.is_file() and file.name.endswith('.pcap'):
+                            count += 1
+                except OSError:
+                    continue
+    except OSError:
+        return 0
+    return count
 
 
 def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:

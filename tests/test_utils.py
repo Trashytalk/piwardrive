@@ -400,3 +400,23 @@ def test_gpspipe_cache(monkeypatch: Any) -> None:
     assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
     assert len(procs) == 0
 
+
+def test_count_bettercap_handshakes(tmp_path: Any) -> None:
+    log_dir = tmp_path
+    d1 = log_dir / "2024-01-01_bettercap"
+    d2 = log_dir / "2024-01-02_bettercap"
+    other = log_dir / "misc"
+    d1.mkdir()
+    d2.mkdir()
+    other.mkdir()
+    (d1 / "a.pcap").write_text("x")
+    (d1 / "ignore.txt").write_text("x")
+    (d2 / "b.pcap").write_text("x")
+    (other / "c.pcap").write_text("x")
+    assert utils.count_bettercap_handshakes(str(log_dir)) == 2
+
+
+def test_count_bettercap_handshakes_missing(tmp_path: Any) -> None:
+    missing = tmp_path / "nope"
+    assert utils.count_bettercap_handshakes(str(missing)) == 0
+

@@ -20,6 +20,7 @@ modules = {
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
     "aiohttp": ModuleType("aiohttp"),
+    "gps": ModuleType("gps"),
 }
 modules["aiohttp"].ClientSession = object
 modules["aiohttp"].ClientTimeout = lambda *a, **k: None
