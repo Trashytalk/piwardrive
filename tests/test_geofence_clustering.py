@@ -5,7 +5,41 @@ from typing import Any
 
 import pytest
 
-pytest.skip("GUI tests skipped in headless CI", allow_module_level=True)
+modules = {
+    "kivy": ModuleType("kivy"),
+    "kivy.app": ModuleType("kivy.app"),
+    "kivy.clock": ModuleType("kivy.clock"),
+    "kivy.metrics": ModuleType("kivy.metrics"),
+    "kivy.uix.label": ModuleType("kivy.uix.label"),
+    "kivy.uix.screenmanager": ModuleType("kivy.uix.screenmanager"),
+    "kivymd.uix.dialog": ModuleType("kivymd.uix.dialog"),
+    "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
+    "kivymd.uix.snackbar": ModuleType("kivymd.uix.snackbar"),
+    "kivymd.uix.textfield": ModuleType("kivymd.uix.textfield"),
+    "kivymd.uix.progressbar": ModuleType("kivymd.uix.progressbar"),
+    "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
+    "kivymd.uix.label": ModuleType("kivymd.uix.label"),
+}
+
+modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
+modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
+modules["kivy.clock"].mainthread = lambda f: f
+modules["kivy.metrics"].dp = lambda x: x
+modules["kivy.uix.label"].Label = object
+modules["kivy.uix.screenmanager"].Screen = object
+modules["kivymd.uix.dialog"].MDDialog = object
+modules["kivymd.uix.menu"].MDDropdownMenu = object
+modules["kivymd.uix.snackbar"].Snackbar = object
+modules["kivymd.uix.textfield"].MDTextField = object
+modules["kivymd.uix.progressbar"].MDProgressBar = object
+modules["kivymd.uix.boxlayout"].MDBoxLayout = object
+modules["kivymd.uix.label"].MDLabel = object
+modules["kivy"].__path__ = []
+modules["kivy"].app = modules["kivy.app"]
+modules["kivy"].clock = modules["kivy.clock"]
+
+for name, mod in modules.items():
+    sys.modules[name] = mod
 
 os.environ.setdefault("KIVY_NO_ARGS", "1")
 os.environ.setdefault("KIVY_WINDOW", "mock")
@@ -16,10 +50,12 @@ _dummy_mapview.MapMarker = object  # type: ignore[attr-defined]
 _dummy_mapview.MapMarkerPopup = object  # type: ignore[attr-defined]
 _dummy_mapview.MBTilesMapSource = object  # type: ignore[attr-defined]
 _dummy_mapview.LineMapLayer = object  # type: ignore[attr-defined]
-sys.modules.setdefault("kivy_garden.mapview", _dummy_mapview)
+sys.modules["kivy_garden.mapview"] = _dummy_mapview
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+if "screens.map_screen" in sys.modules:
+    del sys.modules["screens.map_screen"]
 from screens.map_screen import MapScreen  # noqa: E402
 
 
