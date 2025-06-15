@@ -94,10 +94,11 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
       pip install -r requirements.txt
 
-5. **Compile the C extension**::
+5. **Build the package**::
 
-      cd piwardrive
-      python setup.py build_ext --inplace
+      pip install build
+      python -m build
+      pip install dist/*.whl
 
    See ``docs/ckml_build.rst`` for more detail.
 
