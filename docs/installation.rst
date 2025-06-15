@@ -42,6 +42,10 @@ Raspberry Pi OS
       sudo apt install r-base
       Rscript -e "install.packages(c('ggplot2','jsonlite'), repos='https://cloud.r-project.org')"
 
+8. (Optional) install extra Python packages used by some features::
+
+      pip install pandas orjson pyprof2calltree
+
 
 Generic Linux
 -------------

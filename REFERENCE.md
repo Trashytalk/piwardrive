@@ -88,6 +88,12 @@ See `docs/ckml_build.rst` for troubleshooting compiler issues.
 
 `scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
 
+Additional optional features use `pandas`, `orjson` and `pyprof2calltree` which can be installed via:
+
+```bash
+pip install pandas orjson pyprof2calltree
+```
+
 ## Deployment Options
 
 The software can run from an SD card image or inside a Docker container. For Docker, start from `python:3.11-bullseye`, install the system packages, copy the project to `/app`, run `pip install -r requirements.txt` and set `CMD ["python", "main.py"]`. Map USB devices and persist `~/.config/piwardrive` with a volume.
