@@ -28,4 +28,6 @@ if [ $missing_pkg -eq 1 ]; then
     python3 -m pip install -r "$ROOT_DIR/requirements.txt"
 fi
 
+$SCRIPT_DIR/fetch_oui.sh
+
 echo "Setup complete"

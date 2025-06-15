@@ -7,7 +7,8 @@ the main PiWardrive UI when you only need quick scans or exports.
 ## Modules
 
 - **bluetooth** – scan nearby Bluetooth devices via `hcitool`.
-- **wifi** – discover Wi-Fi access points using `iwlist`. Set the
+- **wifi** – discover Wi-Fi access points using `iwlist`. Results are enriched
+  with vendor names when the IEEE OUI registry is available. Set the
   `IWLIST_CMD` environment variable to override the `iwlist` executable and
   `IW_PRIV_CMD` to change the privilege wrapper (default ``sudo``).
 - **cellular.band_scanner** – scan available cellular bands via an external
@@ -44,5 +45,6 @@ change the privilege helper for Wi-Fi scans.
 The suite expects `iwlist` (from the `wireless-tools` package) and `hcitool`
 (from `bluez`) to be available on the system. Running
 `./sigint_suite/scripts/setup_all.sh` will install these packages and the
-required Python dependencies.
+required Python dependencies. The setup script also downloads the IEEE OUI
+registry used to map BSSID prefixes to vendor names.
 
