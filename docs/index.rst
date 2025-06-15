@@ -17,3 +17,5 @@ PiWardrive Documentation
    deployment
    workflows
    ckml_build
+   r_integration
+   web_ui

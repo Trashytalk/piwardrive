@@ -94,14 +94,18 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
       pip install -r requirements.txt
 
-5. **Compile the C extension**::
+5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
-      cd piwardrive
-      python setup.py build_ext --inplace
+6. **Compile the C extension**::
+
+
+      pip install build
+      python -m build
+      pip install dist/*.whl
 
    See ``docs/ckml_build.rst`` for more detail.
 
-6. **Configure fstab** (optional)::
+7. **Configure fstab** (optional)::
 
       /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
 
@@ -182,6 +186,12 @@ package. A minimal plugin looks like::
 Once the file is created, ``ExtraWidget`` can be added to the dashboard like any
 other built-in widget.
 
+Compiled extensions built with PyO3 or Cython are supported as well. Place the
+resulting ``.so`` (or ``.pyd`` on Windows) in the plugin directory or within a
+package. Ensure the extension is built against the same Python version that
+runs PiWardrive and that ``build-essential`` and the Python development headers
+are installed.
+
 ## Error Handling
 The application reports errors consistently using `utils.report_error`. The sequence below illustrates how
 `control_service` surfaces failures:
@@ -213,6 +223,19 @@ The Sphinx documentation under [docs/](docs/) provides detailed guides for each 
 * [function_flows](docs/function_flows.rst) – diagrams of key functions
 
 Run `pytest` to execute the test suite and use `flake8` and `mypy` to lint and type-check the codebase.
+
+## React Web UI
+
+An optional React application lives under `webui/`. It consumes the API endpoints provided by `service.py`.
+
+```bash
+cd webui
+npm install
+npm run build  # production build
+npm run dev    # start Vite dev server
+```
+
+The dev server proxies API requests to `http://localhost:8000`. Set `PW_API_PASSWORD_HASH` to require a password for the backend routes.
 
 ## Contributing
 

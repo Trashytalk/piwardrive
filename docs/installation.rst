@@ -32,6 +32,12 @@ Raspberry Pi OS
 6. (Optional) configure the SSD mount by editing ``/etc/fstab``::
 
       /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
+7. (Optional) install R integration packages::
+
+      pip install rpy2
+      sudo apt install r-base
+      Rscript -e "install.packages(c('ggplot2','jsonlite'), repos='https://cloud.r-project.org')"
+
 
 Generic Linux
 -------------
