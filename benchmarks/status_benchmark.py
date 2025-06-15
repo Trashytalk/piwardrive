@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import sys
 import time
@@ -17,7 +18,12 @@ async def main(count: int = 100) -> None:
         tasks = [client.get("/status") for _ in range(count)]
         await asyncio.gather(*tasks)
         duration = time.perf_counter() - start
-    print(f"{count} requests in {duration:.2f}s ({count / duration:.1f} r/s)")
+    logging.info(
+        "%d requests in %.2fs (%.1f r/s)",
+        count,
+        duration,
+        count / duration,
+    )
 
 
 if __name__ == "__main__":

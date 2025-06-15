@@ -1,10 +1,11 @@
+import logging
 import subprocess
 import sys
 
 result = subprocess.run([
     'radon', 'cc', '-n', 'D', '-s', '.'
 ], capture_output=True, text=True)
-print(result.stdout)
+logging.info(result.stdout)
 if result.stdout.strip():
-    print('Complexity threshold exceeded')
+    logging.error("Complexity threshold exceeded")
     sys.exit(1)
