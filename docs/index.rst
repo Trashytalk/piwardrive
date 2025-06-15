@@ -17,3 +17,4 @@ PiWardrive Documentation
    deployment
    workflows
    ckml_build
+   web_ui

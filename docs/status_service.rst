@@ -15,3 +15,16 @@ the last few records::
     curl http://localhost:8000/status
 
 Use the ``limit`` query parameter to control how many entries are returned.
+
+Additional Routes
+-----------------
+
+``/widget-metrics`` returns a summary used by the dashboard widgets::
+
+   curl http://localhost:8000/widget-metrics
+
+``/logs`` tails ``app.log`` (``lines`` query parameter controls length)::
+
+   curl "http://localhost:8000/logs?lines=50"
+
+Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
