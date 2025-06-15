@@ -93,6 +93,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 4. **Install Python dependencies**::
 
       pip install -r requirements.txt
+      pip install .
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
@@ -244,6 +245,7 @@ Install project and development dependencies and run the tests locally with:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pip install .
 pytest
 ```
 
