@@ -350,3 +350,5 @@ Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or
 worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
 opening a pull request.
+
+Please ensure you comply with all local laws and obtain proper authorization before conducting any wireless or Bluetooth scans. The authors are not responsible for any misuse of this software.
