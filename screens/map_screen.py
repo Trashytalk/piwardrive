@@ -7,6 +7,9 @@ import json
 import os
 
 
+from gpsd_client import client as gps_client
+
+
 import threading
 
 import time
@@ -544,6 +547,15 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         except StopIteration:
             report_error("GPS lock timed out")
         except Exception as e:
+
+            pos = gps_client.get_position()
+            if pos:
+                lat, lon = pos
+                self._update_map(lat, lon)
+                self._adjust_gps_interval(lat, lon)
+            else:
+                report_error("GPS lock timed out")
+        except Exception as e:  # pragma: no cover - unexpected
             report_error(f"GPS error: {e}")
 
 

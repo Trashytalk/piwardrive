@@ -13,6 +13,12 @@ import types
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
+aiohttp_mod = types.SimpleNamespace(
+    ClientSession=object,
+    ClientError=Exception,
+    ClientTimeout=lambda *a, **k: None,
+)
+sys.modules['aiohttp'] = aiohttp_mod
 import psutil
 if 'requests' not in sys.modules:
     dummy_requests = mock.Mock()
@@ -64,38 +70,80 @@ def test_tail_file_missing_returns_empty_list() -> None:
     assert result == []
 
 
+def test_tail_file_handles_large_file(tmp_path: Any) -> None:
+    path = tmp_path / 'large.txt'
+    with open(path, 'w') as f:
+        for i in range(1000):
+            f.write(f'line{i}\n')
+
+    result = utils.tail_file(str(path), lines=5)
+    assert result == [f'line{i}' for i in range(995, 1000)]
+
+
 def _patch_dbus(monkeypatch: Any, manager: Any, props: Any) -> None:
     class Bus:
+        def __init__(self, *a: Any, **k: Any) -> None:
+            pass
+        async def connect(self) -> None:
+            pass
+
+        async def introspect(self, service: str, path: str) -> str:
+            return "intro"
+
+        def get_proxy_object(self, service: str, path: str, _intro: str) -> Any:
+            class Obj:
+                def get_interface(self, iface: str) -> Any:
+                    return manager if "Manager" in iface else props
+
+            return Obj()
+
+        def disconnect(self) -> None:
+            pass
+
+    aio_mod = types.SimpleNamespace(MessageBus=Bus)
+    dbus_mod = types.SimpleNamespace(aio=aio_mod, BusType=types.SimpleNamespace(SYSTEM=1))
+    monkeypatch.setitem(sys.modules, 'dbus_fast', dbus_mod)
+    monkeypatch.setitem(sys.modules, 'dbus_fast.aio', aio_mod)
+
+
+def _patch_bt_dbus(monkeypatch: Any, objects: dict[str, Any], exc: bool = False) -> None:
+    class Bus:
         def get_object(self, service: str, path: str) -> Any:
-            return 'mgr' if path == '/org/freedesktop/systemd1' else 'unit'
+            return 'bluez'
+
+    class Manager:
+        def GetManagedObjects(self) -> dict[str, Any]:
+            if exc:
+                raise Exception('boom')
+            return objects
 
     def system_bus() -> Bus:
         return Bus()
 
-    def interface(obj: str, iface: str) -> Any:
-        return manager if obj == 'mgr' else props
+    def interface(_obj: str, iface: str) -> Any:
+        return Manager()
 
     dbus_mod = types.SimpleNamespace(SystemBus=system_bus, Interface=interface, DBusException=Exception)
     monkeypatch.setitem(sys.modules, 'dbus', dbus_mod)
 
 
 def test_run_service_cmd_success(monkeypatch: Any) -> None:
-    mgr = mock.Mock()
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock())
     props = mock.Mock()
     _patch_dbus(monkeypatch, mgr, props)
 
     success, out, err = utils.run_service_cmd('kismet', 'start')
-    mgr.StartUnit.assert_called_once_with('kismet.service', 'replace')
+    mgr.call_start_unit.assert_called_once_with('kismet.service', 'replace')
     assert success is True and out == '' and err == ''
 
 
 def test_run_service_cmd_failure(monkeypatch: Any) -> None:
-    mgr = mock.Mock(StartUnit=mock.Mock(side_effect=Exception('err')))
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock(side_effect=Exception('err')))
     props = mock.Mock()
     _patch_dbus(monkeypatch, mgr, props)
 
     success, out, err = utils.run_service_cmd('kismet', 'start')
-    mgr.StartUnit.assert_called_once()
+    mgr.call_start_unit.assert_called_once()
     assert success is False and out == '' and 'err' in err
 
 
@@ -107,22 +155,22 @@ def test_run_service_cmd_retries_until_success(monkeypatch: Any) -> None:
         if isinstance(res, Exception):
             raise res
 
-    mgr = mock.Mock(StartUnit=mock.Mock(side_effect=start_side))
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock(side_effect=start_side))
     props = mock.Mock()
     _patch_dbus(monkeypatch, mgr, props)
 
     success, out, err = utils.run_service_cmd('kismet', 'start', attempts=2, delay=0)
-    assert mgr.StartUnit.call_count == 2
+    assert mgr.call_start_unit.call_count == 2
     assert success is True and out == '' and err == ''
 
 
 def test_service_status_passes_retry_params() -> None:
-    with mock.patch(
-        'utils.run_service_cmd',
-        return_value=(True, 'active', '')
-    ) as run_mock:
+    async def _svc(_: str, attempts: int = 1, delay: float = 0) -> bool:
+        assert attempts == 2 and delay == 0.5
+        return True
+
+    with mock.patch('utils.service_status_async', _svc):
         assert utils.service_status('kismet', attempts=2, delay=0.5) is True
-        run_mock.assert_called_once_with('kismet', 'is-active', attempts=2, delay=0.5)
 
 
 def test_point_in_polygon_basic() -> None:
@@ -307,6 +355,19 @@ def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
     dbus_mod = types.SimpleNamespace(SystemBus=lambda: Bus(), Interface=interface, DBusException=Exception)
     monkeypatch.setitem(sys.modules, "dbus", dbus_mod)
 
+
+    objs = {
+        "/dev": {
+            "org.bluez.Device1": {
+                "Address": "AA:BB:CC:DD:EE:FF",
+                "Name": "Foo",
+                "GPS Coordinates": "1.0,2.0",
+            }
+        }
+    }
+
+    _patch_bt_dbus(monkeypatch, objs)
+
     devices = utils.scan_bt_devices()
     assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
 
@@ -315,5 +376,27 @@ def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
     bt_mod = ModuleType("bluetooth")
     bt_mod.discover_devices = mock.Mock(side_effect=OSError())
     monkeypatch.setitem(sys.modules, "bluetooth", bt_mod)
+
+    _patch_bt_dbus(monkeypatch, {}, exc=True)
+
     assert utils.scan_bt_devices() == []
+
+
+def test_gpspipe_cache(monkeypatch: Any) -> None:
+    proc1 = mock.Mock(returncode=0, stdout='{"mode": 2, "epx": 1, "epy": 2}\n')
+    proc2 = mock.Mock(returncode=0, stdout='{"mode": 3, "epx": 4, "epy": 5}\n')
+    procs = [proc1, proc2]
+
+    def fake_run(*_a: Any, **_k: Any) -> Any:
+        return procs.pop(0)
+
+    monkeypatch.setattr(utils.subprocess, "run", fake_run)
+    utils._GPSPIPE_CACHE = {"timestamp": 0.0, "data": None}
+
+    assert utils.get_gps_accuracy() == 2
+    assert utils.get_gps_fix_quality() == "2D"
+    assert len(procs) == 1  # subprocess.run called once
+
+    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    assert len(procs) == 0
 

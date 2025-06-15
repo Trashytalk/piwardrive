@@ -9,6 +9,7 @@ import asyncio
 import logging
 import os
 import subprocess
+from gpsd_client import client as gps_client
 import time
 import threading
 
@@ -30,6 +31,9 @@ import psutil
 import requests  # type: ignore
 import aiohttp
 
+GPSPIPE_CACHE_SECONDS = 2.0  # cache ttl in seconds
+_GPSPIPE_CACHE: dict[str, Any] = {"timestamp": 0.0, "data": None}
+
 
 class ErrorCode(IntEnum):
     """Enumerate application error codes."""
@@ -48,6 +52,7 @@ class ErrorCode(IntEnum):
     KISMET_API_REQUEST_FAILED = 301
     KISMET_API_JSON_ERROR = 302
     KISMET_API_ERROR = 303
+
 
 ERROR_PREFIX = "E"
 
@@ -268,23 +273,33 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
-    """
-    Tail last N lines from a file.
-    """
+    """Return the last ``lines`` from ``path`` efficiently."""
     try:
-        with open(path, 'rb') as f:
-            lines_deque: deque[str] = deque(maxlen=lines)
-            for line in f:
-                lines_deque.append(line.decode('utf-8', errors='ignore').rstrip())
-        return list(lines_deque)
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            position = f.tell()
+            block_size = 4096
+            data = bytearray()
+            line_count = 0
+
+            while position > 0 and line_count <= lines:
+                read_size = block_size if position >= block_size else position
+                position -= read_size
+                f.seek(position)
+                block = f.read(read_size)
+                data[:0] = block
+                line_count = data.count(b"\n")
+
+            text = data.decode("utf-8", errors="ignore")
+            return text.splitlines()[-lines:]
     except Exception:
         return []
 
 
-def run_service_cmd(
+def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Control ``service`` via systemd's DBus API."""
+    """Synchronous DBus implementation used as a fallback."""
 
     import dbus
     from security import validate_service_name
@@ -322,15 +337,112 @@ def run_service_cmd(
         return False, "", str(exc)
 
 
-def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
+async def _run_service_cmd_async(
+    service: str, action: str, attempts: int = 1, delay: float = 0
+) -> tuple[bool, str, str]:
+    """Async DBus implementation using ``dbus-fast``."""
+
+    from security import validate_service_name
+
+    validate_service_name(service)
+    if action not in {"start", "stop", "restart", "is-active"}:
+        raise ValueError(f"Invalid action: {action}")
+
+    svc_name = f"{service}.service"
+
+    try:
+        from dbus_fast.aio import MessageBus
+        from dbus_fast import BusType
+    except Exception:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            None, lambda: _run_service_cmd_sync(service, action, attempts, delay)
+        )
+
+    async def _call() -> tuple[bool, str, str]:
+        bus = MessageBus(bus_type=BusType.SYSTEM)
+        await bus.connect()
+        try:
+            intro = await bus.introspect(
+                "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
+            )
+            obj = bus.get_proxy_object(
+                "org.freedesktop.systemd1", "/org/freedesktop/systemd1", intro
+            )
+            manager = obj.get_interface("org.freedesktop.systemd1.Manager")
+
+            if action == "start":
+                await manager.call_start_unit(svc_name, "replace")
+                return True, "", ""
+            if action == "stop":
+                await manager.call_stop_unit(svc_name, "replace")
+                return True, "", ""
+            if action == "restart":
+                await manager.call_restart_unit(svc_name, "replace")
+                return True, "", ""
+
+            unit_path = await manager.call_get_unit(svc_name)
+            uintro = await bus.introspect("org.freedesktop.systemd1", unit_path)
+            unit = bus.get_proxy_object(
+                "org.freedesktop.systemd1", unit_path, uintro
+            )
+            props = unit.get_interface("org.freedesktop.DBus.Properties")
+            state = await props.call_get(
+                "org.freedesktop.systemd1.Unit", "ActiveState"
+            )
+            return True, str(state), ""
+        finally:
+            bus.disconnect()
+
+    async def _retry() -> tuple[bool, str, str]:
+        last_exc: Exception | None = None
+        for _ in range(attempts):
+            try:
+                return await _call()
+            except Exception as exc:
+                last_exc = exc
+                if delay:
+                    await asyncio.sleep(delay)
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("Unreachable")
+
+    try:
+        return await _retry()
+    except Exception as exc:  # pragma: no cover - DBus failures
+        return False, "", str(exc)
+
+
+def run_service_cmd(
+    service: str, action: str, attempts: int = 1, delay: float = 0
+) -> tuple[bool, str, str]:
+    """Synchronous wrapper for :func:`_run_service_cmd_async`."""
+
+    fut = run_async_task(
+        _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
+    )
+    return fut.result()
+
+
+async def service_status_async(
+    service: str, attempts: int = 1, delay: float = 0
+) -> bool:
     """Return ``True`` if the ``systemd`` service is active."""
     try:
-        ok, out, _err = run_service_cmd(
+        ok, out, _err = await _run_service_cmd_async(
             service, "is-active", attempts=attempts, delay=delay
         )
         return ok and out.strip() == "active"
     except Exception:
         return False
+
+
+def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
+    """Synchronous wrapper for :func:`service_status_async`."""
+    fut = run_async_task(
+        service_status_async(service, attempts=attempts, delay=delay)
+    )
+    return fut.result()
 
 
 def scan_bt_devices() -> list[dict[str, Any]]:
@@ -342,6 +454,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
 
     try:
         found = discover_devices(duration=5, lookup_names=True)
+
     except Exception:
         return []
 
@@ -367,6 +480,28 @@ def scan_bt_devices() -> list[dict[str, Any]]:
             except Exception:
                 pass
         devices.append(info)
+    for ifaces in objects.values():
+        dev = ifaces.get("org.bluez.Device1")
+        if not dev:
+            continue
+
+        addr = str(dev.get("Address", ""))
+        name = str(dev.get("Name", addr))
+        info: dict[str, Any] = {"address": addr, "name": name}
+
+        coords = dev.get("GPS Coordinates") or dev.get("GPSCoordinates")
+        if isinstance(coords, (str, bytes)):
+            vals = str(coords).split(",", 1)
+            if len(vals) == 2:
+                try:
+                    info["lat"] = float(vals[0])
+                    info["lon"] = float(vals[1])
+                except Exception:
+                    pass
+
+        devices.append(info)
+
+
     return devices
 
 
@@ -453,47 +588,62 @@ def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     return len(glob.glob(pattern))
 
 
-def get_gps_accuracy() -> float | None:
-    """
-    Read GPS accuracy from gpspipe output (epx/epy fields).
-    Returns max(epx, epy) in meters, or None on failure.
-    """
+def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
+    """Return cached gpspipe data or refresh if stale."""
+    if not force_refresh and _GPSPIPE_CACHE["data"] is not None:
+        age = time.time() - _GPSPIPE_CACHE["timestamp"]
+        if age <= GPSPIPE_CACHE_SECONDS:
+            return _GPSPIPE_CACHE["data"]
+
     try:
         proc = subprocess.run(
             ['gpspipe', '-w', '-n', '10'],
-            capture_output=True, text=True, timeout=5
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
+        data: dict[str, Any] = {}
         for line in proc.stdout.splitlines():
-            if 'epx' in line:
-                rec = json.loads(line)
-                epx = rec.get('epx')
-                epy = rec.get('epy')
-                if epx is not None and epy is not None:
-                    return max(epx, epy)
+            if not line.strip().startswith('{'):
+                continue
+            rec = json.loads(line)
+            if 'epx' in rec:
+                data['epx'] = rec.get('epx')
+            if 'epy' in rec:
+                data['epy'] = rec.get('epy')
+            if 'mode' in rec:
+                data['mode'] = rec.get('mode')
+            if all(k in data for k in ('epx', 'epy', 'mode')):
+                break
+        if data:
+            _GPSPIPE_CACHE['timestamp'] = time.time()
+            _GPSPIPE_CACHE['data'] = data
+            return data
     except Exception:
         pass
+    return _GPSPIPE_CACHE.get('data')
+
+
+def get_gps_accuracy(force_refresh: bool = False) -> float | None:
+    """Return GPS accuracy from cached gpspipe data."""
+    data = _get_cached_gps_data(force_refresh)
+    if not data:
+        return None
+    epx = data.get('epx')
+    epy = data.get('epy')
+    if epx is not None and epy is not None:
+        return max(epx, epy)
     return None
 
 
-def get_gps_fix_quality() -> str:
-    """
-    Read GPS fix quality (mode) from gpspipe output.
-    Returns a string like 'No Fix', '2D', '3D', or 'DGPS'.
-    """
+def get_gps_fix_quality(force_refresh: bool = False) -> str:
+    """Return human readable GPS fix quality from cached data."""
     mode_map = {1: 'No Fix', 2: '2D', 3: '3D', 4: 'DGPS'}
-    try:
-        proc = subprocess.run(
-            ['gpspipe', '-w', '-n', '10'],
-            capture_output=True, text=True, timeout=5
-        )
-        for line in proc.stdout.splitlines():
-            if 'mode' in line:
-                rec = json.loads(line)
-                mode = rec.get('mode')
-                return mode_map.get(mode, str(mode))
-    except Exception:
-        pass
-    return 'Unknown'
+    data = _get_cached_gps_data(force_refresh)
+    if not data:
+        return 'Unknown'
+    mode = data.get('mode')
+    return mode_map.get(mode, str(mode))
 
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
@@ -512,11 +662,9 @@ def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
         return None
 
 
-def parse_latest_gps_accuracy() -> float | None:
-    """
-    Alias for get_gps_accuracy for backward compatibility.
-    """
-    return get_gps_accuracy()
+def parse_latest_gps_accuracy(force_refresh: bool = False) -> float | None:
+    """Alias for :func:`get_gps_accuracy`."""
+    return get_gps_accuracy(force_refresh=force_refresh)
 
 
 def tail_log_file(path: str, lines: int = 50) -> list[str]:

@@ -5,6 +5,12 @@ from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+aiohttp_mod = ModuleType("aiohttp")
+aiohttp_mod.ClientSession = object
+aiohttp_mod.ClientTimeout = lambda *a, **k: None
+aiohttp_mod.ClientError = Exception
+sys.modules["aiohttp"] = aiohttp_mod
+
 # provide dummy kivy modules
 modules = {
     "kivy.app": ModuleType("kivy.app"),

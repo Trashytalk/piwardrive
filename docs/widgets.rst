@@ -21,6 +21,10 @@ startup. Each module may define one or more subclasses of
 :class:`widgets.base.DashboardWidget`. Discovered classes are available from the
 :mod:`widgets` package by name.
 
+The plugin directory is scanned lazily and a timestamp is cached to avoid
+repeated filesystem checks. Call :func:`widgets.clear_plugin_cache` after
+installing new plugins so the next import or reload picks them up.
+
 Example::
 
     from widgets.base import DashboardWidget
