@@ -16,6 +16,9 @@ img2pdf
 PyYAML>=6.0
 numpy>=1.24.0
 matplotlib>=3.7.0
+plotly>=6.0.0
+kaleido>=0.2.1
+vispy>=0.14.0
 cryptography>=42.0
 fastapi>=0.110
 uvicorn>=0.26
