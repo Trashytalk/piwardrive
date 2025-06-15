@@ -13,10 +13,13 @@ import shutil
 
 import psutil
 import logging
+import asyncio
 
 import utils
 from scheduler import PollScheduler
 from interfaces import DataCollector, SelfTestCollector
+from persistence import HealthRecord, save_health_record
+from utils import run_async_task
 
 _PROFILER: cProfile.Profile | None = None
 
@@ -166,14 +169,21 @@ class HealthMonitor:
         self._collector: DataCollector = collector or SelfTestCollector()
         self.data: dict | None = None
         self._event = "health_monitor"
-        scheduler.schedule(self._event, lambda dt: self._poll(), interval)
-        self._poll()
+        scheduler.schedule(self._event, lambda dt: run_async_task(self._poll()), interval)
+        asyncio.run(self._poll())
 
-    def _poll(self) -> None:
+    async def _poll(self) -> None:
         try:
-
-            self.data = self._collector.collect()
-
+            self.data = await asyncio.to_thread(self._collector.collect)
+            system = self.data.get("system", {}) if self.data else {}
+            rec = HealthRecord(
+                timestamp=system.get("timestamp", datetime.now().isoformat()),
+                cpu_temp=system.get("cpu_temp"),
+                cpu_percent=system.get("cpu_percent", 0.0),
+                memory_percent=system.get("memory_percent", 0.0),
+                disk_percent=system.get("disk_percent", 0.0),
+            )
+            await save_health_record(rec)
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 

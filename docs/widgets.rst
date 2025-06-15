@@ -35,6 +35,11 @@ Example::
         def update(self):
             pass
 
+Compiled extensions written in PyO3 or Cython can also be used. Place the built
+``.so``/``.pyd`` file or package inside ``~/.config/piwardrive/plugins``. The
+extension must target the same Python version as PiWardrive and requires the
+system headers and compiler tools (``build-essential``) to be installed.
+
 
 
 Available Widgets
