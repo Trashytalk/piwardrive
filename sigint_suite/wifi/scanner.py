@@ -3,6 +3,8 @@ import shlex
 import subprocess
 from typing import List, Dict, Optional
 
+from sigint_suite.enrichment import lookup_vendor
+
 
 def scan_wifi(
     interface: str = "wlan0",
@@ -34,7 +36,11 @@ def scan_wifi(
         elif "ESSID" in line:
             current["ssid"] = line.split(":", 1)[-1].strip('"')
         elif "Address" in line:
-            current["bssid"] = line.split("Address:")[-1].strip()
+            bssid = line.split("Address:")[-1].strip()
+            current["bssid"] = bssid
+            vendor = lookup_vendor(bssid)
+            if vendor:
+                current["vendor"] = vendor
         elif "Frequency" in line:
             current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
         elif "Quality" in line:
