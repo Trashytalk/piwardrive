@@ -4,11 +4,22 @@ import json
 import os
 from dataclasses import dataclass, asdict, field
 
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
+
+
+class Theme(str, Enum):
+    """Available UI themes."""
+
+    Dark = "Dark"
+    Light = "Light"
+    Green = "Green"
+    Red = "Red"
+
 
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
@@ -74,11 +85,14 @@ class ConfigModel(FileConfigModel):
 
     map_poll_gps: int = Field(..., gt=0)
 
-    @field_validator("theme")
-    def check_theme(cls, value: str) -> str:
-        if value not in {"Dark", "Light", "Green", "Red"}:
-            raise ValueError(f"Invalid theme: {value}")
-        return value
+    theme: Theme
+
+    @field_validator("theme", mode="before")
+    def check_theme(cls, value: Any) -> Theme:
+        try:
+            return Theme(value)
+        except Exception as exc:  # pragma: no cover - should raise
+            raise ValueError(f"Invalid theme: {value}") from exc
 
 
 def _parse_env_value(raw: str, default: Any) -> Any:
@@ -114,7 +128,13 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
     for key, default in DEFAULTS.items():
         raw = os.getenv(f"PW_{key.upper()}")
         if raw is not None:
-            result[key] = _parse_env_value(raw, default)
+            if key == "theme":
+                try:
+                    result[key] = Theme(raw)
+                except ValueError:
+                    result[key] = raw
+            else:
+                result[key] = _parse_env_value(raw, default)
     return result
 
 
