@@ -256,6 +256,68 @@ The Sphinx documentation under [docs/](docs/) provides detailed guides for each 
 
 Run `pytest` to execute the test suite and use `flake8` and `mypy` to lint and type-check the codebase.
 
+## Module Reference
+
+Each module below has a focused responsibility within the application.  The
+summaries link to their source files for quick reference.
+
+### `main.py`
+Defines `PiWardriveApp` and manages initialization, screen setup, service
+control, auto-saving configuration and cleanup.
+
+### `utils.py`
+Utility helpers that handle error formatting, async task execution, safe
+requests, and system metrics. Errors are reported uniformly via
+`report_error`.
+
+### `diagnostics.py`
+Collects system metrics and rotates log files. `HealthMonitor` periodically
+gathers data and stores it in SQLite, catching and logging exceptions during
+polling.
+
+### `persistence.py`
+Defines `HealthRecord` and `AppState` dataclasses and provides async functions
+for saving and loading them via a small SQLite database.
+
+### `scheduler.py`
+Supplies `PollScheduler` and `AsyncScheduler` classes for periodic callbacks.
+Both versions log exceptions while keeping tasks alive.
+
+### `export.py`
+Filters and exports recorded access-point data in CSV, JSON, GPX, or KML
+formats, raising `ValueError` for unsupported formats.
+
+### `analysis.py`
+Computes average health statistics and can plot CPU temperature, optionally
+using pandas and Plotly when available.
+
+### `gpsd_client.py`
+Maintains a persistent connection to `gpsd`, gracefully handling connection
+failures and returning `None` on errors.
+
+### `security.py`
+Provides path sanitization, service name validation, password hashing and
+verification, plus simple encryption helpers.
+
+### `logconfig.py`
+Configures JSON-formatted logging, writing to `~/.config/piwardrive/app.log`.
+
+### `localization.py`
+Offers a lightweight translation mechanism where missing keys fall back to the
+original text.
+
+### `service.py`
+Exposes recent health records and widget metrics over FastAPI, with optional
+HTTP basic authentication and log retrieval endpoints.
+
+### `exception_handler.py`
+Installs a Kivy exception handler that logs uncaught exceptions instead of
+crashing the GUI.
+
+### `di.py`
+Implements a minimal dependency-injection container used to manage shared
+services.
+
 ## React Web UI
 
 An optional React application lives under `webui/`. It consumes the API endpoints provided by `service.py`.
