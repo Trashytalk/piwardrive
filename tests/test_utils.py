@@ -22,6 +22,11 @@ import asyncio
 from collections import namedtuple
 
 
+def test_format_error_with_enum() -> None:
+    msg = utils.format_error(utils.ErrorCode.KISMET_API_ERROR, "fail")
+    assert msg == "[E303] fail"
+
+
 def test_find_latest_file_returns_latest() -> None:
     with tempfile.TemporaryDirectory() as tmpdir:
         file1 = os.path.join(tmpdir, 'a.txt')

@@ -18,9 +18,29 @@ from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 from concurrent.futures import Future
 
 from kivy.app import App
+from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
+
+
+class ErrorCode(IntEnum):
+    """Enumerate application error codes."""
+
+    INVALID_KISMET_LOG_DIR = 201
+    INVALID_BETTERCAP_CAPLET = 202
+    GPS_POLL_RATE_INVALID = 203
+    INVALID_OFFLINE_TILE_PATH = 204
+    CONFIG_SAVE_FAILED = 205
+    AP_POLL_RATE_INVALID = 206
+    HEALTH_POLL_INVALID = 207
+    LOG_ROTATE_INVALID = 208
+    LOG_ARCHIVES_INVALID = 209
+    BT_POLL_RATE_INVALID = 210
+
+    KISMET_API_REQUEST_FAILED = 301
+    KISMET_API_JSON_ERROR = 302
+    KISMET_API_ERROR = 303
 
 ERROR_PREFIX = "E"
 
@@ -29,9 +49,9 @@ _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
 _async_thread.start()
 
 
-def format_error(code: int, message: str) -> str:
+def format_error(code: int | IntEnum, message: str) -> str:
     """Return standardized error string like ``[E001] message``."""
-    return f"[{ERROR_PREFIX}{code:03d}] {message}"
+    return f"[{ERROR_PREFIX}{int(code):03d}] {message}"
 
 
 try:
@@ -352,7 +372,7 @@ def fetch_kismet_devices() -> tuple[list, list]:
         except requests.RequestException as exc:
             report_error(
                 format_error(
-                    301,
+                    ErrorCode.KISMET_API_REQUEST_FAILED,
                     (
                         f"Kismet API request failed: {exc}. "
                         "Ensure Kismet is running."
@@ -366,11 +386,17 @@ def fetch_kismet_devices() -> tuple[list, list]:
                 return data.get("access_points", []), data.get("clients", [])
         except json.JSONDecodeError as exc:
             report_error(
-                format_error(302, f"Kismet API JSON decode error: {exc}")
+                format_error(
+                    ErrorCode.KISMET_API_JSON_ERROR,
+                    f"Kismet API JSON decode error: {exc}",
+                )
             )
         except Exception as exc:  # pragma: no cover - unexpected
             report_error(
-                format_error(303, f"Kismet API error: {exc}")
+                format_error(
+                    ErrorCode.KISMET_API_ERROR,
+                    f"Kismet API error: {exc}",
+                )
             )
     return [], []
 
@@ -387,7 +413,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         except requests.RequestException as exc:
             report_error(
                 format_error(
-                    301,
+                    ErrorCode.KISMET_API_REQUEST_FAILED,
                     (
                         f"Kismet API request failed: {exc}. "
                         "Ensure Kismet is running."
@@ -401,7 +427,10 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                 return data.get("access_points", []), data.get("clients", [])
         except Exception as exc:  # pragma: no cover - JSON parse or other
             report_error(
-                format_error(303, f"Kismet API error: {exc}")
+                format_error(
+                    ErrorCode.KISMET_API_ERROR,
+                    f"Kismet API error: {exc}",
+                )
             )
     return [], []
 
