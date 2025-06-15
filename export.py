@@ -38,7 +38,12 @@ def export_records(
     fmt = fmt.lower()
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unsupported format: {fmt}")
-    def export_csv(rows: Sequence[Mapping[str, Any]], p: str, f: Sequence[str] | None) -> None:
+
+    def export_csv(
+        rows: Sequence[Mapping[str, Any]],
+        p: str,
+        f: Sequence[str] | None,
+    ) -> None:
         rows = list(rows)
         with open(p, "w", newline="", encoding="utf-8") as fh:
             if rows:
@@ -47,11 +52,19 @@ def export_records(
                 writer.writeheader()
                 writer.writerows(rows)
 
-    def export_json(rs: Sequence[Mapping[str, Any]], p: str, _f: Sequence[str] | None) -> None:
+    def export_json(
+        rs: Sequence[Mapping[str, Any]],
+        p: str,
+        _f: Sequence[str] | None,
+    ) -> None:
         with open(p, "w", encoding="utf-8") as fh:
             json.dump(list(rs), fh)
 
-    def export_gpx(rs: Sequence[Mapping[str, Any]], p: str, _f: Sequence[str] | None) -> None:
+    def export_gpx(
+        rs: Sequence[Mapping[str, Any]],
+        p: str,
+        _f: Sequence[str] | None,
+    ) -> None:
         root = ET.Element("gpx", version="1.1", creator="piwardrive")
         for rec in rs:
             lat = rec.get("lat")
@@ -64,7 +77,11 @@ def export_records(
                 ET.SubElement(wpt, "name").text = str(name)
         ET.ElementTree(root).write(p, encoding="utf-8", xml_declaration=True)
 
-    def export_kml(rs: Sequence[Mapping[str, Any]], p: str, _f: Sequence[str] | None) -> None:
+    def export_kml(
+        rs: Sequence[Mapping[str, Any]],
+        p: str,
+        _f: Sequence[str] | None,
+    ) -> None:
         root = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
         doc = ET.SubElement(root, "Document")
         for rec in rs:

@@ -2,6 +2,7 @@ class DummyEvent:
     def cancel(self):
         pass
 
+
 class Clock:
     @staticmethod
     def schedule_interval(callback, interval):
@@ -20,6 +21,7 @@ class Clock:
     @staticmethod
     def unschedule(ev):
         pass
+
 
 def mainthread(func):
     def wrapper(*args, **kwargs):

@@ -311,7 +311,10 @@ def _run_service_cmd_sync(
 
     def _call() -> tuple[bool, str, str]:
         bus = dbus.SystemBus()
-        systemd = bus.get_object("org.freedesktop.systemd1", "/org/freedesktop/systemd1")
+        systemd = bus.get_object(
+            "org.freedesktop.systemd1",
+            "/org/freedesktop/systemd1",
+        )
         manager = dbus.Interface(systemd, "org.freedesktop.systemd1.Manager")
 
         if action == "start":
