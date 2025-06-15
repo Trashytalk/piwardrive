@@ -261,7 +261,10 @@ class PiWardriveApp(MDApp):
 
 def main() -> None:
     """Launch :class:`PiWardriveApp`."""
-    PiWardriveApp().run()
+    try:
+        PiWardriveApp().run()
+    finally:
+        utils.shutdown_async_loop()
 
 
 if __name__ == "__main__":

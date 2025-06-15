@@ -13,6 +13,11 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install flake8 mypy pytest radon
+      - name: Build web UI
+        run: |
+          cd webui
+          npm ci
+          npm run build
       - name: Lint
         run: flake8 .
       - name: Type check

@@ -115,6 +115,21 @@ services like Kismet and BetterCAP are controlled via helper functions.
       /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
 
 For detailed instructions and troubleshooting steps see ``docs/installation.rst``.
+## Docker
+
+Build an image using the provided `Dockerfile`:
+```bash
+docker build -t piwardrive .
+```
+Run the app:
+```bash
+docker run --device=/dev/ttyUSB0 --rm piwardrive
+```
+For tests:
+```bash
+docker-compose run --rm test
+```
+
 
 ## Configuration
 
@@ -398,4 +413,8 @@ Cyclomatic complexity is also checked in CI. The workflow runs
 worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
 opening a pull request.
 
+Install pre-commit hooks with:
+```bash
+pre-commit install
+```
 Please ensure you comply with all local laws and obtain proper authorization before conducting any wireless or Bluetooth scans. The authors are not responsible for any misuse of this software.

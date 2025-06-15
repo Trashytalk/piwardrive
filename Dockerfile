@@ -12,3 +12,4 @@ COPY . .
 RUN pip install --no-cache-dir -e .
 
 CMD ["pytest"]
+
