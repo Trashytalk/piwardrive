@@ -19,6 +19,7 @@ modules = {
     "kivymd.uix.progressbar": ModuleType("kivymd.uix.progressbar"),
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
+    "gps": ModuleType("gps"),
 }
 
 aiohttp_mod = ModuleType("aiohttp")
