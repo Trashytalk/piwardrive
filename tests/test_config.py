@@ -31,6 +31,7 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.map_poll_bt == config.DEFAULT_CONFIG.map_poll_bt
     assert data.map_show_bt == config.DEFAULT_CONFIG.map_show_bt
     assert data.offline_tile_path == config.DEFAULT_CONFIG.offline_tile_path
+    assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
 
 
 def test_save_and_load_roundtrip(tmp_path: Path) -> None:
@@ -41,6 +42,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.map_poll_gps_max = 20
     orig.map_poll_bt = 30
     orig.map_show_bt = True
+    orig.ui_font_size = 18
     orig.offline_tile_path = "/tmp/off.mbtiles"
     config.save_config(orig)
     assert Path(cfg_file).is_file()
@@ -51,14 +53,16 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.map_poll_bt == 30
     assert loaded.map_show_bt is True
     assert loaded.offline_tile_path == "/tmp/off.mbtiles"
+    assert loaded.ui_font_size == 18
 
 def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
     cfg_file = setup_temp_config(tmp_path)
-    cfg = config.Config(theme="Light")
+    cfg = config.Config(theme="Light", ui_font_size=20)
     config.save_config(cfg)
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
     assert loaded.theme == "Light"
+    assert loaded.ui_font_size == 20
     
 
 def test_load_config_bad_json(tmp_path: Path) -> None:
@@ -80,10 +84,12 @@ def test_env_override_integer(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setenv("PW_MAP_POLL_GPS", "42")
     monkeypatch.setenv("PW_MAP_POLL_GPS_MAX", "50")
     monkeypatch.setenv("PW_MAP_POLL_BT", "30")
+    monkeypatch.setenv("PW_UI_FONT_SIZE", "22")
     cfg = config.AppConfig.load()
     assert cfg.map_poll_gps == 42
     assert cfg.map_poll_gps_max == 50
     assert cfg.map_poll_bt == 30
+    assert cfg.ui_font_size == 22
 
 
 def test_env_override_boolean(monkeypatch: Any, tmp_path: Path) -> None:

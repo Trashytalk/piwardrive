@@ -68,6 +68,7 @@ class DummyApp:
         self.log_rotate_interval = 3600
         self.log_rotate_archives = 3
         self.widget_battery_status = False
+        self.ui_font_size = 16
         self.theme = "Dark"
         self.theme_cls = SimpleNamespace(theme_style="Dark")
         self.config_data = config.Config()
@@ -92,6 +93,7 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
     screen.debug_switch = SimpleNamespace(active=app.debug_mode)
     screen.battery_switch = SimpleNamespace(active=app.widget_battery_status)
+    screen.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
     screen.theme_switch = SimpleNamespace(active=app.theme == "Dark")
     screen.theme_cls = SimpleNamespace(theme_style=app.theme)
     return screen
@@ -153,6 +155,7 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     screen.health_poll_field.text = "15"
     screen.log_rotate_field.text = "1200"
     screen.log_archives_field.text = "5"
+    screen.font_size_field.text = "18"
     screen.show_gps_switch.active = False
     screen.show_aps_switch.active = False
     screen.show_bt_switch.active = True
@@ -175,6 +178,7 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert app.health_poll_interval == 15
     assert app.log_rotate_interval == 1200
     assert app.log_rotate_archives == 5
+    assert app.ui_font_size == 18
     assert app.map_show_gps is False
     assert app.map_show_aps is False
     assert app.map_show_bt is True

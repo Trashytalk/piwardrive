@@ -36,6 +36,7 @@ class SettingsScreen:
         self.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
         self.debug_switch = SimpleNamespace(active=app.debug_mode)
         self.battery_switch = SimpleNamespace(active=app.widget_battery_status)
+        self.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
 
     # ------------------------------------------------------------------
     def save_settings(self) -> None:  # pragma: no cover - exercised via tests
@@ -59,6 +60,11 @@ class SettingsScreen:
             if val <= 0:
                 raise ValueError
             app.map_poll_bt = val
+
+            val = int(self.font_size_field.text)
+            if val <= 0:
+                raise ValueError
+            app.ui_font_size = val
 
             val = int(self.health_poll_field.text)
             if val <= 0:
@@ -113,6 +119,7 @@ class SettingsScreen:
         cfg.map_cluster_aps = app.map_cluster_aps
         cfg.debug_mode = app.debug_mode
         cfg.widget_battery_status = app.widget_battery_status
+        cfg.ui_font_size = app.ui_font_size
         cfg.offline_tile_path = app.offline_tile_path
 
         save_config(cfg)
