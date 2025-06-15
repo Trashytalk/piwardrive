@@ -6,6 +6,7 @@ import os
 from types import SimpleNamespace
 from typing import Any
 
+import asyncio
 from kivy.app import App
 from kivymd.uix.snackbar import Snackbar
 
@@ -116,11 +117,35 @@ class SettingsScreen:
 
         save_config(cfg)
 
+    # ------------------------------------------------------------------
+    def _export_logs(self) -> None:  # pragma: no cover - simple wrapper
+        app = App.get_running_app()
+        path = asyncio.run(app.export_logs())
+        Snackbar(text=f"Exported {path}").open()
 
-    def _export_logs(self) -> None:
+            report_error(
+                format_error(
+                    ErrorCode.INVALID_OFFLINE_TILE_PATH,
+                    f"Invalid offline tile path: {path}. Please provide an existing directory.",
+                )
+            )
+
+        app.map_show_gps = self.show_gps_switch.active
+        app.map_show_aps = self.show_aps_switch.active
+        app.map_show_bt = self.show_bt_switch.active
+        app.map_cluster_aps = self.cluster_switch.active
+        app.debug_mode = self.debug_switch.active
+        app.widget_battery_status = self.battery_switch.active
+        app.theme = "Dark" if self.theme_switch.active else "Light"
+        app.theme_cls.theme_style = app.theme
+
+        save_config(app.config_data)
+
+    async def _export_logs(self) -> None:
+
         """Export application logs to a file and show notification."""
         app = App.get_running_app()
-        path = app.export_logs()
+        path = await app.export_logs()
         if path:
             Snackbar(text=f"Exported {path}").open()
 
