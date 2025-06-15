@@ -29,6 +29,10 @@ Raspberry Pi OS
 
       pip install -r requirements-dev.txt
 
+   ``requirements-dev.txt`` now includes test dependencies such as
+   ``aiosqlite``, ``psutil`` and ``pydantic>=2`` so they are available when
+   running ``pytest``.
+
 6. (Optional) configure the SSD mount by editing ``/etc/fstab``::
 
       /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
