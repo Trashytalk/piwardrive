@@ -257,5 +257,10 @@ class PiWardriveApp(MDApp):
             logging.exception("Failed to save app state: %s", exc)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Launch :class:`PiWardriveApp`."""
     PiWardriveApp().run()
+
+
+if __name__ == "__main__":
+    main()
