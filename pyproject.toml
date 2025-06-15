@@ -2,10 +2,6 @@
 max-line-length = 88
 extend-ignore = ["E203", "W503"]
 
-[build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "piwardrive"
 version = "0.1.0"
