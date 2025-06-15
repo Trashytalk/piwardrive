@@ -303,7 +303,8 @@ verification, plus simple encryption helpers.
 Configures JSON-formatted logging, writing to `~/.config/piwardrive/app.log`.
 
 ### `localization.py`
-Offers a lightweight translation mechanism where missing keys fall back to the
+Offers a lightweight translation mechanism that caches parsed locale files so
+switching languages doesn't reread JSON from disk. Missing keys fall back to the
 original text.
 
 ### `service.py`
