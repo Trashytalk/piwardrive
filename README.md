@@ -361,6 +361,12 @@ sudo apt install r-base
 Rscript -e "install.packages(c('ggplot2','jsonlite'), repos='https://cloud.r-project.org')"
 ```
 
+Other optional features rely on additional Python packages:
+
+```bash
+pip install pandas orjson pyprof2calltree
+```
+
 ## Contributing
 
 Install project and development dependencies and run the tests locally with:
