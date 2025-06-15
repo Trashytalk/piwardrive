@@ -17,6 +17,20 @@ the last few records::
 
 Use the ``limit`` query parameter to control how many entries are returned.
 
+
+Additional Routes
+-----------------
+
+``/widget-metrics`` returns a summary used by the dashboard widgets::
+
+   curl http://localhost:8000/widget-metrics
+
+``/logs`` tails ``app.log`` (``lines`` query parameter controls length)::
+
+   curl "http://localhost:8000/logs?lines=50"
+
+Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
+
 Benchmark
 ---------
 
@@ -29,3 +43,4 @@ concurrent requests against the ASGI application::
 On a Raspberry Pi 5 the asynchronous implementation processes hundreds of
 requests per second, roughly doubling the throughput compared to the original
 synchronous handler.
+

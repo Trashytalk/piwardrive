@@ -224,6 +224,19 @@ The Sphinx documentation under [docs/](docs/) provides detailed guides for each 
 
 Run `pytest` to execute the test suite and use `flake8` and `mypy` to lint and type-check the codebase.
 
+## React Web UI
+
+An optional React application lives under `webui/`. It consumes the API endpoints provided by `service.py`.
+
+```bash
+cd webui
+npm install
+npm run build  # production build
+npm run dev    # start Vite dev server
+```
+
+The dev server proxies API requests to `http://localhost:8000`. Set `PW_API_PASSWORD_HASH` to require a password for the backend routes.
+
 ## Contributing
 
 Install project and development dependencies and run the tests locally with:
