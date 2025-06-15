@@ -16,6 +16,12 @@ class MapScreen(Screen):
     breadcrumb: list[tuple[float, float]]
     kml_layers: list[Any]
     geofences: list[dict[str, Any]]
+    context_menu: Any
+    gpx_field: Any
+    gpx_dialog: Any
+    kml_field: Any
+    kml_dialog: Any
+    layer_menu: Any
 
     def __init__(self, **kwargs: Any) -> None: ...
     def on_enter(self) -> None: ...
