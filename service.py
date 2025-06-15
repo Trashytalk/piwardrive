@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import os
+import inspect
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -39,7 +40,9 @@ def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
 @app.get("/status")
 async def get_status(limit: int = 5) -> list[dict]:
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
-    records = await load_recent_health(limit)
+    records = load_recent_health(limit)
+    if inspect.isawaitable(records):
+        records = await records
 
     return [asdict(rec) for rec in records]
 

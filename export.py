@@ -39,6 +39,14 @@ def export_records(
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unsupported format: {fmt}")
     if fmt == "csv":
+        if records:
+            fieldnames = list(records[0].keys())
+            with open(path, "w", newline="", encoding="utf-8") as fh:
+                writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(records)
+        else:
+            open(path, "w", encoding="utf-8").close()
         rows = list(records)
         if not rows:
             open(path, "w", encoding="utf-8").close()
