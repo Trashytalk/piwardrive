@@ -28,6 +28,7 @@ _MODULE_MAP: Dict[str, str] = {
 }
 
 _PLUGIN_CLASSES: Dict[str, type] = {}
+_PLUGIN_STAMP: float | None = None
 
 
 __all__: list[str] = [
@@ -51,6 +52,13 @@ def _load_plugins() -> None:
     plugin_dir = Path.home() / ".config" / "piwardrive" / "plugins"
     if not plugin_dir.is_dir():
         return
+    global _PLUGIN_STAMP
+    stamp = plugin_dir.stat().st_mtime
+    if _PLUGIN_STAMP == stamp and _PLUGIN_CLASSES:
+        return
+    if _PLUGIN_STAMP != stamp:
+        _PLUGIN_CLASSES.clear()
+        __all__[:] = [n for n in __all__ if n in _MODULE_MAP]
     for path in plugin_dir.iterdir():
         module: Optional[object] = None
         load_path: Path | None = None
@@ -89,6 +97,15 @@ def _load_plugins() -> None:
                 ):
                     _PLUGIN_CLASSES[name] = obj
                     __all__.append(name)
+    _PLUGIN_STAMP = plugin_dir.stat().st_mtime
+
+
+def clear_plugin_cache() -> None:
+    """Clear cached plugin data so plugins are rescanned on the next load."""
+    global _PLUGIN_STAMP
+    _PLUGIN_STAMP = None
+    _PLUGIN_CLASSES.clear()
+    __all__[:] = [n for n in __all__ if n in _MODULE_MAP]
 
 
 _load_plugins()

@@ -20,7 +20,9 @@ def load_screen(monkeypatch: Any):
         "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
         "kivymd.uix.snackbar": ModuleType("kivymd.uix.snackbar"),
         "kivymd.uix.textfield": ModuleType("kivymd.uix.textfield"),
+        "aiohttp": ModuleType("aiohttp"),
     }
+    mods["aiohttp"].ClientSession = object
     mods["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
     mods["kivy.clock"].Clock = type("Clock", (), {"create_trigger": staticmethod(lambda *a, **k: lambda *a2, **k2: None)})
     mods["kivy.clock"].mainthread = lambda f: f

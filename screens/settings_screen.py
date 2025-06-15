@@ -142,6 +142,7 @@ class SettingsScreen:
         save_config(app.config_data)
 
     async def _export_logs(self) -> None:
+
         """Export application logs to a file and show notification."""
         app = App.get_running_app()
         path = await app.export_logs()

@@ -48,6 +48,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
   analysis in KCachegrind.
 * **Health Monitoring**: Background widget shows service status, disk usage and network connectivity.
 * **Battery Widget**: Optional dashboard tile showing battery percentage if available.
+* **Persistent GPSD Client**: Keeps a socket open to `gpsd` for faster updates.
 * **Unified Error Reporting**: Consistent alerts and logs when operations fail.
 * **Access Control**: Service commands require `PW_ADMIN_PASSWORD` or will
   prompt for a password interactively.
