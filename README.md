@@ -280,8 +280,9 @@ pip install .
 pytest
 ```
 
-The `requirements-dev.txt` file lists `flake8`, `mypy` and `pytest` which are
-used to lint, type-check and test the project.
+The `requirements-dev.txt` file includes tools like `flake8`, `mypy` and
+`pytest` along with runtime dependencies required by the tests such as
+`aiosqlite`, `psutil`, `pydantic`, `fastapi` and `httpx`.
 
 Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or

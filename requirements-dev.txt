@@ -3,3 +3,9 @@ mypy
 pytest
 radon
 pydocstyle
+aiosqlite>=0.19
+psutil>=5.9
+pydantic>=2
+fastapi
+httpx
+gps>=3.0
