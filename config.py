@@ -50,6 +50,7 @@ class Config:
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
     widget_battery_status: bool = False
+    ui_font_size: int = 16
     admin_password_hash: str = ""
 
 
@@ -77,6 +78,7 @@ class FileConfigModel(BaseModel):
     log_rotate_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_archives: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
+    ui_font_size: Optional[int] = Field(default=None, ge=1)
     admin_password_hash: Optional[str] = ""
 
 
@@ -84,6 +86,7 @@ class ConfigModel(FileConfigModel):
     """Extended validation used by :func:`validate_config_data`."""
 
     map_poll_gps: int = Field(..., gt=0)
+    ui_font_size: int = Field(default=16, ge=1)
 
     theme: Theme
 
@@ -265,6 +268,7 @@ class AppConfig:
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
+    ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
 
     @classmethod

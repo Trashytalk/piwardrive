@@ -66,6 +66,7 @@ class PiWardriveApp(MDApp):
     widget_net_throughput = BooleanProperty(True)
     widget_battery_status = BooleanProperty(False)
     widget_health_analysis = BooleanProperty(True)
+    ui_font_size = NumericProperty(16)
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)

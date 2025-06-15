@@ -24,6 +24,7 @@ class SettingsScreen(Screen):
     cluster_switch: Any
     debug_switch: Any
     battery_switch: Any
+    font_size_field: Any
 
     def on_enter(self) -> None: ...
     def save_settings(self) -> None: ...
