@@ -197,8 +197,15 @@ Error messages are prefixed with codes like `[E001]` to aid troubleshooting.
 
 ## Documentation & Tests
 
-See [docs/](docs/) for configuration guides and widget details. Run `pytest` to execute the test suite and
-use `flake8` and `mypy` to lint and type-check the codebase.
+The Sphinx documentation under [docs/](docs/) provides detailed guides for each component of the application.
+
+* [installation](docs/installation.rst) – step by step setup
+* [configuration](docs/configuration.rst) – all runtime options
+* [widgets](docs/widgets.rst) – reference for each dashboard widget
+* [architecture](docs/architecture.rst) – system overview diagrams
+* [function_flows](docs/function_flows.rst) – diagrams of key functions
+
+Run `pytest` to execute the test suite and use `flake8` and `mypy` to lint and type-check the codebase.
 
 ## Contributing
 

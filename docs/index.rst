@@ -13,6 +13,7 @@ PiWardrive Documentation
    bluetooth
    status_service
    architecture
+   function_flows
    deployment
    workflows
    ckml_build
