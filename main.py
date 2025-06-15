@@ -3,6 +3,7 @@
 import logging
 import os
 import time
+import asyncio
 from dataclasses import asdict, fields
 
 from typing import Any, Callable
@@ -162,7 +163,7 @@ class PiWardriveApp(MDApp):
         self.root.ids.sm.current = name
         self.last_screen = name
         self.app_state.last_screen = name
-        save_app_state(self.app_state)
+        asyncio.run(save_app_state(self.app_state))
 
     # 1) Service control with feedback
     def control_service(self, svc: str, action: str) -> None:
@@ -252,7 +253,7 @@ class PiWardriveApp(MDApp):
         except OSError as exc:  # pragma: no cover - save failure is non-critical
             logging.exception("Failed to save config: %s", exc)
         try:
-            save_app_state(self.app_state)
+            asyncio.run(save_app_state(self.app_state))
         except OSError as exc:  # pragma: no cover - save failure
             logging.exception("Failed to save app state: %s", exc)
 

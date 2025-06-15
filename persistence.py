@@ -3,7 +3,7 @@ from __future__ import annotations
 """Simple persistence helpers using SQLite."""
 
 import os
-import sqlite3
+import aiosqlite
 from dataclasses import dataclass, asdict
 from typing import List, Optional
 
@@ -33,15 +33,10 @@ class AppState:
     last_start: str = ""
 
 
-def _connect() -> sqlite3.Connection:
-    os.makedirs(config.CONFIG_DIR, exist_ok=True)
-    conn = sqlite3.connect(_db_path())
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
-def _init_db(conn: sqlite3.Connection) -> None:
-    conn.execute(
+async def _init_db(conn: aiosqlite.Connection) -> None:
+    await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS health_records (
             timestamp TEXT PRIMARY KEY,
@@ -52,7 +47,7 @@ def _init_db(conn: sqlite3.Connection) -> None:
         )
         """
     )
-    conn.execute(
+    await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS app_state (
             id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -61,15 +56,16 @@ def _init_db(conn: sqlite3.Connection) -> None:
         )
         """
     )
-    conn.commit()
+    await conn.commit()
 
 
-def save_health_record(rec: HealthRecord) -> None:
+async def save_health_record(rec: HealthRecord) -> None:
     """Insert ``rec`` into the ``health_records`` table."""
-    conn = _connect()
-    try:
-        _init_db(conn)
-        conn.execute(
+    os.makedirs(config.CONFIG_DIR, exist_ok=True)
+    async with aiosqlite.connect(_db_path()) as conn:
+        conn.row_factory = aiosqlite.Row
+        await _init_db(conn)
+        await conn.execute(
             """
             INSERT OR REPLACE INTO health_records
             (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
@@ -77,51 +73,48 @@ def save_health_record(rec: HealthRecord) -> None:
             """,
             asdict(rec),
         )
-        conn.commit()
-    finally:
-        conn.close()
+        await conn.commit()
 
 
-def load_recent_health(limit: int = 10) -> List[HealthRecord]:
+async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
     """Return up to ``limit`` most recent :class:`HealthRecord` entries."""
-    conn = _connect()
-    try:
-        _init_db(conn)
-        cur = conn.execute(
+    os.makedirs(config.CONFIG_DIR, exist_ok=True)
+    async with aiosqlite.connect(_db_path()) as conn:
+        conn.row_factory = aiosqlite.Row
+        await _init_db(conn)
+        cur = await conn.execute(
             """SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent
             FROM health_records ORDER BY timestamp DESC LIMIT ?""",
             (limit,),
         )
-        rows = cur.fetchall()
+        rows = await cur.fetchall()
         return [HealthRecord(**dict(row)) for row in rows]
-    finally:
-        conn.close()
 
 
-def save_app_state(state: AppState) -> None:
+async def save_app_state(state: AppState) -> None:
     """Persist application ``state``."""
-    conn = _connect()
-    try:
-        _init_db(conn)
-        conn.execute("DELETE FROM app_state WHERE id = 1")
-        conn.execute(
+    os.makedirs(config.CONFIG_DIR, exist_ok=True)
+    async with aiosqlite.connect(_db_path()) as conn:
+        conn.row_factory = aiosqlite.Row
+        await _init_db(conn)
+        await conn.execute("DELETE FROM app_state WHERE id = 1")
+        await conn.execute(
             "INSERT INTO app_state (id, last_screen, last_start) VALUES (1, ?, ?)",
             (state.last_screen, state.last_start),
         )
-        conn.commit()
-    finally:
-        conn.close()
+        await conn.commit()
 
 
-def load_app_state() -> AppState:
+async def load_app_state() -> AppState:
     """Load persisted :class:`AppState` or defaults."""
-    conn = _connect()
-    try:
-        _init_db(conn)
-        cur = conn.execute("SELECT last_screen, last_start FROM app_state WHERE id = 1")
-        row = cur.fetchone()
+    os.makedirs(config.CONFIG_DIR, exist_ok=True)
+    async with aiosqlite.connect(_db_path()) as conn:
+        conn.row_factory = aiosqlite.Row
+        await _init_db(conn)
+        cur = await conn.execute(
+            "SELECT last_screen, last_start FROM app_state WHERE id = 1"
+        )
+        row = await cur.fetchone()
         if row is None:
             return AppState()
         return AppState(last_screen=row["last_screen"], last_start=row["last_start"])
-    finally:
-        conn.close()

@@ -12,9 +12,9 @@ app = FastAPI()
 
 
 @app.get("/status")
-def get_status(limit: int = 5) -> list[dict]:
+async def get_status(limit: int = 5) -> list[dict]:
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
-    records = load_recent_health(limit)
+    records = await load_recent_health(limit)
     return [asdict(rec) for rec in records]
 
 

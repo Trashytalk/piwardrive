@@ -11,6 +11,7 @@ from localization import _
 
 from .base import DashboardWidget
 from persistence import load_recent_health
+from utils import run_async_task
 from analysis import compute_health_stats, plot_cpu_temp
 
 
@@ -36,20 +37,23 @@ class HealthAnalysisWidget(DashboardWidget):
 
     def update(self) -> None:  # pragma: no cover - GUI update
         """Load recent metrics, compute stats and refresh the view."""
-        try:
-            records = load_recent_health(self.max_records)
-            if not records:
-                self.label.text = f"{_('health_analysis')}: {_('not_available')}"
-                return
-            stats = compute_health_stats(records)
-            self.label.text = (
-                f"{_('temp')}:{stats['temp_avg']:.1f}°C "
-                f"{_('cpu')}:{stats['cpu_avg']:.0f}% "
-                f"{_('mem')}:{stats['mem_avg']:.0f}% "
-                f"{_('disk')}:{stats['disk_avg']:.0f}%"
-            )
-            plot_cpu_temp(records, self._tmp.name)
-            self.image.source = self._tmp.name
-            self.image.reload()
-        except Exception as exc:
-            logging.exception("HealthAnalysisWidget update failed: %s", exc)
+
+        def _apply(records: list) -> None:
+            try:
+                if not records:
+                    self.label.text = f"{_('health_analysis')}: {_('not_available')}"
+                    return
+                stats = compute_health_stats(records)
+                self.label.text = (
+                    f"{_('temp')}:{stats['temp_avg']:.1f}°C "
+                    f"{_('cpu')}:{stats['cpu_avg']:.0f}% "
+                    f"{_('mem')}:{stats['mem_avg']:.0f}% "
+                    f"{_('disk')}:{stats['disk_avg']:.0f}%"
+                )
+                plot_cpu_temp(records, self._tmp.name)
+                self.image.source = self._tmp.name
+                self.image.reload()
+            except Exception as exc:
+                logging.exception("HealthAnalysisWidget update failed: %s", exc)
+
+        run_async_task(load_recent_health(self.max_records), _apply)
