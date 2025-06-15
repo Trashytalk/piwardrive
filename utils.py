@@ -9,6 +9,7 @@ import asyncio
 import logging
 import os
 import subprocess
+from gpsd_client import client as gps_client
 import time
 import threading
 
@@ -272,15 +273,25 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
-    """
-    Tail last N lines from a file.
-    """
+    """Return the last ``lines`` from ``path`` efficiently."""
     try:
-        with open(path, 'rb') as f:
-            lines_deque: deque[str] = deque(maxlen=lines)
-            for line in f:
-                lines_deque.append(line.decode('utf-8', errors='ignore').rstrip())
-        return list(lines_deque)
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            position = f.tell()
+            block_size = 4096
+            data = bytearray()
+            line_count = 0
+
+            while position > 0 and line_count <= lines:
+                read_size = block_size if position >= block_size else position
+                position -= read_size
+                f.seek(position)
+                block = f.read(read_size)
+                data[:0] = block
+                line_count = data.count(b"\n")
+
+            text = data.decode("utf-8", errors="ignore")
+            return text.splitlines()[-lines:]
     except Exception:
         return []
 
@@ -338,43 +349,40 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
 
 
 def scan_bt_devices() -> list[dict[str, Any]]:
-    """Return nearby Bluetooth devices via ``bluetoothctl``."""
+    """Return nearby Bluetooth devices via DBus."""
+
     try:
-        proc = subprocess.run(
-            ["bluetoothctl", "devices"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
+        import dbus  # type: ignore
+
+        bus = dbus.SystemBus()
+        obj = bus.get_object("org.bluez", "/")
+        manager = dbus.Interface(obj, "org.freedesktop.DBus.ObjectManager")
+        objects = manager.GetManagedObjects()
     except Exception:
         return []
 
     devices: list[dict[str, Any]] = []
-    for line in proc.stdout.splitlines():
-        parts = line.strip().split(" ", 2)
-        if len(parts) >= 3 and parts[0] == "Device":
-            addr = parts[1]
-            name = parts[2]
-            info: dict[str, Any] = {"address": addr, "name": name}
-            try:
-                info_proc = subprocess.run(
-                    ["bluetoothctl", "info", addr],
-                    capture_output=True,
-                    text=True,
-                    timeout=3,
-                    check=False,
-                )
-                for il in info_proc.stdout.splitlines():
-                    if "GPS Coordinates:" in il:
-                        vals = il.split(":", 1)[1].strip().split(",")
-                        if len(vals) == 2:
-                            info["lat"] = float(vals[0])
-                            info["lon"] = float(vals[1])
-                        break
-            except Exception:
-                pass
-            devices.append(info)
+    for ifaces in objects.values():
+        dev = ifaces.get("org.bluez.Device1")
+        if not dev:
+            continue
+
+        addr = str(dev.get("Address", ""))
+        name = str(dev.get("Name", addr))
+        info: dict[str, Any] = {"address": addr, "name": name}
+
+        coords = dev.get("GPS Coordinates") or dev.get("GPSCoordinates")
+        if isinstance(coords, (str, bytes)):
+            vals = str(coords).split(",", 1)
+            if len(vals) == 2:
+                try:
+                    info["lat"] = float(vals[0])
+                    info["lon"] = float(vals[1])
+                except Exception:
+                    pass
+
+        devices.append(info)
+
     return devices
 
 
