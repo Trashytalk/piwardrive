@@ -1,0 +1,7 @@
+version: "3.9"
+services:
+  tests:
+    build: .
+    volumes:
+      - .:/app
+    command: pytest
