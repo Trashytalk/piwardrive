@@ -6,6 +6,7 @@ import tempfile
 from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.image import Image
+from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
 from localization import _
 
@@ -24,10 +25,14 @@ class HealthAnalysisWidget(DashboardWidget):
         """Prepare widgets and schedule periodic analysis updates."""
         super().__init__(**kwargs)
         self.max_records = max_records
-        self.label = MDLabel(text=f"{_('health_analysis')}: {_('not_available')}")
+        self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
+        self.label = MDLabel(
+            text=f"{_('health_analysis')}: {_('not_available')}", halign="center"
+        )
         self.image = Image(size_hint_y=None, height=dp(150))
-        self.add_widget(self.label)
-        self.add_widget(self.image)
+        self.card.add_widget(self.label)
+        self.card.add_widget(self.image)
+        self.add_widget(self.card)
         self._tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
         self._event = f"health_analysis_{id(self)}"
         App.get_running_app().scheduler.schedule(
