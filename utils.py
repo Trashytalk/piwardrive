@@ -65,6 +65,16 @@ _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
 _async_thread.start()
 
 
+def shutdown_async_loop(timeout: float | None = 5.0) -> None:
+    """Stop the background asyncio loop and join its thread."""
+    if _async_thread.is_alive():
+        if _async_loop.is_running():
+            _async_loop.call_soon_threadsafe(_async_loop.stop)
+        _async_thread.join(timeout)
+    if not _async_loop.is_closed():
+        _async_loop.close()
+
+
 def format_error(code: int | IntEnum, message: str) -> str:
     """Return standardized error string like ``[E001] message``."""
     return f"[{ERROR_PREFIX}{int(code):03d}] {message}"

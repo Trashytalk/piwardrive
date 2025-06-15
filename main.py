@@ -256,6 +256,7 @@ class PiWardriveApp(MDApp):
             asyncio.run(save_app_state(self.app_state))
         except OSError as exc:  # pragma: no cover - save failure
             logging.exception("Failed to save app state: %s", exc)
+        utils.shutdown_async_loop()
 
 
 def main() -> None:
