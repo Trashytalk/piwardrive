@@ -520,7 +520,7 @@ def get_recent_bssids(limit: int = 5) -> list[str]:
         return []
 
 
-def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> float:
+def _haversine_distance_py(p1: tuple[float, float], p2: tuple[float, float]) -> float:
     """Return great-circle distance between two ``(lat, lon)`` points in meters."""
     import math
 
@@ -540,7 +540,7 @@ def haversine_distance(p1: tuple[float, float], p2: tuple[float, float]) -> floa
     return r * c
 
 
-def polygon_area(points: Sequence[tuple[float, float]]) -> float:
+def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
     """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
     if len(points) < 3:
         return 0.0
@@ -567,7 +567,7 @@ def polygon_area(points: Sequence[tuple[float, float]]) -> float:
     return area * (meter_per_deg**2)
 
 
-def point_in_polygon(
+def _point_in_polygon_py(
     point: tuple[float, float], polygon: Sequence[tuple[float, float]]
 ) -> bool:
     """Return True if ``point`` is inside ``polygon`` using ray casting."""
@@ -584,6 +584,22 @@ def point_in_polygon(
             if lat < intersect:
                 inside = not inside
     return inside
+
+
+try:  # pragma: no cover - optional geometry C extension for speed
+    from cgeom import (
+        haversine_distance as _haversine_distance_c,  # type: ignore
+        polygon_area as _polygon_area_c,  # type: ignore
+        point_in_polygon as _point_in_polygon_c,  # type: ignore
+    )
+except Exception:  # pragma: no cover - extension not built
+    _haversine_distance_c = None
+    _polygon_area_c = None
+    _point_in_polygon_c = None
+
+haversine_distance = _haversine_distance_c or _haversine_distance_py
+polygon_area = _polygon_area_c or _polygon_area_py
+point_in_polygon = _point_in_polygon_c or _point_in_polygon_py
 
 
 try:  # pragma: no cover - optional C extension for speed

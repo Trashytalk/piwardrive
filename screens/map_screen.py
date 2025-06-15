@@ -15,6 +15,8 @@ import time
 
 
 import requests
+from concurrent.futures import ThreadPoolExecutor
+from typing import Callable
 
 import pandas as pd
 
@@ -50,8 +52,10 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 
 from kivymd.uix.snackbar import Snackbar
-
 from kivymd.uix.textfield import MDTextField
+from kivymd.uix.progressbar import MDProgressBar
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
 
 import utils
 from utils import (
@@ -935,7 +939,15 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             with open(local, "wb") as fh:
                 fh.write(resp.content)
 
-    def prefetch_tiles(self, bounds, zoom=16, folder="/mnt/ssd/tiles"):
+    def prefetch_tiles(
+        self,
+        bounds,
+        zoom: int = 16,
+        folder: str = "/mnt/ssd/tiles",
+        *,
+        concurrency: int = 5,
+        progress_cb: Callable[[int, int], None] | None = None,
+    ) -> None:
 
         """Download PNG tiles covering ``bounds`` to ``folder``."""
 
@@ -951,15 +963,30 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             base_url = "https://tile.openstreetmap.org"
 
+            tasks = []
             for x in range(x_min, x_max + 1):
                 for y in range(y_min, y_max + 1):
                     url = f"{base_url}/{zoom}/{x}/{y}.png"
                     local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
-                    if os.path.exists(local):
-                        continue
+                    tasks.append((url, local))
+
+            total = len(tasks)
+            completed = 0
+            lock = threading.Lock()
+
+            def _task(item: tuple[str, str]) -> None:
+                nonlocal completed
+                url, local = item
+                if not os.path.exists(local):
                     os.makedirs(os.path.dirname(local), exist_ok=True)
-                    # Download the tile if it doesn't already exist
                     self._download_tile(url, local)
+                with lock:
+                    completed += 1
+                    if progress_cb:
+                        progress_cb(completed, total)
+
+            with ThreadPoolExecutor(max_workers=max(1, concurrency)) as ex:
+                ex.map(_task, tasks)
 
 
         except Exception as e:  # pragma: no cover - network errors
@@ -979,9 +1006,25 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         bbox = mv.get_bbox()
         folder = os.path.dirname(getattr(app, "offline_tile_path", "")) or "/mnt/ssd/tiles"
 
+        progress_bar = MDProgressBar(value=0)
+        progress_label = MDLabel(text="0/0", halign="center")
+        content = MDBoxLayout(orientation="vertical", spacing=dp(8), size_hint_y=None, height=dp(56))
+        content.add_widget(progress_label)
+        content.add_widget(progress_bar)
+        dialog = MDDialog(title="Prefetching tiles", type="custom", content_cls=content)
+        dialog.open()
+
+        def progress(done: int, total: int) -> None:
+            def _update(_dt):
+                progress_bar.value = done / total * 100
+                progress_label.text = f"{done}/{total}"
+                if done >= total:
+                    dialog.dismiss()
+                    Snackbar(text="Prefetch complete").open()
+            Clock.schedule_once(_update)
+
         def _worker() -> None:
-            self.prefetch_tiles(tuple(bbox), zoom=mv.zoom, folder=folder)
-            Clock.schedule_once(lambda _dt: Snackbar(text="Prefetch complete").open())
+            self.prefetch_tiles(tuple(bbox), zoom=mv.zoom, folder=folder, progress_cb=progress)
 
         threading.Thread(target=_worker, daemon=True).start()
 
