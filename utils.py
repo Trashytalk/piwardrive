@@ -12,8 +12,8 @@ import subprocess
 from gpsd_client import client as gps_client
 import time
 import threading
+import mmap
 
-from collections import deque
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 from concurrent.futures import Future
@@ -273,25 +273,20 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
-    """Return the last ``lines`` from ``path`` efficiently."""
+    """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
     try:
         with open(path, "rb") as f:
-            f.seek(0, os.SEEK_END)
-            position = f.tell()
-            block_size = 4096
-            data = bytearray()
-            line_count = 0
-
-            while position > 0 and line_count <= lines:
-                read_size = block_size if position >= block_size else position
-                position -= read_size
-                f.seek(position)
-                block = f.read(read_size)
-                data[:0] = block
-                line_count = data.count(b"\n")
-
-            text = data.decode("utf-8", errors="ignore")
-            return text.splitlines()[-lines:]
+            with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
+                pos = mm.size()
+                for _ in range(lines + 1):
+                    new_pos = mm.rfind(b"\n", 0, pos)
+                    if new_pos == -1:
+                        pos = -1
+                        break
+                    pos = new_pos
+                start = 0 if pos < 0 else pos + 1
+                text = mm[start:]
+                return text.decode("utf-8", errors="ignore").splitlines()[-lines:]
     except Exception:
         return []
 
