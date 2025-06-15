@@ -38,30 +38,22 @@ def export_records(
     fmt = fmt.lower()
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unsupported format: {fmt}")
-    if fmt == "csv":
-        if records:
-            fieldnames = list(records[0].keys())
-            with open(path, "w", newline="", encoding="utf-8") as fh:
-                writer = csv.DictWriter(fh, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(records)
-        else:
-            open(path, "w", encoding="utf-8").close()
-        rows = list(records)
-        if not rows:
-            open(path, "w", encoding="utf-8").close()
-        else:
-            fieldnames = fields or list(rows[0].keys())
-            with open(path, "w", encoding="utf-8", newline="") as fh:
+    def export_csv(rows: Sequence[Mapping[str, Any]], p: str, f: Sequence[str] | None) -> None:
+        rows = list(rows)
+        with open(p, "w", newline="", encoding="utf-8") as fh:
+            if rows:
+                fieldnames = f or list(rows[0].keys())
                 writer = csv.DictWriter(fh, fieldnames=fieldnames)
                 writer.writeheader()
                 writer.writerows(rows)
-    elif fmt == "json":
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(list(records), fh)
-    elif fmt == "gpx":
+
+    def export_json(rs: Sequence[Mapping[str, Any]], p: str, _f: Sequence[str] | None) -> None:
+        with open(p, "w", encoding="utf-8") as fh:
+            json.dump(list(rs), fh)
+
+    def export_gpx(rs: Sequence[Mapping[str, Any]], p: str, _f: Sequence[str] | None) -> None:
         root = ET.Element("gpx", version="1.1", creator="piwardrive")
-        for rec in records:
+        for rec in rs:
             lat = rec.get("lat")
             lon = rec.get("lon")
             if lat is None or lon is None:
@@ -70,11 +62,12 @@ def export_records(
             name = rec.get("ssid") or rec.get("bssid")
             if name:
                 ET.SubElement(wpt, "name").text = str(name)
-        ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
-    elif fmt == "kml":
+        ET.ElementTree(root).write(p, encoding="utf-8", xml_declaration=True)
+
+    def export_kml(rs: Sequence[Mapping[str, Any]], p: str, _f: Sequence[str] | None) -> None:
         root = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
         doc = ET.SubElement(root, "Document")
-        for rec in records:
+        for rec in rs:
             lat = rec.get("lat")
             lon = rec.get("lon")
             if lat is None or lon is None:
@@ -85,6 +78,17 @@ def export_records(
                 ET.SubElement(placemark, "name").text = str(name)
             point = ET.SubElement(placemark, "Point")
             ET.SubElement(point, "coordinates").text = f"{lon},{lat}"
-        ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
-    else:  # pragma: no cover - safety net
-        raise ValueError(fmt)
+        ET.ElementTree(root).write(p, encoding="utf-8", xml_declaration=True)
+
+    exporters = {
+        "csv": export_csv,
+        "json": export_json,
+        "gpx": export_gpx,
+        "kml": export_kml,
+    }
+
+    try:
+        exporter = exporters[fmt]
+    except KeyError as exc:  # pragma: no cover - safety net
+        raise ValueError(f"Unsupported format: {fmt}") from exc
+    exporter(records, path, fields)
