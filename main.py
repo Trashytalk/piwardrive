@@ -124,14 +124,8 @@ class PiWardriveApp(MDApp):
         # DEBUG: show which IDs were parsed from KV if debug mode is enabled
         if self.debug_mode:
             print("Root IDs:", self.root.ids.keys())
-        try:
-            sm = self.root.ids.sm
-        except KeyError:
-            raise RuntimeError(
-                f"ID 'sm' not found; available IDs: {list(self.root.ids.keys())}"
-            )
-
-        nav_bar = self.root.ids.nav_bar
+        sm = utils.require_id(self.root, "sm")
+        nav_bar = utils.require_id(self.root, "nav_bar")
 
         # 1) Add all six screens first
         sm.add_widget(MapScreen(name="Map"))  # type: ignore[call-arg]
@@ -160,7 +154,7 @@ class PiWardriveApp(MDApp):
 
     def switch_screen(self, name: str) -> None:
         """Change the active screen."""
-        self.root.ids.sm.current = name
+        utils.require_id(self.root, "sm").current = name
         self.last_screen = name
         self.app_state.last_screen = name
         asyncio.run(save_app_state(self.app_state))
