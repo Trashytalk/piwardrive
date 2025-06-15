@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
-import json
-import subprocess
+from gpsd_client import client as gps_client
 
 import diagnostics
 import utils
@@ -22,21 +21,13 @@ class MapService(Protocol):
 
 
 class DefaultMapService:
-    """Map service using ``gpspipe`` and the local Kismet API."""
+    """Map service using ``gpsd`` and the local Kismet API."""
 
     def get_current_position(self) -> tuple[float, float] | None:
         try:
-            proc = subprocess.run(
-                ["gpspipe", "-w", "-n", "1"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-            line = proc.stdout.strip().splitlines()[0]
-            data = json.loads(line)
-            lat = data.get("lat")
-            lon = data.get("lon")
-            if lat is not None and lon is not None:
+            pos = gps_client.get_position()
+            if pos:
+                lat, lon = pos
                 return float(lat), float(lon)
         except Exception:
             return None

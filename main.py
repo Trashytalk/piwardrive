@@ -128,6 +128,18 @@ class PiWardriveApp(MDApp):
         nav_bar = utils.require_id(self.root, "nav_bar")
 
 
+        logging.debug("Root IDs: %s", list(self.root.ids.keys()))
+
+        try:
+            sm = self.root.ids.sm
+        except KeyError:
+            raise RuntimeError(
+                f"ID 'sm' not found; available IDs: {list(self.root.ids.keys())}"
+            )
+
+        nav_bar = self.root.ids.nav_bar
+
+
         # 1) Add all six screens first
         sm.add_widget(MapScreen(name="Map"))  # type: ignore[call-arg]
         sm.add_widget(StatsScreen(name="Stats"))  # type: ignore[call-arg]

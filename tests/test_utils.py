@@ -12,6 +12,12 @@ import types
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
+aiohttp_mod = types.SimpleNamespace(
+    ClientSession=object,
+    ClientError=Exception,
+    ClientTimeout=lambda *a, **k: None,
+)
+sys.modules['aiohttp'] = aiohttp_mod
 import psutil
 if 'requests' not in sys.modules:
     dummy_requests = mock.Mock()
@@ -63,6 +69,16 @@ def test_tail_file_missing_returns_empty_list() -> None:
     assert result == []
 
 
+def test_tail_file_handles_large_file(tmp_path: Any) -> None:
+    path = tmp_path / 'large.txt'
+    with open(path, 'w') as f:
+        for i in range(1000):
+            f.write(f'line{i}\n')
+
+    result = utils.tail_file(str(path), lines=5)
+    assert result == [f'line{i}' for i in range(995, 1000)]
+
+
 def _patch_dbus(monkeypatch: Any, manager: Any, props: Any) -> None:
     class Bus:
         def __init__(self, *a: Any, **k: Any) -> None:
@@ -87,6 +103,27 @@ def _patch_dbus(monkeypatch: Any, manager: Any, props: Any) -> None:
     dbus_mod = types.SimpleNamespace(aio=aio_mod, BusType=types.SimpleNamespace(SYSTEM=1))
     monkeypatch.setitem(sys.modules, 'dbus_fast', dbus_mod)
     monkeypatch.setitem(sys.modules, 'dbus_fast.aio', aio_mod)
+
+
+def _patch_bt_dbus(monkeypatch: Any, objects: dict[str, Any], exc: bool = False) -> None:
+    class Bus:
+        def get_object(self, service: str, path: str) -> Any:
+            return 'bluez'
+
+    class Manager:
+        def GetManagedObjects(self) -> dict[str, Any]:
+            if exc:
+                raise Exception('boom')
+            return objects
+
+    def system_bus() -> Bus:
+        return Bus()
+
+    def interface(_obj: str, iface: str) -> Any:
+        return Manager()
+
+    dbus_mod = types.SimpleNamespace(SystemBus=system_bus, Interface=interface, DBusException=Exception)
+    monkeypatch.setitem(sys.modules, 'dbus', dbus_mod)
 
 
 def test_run_service_cmd_success(monkeypatch: Any) -> None:
@@ -298,22 +335,41 @@ def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
 
 
 def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
-    output = "Device AA:BB:CC:DD:EE:FF Foo\n"
-    info = "GPS Coordinates: 1.0,2.0\n"
-    procs = [
-        mock.Mock(returncode=0, stdout=output, stderr=""),
-        mock.Mock(returncode=0, stdout=info, stderr=""),
-    ]
+    objs = {
+        "/dev": {
+            "org.bluez.Device1": {
+                "Address": "AA:BB:CC:DD:EE:FF",
+                "Name": "Foo",
+                "GPS Coordinates": "1.0,2.0",
+            }
+        }
+    }
 
-    def fake_run(*args: Any, **kwargs: Any):
-        return procs.pop(0)
-
-    monkeypatch.setattr(utils.subprocess, "run", fake_run)
+    _patch_bt_dbus(monkeypatch, objs)
     devices = utils.scan_bt_devices()
     assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
 
 
 def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
-    monkeypatch.setattr(utils.subprocess, "run", mock.Mock(side_effect=OSError()))
+    _patch_bt_dbus(monkeypatch, {}, exc=True)
     assert utils.scan_bt_devices() == []
+
+
+def test_gpspipe_cache(monkeypatch: Any) -> None:
+    proc1 = mock.Mock(returncode=0, stdout='{"mode": 2, "epx": 1, "epy": 2}\n')
+    proc2 = mock.Mock(returncode=0, stdout='{"mode": 3, "epx": 4, "epy": 5}\n')
+    procs = [proc1, proc2]
+
+    def fake_run(*_a: Any, **_k: Any) -> Any:
+        return procs.pop(0)
+
+    monkeypatch.setattr(utils.subprocess, "run", fake_run)
+    utils._GPSPIPE_CACHE = {"timestamp": 0.0, "data": None}
+
+    assert utils.get_gps_accuracy() == 2
+    assert utils.get_gps_fix_quality() == "2D"
+    assert len(procs) == 1  # subprocess.run called once
+
+    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    assert len(procs) == 0
 
