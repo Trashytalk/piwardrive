@@ -8,7 +8,10 @@ from persistence import HealthRecord
 
 def test_get_status_async(monkeypatch):
     records = [HealthRecord("t", 1.0, 2.0, 3.0, 4.0)]
-    monkeypatch.setattr(service, "load_recent_health", lambda limit=5: records)
+    async def fake_load(limit=5):
+        return records
+
+    monkeypatch.setattr(service, "load_recent_health", fake_load)
 
     async def _call() -> None:
         transport = ASGITransport(app=service.app)

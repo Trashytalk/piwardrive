@@ -11,4 +11,5 @@ def parse_coords(text: str) -> list[tuple[float, float]]:
         lon = float(parts[0])
         lat = float(parts[1])
         coords.append((lat, lon))
+
     return coords

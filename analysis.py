@@ -1,3 +1,4 @@
+
 from dataclasses import asdict
 from typing import List, Dict
 from statistics import mean
@@ -49,6 +50,15 @@ def plot_cpu_temp(records: List[HealthRecord], path: str) -> None:
             rolling.append(mean(window))
         else:
             rolling.append(float("nan"))
+    recs = sorted(records, key=lambda r: datetime.fromisoformat(r.timestamp))
+    times = [datetime.fromisoformat(r.timestamp) for r in recs]
+    temps = [r.cpu_temp for r in recs]
+
+    rolling = []
+    for i in range(len(temps)):
+        window = [t for t in temps[max(0, i - 4) : i + 1] if t is not None and not math.isnan(t)]
+        rolling.append(fmean(window) if window else math.nan)
+
 
     plt.figure(figsize=(4, 2))
     plt.plot(times, temps, label="Temp")

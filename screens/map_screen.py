@@ -56,8 +56,6 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
-
-import utils
 from utils import (
     haversine_distance,
     polygon_area,
@@ -1248,6 +1246,16 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     writer.writerows(data)
             else:
                 open(path, "w", encoding="utf-8").close()
+
+            if not data:
+                open(path, "w", encoding="utf-8").close()
+            else:
+                fieldnames = sorted({k for d in data for k in d.keys()})
+                with open(path, "w", encoding="utf-8", newline="") as fh:
+                    writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(data)
+
 
             Snackbar(text=f"Exported {path}").open()
 

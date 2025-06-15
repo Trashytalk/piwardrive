@@ -47,6 +47,15 @@ def export_records(
                 writer.writerows(records)
         else:
             open(path, "w", encoding="utf-8").close()
+        rows = list(records)
+        if not rows:
+            open(path, "w", encoding="utf-8").close()
+        else:
+            fieldnames = fields or list(rows[0].keys())
+            with open(path, "w", encoding="utf-8", newline="") as fh:
+                writer = csv.DictWriter(fh, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(rows)
     elif fmt == "json":
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(list(records), fh)
