@@ -56,8 +56,6 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
-
-import utils
 from utils import (
     haversine_distance,
     polygon_area,
