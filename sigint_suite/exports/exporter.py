@@ -31,8 +31,9 @@ def export_yaml(records: Iterable[Any], path: str) -> None:
     """Export ``records`` to ``path`` in YAML format."""
     try:
         import yaml  # type: ignore
-    except Exception as exc:  # pragma: no cover - optional dependency
+    except Exception as exc:  # pragma: no cover - optional dep
         raise RuntimeError("PyYAML required for YAML export") from exc
+
     data = []
     for rec in records:
         if hasattr(rec, "model_dump"):
@@ -43,3 +44,4 @@ def export_yaml(records: Iterable[Any], path: str) -> None:
             data.append(rec)
     with open(path, "w", encoding="utf-8") as fh:
         yaml.safe_dump(data, fh, sort_keys=False)
+
