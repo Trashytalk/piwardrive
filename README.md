@@ -431,6 +431,22 @@ crashing the GUI.
 Implements a minimal dependency-injection container used to manage shared
 services.
 
+## Individual Module Walkthroughs
+
+The summaries above list each file and its purpose. This section provides a short walkthrough of the key modules so you can better understand how the pieces work together.
+
+### Main Application (`main.py`)
+`PiWardriveApp` brings everything online. It loads the active configuration profile, registers screens and starts the `PollScheduler` to drive background jobs. External tools such as Kismet and BetterCAP are started here.
+
+### Diagnostics (`diagnostics.py`)
+`HealthMonitor` collects CPU and memory statistics while `LogRotator` compresses old log files. The scheduler triggers these tasks and the results are written to the database.
+
+### Persistence (`persistence.py`)
+This module defines dataclasses like `HealthRecord` and provides asynchronous helpers for reading and writing them to SQLite. All database access is funneled through these functions.
+
+### Service API (`service.py`)
+The FastAPI application in `service.py` exposes recent metrics, log files and service controls. It is consumed by the optional web UI and React frontend.
+
 ## React Web UI
 
 An optional React application lives under `webui/`. It consumes the API endpoints provided by `service.py`.
