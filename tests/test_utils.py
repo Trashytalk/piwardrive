@@ -369,7 +369,9 @@ def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
     _patch_bt_dbus(monkeypatch, objs)
 
     devices = utils.scan_bt_devices()
-    assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
+    assert [d.model_dump() for d in devices] == [
+        {"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}
+    ]
 
 
 def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:

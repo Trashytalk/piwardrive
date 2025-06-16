@@ -3,6 +3,8 @@ import shlex
 import subprocess
 from typing import List, Dict, Optional
 
+from sigint_suite.models import WifiNetwork
+
 from sigint_suite.enrichment import lookup_vendor
 
 
@@ -10,7 +12,7 @@ def scan_wifi(
     interface: str = "wlan0",
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
-) -> List[Dict[str, str]]:
+) -> List[WifiNetwork]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
 
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
@@ -25,14 +27,20 @@ def scan_wifi(
     except Exception:
         return []
 
-    networks: List[Dict[str, str]] = []
+    networks: List[WifiNetwork] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
             if current:
-                networks.append(current)
+                networks.append(WifiNetwork(**current))
             current = {"cell": line}
+            if "Address:" in line:
+                bssid = line.split("Address:")[-1].strip()
+                current["bssid"] = bssid
+                vendor = lookup_vendor(bssid)
+                if vendor:
+                    current["vendor"] = vendor
         elif "ESSID" in line:
             current["ssid"] = line.split(":", 1)[-1].strip('"')
         elif "Address" in line:
@@ -46,5 +54,5 @@ def scan_wifi(
         elif "Quality" in line:
             current["quality"] = line.split("Quality=")[-1].split(" ")[0]
     if current:
-        networks.append(current)
+        networks.append(WifiNetwork(**current))
     return networks

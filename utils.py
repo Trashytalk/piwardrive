@@ -16,6 +16,8 @@ import mmap
 
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
+
+from sigint_suite.models import BluetoothDevice
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
@@ -464,7 +466,7 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
     return fut.result()
 
 
-def scan_bt_devices() -> list[dict[str, Any]]:
+def scan_bt_devices() -> list[BluetoothDevice]:
     """Return nearby Bluetooth devices via DBus."""
     try:
         import dbus  # type: ignore
@@ -476,7 +478,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
     except Exception:
         return []
 
-    devices: list[dict[str, Any]] = []
+    devices: list[BluetoothDevice] = []
     for ifaces in objects.values():
         dev = ifaces.get("org.bluez.Device1")
         if not dev:
@@ -496,7 +498,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
                 except Exception:
                     pass
 
-        devices.append(info)
+        devices.append(BluetoothDevice(**info))
 
     return devices
 
