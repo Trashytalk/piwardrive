@@ -15,3 +15,10 @@ R libraries ``ggplot2`` and ``jsonlite``::
 
 Use :func:`r_integration.health_summary` to invoke the R code from
 Python.
+
+When ``HealthMonitor`` is created with ``daily_summary=True`` a scheduled task
+exports the latest metrics and calls ``health_summary`` once per day.
+The resulting JSON averages and optional temperature plot are stored under
+``~/.config/piwardrive/reports``.
+This scheduled task requires the ``rpy2`` package and the R libraries listed
+above to be installed.

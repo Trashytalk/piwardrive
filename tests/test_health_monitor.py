@@ -34,3 +34,11 @@ def test_health_monitor_polls_self_test() -> None:
         assert sched.scheduled[0][1] == 5
         assert mon.data is not None
         assert mon.data['system']['disk_percent'] == 42
+
+
+def test_health_monitor_daily_summary() -> None:
+    sched = DummyScheduler()
+    with mock.patch('diagnostics.self_test', return_value={'system': {'disk_percent': 42}, 'network_ok': True, 'services': {}}), \
+         mock.patch('diagnostics.load_recent_health', return_value=[]):
+        diagnostics.HealthMonitor(cast(PollScheduler, sched), interval=5, daily_summary=True)
+        assert any(name == 'health_summary' and interval == 86400 for name, interval in sched.scheduled)
