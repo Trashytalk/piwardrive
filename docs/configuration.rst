@@ -13,7 +13,11 @@ To enable the optional battery widget set ``widget_battery_status`` to ``true``:
 Set ``PW_ADMIN_PASSWORD`` to allow privileged service actions without being
 prompted for a password::
 
-   PW_ADMIN_PASSWORD=secret python main.py
+  PW_ADMIN_PASSWORD=secret python main.py
+
+Log paths shown in the console screen can be customised via the ``log_paths``
+list.  Provide a JSON array in ``config.json`` or set ``PW_LOG_PATHS`` to a
+JSON encoded list to override the defaults.
 
 See :mod:`config` for defaults and helpers.
 

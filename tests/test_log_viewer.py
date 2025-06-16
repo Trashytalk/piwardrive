@@ -14,6 +14,7 @@ modules = {
     "kivy.uix.scrollview": ModuleType("kivy.uix.scrollview"),
     "kivy.uix.behaviors": ModuleType("kivy.uix.behaviors"),
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
+    "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
 }
 
 
@@ -59,7 +60,20 @@ class _ScrollView(_Widget):
     scroll_y = 0.0
 
 
-modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
+class DummyMenu:
+    def __init__(self, **kwargs):
+        DummyMenu.kwargs = kwargs
+
+    def open(self):
+        DummyMenu.opened = True
+
+    def dismiss(self):
+        DummyMenu.dismissed = True
+
+
+modules["kivy.app"].App = type(
+    "App", (), {"get_running_app": staticmethod(lambda: None)}
+)
 modules["kivy.clock"].Clock = SimpleNamespace(schedule_interval=lambda *a, **k: None)
 modules["kivy.properties"].NumericProperty = _Property
 modules["kivy.properties"].StringProperty = _Property
@@ -67,6 +81,7 @@ modules["kivy.uix.label"].Label = _Label
 modules["kivy.uix.scrollview"].ScrollView = _ScrollView
 modules["kivy.uix.behaviors"].DragBehavior = type("DragBehavior", (), {})
 modules["kivymd.uix.boxlayout"].MDBoxLayout = object
+modules["kivymd.uix.menu"].MDDropdownMenu = DummyMenu
 modules["kivy"].__path__ = []
 modules["kivy"].app = modules["kivy.app"]
 modules["kivy"].clock = modules["kivy.clock"]
@@ -100,3 +115,14 @@ def test_log_viewer_no_filter(tmp_path: Any) -> None:
     lv = LogViewer(log_path=str(log), max_lines=10)
     lv._refresh(0)
     assert lv.label.text.strip() == "A\nB"
+
+
+def test_log_viewer_path_menu(monkeypatch: Any) -> None:
+    app = SimpleNamespace(log_paths=["/a", "/b"])
+    monkeypatch.setattr("widgets.log_viewer.App.get_running_app", lambda: app)
+    lv = LogViewer()
+    lv.show_path_menu(None)
+    items = DummyMenu.kwargs["items"]
+    assert items[0]["text"] == "a"
+    items[1]["on_release"]()
+    assert lv.log_path == "/b"
