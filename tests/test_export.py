@@ -5,18 +5,38 @@ import sys
 from types import ModuleType, SimpleNamespace
 
 import pytest
+import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import export as exp
 
 
-def test_filter_records() -> None:
+def test_filter_records(monkeypatch: pytest.MonkeyPatch) -> None:
     records = [
-        {"ssid": "A", "encryption": "WPA2", "bssid": "AA", "lat": 1.0, "lon": 2.0},
-        {"ssid": "B", "encryption": "OPEN", "bssid": "BB", "lat": 3.0, "lon": 4.0},
+        {
+            "ssid": "A",
+            "encryption": "WPA2",
+            "bssid": "AA",
+            "lat": 1.0,
+            "lon": 2.0,
+            "signal_dbm": -40,
+            "last_time": 80,
+        },
+        {
+            "ssid": "B",
+            "encryption": "OPEN",
+            "bssid": "BB",
+            "lat": 3.0,
+            "lon": 4.0,
+            "signal_dbm": -80,
+            "last_time": 20,
+        },
     ]
+    monkeypatch.setattr(time, "time", lambda: 100)
     assert exp.filter_records(records, encryption="OPEN") == [records[1]]
     assert exp.filter_records(records, oui="AA") == [records[0]]
+    assert exp.filter_records(records, min_signal=-50) == [records[0]]
+    assert exp.filter_records(records, max_age=30) == [records[0]]
 
 
 def test_export_records_formats(tmp_path) -> None:
