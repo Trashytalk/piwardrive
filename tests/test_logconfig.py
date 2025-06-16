@@ -14,3 +14,15 @@ def test_setup_logging_writes_json(tmp_path: Any) -> None:
         data = json.loads(f.readline())
     assert data["message"] == "hello"
     assert data["level"] == "INFO"
+
+
+def test_setup_logging_respects_env(monkeypatch: Any, tmp_path: Any) -> None:
+    log_file = tmp_path / "env.log"
+    monkeypatch.setenv("PW_LOG_LEVEL", "DEBUG")
+    logger = setup_logging(log_file=str(log_file))
+    logging.debug("hi")
+    with open(log_file) as f:
+        data = json.loads(f.readline())
+    assert data["level"] == "DEBUG"
+    assert logger.level == logging.DEBUG
+    monkeypatch.delenv("PW_LOG_LEVEL")

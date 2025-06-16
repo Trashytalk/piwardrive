@@ -128,6 +128,10 @@ class AsyncScheduler:
         if task:
             task.cancel()
 
-    def cancel_all(self) -> None:
-        for name in list(self._tasks.keys()):
-            self.cancel(name)
+    async def cancel_all(self) -> None:
+        tasks = list(self._tasks.values())
+        self._tasks.clear()
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)

@@ -2,7 +2,7 @@
 # Download the IEEE OUI registry for vendor lookups.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DATA_DIR="$HOME/.config/piwardrive"
+DATA_DIR="$(python3 -c 'from sigint_suite import paths; print(paths.CONFIG_DIR)')"
 URL="https://standards-oui.ieee.org/oui/oui.csv"
 
 mkdir -p "$DATA_DIR"
