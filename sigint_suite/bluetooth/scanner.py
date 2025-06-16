@@ -5,7 +5,7 @@ import os
 import asyncio
 
 import subprocess
-from typing import List
+from typing import List, Dict
 
 
 from sigint_suite.models import BluetoothDevice
@@ -43,15 +43,19 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
     except Exception:
         return []
 
-    devices: List[BluetoothDevice] = []
+    devices: Dict[str, str] = {}
     for line in output.splitlines():
-        if "Device" in line and ":" in line:
-            parts = line.split()
-            if len(parts) >= 2:
-                addr = parts[0]
-                name = " ".join(parts[1:])
-                devices.append(BluetoothDevice(address=addr, name=name))
-    return devices
+        parts = line.split()
+        try:
+            idx = parts.index("Device")
+        except ValueError:
+            continue
+        if idx + 1 < len(parts):
+            addr = parts[idx + 1]
+            name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
+            devices[addr] = name
+
+    return [{"address": a, "name": n} for a, n in devices.items()]
 
 def main() -> None:
     """Command-line interface for Bluetooth scanning."""
@@ -73,13 +77,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-            try:
-                idx = parts.index("Device")
-            except ValueError:
-                continue
-            if idx + 1 < len(parts):
-                addr = parts[idx + 1]
-                name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
-                devices[addr] = name
-
-    return [{"address": a, "name": n} for a, n in devices.items()]
