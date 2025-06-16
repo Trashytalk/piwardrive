@@ -1,6 +1,8 @@
 import time
 from typing import Dict, List, Optional
 
+import aiosqlite
+
 
 
 class TowerTracker:
@@ -97,16 +99,12 @@ class TowerTracker:
     async def all_towers(self) -> List[Dict[str, float]]:
         """Return all tracked towers."""
 
-        cur = self.conn.execute("SELECT tower_id, lat, lon, last_seen FROM towers")
-        return [
-            {
-                "tower_id": row[0],
-                "lat": row[1],
-                "lon": row[2],
-                "last_seen": row[3],
-            }
-            for row in rows
-        ]
+        conn = await self._get_conn()
+        cur = await conn.execute(
+            "SELECT tower_id, lat, lon, last_seen FROM towers"
+        )
+        rows = await cur.fetchall()
+        return [dict(row) for row in rows]
 
     async def close(self) -> None:
         """Close the database connection."""
