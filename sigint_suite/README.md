@@ -50,7 +50,7 @@ The `scripts/start_imsi_mode.sh` script performs a single Wi-Fi and Bluetooth
 scan and stores the results under `exports/`.
 
 ```bash
-./sigint_suite/scripts/start_imsi_mode.sh
+EXPORT_DIR=/tmp/exports ./sigint_suite/scripts/start_imsi_mode.sh
 ```
 
 By default the JSON files `wifi.json` and `bluetooth.json` are written to
@@ -67,7 +67,7 @@ interval. Set `--interval` to change the delay between scans and optionally
 limit the number of iterations with `--iterations`.
 
 ```bash
-python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
+EXPORT_DIR=/tmp/exports python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
 ```
 
 ## Dependencies
