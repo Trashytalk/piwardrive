@@ -97,7 +97,11 @@ async def ws_status(websocket: WebSocket) -> None:
                 "status": await get_status(),
                 "metrics": await _collect_widget_metrics(),
             }
-            await websocket.send_json(data)
+            try:
+                await asyncio.wait_for(websocket.send_json(data), timeout=1)
+            except (asyncio.TimeoutError, Exception):
+                await websocket.close()
+                break
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         pass

@@ -2,6 +2,9 @@ import sys
 from dataclasses import asdict
 from unittest import mock
 from types import ModuleType
+import asyncio
+import pytest
+from fastapi import WebSocketDisconnect
 
 sys.path.insert(0, '.')
 aiohttp_mod = ModuleType('aiohttp')
@@ -104,3 +107,28 @@ def test_websocket_status_stream() -> None:
             assert data["status"][0]["cpu_percent"] == 2.0
             assert data["metrics"]["bssid_count"] == 1
             assert data["metrics"]["rx_kbps"] == 1.0
+
+
+def test_websocket_timeout_closes_connection() -> None:
+    async def fake_load(_: int = 5) -> list:
+        return []
+
+    async def fake_fetch() -> tuple[list, list, int]:
+        return ([], [], 0)
+
+    async def send_timeout(*_: any, **__: any) -> None:
+        raise asyncio.TimeoutError
+
+    with (
+        mock.patch("service.load_recent_health", fake_load),
+        mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("service.WebSocket.send_json", side_effect=send_timeout),
+        mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("service.service_status_async", side_effect=[True, False]),
+    ):
+        client = TestClient(service.app)
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect("/ws/status") as ws:
+                ws.receive_json()
