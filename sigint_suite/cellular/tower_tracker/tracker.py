@@ -1,6 +1,5 @@
-import asyncio
 import time
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 import aiosqlite
 

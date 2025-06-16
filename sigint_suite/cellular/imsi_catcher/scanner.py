@@ -3,8 +3,7 @@ import os
 import shlex
 import subprocess
 import asyncio
-from typing import List, Optional, Callable
-import logging
+from typing import Callable, List, Optional
 
 
 from sigint_suite.models import ImsiRecord
@@ -69,7 +68,11 @@ async def async_scan_imsis(
 
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    )
     logger.debug("Executing: %s", " ".join(args))
     try:
         proc = await asyncio.create_subprocess_exec(
