@@ -1,5 +1,8 @@
 R Integration
 -------------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 ``scripts/health_summary.R`` reads a CSV or JSON file of
 ``HealthRecord`` rows. The function ``health_summary`` returns averages

@@ -22,8 +22,9 @@ from utils import (
     get_network_throughput,
     get_gps_fix_quality,
     service_status_async,
-    tail_file,
+    async_tail_file,
 )
+from sync import upload_data
 
 security = HTTPBasic(auto_error=False)
 app = FastAPI()
@@ -72,14 +73,31 @@ async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
 
 
 @app.get("/logs")
-def get_logs(
+async def get_logs(
     lines: int = 200,
     path: str = DEFAULT_LOG_PATH,
     _auth: None = Depends(_check_auth),
 ) -> dict:
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
-    return {"path": safe, "lines": tail_file(safe, lines)}
+    data = async_tail_file(safe, lines)
+    if inspect.isawaitable(data):
+        lines_out = await data
+    else:
+        lines_out = data
+    return {"path": safe, "lines": lines_out}
+
+
+@app.post("/sync")
+async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> dict:
+    """Upload recent health records to the configured sync endpoint."""
+    records = load_recent_health(limit)
+    if inspect.isawaitable(records):
+        records = await records
+    success = await upload_data([asdict(r) for r in records])
+    if not success:
+        raise HTTPException(status_code=502, detail="Upload failed")
+    return {"uploaded": len(records)}
 
 
 @app.websocket("/ws/status")
@@ -92,7 +110,11 @@ async def ws_status(websocket: WebSocket) -> None:
                 "status": await get_status(),
                 "metrics": await _collect_widget_metrics(),
             }
-            await websocket.send_json(data)
+            try:
+                await asyncio.wait_for(websocket.send_json(data), timeout=1)
+            except (asyncio.TimeoutError, Exception):
+                await websocket.close()
+                break
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         pass

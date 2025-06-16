@@ -1,5 +1,8 @@
 Diagnostics
 ----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The :mod:`diagnostics` module exposes helpers for gathering system metrics and
 rotating log files. Use ``diagnostics.self_test()`` to perform a quick health
@@ -10,6 +13,9 @@ components to display. ``self_test`` includes CPU temperature and
 usage statistics, network reachability and service states. Disk SMART
 health is also reported for ``/mnt/ssd`` and surfaced in the stats
 screen.
+
+``scripts/service_status.py`` provides a small command-line interface to
+``diagnostics.get_service_statuses`` for quick checks outside the GUI.
 
 Use :func:`utils.report_error` to surface exceptions consistently. It logs the
 message and displays a dialog via the running application if available.

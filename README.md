@@ -4,7 +4,8 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
 
 For a consolidated overview of all available documentation see
-**REFERENCE.md** in the repository root.
+**REFERENCE.md** in the repository root. Additional guides live under
+the `docs/` directory and are rendered using Sphinx.
 
 ## Architecture Overview
 
@@ -44,6 +45,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`,
   compress archives and remove old backups.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
+  Set `PW_LOG_LEVEL=DEBUG` to increase verbosity.
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
 * **Historical Records**: Wi‑Fi and Bluetooth observations stored in SQLite for
@@ -63,6 +65,25 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
   Scan timeouts can be tuned via environment variables such as
   `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
+* **Remote Sync**: periodically upload the SQLite database to a central server.
+* **Vector Tiles**: render offline maps from MBTiles for smoother panning.
+* **Network Analytics**: highlight potentially suspicious Wi‑Fi activity.
+* **Track Playback**: review GPS traces from previous drives.
+* **LoRa Scanning**: monitor LoRa/IoT radio traffic alongside Wi‑Fi.
+* **Database Browser**: browse historical records via a lightweight web UI.
+* **Cloud Export**: send exports directly to AWS S3 buckets.
+* **Vehicle Sensors**: read speed from an accelerometer or OBD‑II adapter.
+* **Setup Wizard**: interactive configuration for Kismet, BetterCAP and GPSD.
+
+## Additional Documentation
+
+Full guides for installation, configuration and deployment are stored in
+the `docs/` directory. Run ``make html`` inside `docs/` to generate the
+HTML output. The rendered pages cover topics such as mobile builds,
+geofencing, persistence, diagnostics and more.
+
+Reference tables for environment variables and module summaries are also
+available in **REFERENCE.md**.
 
 ## Hardware Prerequisites
 
@@ -107,8 +128,9 @@ vendor lookups. The manual steps are listed below.
 
       pip install -r requirements.txt
       # confirm the pinned web framework versions
-      pip install pydantic==2.11.7 fastapi==0.115.12
-      pip install .
+     pip install pydantic==2.11.7 fastapi==0.115.12
+     # project metadata is defined in ``pyproject.toml``
+     pip install .
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
@@ -174,6 +196,9 @@ docker-compose run --rm test
   * `PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles` – MBTiles file
   * `PW_LANG=es` – interface language
   * `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` – callgrind output path
+  * `PW_LOG_LEVEL=DEBUG` – root logger verbosity
+  * `PW_GPSD_HOST=192.168.1.10` – gpsd host address
+  * `PW_GPSD_PORT=4000` – gpsd port number
   * `IWLIST_CMD=/usr/sbin/iwlist` – Wi‑Fi scanner command
   * `IW_PRIV_CMD=doas` – privilege wrapper for Wi‑Fi scans
   * `IMSI_CATCH_CMD=/usr/local/bin/imsi-catcher` – IMSI catcher command
@@ -370,6 +395,14 @@ Exports recent `HealthRecord` rows in CSV or JSON format.
 ### `scripts/health_import.py`
 Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
 
+### `scripts/service_status.py`
+Prints the active state of key services such as Kismet, BetterCAP and GPSD.
+
+### `scripts/export_logs.py`
+Writes the most recent lines from `app.log` to a file using
+`PiWardriveApp.export_logs`.
+
+
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
 failures and returning `None` on errors.
@@ -440,7 +473,10 @@ Install project and development dependencies and run the tests locally with:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pip install .  # uses metadata from ``pyproject.toml``
+pip install pandas orjson pyprof2calltree
 pip install .
+pre-commit run --all-files
 pytest
 ```
 Alternatively run the suite in Docker:
@@ -459,8 +495,15 @@ Cyclomatic complexity is also checked in CI. The workflow runs
 worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
 opening a pull request.
 
+The GitHub Actions workflow in `.github/workflows/ci.yml` installs the optional
+packages listed above and runs `pre-commit run --all-files` followed by
+`pytest`.
+
 Install pre-commit hooks with:
 ```bash
 pre-commit install
 ```
+
+## Legal Notice
+
 Please ensure you comply with all local laws and obtain proper authorization before conducting any wireless or Bluetooth scans. The authors are not responsible for any misuse of this software.

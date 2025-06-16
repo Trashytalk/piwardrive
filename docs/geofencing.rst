@@ -1,5 +1,8 @@
 Geofencing
 ----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The map supports registering polygonal geofences that trigger callbacks when
 the user's location crosses the boundary.

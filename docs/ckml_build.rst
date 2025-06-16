@@ -1,5 +1,8 @@
 Building the CKML Extension
 ===========================
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 PiWardrive ships with two small C extensions ``ckml`` and ``cgeom`` used by the
 GUI. They are compiled automatically when building the project. Prebuilt wheels
@@ -15,7 +18,7 @@ Prerequisites
 Build the project from the repository root using ``python -m build``::
 
     pip install build
-    python -m build
+    python -m build  # reads metadata from ``pyproject.toml``
 
 The wheel is written to ``dist/``. An example output path is::
 

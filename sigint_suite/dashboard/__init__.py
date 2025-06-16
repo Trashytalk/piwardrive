@@ -89,7 +89,7 @@ def main() -> None:  # pragma: no cover - small CLI helper
     parser = argparse.ArgumentParser(description="Show exported scan results")
     parser.add_argument(
         "--export-dir",
-        default=DEFAULT_EXPORT_DIR,
+        default=paths.EXPORT_DIR,
         help="directory containing JSON exports",
     )
     parser.add_argument("--json", action="store_true", help="print raw JSON")

@@ -3,8 +3,10 @@ import os
 import subprocess
 from typing import Dict, List
 
+
 from sigint_suite.models import BluetoothDevice
 
+logger = logging.getLogger(__name__)
 
 def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
     """Scan for nearby Bluetooth devices using ``bleak`` or ``bluetoothctl``."""
@@ -13,7 +15,6 @@ def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
         if timeout is not None
         else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
     )
-
     try:
         from bleak import BleakScanner  # type: ignore
 
@@ -29,11 +30,70 @@ def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
         return _scan_bluetoothctl(timeout)
 
 
-def _scan_bluetoothctl(timeout: int) -> List[BluetoothDevice]:
+
+
+async def async_scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
+    """Asynchronously scan for nearby Bluetooth devices."""
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
+    )
+    try:
+        from bleak import BleakScanner  # type: ignore
+
+        found = await BleakScanner.discover(timeout=timeout)
+        return [
+            {"address": dev.address, "name": dev.name or dev.address}
+            for dev in found
+        ]
+    except Exception:
+        pass
+
+    return await _async_scan_bluetoothctl(timeout)
+
+
+def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
+
     """Scan using ``bluetoothctl`` as a fallback."""
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
+    logger.debug("Executing: %s", " ".join(cmd))
     try:
         output = subprocess.check_output(cmd, text=True)
+    except Exception as exc:
+        logger.exception("Bluetooth scan failed: %s", exc)
+    except Exception as exc:  # pragma: no cover - external command
+        logging.exception("Failed to run bluetoothctl", exc_info=exc)
+        return []
+
+    devices: Dict[str, str] = {}
+    for line in output.splitlines():
+        parts = line.split()
+        try:
+            idx = parts.index("Device")
+        except ValueError:
+            continue
+        if idx + 1 < len(parts):
+            addr = parts[idx + 1]
+            name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
+            devices[addr] = name
+
+    return [{"address": a, "name": n} for a, n in devices.items()]
+
+
+async def _async_scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
+
+    """Async wrapper for ``bluetoothctl``."""
+
+    cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout + 1)
+        output = stdout.decode()
     except Exception:
         return []
 
@@ -53,6 +113,7 @@ def _scan_bluetoothctl(timeout: int) -> List[BluetoothDevice]:
 
 
 def main() -> None:  # pragma: no cover - CLI helper
+
     """Command-line interface for Bluetooth scanning."""
     import argparse
     import json

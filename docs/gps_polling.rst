@@ -1,10 +1,15 @@
 GPS Polling
 -----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The application polls ``gpsd`` on a timer to center the map and track
 movement. Frequent polling yields more responsive updates but can drain
 battery faster on portable setups. Conversely, long intervals conserve
-power at the cost of stale position data.
+power at the cost of stale position data. The client connects to
+``127.0.0.1:2947`` by default. Set ``PW_GPSD_HOST`` and
+``PW_GPSD_PORT`` to use a remote ``gpsd`` instance.
 
 PiWardrive adapts its polling rate automatically. When movement is
 detected the map polls at ``map_poll_gps`` seconds. If the location

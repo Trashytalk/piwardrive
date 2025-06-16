@@ -1,5 +1,8 @@
 React Web UI
 ============
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 A small React application lives under ``webui/``. It consumes the HTTP API
 provided by :mod:`service` to display recent status information and logs.  When

@@ -10,8 +10,9 @@ the main PiWardrive UI when you only need quick scans or exports.
 pip install sigint-suite
 ```
 
-The installation provides the ``wifi-scan``, ``bluetooth-scan``, ``imsi-scan``
-and ``band-scan`` entry points for quickly running scans from the command line.
+The installation provides the ``wifi-scan``, ``bluetooth-scan``, ``imsi-scan``,
+``band-scan`` and ``scan-all`` entry points for quickly running scans from the
+command line.
 
 ## Modules
 
@@ -35,10 +36,17 @@ and ``band-scan`` entry points for quickly running scans from the command line.
   Bluetooth devices in a SQLite database for historical queries.
 - **dashboard** – minimal dashboard integration.
 - **enrichment** – routines to enrich captured data.
-- **exports** – helpers for writing results to JSON/CSV files.
+- **exports** – helpers for writing results to JSON/CSV/YAML files.
 - **gps** – GPS helpers for tagging results with location.
 - **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
+
+### Async API
+
+All scanner modules also provide asynchronous variants built with
+``asyncio.create_subprocess_exec``. Use ``async_scan_wifi``,
+``async_scan_bluetooth``, ``async_scan_bands`` and ``async_scan_imsis`` when
+running inside an event loop.
 
 Post-processing hooks can be registered with
 `sigint_suite.hooks.register_post_processor` to enrich scan results (e.g.,
@@ -50,7 +58,7 @@ The `scripts/start_imsi_mode.sh` script performs a single Wi-Fi and Bluetooth
 scan and stores the results under `exports/`.
 
 ```bash
-./sigint_suite/scripts/start_imsi_mode.sh
+EXPORT_DIR=/tmp/exports ./sigint_suite/scripts/start_imsi_mode.sh
 ```
 
 By default the JSON files `wifi.json` and `bluetooth.json` are written to
@@ -58,16 +66,27 @@ By default the JSON files `wifi.json` and `bluetooth.json` are written to
 this location.
 
 Use `IWLIST_CMD` to specify an alternate `iwlist` path and `IW_PRIV_CMD` to
-change the privilege helper for Wi-Fi scans.
+change the privilege helper for Wi-Fi scans. Set `SIGINT_DEBUG=1` to enable
+debug logging for all scanners.
+
+## `scan-all` command
+
+The ``scan-all`` entry point runs all available scans—Wi-Fi, Bluetooth,
+cellular bands and IMSI numbers—in one go. Results are written as JSON files in
+``sigint_suite/exports/`` by default. Override this location with the
+``--export-dir`` option or by setting the ``EXPORT_DIR`` environment variable.
 
 ## Continuous Scans
 
-`scripts/continuous_scan.py` repeats Wi-Fi and Bluetooth scans at a configurable
-interval. Set `--interval` to change the delay between scans and optionally
-limit the number of iterations with `--iterations`.
+The `continuous-scan` entry point repeats Wi-Fi and Bluetooth scans at a
+configurable interval. Set `--interval` to change the delay between scans and
+optionally limit the number of iterations with `--iterations`.
 
 ```bash
-python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
+EXPORT_DIR=/tmp/exports python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
+
+continuous-scan --interval 30 --iterations 5
+
 ```
 
 ## Dependencies
@@ -79,4 +98,21 @@ the system. Running
 required Python dependencies. Vendor lookups use the IEEE OUI registry which is
 automatically downloaded to `~/.config/piwardrive/oui.csv` when first needed and
 refreshed weekly. The setup script can also fetch the file manually.
+
+## Plugins
+
+Place additional scan modules in `~/.config/piwardrive/sigint_plugins` and they
+will be imported automatically. Each plugin must define a `scan()` function that
+returns structured records such as `WifiNetwork` or `BluetoothDevice` models.
+Loaded plugins become available directly from the `sigint_suite` package::
+
+    # ~/.config/piwardrive/sigint_plugins/custom_wifi.py
+    def scan():
+        return [{"ssid": "Example"}]
+
+    import sigint_suite
+    results = sigint_suite.custom_wifi.scan()
+
+Call `sigint_suite.plugins.clear_plugin_cache()` after adding new files so the
+next import picks them up.
 

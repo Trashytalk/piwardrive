@@ -1,5 +1,8 @@
 Environment Variables
 =====================
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 PiWardrive and the companion SIGINT suite can be customised using several
 environment variables. Any option in :mod:`config` may be overridden by
@@ -29,6 +32,12 @@ General
 
 ``PW_LANG``
     Two-letter code selecting a translation under ``locales/``.
+
+``PW_GPSD_HOST``
+    Hostname or IP address of the running ``gpsd`` instance.
+
+``PW_GPSD_PORT``
+    Port used to connect to ``gpsd`` (default ``2947``).
 
 Configuration Overrides
 ----------------------

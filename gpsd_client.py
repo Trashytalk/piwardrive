@@ -1,6 +1,7 @@
 """Thread-safe client for ``gpsd`` with helpers for common queries."""
 
 import logging
+import os
 import threading
 
 try:
@@ -13,9 +14,9 @@ except Exception as exc:  # pragma: no cover - optional dependency
 class GPSDClient:
     """Persistent connection to ``gpsd`` providing basic helpers."""
 
-    def __init__(self, host: str = "127.0.0.1", port: int = 2947) -> None:
-        self.host = host
-        self.port = port
+    def __init__(self, host: str | None = None, port: int | None = None) -> None:
+        self.host = host or os.getenv("PW_GPSD_HOST", "127.0.0.1")
+        self.port = port or int(os.getenv("PW_GPSD_PORT", 2947))
         self._lock = threading.Lock()
         self._connected = False
 

@@ -2,13 +2,13 @@
 
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
-import glob
-
 import json
 import asyncio
+from contextlib import asynccontextmanager
 import logging
 import os
 import subprocess
+from pathlib import Path
 from gpsd_client import client as gps_client
 import time
 import threading
@@ -49,10 +49,16 @@ _GPSD_CACHE: dict[str, Any] = {
 }
 
 # Track previous network counters for throughput calculations
-_NET_IO_CACHE = {
-    "timestamp": time.time(),
-    "counters": psutil.net_io_counters(),
+_NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
+    None: {
+        "timestamp": time.time(),
+        "counters": psutil.net_io_counters(),
+    }
 }
+
+# Cache for HTTP requests issued via :func:`safe_request`
+SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
+_SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
 
 
 class ErrorCode(IntEnum):
@@ -81,22 +87,51 @@ def network_scanning_disabled() -> bool:
     """Return ``True`` if scanning is globally disabled."""
     app = App.get_running_app()
     if app is not None:
-        return bool(getattr(app, "disable_scanning", False))
-    return os.getenv("PW_DISABLE_SCANNING", "0").lower() in {"1", "true", "yes", "on"}
+        disabled = bool(getattr(app, "disable_scanning", False))
+    else:
+        disabled = os.getenv("PW_DISABLE_SCANNING", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+    if disabled:
+        logging.debug("Network scanning disabled")
+    return disabled
 
-_async_loop = asyncio.new_event_loop()
-_async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
-_async_thread.start()
+
+_async_loop: asyncio.AbstractEventLoop | None = None
+_async_thread: threading.Thread | None = None
+
+
+def _ensure_async_loop_running() -> None:
+    """Create and start the background asyncio loop if needed."""
+    global _async_loop, _async_thread
+
+    if _async_loop is None or _async_loop.is_closed():
+        _async_loop = asyncio.new_event_loop()
+        _async_thread = None
+
+    if _async_thread is None or not _async_thread.is_alive():
+        assert _async_loop is not None  # for type checkers
+        _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
+        _async_thread.start()
 
 
 def shutdown_async_loop(timeout: float | None = 5.0) -> None:
     """Stop the background asyncio loop and join its thread."""
-    if _async_thread.is_alive():
-        if _async_loop.is_running():
+    global _async_loop, _async_thread
+
+    if _async_thread is not None and _async_thread.is_alive():
+        if _async_loop is not None and _async_loop.is_running():
             _async_loop.call_soon_threadsafe(_async_loop.stop)
         _async_thread.join(timeout)
-    if not _async_loop.is_closed():
+
+    if _async_loop is not None and not _async_loop.is_closed():
         _async_loop.close()
+
+    _async_thread = None
+    _async_loop = None
 
 
 def format_error(code: int | IntEnum, message: str) -> str:
@@ -160,6 +195,8 @@ def run_async_task(
 ) -> Future[T]:
     """Schedule ``coro`` on the background loop and invoke ``callback``."""
 
+    _ensure_async_loop_running()
+    assert _async_loop is not None  # for mypy
     fut: Future[T] = asyncio.run_coroutine_threadsafe(coro, _async_loop)
 
     if callback is not None:
@@ -197,10 +234,21 @@ def safe_request(
     *,
     attempts: int = 3,
     timeout: float = 5,
+    cache_seconds: float = SAFE_REQUEST_CACHE_SECONDS,
     fallback: Callable[[], T] | None = None,
     **kwargs: Any,
 ) -> T | Any | None:
-    """Return ``requests.get(url)`` with retries and optional fallback."""
+
+    """Return ``requests.get(url)`` with retries and optional fallback.
+
+    Results are cached for ``cache_seconds`` to avoid repeated network calls.
+    Passing ``cache_seconds`` as ``0`` disables caching.
+    """
+    now = time.time()
+    if cache_seconds and url in _SAFE_REQUEST_CACHE:
+        ts, cached = _SAFE_REQUEST_CACHE[url]
+        if now - ts <= cache_seconds:
+            return cached
 
     def _get() -> Any:
         return requests.get(url, timeout=timeout, **kwargs)
@@ -208,12 +256,15 @@ def safe_request(
     try:
         resp = retry_call(_get, attempts=attempts, delay=1)
         resp.raise_for_status()
+        _SAFE_REQUEST_CACHE[url] = (now, resp)
         return resp
     except Exception as exc:  # pragma: no cover - network errors
         report_error(f"Request error for {url}: {exc}")
         if fallback is not None:
             try:
-                return fallback()
+                result = fallback()
+                _SAFE_REQUEST_CACHE[url] = (time.time(), result)
+                return result
             except Exception as exc2:  # pragma: no cover - fallback failed
                 report_error(f"Fallback for {url} failed: {exc2}")
         return None
@@ -268,23 +319,33 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
         return None
 
 
-def get_network_throughput() -> tuple[float, float]:
-    """Return (rx_kbps, tx_kbps) since the last call."""
-    global _NET_IO_CACHE
+def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
+    """Return ``(rx_kbps, tx_kbps)`` since the last call.
+
+    If ``iface`` is provided, only counters for that interface are used.
+    The first call for a given ``iface`` returns ``(0.0, 0.0)``.
+    """
     try:
-        cur = psutil.net_io_counters()
+        if iface:
+            counters = psutil.net_io_counters(pernic=True)
+            cur = counters.get(iface)
+            if cur is None:
+                return 0.0, 0.0
+        else:
+            cur = psutil.net_io_counters()
     except Exception:
         return 0.0, 0.0
     now = time.time()
-    prev = _NET_IO_CACHE.get("counters")
-    prev_ts = _NET_IO_CACHE.get("timestamp", now)
+    cache = _NET_IO_CACHE.setdefault(iface, {"counters": cur, "timestamp": now})
+    prev = cache.get("counters")
+    prev_ts = cache.get("timestamp", now)
     dt = now - prev_ts if prev_ts else 0.0
     rx_kbps = tx_kbps = 0.0
     if prev is not None and dt > 0:
         rx_kbps = (cur.bytes_recv - prev.bytes_recv) / dt / 1024.0
         tx_kbps = (cur.bytes_sent - prev.bytes_sent) / dt / 1024.0
-    _NET_IO_CACHE["counters"] = cur
-    _NET_IO_CACHE["timestamp"] = now
+    cache["counters"] = cur
+    cache["timestamp"] = now
     return rx_kbps, tx_kbps
 
 
@@ -298,13 +359,14 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         )
         if not dev:
             return None
-        proc = subprocess.run(
-            ['smartctl', '-H', dev],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if proc.returncode != 0:
+        try:
+            proc = subprocess.run(
+                ['smartctl', '-H', dev],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError:
             return None
         out = proc.stdout + proc.stderr
         return _parse_smartctl_output(out)
@@ -321,30 +383,61 @@ def _parse_smartctl_output(output: str) -> str | None:
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
-    """
-    Find the latest file matching pattern under directory.
-    """
-    files = glob.glob(os.path.join(directory, pattern))
+    """Return the newest file matching ``pattern`` under ``directory``."""
+    dir_path = Path(directory)
+    files = list(dir_path.glob(pattern))
     if not files:
         return None
-    return max(files, key=os.path.getmtime)
+    return str(max(files, key=lambda p: p.stat().st_mtime))
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
     """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
     try:
-        with open(path, "rb") as f:
-            with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-                pos = mm.size()
-                for _ in range(lines + 1):
-                    new_pos = mm.rfind(b"\n", 0, pos)
-                    if new_pos == -1:
-                        pos = -1
-                        break
-                    pos = new_pos
-                start = 0 if pos < 0 else pos + 1
-                text = mm[start:]
-                return text.decode("utf-8", errors="ignore").splitlines()[-lines:]
+        with open(path, "rb") as f, mmap.mmap(
+            f.fileno(), 0, access=mmap.ACCESS_READ
+        ) as mm:
+            pos = mm.size()
+            for _ in range(lines + 1):
+                new_pos = mm.rfind(b"\n", 0, pos)
+                if new_pos == -1:
+                    pos = -1
+                    break
+                pos = new_pos
+            start = 0 if pos < 0 else pos + 1
+            text = mm[start:]
+            return text.decode("utf-8", errors="ignore").splitlines()[-lines:]
+    except Exception:
+        return []
+
+
+async def async_tail_file(path: str, lines: int = 50) -> list[str]:
+    """Asynchronously return the last ``lines`` from ``path``."""
+    try:
+        import aiofiles  # type: ignore
+    except Exception:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, lambda: tail_file(path, lines))
+
+    try:
+        async with aiofiles.open(path, "rb") as f:
+            fd = f.fileno()
+            try:
+                with mmap.mmap(fd, 0, access=mmap.ACCESS_READ) as mm:
+                    pos = mm.size()
+                    for _ in range(lines + 1):
+                        new_pos = mm.rfind(b"\n", 0, pos)
+                        if new_pos == -1:
+                            pos = -1
+                            break
+                        pos = new_pos
+                    start = 0 if pos < 0 else pos + 1
+                    data = mm[start:]
+                    return data.decode("utf-8", errors="ignore").splitlines()[-lines:]
+            except Exception:
+                await f.seek(0)
+                data = await f.read()
+                return data.decode("utf-8", errors="ignore").splitlines()[-lines:]
     except Exception:
         return []
 
@@ -393,6 +486,21 @@ def _run_service_cmd_sync(
         return False, "", str(exc)
 
 
+@asynccontextmanager
+async def message_bus() -> Any:
+    """Yield a connected ``dbus-fast`` ``MessageBus`` instance."""
+
+    from dbus_fast.aio import MessageBus
+    from dbus_fast import BusType
+
+    bus = MessageBus(bus_type=BusType.SYSTEM)
+    await bus.connect()
+    try:
+        yield bus
+    finally:
+        bus.disconnect()
+
+
 async def _run_service_cmd_async(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
@@ -407,8 +515,7 @@ async def _run_service_cmd_async(
     svc_name = f"{service}.service"
 
     try:
-        from dbus_fast.aio import MessageBus
-        from dbus_fast import BusType
+        import dbus_fast.aio  # type: ignore  # noqa: F401
     except Exception:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
@@ -416,9 +523,7 @@ async def _run_service_cmd_async(
         )
 
     async def _call() -> tuple[bool, str, str]:
-        bus = MessageBus(bus_type=BusType.SYSTEM)
-        await bus.connect()
-        try:
+        async with message_bus() as bus:
             intro = await bus.introspect(
                 "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
             )
@@ -447,8 +552,6 @@ async def _run_service_cmd_async(
                 "org.freedesktop.systemd1.Unit", "ActiveState"
             )
             return True, str(state), ""
-        finally:
-            bus.disconnect()
 
     async def _retry() -> tuple[bool, str, str]:
         last_exc: Exception | None = None
@@ -466,6 +569,9 @@ async def _run_service_cmd_async(
     try:
         return await _retry()
     except Exception as exc:  # pragma: no cover - DBus failures
+        logging.exception(
+            "Service command '%s %s' failed: %s", service, action, exc
+        )
         return False, "", str(exc)
 
 
@@ -477,7 +583,16 @@ def run_service_cmd(
     fut = run_async_task(
         _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
     )
-    return fut.result()
+    try:
+        return fut.result()
+    except Exception as exc:  # pragma: no cover - background failures
+        logging.exception(
+            "run_service_cmd encountered an error for '%s %s': %s",
+            service,
+            action,
+            exc,
+        )
+        return False, "", str(exc)
 
 
 async def service_status_async(
@@ -620,7 +735,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                         ]
                     )
                 except Exception:
-                    pass
+                    logging.exception("Failed to save AP cache")
                 return aps, clients
 
     try:
@@ -649,14 +764,16 @@ def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     """Count ``.pcap`` handshake files in BetterCAP log directories."""
     count = 0
     try:
-        for entry in os.scandir(log_folder):
-            if entry.is_dir() and entry.name.endswith('_bettercap'):
-                try:
-                    for file in os.scandir(entry.path):
-                        if file.is_file() and file.name.endswith('.pcap'):
-                            count += 1
-                except OSError:
-                    continue
+        with os.scandir(log_folder) as entries:
+            for entry in entries:
+                if entry.is_dir() and entry.name.endswith('_bettercap'):
+                    try:
+                        with os.scandir(entry.path) as files:
+                            for file in files:
+                                if file.is_file() and file.name.endswith('.pcap'):
+                                    count += 1
+                    except OSError:
+                        continue
     except OSError:
         return 0
     return count
@@ -672,15 +789,16 @@ def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
     try:
         accuracy = gps_client.get_accuracy()
         fix = gps_client.get_fix_quality()
-        if accuracy is None and fix == "Unknown":
-            return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
-
-        _GPSD_CACHE["timestamp"] = time.time()
-        _GPSD_CACHE["accuracy"] = accuracy
-        _GPSD_CACHE["fix"] = fix
-        return _GPSD_CACHE
     except Exception:
         return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
+
+    if accuracy is None or fix == "Unknown":
+        return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
+
+    _GPSD_CACHE["timestamp"] = time.time()
+    _GPSD_CACHE["accuracy"] = accuracy
+    _GPSD_CACHE["fix"] = fix
+    return _GPSD_CACHE
 
 
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:
