@@ -36,6 +36,9 @@
   "disk": "Disco",
   "samples": "Muestras",
   "kbps": "KB/s"
+  ,"orientation": "Orientación"
+  ,"vehicle_speed": "Velocidad"
+  ,"lora_devices": "Dispositivos LoRa"
   ,"time": "Tiempo"
   ,"load": "Carga"
   ,"db": "BD"

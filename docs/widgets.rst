@@ -111,6 +111,20 @@ coordinates from the local database and renders a small image using
 ``heatmap.save_png``. The number of grid cells can be adjusted via the
 ``bins`` parameter when instantiating the widget.
 
+OrientationWidget
+~~~~~~~~~~~~~~~~~
+Displays the current device orientation using :func:`orientation_sensors.get_orientation_dbus`.
+If unavailable, raw accelerometer readings from :func:`orientation_sensors.read_mpu6050`
+are shown instead.
+
+VehicleSpeedWidget
+~~~~~~~~~~~~~~~~~~
+Shows the vehicle speed reported by :func:`vehicle_sensors.read_speed_obd`.
+
+LoRaScanWidget
+~~~~~~~~~~~~~~
+Runs :func:`lora_scanner.scan_lora` and reports how many devices were found.
+
 LogViewer
 ~~~~~~~~~
 Scrollable widget that tails a log file. ``log_path`` selects the file, ``max_lines`` determines
