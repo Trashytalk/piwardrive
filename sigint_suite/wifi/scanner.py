@@ -1,8 +1,10 @@
+import logging
 import os
 import shlex
 import subprocess
-from typing import Dict, List, Optional
+from typing import List, Dict, Optional
 
+from sigint_suite.models import WifiNetwork
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
 
@@ -24,7 +26,7 @@ def scan_wifi(
     interface: str = "wlan0",
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
 ) -> List[WifiNetwork]:
 
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
@@ -43,7 +45,8 @@ def scan_wifi(
         output = subprocess.check_output(
             cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
         )
-    except Exception:
+    except Exception as exc:  # pragma: no cover - platform dependent
+        logging.exception("Failed to run iwlist", exc_info=exc)
         return []
 
     networks: List[Dict[str, str]] = []
@@ -53,28 +56,23 @@ def scan_wifi(
         if line.startswith("Cell"):
             if current:
                 networks.append(current)
-            bssid = None
-            if "Address:" in line:
-                bssid = line.split("Address:")[-1].strip()
             current = {"cell": line}
-            if bssid:
-                current["bssid"] = bssid
+            if "Address:" in line:
+                current["bssid"] = line.split("Address:")[-1].strip()
         elif "ESSID" in line:
             current["ssid"] = line.split(":", 1)[-1].strip('"')
         elif "Address" in line:
-            bssid = line.split("Address:")[-1].strip()
-            current["bssid"] = bssid
-            vendor = lookup_vendor(bssid)
-            if vendor:
-                current["vendor"] = vendor
+            current["bssid"] = line.split("Address:")[-1].strip()
         elif "Frequency" in line:
             current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
         elif "Quality" in line:
             current["quality"] = line.split("Quality=")[-1].split(" ")[0]
     if current:
         networks.append(current)
+
     networks = apply_post_processors("wifi", networks)
-    return [WifiNetwork.model_validate(rec) for rec in networks]
+    return [WifiNetwork(**rec) for rec in networks]
+
 
 
 def main() -> None:
@@ -89,11 +87,11 @@ def main() -> None:
 
     nets = scan_wifi(args.interface)
     if args.json:
-        print(json.dumps(nets, indent=2))
+        print(json.dumps([n.model_dump() for n in nets], indent=2))
     else:
         for rec in nets:
-            ssid = rec.get("ssid", "")
-            bssid = rec.get("bssid", "")
+            ssid = rec.ssid or ""
+            bssid = rec.bssid or ""
             print(f"{ssid} {bssid}")
 
 

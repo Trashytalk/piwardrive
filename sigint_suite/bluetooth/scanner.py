@@ -1,20 +1,17 @@
-import os
-
 """Bluetooth scanning helpers using modern tools."""
 
 import asyncio
+import logging
+import os
 import subprocess
-from typing import List, Dict
+from typing import List
+
+from sigint_suite.models import BluetoothDevice
 
 
-def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
-
-    """Scan for nearby Bluetooth devices using ``hcitool``."""
-    timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
-    )
+def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
+    """Scan for nearby Bluetooth devices."""
+    timeout = timeout if timeout is not None else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
 
     try:
         from bleak import BleakScanner  # type: ignore
@@ -33,13 +30,14 @@ def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
     return _scan_bluetoothctl(timeout)
 
 
-def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
+def _scan_bluetoothctl(timeout: int) -> List[BluetoothDevice]:
     """Scan using ``bluetoothctl`` as a fallback."""
 
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
     try:
         output = subprocess.check_output(cmd, text=True)
-    except Exception:
+    except Exception as exc:  # pragma: no cover - external command
+        logging.exception("Failed to run bluetoothctl", exc_info=exc)
         return []
 
     devices: Dict[str, str] = {}
@@ -56,6 +54,7 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
 
     return [{"address": a, "name": n} for a, n in devices.items()]
 
+
 def main() -> None:
     """Command-line interface for Bluetooth scanning."""
     import argparse
@@ -68,10 +67,10 @@ def main() -> None:
 
     devices = scan_bluetooth(args.timeout)
     if args.json:
-        print(json.dumps(devices, indent=2))
+        print(json.dumps([d.model_dump() for d in devices], indent=2))
     else:
         for rec in devices:
-            print(f"{rec['address']} {rec['name']}")
+            print(f"{rec.address} {rec.name}")
 
 
 if __name__ == "__main__":
