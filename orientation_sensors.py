@@ -22,12 +22,31 @@ _ORIENTATION_MAP: Dict[str, float] = {
     "bottom-up": 180.0,
     "right-up": 90.0,
     "left-up": 270.0,
+    # additional common orientation aliases
+    "portrait": 0.0,
+    "portrait-upside-down": 180.0,
+    "landscape-left": 90.0,
+    "landscape-right": 270.0,
+    "upside-down": 180.0,
 }
 
 
-def orientation_to_angle(orientation: str) -> Optional[float]:
-    """Map orientation string to a rotation angle in degrees."""
-    return _ORIENTATION_MAP.get(orientation.lower())
+def orientation_to_angle(
+    orientation: str, orientation_map: Optional[Dict[str, float]] = None
+) -> Optional[float]:
+    """Map orientation string to a rotation angle in degrees.
+
+    The mapping can be customized by passing a dictionary via ``orientation_map``.
+    """
+    mapping = _ORIENTATION_MAP if orientation_map is None else orientation_map
+    return mapping.get(orientation.lower())
+
+
+def update_orientation_map(new_map: Dict[str, float], *, clear: bool = False) -> None:
+    """Update the global orientation mapping used by :func:`orientation_to_angle`."""
+    if clear:
+        _ORIENTATION_MAP.clear()
+    _ORIENTATION_MAP.update({k.lower(): v for k, v in new_map.items()})
 
 
 def get_orientation_dbus() -> Optional[str]:
