@@ -407,6 +407,10 @@ Prints the active state of key services such as Kismet, BetterCAP and GPSD.
 Writes the most recent lines from `app.log` to a file using
 `PiWardriveApp.export_logs`.
 
+### `scripts/localize_aps.py`
+Runs the advanced localization pipeline on a `.kismet` log and outputs an HTML
+map of estimated AP positions.
+
 
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
@@ -423,6 +427,10 @@ Configures JSON-formatted logging, writing to `~/.config/piwardrive/app.log`.
 Offers a lightweight translation mechanism that caches parsed locale files so
 switching languages doesn't reread JSON from disk. Missing keys fall back to the
 original text.
+
+### `advanced_localization.py`
+Processes Kismet logs with Kalman filtering and DBSCAN outlier removal to
+produce more accurate AP coordinates. Used by `scripts/localize_aps.py`.
 
 ### `service.py`
 Exposes recent health records and widget metrics over FastAPI, with optional
