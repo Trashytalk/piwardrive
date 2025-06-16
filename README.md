@@ -273,14 +273,16 @@ run one of:
 * **Tabs**: Swipe or tap top buttons to switch between Map, Stats, Split, Console, Settings, Dashboard.
 * **Map Gestures**: Single-finger long‑press for context; drag to pan; pinch to zoom.
 * **Context Menu**: Save waypoints, load GPX/KML tracks and measure distances.
-* **Geofences**: Register polygons with ``add_geofence`` to trigger callbacks when entering or leaving an area.
+* **Geofences**: Register polygons with ``add_geofence`` to trigger callbacks when entering or leaving an area. Saved geofences can be renamed, modified or assigned custom alert messages.
 
 ### Geofences
 
 Call ``add_geofence(name, polygon, on_enter=None, on_exit=None)`` to register a
-polygon. ``on_enter`` and ``on_exit`` callbacks fire when the GPS location
-crosses the polygon boundary. Tests ``test_geofence_clustering.py`` and
-``test_geofence_handling.py`` contain usage examples.
+polygon. ``on_enter`` and ``on_exit`` can be callables or plain strings shown in
+a ``Snackbar`` when the boundary is crossed. The bundled ``GeofenceEditor``
+exposes helpers to rename polygons and configure these messages. Tests
+``test_geofence_clustering.py`` and ``test_geofence_handling.py`` contain usage
+examples.
 
 ## Widget Plugins
 

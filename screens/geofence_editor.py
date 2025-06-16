@@ -89,3 +89,48 @@ class GeofenceEditor(Screen):
         with open(self.GEOFENCE_FILE, "w", encoding="utf-8") as fh:
             json.dump(self.polygons, fh, indent=2)
 
+    # ------------------------------------------------------------------
+    def rename_polygon(self, old_name: str, new_name: str) -> bool:
+        """Rename the polygon ``old_name`` to ``new_name`` and save."""
+        for poly in self.polygons:
+            if poly.get("name") == old_name:
+                poly["name"] = new_name
+                self.save_polygons()
+                return True
+        return False
+
+    def remove_polygon(self, name: str) -> bool:
+        """Delete the polygon with the given ``name`` and save."""
+        for idx, poly in enumerate(self.polygons):
+            if poly.get("name") == name:
+                self.polygons.pop(idx)
+                self.save_polygons()
+                return True
+        return False
+
+    def update_polygon(self, name: str, points: list[tuple[float, float]]) -> bool:
+        """Replace the vertices of ``name`` with ``points`` and save."""
+        for poly in self.polygons:
+            if poly.get("name") == name:
+                poly["points"] = points
+                self.save_polygons()
+                return True
+        return False
+
+    def configure_alerts(
+        self,
+        name: str,
+        enter_message: str | None = None,
+        exit_message: str | None = None,
+    ) -> bool:
+        """Set optional alert messages for ``name`` and save."""
+        for poly in self.polygons:
+            if poly.get("name") == name:
+                if enter_message is not None:
+                    poly["enter_message"] = enter_message
+                if exit_message is not None:
+                    poly["exit_message"] = exit_message
+                self.save_polygons()
+                return True
+        return False
+
