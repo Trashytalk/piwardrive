@@ -1,7 +1,9 @@
 PiWardrive Documentation
 ========================
 .. note::
-   Please read the legal notice in the project `README.md` before using PiWardrive.
+   Please read :doc:`legal` and ensure you comply with all local laws and obtain
+   proper authorization before conducting any wireless or Bluetooth scans. The
+   authors are not responsible for any misuse of this software.
 
 
 .. toctree::
@@ -27,3 +29,4 @@ PiWardrive Documentation
 
    r_integration
    web_ui
+   legal
