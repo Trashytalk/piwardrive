@@ -267,6 +267,18 @@ def test_get_smart_status_ok(monkeypatch: Any) -> None:
     assert utils.get_smart_status('/mnt/ssd') == 'OK'
 
 
+def test_get_smart_status_failure(monkeypatch: Any) -> None:
+    Part = namedtuple('Part', 'device mountpoint fstype opts')
+    part = Part('/dev/sda', '/mnt/ssd', 'ext4', '')
+    monkeypatch.setattr(psutil, 'disk_partitions', lambda all=False: [part])
+    monkeypatch.setattr(
+        utils.subprocess,
+        'run',
+        lambda *a, **k: (_ for _ in ()).throw(utils.subprocess.CalledProcessError(1, 'smartctl')),
+    )
+    assert utils.get_smart_status('/mnt/ssd') is None
+
+
 def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     class FakeResp:
         status = 200
@@ -294,6 +306,41 @@ def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
 
     aps, clients = asyncio.run(utils.fetch_kismet_devices_async())
     assert aps == [1] and clients == [2]
+
+
+def test_fetch_kismet_devices_async_logs_cache_error(monkeypatch: Any) -> None:
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return '{"access_points": [], "clients": []}'
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any) -> FakeResp:
+            return FakeResp()
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+    monkeypatch.setattr(
+        persistence,
+        "save_ap_cache",
+        mock.AsyncMock(side_effect=Exception("fail")),
+    )
+
+    with mock.patch.object(utils.logging, "exception") as exc_log:
+        asyncio.run(utils.fetch_kismet_devices_async())
+        exc_log.assert_called_once()
 
 
 def test_fetch_kismet_devices_cache(monkeypatch: Any, tmp_path: Path) -> None:
@@ -460,4 +507,52 @@ def test_network_scanning_disabled(monkeypatch: Any) -> None:
     monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
     assert utils.network_scanning_disabled() is True
     monkeypatch.delenv("PW_DISABLE_SCANNING")
+
+
+def test_get_network_throughput_calculates_kbps(monkeypatch: Any) -> None:
+    net = namedtuple("Net", "bytes_sent bytes_recv")
+    utils._NET_IO_CACHE = {"timestamp": 1.0, "counters": net(1000, 2000)}
+    monkeypatch.setattr(utils.time, "time", lambda: 2.0)
+    monkeypatch.setattr(psutil, "net_io_counters", lambda: net(3000, 6000))
+
+    rx, tx = utils.get_network_throughput()
+
+    assert round(rx, 2) == round((6000 - 2000) / 1024.0, 2)
+    assert round(tx, 2) == round((3000 - 1000) / 1024.0, 2)
+    assert utils._NET_IO_CACHE["counters"].bytes_recv == 6000
+    assert utils._NET_IO_CACHE["timestamp"] == 2.0
+
+
+def test_get_network_throughput_resets_when_cache_missing(monkeypatch: Any) -> None:
+    net = namedtuple("Net", "bytes_sent bytes_recv")
+    utils._NET_IO_CACHE = {}
+    monkeypatch.setattr(psutil, "net_io_counters", lambda: net(500, 700))
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+
+    rx, tx = utils.get_network_throughput()
+
+    assert rx == 0.0 and tx == 0.0
+    assert utils._NET_IO_CACHE["counters"].bytes_sent == 500
+    assert utils._NET_IO_CACHE["timestamp"] == 1.0
+
+def test_run_async_task() -> None:
+    """The async loop is started on demand and callbacks run."""
+    import importlib, sys
+
+    sys.modules.pop("utils", None)
+    utils_mod = importlib.import_module("utils")
+
+    async def do_work() -> int:
+        return 3
+
+    results: list[int] = []
+
+    def cb(val: int) -> None:
+        results.append(val)
+
+    fut = utils_mod.run_async_task(do_work(), callback=cb)
+    assert fut.result(timeout=1) == 3
+    assert results == [3]
+    utils_mod.shutdown_async_loop()
+
 
