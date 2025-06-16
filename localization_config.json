@@ -1,0 +1,10 @@
+{
+  "kalman_enable": true,
+  "kalman_process_variance": 0.0001,
+  "kalman_measurement_variance": 0.01,
+  "dbscan_eps": 0.0005,
+  "dbscan_min_samples": 5,
+  "centroid_rssi_weight_power": 1.5,
+  "min_points_for_confidence": 5,
+  "map_zoom_start": 16
+}
