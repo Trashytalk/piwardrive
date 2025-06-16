@@ -166,6 +166,41 @@ def test_run_service_cmd_retries_until_success(monkeypatch: Any) -> None:
     assert success is True and out == '' and err == ''
 
 
+def test_message_bus_disconnect_called(monkeypatch: Any) -> None:
+    called = False
+
+    class Bus:
+        def __init__(self, *_a: Any, **_k: Any) -> None:
+            pass
+
+        async def connect(self) -> None:  # pragma: no cover - mock
+            pass
+
+        async def introspect(self, service: str, path: str) -> str:  # pragma: no cover - mock
+            return "intro"
+
+        def get_proxy_object(self, service: str, path: str, _intro: str) -> Any:
+            class Obj:
+                def get_interface(self, iface: str) -> Any:
+                    return mgr if "Manager" in iface else props
+
+            return Obj()
+
+        def disconnect(self) -> None:
+            nonlocal called
+            called = True
+
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock())
+    props = mock.Mock()
+    aio_mod = types.SimpleNamespace(MessageBus=Bus)
+    dbus_mod = types.SimpleNamespace(aio=aio_mod, BusType=types.SimpleNamespace(SYSTEM=1))
+    monkeypatch.setitem(sys.modules, 'dbus_fast', dbus_mod)
+    monkeypatch.setitem(sys.modules, 'dbus_fast.aio', aio_mod)
+
+    success, _out, _err = utils.run_service_cmd('kismet', 'start')
+    assert success is True and called is True
+
+
 def test_service_status_passes_retry_params() -> None:
     async def _svc(_: str, attempts: int = 1, delay: float = 0) -> bool:
         assert attempts == 2 and delay == 0.5
