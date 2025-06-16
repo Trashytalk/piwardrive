@@ -18,6 +18,29 @@ graph LR
     C --> G[External Services]
 ```
 
+## Data Inputs
+- Kismet
+- Bettercap
+- GPSD
+- SDR
+- Other Sensors (read speed from an accelerometer or OBD‑II adapter)
+
+
+## U/I Features
+- Service controls for Kismet and BetterCAP
+- Interactive map with offline tile prefetch and rotation
+- Real-time CPU, memory and network metrics
+- Drag-and-drop dashboard widgets
+- Vector tile renderer and track playback
+
+
+## Data Handling
+- Multi-format exports (
+- Diagnostics and log rotation
+- Optional remote sync and cloud exports
+- Observations stored in SQLite for later analysis
+- 
+  
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
 ### Scanning and Logging
@@ -60,16 +83,6 @@ sequenceDiagram
     Scheduler->>Clock: schedule_interval(update)
     Clock-->>Scheduler: event handle
 ```
-
-## Features
-- Interactive map with offline tiles
-- Real-time CPU, memory and network metrics
-- Drag-and-drop dashboard widgets
-- Service controls for Kismet and BetterCAP
-- Offline tile prefetch and rotation
-- Diagnostics and log rotation
-- Vector tile renderer and track playback
-- Optional remote sync and cloud exports
 
 ## Quick Start
 
