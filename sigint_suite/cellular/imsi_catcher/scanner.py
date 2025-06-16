@@ -1,7 +1,9 @@
 import os
 import shlex
 import subprocess
-from typing import List, Dict, Optional, Callable
+from typing import List, Optional, Callable
+
+from sigint_suite.models import ImsiRecord
 
 from sigint_suite.cellular.parsers import parse_imsi_output
 from sigint_suite.gps import get_position
@@ -11,10 +13,12 @@ def scan_imsis(
     cmd: Optional[str] = None,
     with_location: bool = True,
     enrich_func: Optional[
-        Callable[[List[Dict[str, str]]], List[Dict[str, str]]]
+        Callable[[List[ImsiRecord]], List[ImsiRecord]]
     ] = None,
+) -> List[ImsiRecord]:
     timeout: int | None = None,
 ) -> List[Dict[str, str]]:
+
     """Scan for IMSI numbers using an external command.
 
     The command output should be comma separated with ``imsi,mcc,mnc,rssi`` per
@@ -41,8 +45,8 @@ def scan_imsis(
         if pos:
             lat, lon = pos
             for rec in records:
-                rec["lat"] = lat
-                rec["lon"] = lon
+                rec.lat = lat
+                rec.lon = lon
 
     if enrich_func:
         try:

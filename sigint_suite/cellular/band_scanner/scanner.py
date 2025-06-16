@@ -1,12 +1,15 @@
 import os
 import shlex
 import subprocess
-from typing import List, Dict, Optional
+from typing import List, Optional
+
+from sigint_suite.models import BandRecord
 
 from sigint_suite.cellular.parsers import parse_band_output
 
 
-def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[Dict[str, str]]:
+def scan_bands(cmd: Optional[str] = None) -> List[BandRecord]:
+
     """Scan for cellular bands and return a list of records.
 
     The command output is expected to be comma separated with

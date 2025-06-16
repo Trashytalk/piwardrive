@@ -746,7 +746,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         for m in self.bt_markers:
             mv.remove_widget(m)
         self.bt_markers.clear()
-        devices = utils.scan_bt_devices()
+        devices = [d.model_dump() for d in utils.scan_bt_devices()]
         try:
             from sigint_integration import load_sigint_data
 
@@ -1000,6 +1000,19 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         progress_cb: Callable[[int, int], None] | None = None,
     ) -> None:
         """Download PNG tiles covering ``bounds`` to ``folder``."""
+
+        from .map_utils import tile_cache
+        try:
+            tile_cache.prefetch_tiles(
+                bounds,
+                zoom=zoom,
+                folder=folder,
+                concurrency=concurrency,
+                progress_cb=progress_cb,
+            )
+            return
+        except Exception:
+            pass
 
         try:
             from .map_utils import tile_cache

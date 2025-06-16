@@ -5,10 +5,14 @@ import os
 import asyncio
 
 import subprocess
-from typing import Dict, List
+from typing import List
 
 
-def scan_bluetooth(timeout: int | None = None) -> List[Dict[str, str]]:
+from sigint_suite.models import BluetoothDevice
+
+
+def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
+
     """Scan for nearby Bluetooth devices using ``hcitool``."""
     timeout = timeout if timeout is not None else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
     cmd = ["hcitool", "scan"]
@@ -39,10 +43,15 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
     except Exception:
         return []
 
-    devices: Dict[str, str] = {}
+    devices: List[BluetoothDevice] = []
     for line in output.splitlines():
         if "Device" in line and ":" in line:
             parts = line.split()
+            if len(parts) >= 2:
+                addr = parts[0]
+                name = " ".join(parts[1:])
+                devices.append(BluetoothDevice(address=addr, name=name))
+    return devices
             try:
                 idx = parts.index("Device")
             except ValueError:
@@ -53,3 +62,4 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
                 devices[addr] = name
 
     return [{"address": a, "name": n} for a, n in devices.items()]
+
