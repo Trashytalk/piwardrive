@@ -86,8 +86,17 @@ def network_scanning_disabled() -> bool:
     """Return ``True`` if scanning is globally disabled."""
     app = App.get_running_app()
     if app is not None:
-        return bool(getattr(app, "disable_scanning", False))
-    return os.getenv("PW_DISABLE_SCANNING", "0").lower() in {"1", "true", "yes", "on"}
+        disabled = bool(getattr(app, "disable_scanning", False))
+    else:
+        disabled = os.getenv("PW_DISABLE_SCANNING", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+    if disabled:
+        logging.debug("Network scanning disabled")
+    return disabled
 
 
 _async_loop: asyncio.AbstractEventLoop | None = None
