@@ -40,6 +40,10 @@ and ``band-scan`` entry points for quickly running scans from the command line.
 - **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
 
+Post-processing hooks can be registered with
+`sigint_suite.hooks.register_post_processor` to enrich scan results (e.g.,
+adding operator names for IMSI captures) without modifying the core library.
+
 ## Running `start_imsi_mode.sh`
 
 The `scripts/start_imsi_mode.sh` script performs a single Wi-Fi and Bluetooth

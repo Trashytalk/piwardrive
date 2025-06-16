@@ -7,6 +7,7 @@ from sigint_suite.models import ImsiRecord
 
 from sigint_suite.cellular.parsers import parse_imsi_output
 from sigint_suite.gps import get_position
+from sigint_suite.hooks import apply_post_processors
 
 
 def scan_imsis(
@@ -47,6 +48,8 @@ def scan_imsis(
             for rec in records:
                 rec.lat = lat
                 rec.lon = lon
+
+    records = apply_post_processors("imsi", records)
 
     if enrich_func:
         try:
