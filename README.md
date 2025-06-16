@@ -487,7 +487,8 @@ docker compose run --rm tests
 
 The `requirements-dev.txt` file includes tools like `flake8`, `mypy` and
 `pytest` along with runtime dependencies required by the tests such as
-`aiosqlite`, `psutil`, `pydantic`, `fastapi` and `httpx`.
+`aiosqlite`, `psutil`, `pydantic`, `fastapi` and `httpx`. Format code and
+imports with `black` and `isort` before opening a pull request.
 
 Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or

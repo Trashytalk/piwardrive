@@ -86,11 +86,11 @@ def lookup_vendor(
     """Return vendor name for ``bssid`` if known."""
     if not bssid:
         return None
-    bssid = bssid.upper().replace('-', ':')
-    parts = bssid.split(':')
+    bssid = bssid.upper().replace("-", ":")
+    parts = bssid.split(":")
     if len(parts) < 3:
         return None
-    prefix = ':'.join(parts[:3])
+    prefix = ":".join(parts[:3])
     return (oui_map or _default_map()).get(prefix)
 
 

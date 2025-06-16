@@ -26,6 +26,10 @@ CONFIG_PATH = str(Path(CONFIG_DIR) / "config.json")
 PROFILES_DIR = str(Path(CONFIG_DIR) / "profiles")
 ACTIVE_PROFILE_FILE = str(Path(CONFIG_DIR) / "active_profile")
 REPORTS_DIR = str(Path(CONFIG_DIR) / "reports")
+HEALTH_EXPORT_DIR = str(Path(CONFIG_DIR) / "health_exports")
+HEALTH_EXPORT_INTERVAL = 6  # hours
+COMPRESS_HEALTH_EXPORTS = True
+HEALTH_EXPORT_RETENTION = 7
 
 
 def get_config_path(profile: Optional[str] = None) -> str:
@@ -56,6 +60,7 @@ class Config:
     map_show_gps: bool = True
     map_show_aps: bool = True
     map_show_bt: bool = False
+    map_show_heatmap: bool = False
     map_cluster_aps: bool = False
     map_cluster_capacity: int = 8
     map_use_offline: bool = False
@@ -76,9 +81,17 @@ class Config:
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
     cleanup_rotated_logs: bool = True
+    health_export_interval: int = HEALTH_EXPORT_INTERVAL
+    health_export_dir: str = HEALTH_EXPORT_DIR
+    compress_health_exports: bool = COMPRESS_HEALTH_EXPORTS
+    health_export_retention: int = HEALTH_EXPORT_RETENTION
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
+    remote_sync_url: str = ""
+    remote_sync_token: str = ""
+    remote_sync_timeout: int = 5
+    remote_sync_retries: int = 3
 
 
 DEFAULT_CONFIG = Config()
@@ -95,6 +108,7 @@ class FileConfigModel(BaseModel):
     map_show_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
+    map_show_heatmap: Optional[bool] = None
     map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
     disable_scanning: Optional[bool] = None
@@ -107,10 +121,18 @@ class FileConfigModel(BaseModel):
     log_rotate_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_archives: Optional[int] = Field(default=None, ge=1)
     cleanup_rotated_logs: Optional[bool] = None
+    health_export_interval: Optional[int] = Field(default=None, ge=1)
+    health_export_dir: Optional[str] = Field(default=None, min_length=1)
+    compress_health_exports: Optional[bool] = None
+    health_export_retention: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
     admin_password_hash: Optional[str] = ""
+    remote_sync_url: Optional[str] = Field(default=None, min_length=1)
+    remote_sync_token: Optional[str] = None
+    remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
+    remote_sync_retries: Optional[int] = Field(default=None, ge=1)
 
 
 class ConfigModel(FileConfigModel):
@@ -120,6 +142,11 @@ class ConfigModel(FileConfigModel):
     map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
+    health_export_interval: int = Field(default=6, ge=1)
+    health_export_dir: str = DEFAULTS["health_export_dir"]
+    compress_health_exports: bool = DEFAULTS["compress_health_exports"]
+    health_export_retention: int = Field(default=7, ge=1)
+
 
     theme: Theme
 
@@ -290,6 +317,7 @@ class AppConfig:
     map_show_gps: bool = DEFAULTS["map_show_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
+    map_show_heatmap: bool = DEFAULTS["map_show_heatmap"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
@@ -304,9 +332,17 @@ class AppConfig:
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     cleanup_rotated_logs: bool = DEFAULTS["cleanup_rotated_logs"]
+    health_export_interval: int = DEFAULTS["health_export_interval"]
+    health_export_dir: str = DEFAULTS["health_export_dir"]
+    compress_health_exports: bool = DEFAULTS["compress_health_exports"]
+    health_export_retention: int = DEFAULTS["health_export_retention"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
+    remote_sync_url: str = DEFAULTS["remote_sync_url"]
+    remote_sync_token: str = DEFAULTS["remote_sync_token"]
+    remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
+    remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
 
     @classmethod
     def load(cls) -> "AppConfig":

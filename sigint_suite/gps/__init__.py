@@ -1,6 +1,7 @@
 """GPS helpers for SIGINT suite."""
 
 from typing import Optional, Tuple
+
 from gpsd_client import client as gps_client
 
 

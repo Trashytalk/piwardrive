@@ -24,6 +24,7 @@ from utils import (
     service_status_async,
     async_tail_file,
 )
+from sync import upload_data
 
 security = HTTPBasic(auto_error=False)
 app = FastAPI()
@@ -85,6 +86,18 @@ async def get_logs(
     else:
         lines_out = data
     return {"path": safe, "lines": lines_out}
+
+
+@app.post("/sync")
+async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> dict:
+    """Upload recent health records to the configured sync endpoint."""
+    records = load_recent_health(limit)
+    if inspect.isawaitable(records):
+        records = await records
+    success = await upload_data([asdict(r) for r in records])
+    if not success:
+        raise HTTPException(status_code=502, detail="Upload failed")
+    return {"uploaded": len(records)}
 
 
 @app.websocket("/ws/status")

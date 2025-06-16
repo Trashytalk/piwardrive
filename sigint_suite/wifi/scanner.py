@@ -2,10 +2,8 @@ import logging
 import os
 import shlex
 import subprocess
-import asyncio
-from typing import Dict, List, Optional
 
-from sigint_suite.models import WifiNetwork
+from typing import Dict, List, Optional
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
 
@@ -30,8 +28,7 @@ def scan_wifi(
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
     timeout: Optional[int] = None,
-) -> List[WifiNetwork]:
-
+) -> List[Dict[str, str]]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
@@ -41,11 +38,8 @@ def scan_wifi(
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
     )
-    logger.debug("Executing: %s", " ".join(cmd))
 
     try:
         output = subprocess.check_output(
@@ -53,8 +47,6 @@ def scan_wifi(
         )
     except Exception as exc:
         logger.exception("Wi-Fi scan failed: %s", exc)
-    except Exception as exc:  # pragma: no cover - platform dependent
-        logging.exception("Failed to run iwlist", exc_info=exc)
         return []
 
     records: List[Dict[str, str]] = []
@@ -146,13 +138,13 @@ async def async_scan_wifi(
     except Exception:
         return []
 
-    networks: List[WifiNetwork] = []
+    records: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
             if current:
-                networks.append(current)
+                records.append(current)
             bssid = None
             if "Address:" in line:
                 bssid = line.split("Address:")[-1].strip()
@@ -172,12 +164,12 @@ async def async_scan_wifi(
         elif "Quality" in line:
             current["quality"] = line.split("Quality=")[-1].split(" ")[0]
     if current:
-        networks.append(current)
-    networks = apply_post_processors("wifi", networks)
-    return networks
+        records.append(current)
+    records = apply_post_processors("wifi", records)
+    return [WifiNetwork(**rec) for rec in records]
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover - CLI helper
     """Command-line interface for Wi-Fi scanning."""
     import argparse
     import json
@@ -197,5 +189,5 @@ def main() -> None:
             print(f"{ssid} {bssid}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - manual execution
     main()
