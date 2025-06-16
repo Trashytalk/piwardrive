@@ -27,3 +27,16 @@ convenient ``piwardrive-vacuum`` command is installed which simply calls this
 function::
 
    piwardrive-vacuum
+
+Schema Migrations
+-----------------
+
+As new versions of PiWardrive add tables or columns, the database schema is
+automatically migrated. The :mod:`persistence` module tracks a schema version
+and applies migrations when a connection is opened. To manually run migrations
+use the ``piwardrive-migrate`` command::
+
+   piwardrive-migrate
+
+Deleting ``app.db`` will recreate it with the latest schema, but the migration
+command is useful when upgrading an existing installation.

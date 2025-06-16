@@ -24,11 +24,15 @@ graph LR
 - GPSD
 - SDR
 - Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
+  - ``dbus`` + ``iio-sensor-proxy`` or an external MPU‑6050 are optional;
+    the app falls back gracefully when absent
+
 
 
 ## U/I Features
 - Service controls for Kismet and BetterCAP
 - Interactive map with offline tile prefetch and rotation
+- Predictive route tile caching
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback
@@ -41,7 +45,7 @@ graph LR
 - Diagnostics and log rotation
 - Remote database sync (`remote_sync.py`) and cloud exports
 - Observations stored in SQLite for later analysis
-- CLI SIGINT tools under `sigint_suite/`
+- CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
@@ -86,6 +90,10 @@ sequenceDiagram
     Clock-->>Scheduler: event handle
 ```
 
+Schedulers expose basic metrics via ``get_metrics()`` including the next
+scheduled run time and duration of the last callback execution. These values
+aid troubleshooting periodic jobs during development.
+
 ## Quick Start
 
 ### Hardware
@@ -127,6 +135,25 @@ The UI renders directly on the framebuffer so no X server is required.
 docker build -t piwardrive .
 docker run --device=/dev/ttyUSB0 --rm piwardrive
 ```
+
+### Automated vs Manual Tasks
+
+#### Automated Aspects
+
+* **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
+* **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
+* **Configuration Reloads** – changes to `config.json` and any `PW_` environment variables are detected at runtime and applied without restarting.
+* **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup.
+
+#### Manual Steps
+
+* **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
+* **Launching the App** – activate the environment and start PiWardrive with `python main.py` or enable `piwardrive.service` to start on boot.
+* **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
+* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
+* **Syncing Data** – trigger uploads via `/sync` or by calling `remote_sync.sync_database_to_server`.
+* **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
+
 
 ## Mobile Builds
 

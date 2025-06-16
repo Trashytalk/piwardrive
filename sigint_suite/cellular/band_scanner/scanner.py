@@ -21,7 +21,8 @@ def scan_bands(
 
     The command output is expected to be comma separated with
     ``band,channel,rssi`` per line. Set the ``BAND_SCAN_CMD`` environment
-    variable to override the executable.
+    variable to override the executable. The timeout defaults to the
+    ``BAND_SCAN_TIMEOUT`` environment variable (``10`` seconds).
     """
 
     cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
