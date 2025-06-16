@@ -11,7 +11,7 @@ CONFIG_PATH = Path.home() / ".config" / "piwardrive" / "setup.json"
 
 def run_wizard() -> None:
     """Prompt for service configuration options and save them."""
-    config = {}
+    config: dict[str, str | int] = {}
     config["kismet_host"] = input("Kismet host [localhost]: ") or "localhost"
     config["kismet_port"] = int(input("Kismet port [2501]: ") or "2501")
     config["bettercap_iface"] = input("BetterCAP interface [wlan0]: ") or "wlan0"

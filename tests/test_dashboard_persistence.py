@@ -14,15 +14,15 @@ def load_screen(monkeypatch: Any):
         "kivy.uix.floatlayout": ModuleType("kivy.uix.floatlayout"),
         "kivy.uix.screenmanager": ModuleType("kivy.uix.screenmanager"),
     }
-    modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
+    setattr(modules["kivy.app"], "App", type("App", (), {"get_running_app": staticmethod(lambda: None)}))
 
     class DummyLayout:
         def __init__(self) -> None:
             self.children: list[Any] = []
         def add_widget(self, w: Any) -> None:
             self.children.append(w)
-    modules["kivy.uix.floatlayout"].FloatLayout = DummyLayout
-    modules["kivy.uix.screenmanager"].Screen = object
+    setattr(modules["kivy.uix.floatlayout"], "FloatLayout", DummyLayout)
+    setattr(modules["kivy.uix.screenmanager"], "Screen", object)
 
     widgets_mod = ModuleType("widgets")
     class BaseWidget:

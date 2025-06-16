@@ -1,0 +1,2 @@
+class MDBoxLayout:
+    pass

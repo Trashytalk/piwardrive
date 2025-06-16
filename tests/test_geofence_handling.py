@@ -30,31 +30,35 @@ def load_screen(monkeypatch: Any):
         "utils": ModuleType("utils"),
         "persistence": ModuleType("persistence"),
     }
-    mods["aiohttp"].ClientSession = object
-    mods["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
-    mods["kivy.clock"].Clock = type("Clock", (), {"create_trigger": staticmethod(lambda *a, **k: lambda *a2, **k2: None)})
-    mods["kivy.clock"].mainthread = lambda f: f
-    mods["kivy.metrics"].dp = lambda x: x
-    mods["kivy.uix.label"].Label = object
-    mods["kivy.uix.screenmanager"].Screen = object
-    mods["kivy.animation"].Animation = object
+    setattr(mods["aiohttp"], "ClientSession", object)
+    setattr(mods["kivy.app"], "App", type("App", (), {"get_running_app": staticmethod(lambda: None)}))
+    setattr(
+        mods["kivy.clock"],
+        "Clock",
+        type("Clock", (), {"create_trigger": staticmethod(lambda *a, **k: lambda *a2, **k2: None)}),
+    )
+    setattr(mods["kivy.clock"], "mainthread", lambda f: f)
+    setattr(mods["kivy.metrics"], "dp", lambda x: x)
+    setattr(mods["kivy.uix.label"], "Label", object)
+    setattr(mods["kivy.uix.screenmanager"], "Screen", object)
+    setattr(mods["kivy.animation"], "Animation", object)
     for name in ["MapMarker", "MapMarkerPopup", "MBTilesMapSource", "LineMapLayer"]:
         setattr(mods["kivy_garden.mapview"], name, object)
-    mods["kivymd.uix.dialog"].MDDialog = object
-    mods["kivymd.uix.menu"].MDDropdownMenu = object
-    mods["kivymd.uix.snackbar"].Snackbar = object
-    mods["kivymd.uix.textfield"].MDTextField = object
-    mods["kivymd.uix.progressbar"].MDProgressBar = object
-    mods["kivymd.uix.boxlayout"].MDBoxLayout = object
-    mods["kivymd.uix.label"].MDLabel = object
-    mods["utils"].haversine_distance = lambda *a, **k: 0.0
-    mods["utils"].polygon_area = lambda *a, **k: 0.0
-    mods["utils"].load_kml = lambda *a, **k: []
-    mods["utils"].point_in_polygon = lambda p, poly: (
+    setattr(mods["kivymd.uix.dialog"], "MDDialog", object)
+    setattr(mods["kivymd.uix.menu"], "MDDropdownMenu", object)
+    setattr(mods["kivymd.uix.snackbar"], "Snackbar", object)
+    setattr(mods["kivymd.uix.textfield"], "MDTextField", object)
+    setattr(mods["kivymd.uix.progressbar"], "MDProgressBar", object)
+    setattr(mods["kivymd.uix.boxlayout"], "MDBoxLayout", object)
+    setattr(mods["kivymd.uix.label"], "MDLabel", object)
+    setattr(mods["utils"], "haversine_distance", lambda *a, **k: 0.0)
+    setattr(mods["utils"], "polygon_area", lambda *a, **k: 0.0)
+    setattr(mods["utils"], "load_kml", lambda *a, **k: [])
+    setattr(mods["utils"], "point_in_polygon", lambda p, poly: (
         poly[0][0] <= p[0] <= poly[2][0] and poly[0][1] <= p[1] <= poly[2][1]
-    )
-    mods["utils"].report_error = lambda msg: None
-    mods["persistence"].save_app_state = lambda *a, **k: None
+    ))
+    setattr(mods["utils"], "report_error", lambda msg: None)
+    setattr(mods["persistence"], "save_app_state", lambda *a, **k: None)
     for n, m in mods.items():
         monkeypatch.setitem(sys.modules, n, m)
     if "screens.map_screen" in sys.modules:

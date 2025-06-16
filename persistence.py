@@ -136,7 +136,6 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?)", (current,)
             )
-            row = {"version": current}
         else:
             await conn.execute(
                 "UPDATE schema_version SET version = ?", (current,)

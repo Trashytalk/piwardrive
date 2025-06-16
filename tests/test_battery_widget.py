@@ -36,7 +36,7 @@ def _load_widget(add_dummy_module):
     )
     return importlib.import_module("widgets.battery_status")
 
-def test_widget_updates(monkeypatch: Any) -> None:
+def test_widget_updates(monkeypatch: Any, add_dummy_module: Any) -> None:
     bs = _load_widget(add_dummy_module)
     widget = object.__new__(bs.BatteryStatusWidget)
     widget.label = bs.MDLabel()  # type: ignore[attr-defined]

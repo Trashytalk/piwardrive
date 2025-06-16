@@ -1,0 +1,2 @@
+class DragBehavior:
+    pass
