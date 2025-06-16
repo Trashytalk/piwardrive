@@ -18,10 +18,12 @@ except Exception:  # pragma: no cover - fallback stubs for tests
         def schedule_interval(
             callback: Callable[[float], Any], interval: float
         ) -> _DummyEvent:
+            """Return a dummy event for tests."""
             return _DummyEvent()
 
         @staticmethod
         def unschedule(event: _DummyEvent) -> None:
+            """No-op unschedule used in tests."""
             pass
 
     Clock = _DummyClock()
