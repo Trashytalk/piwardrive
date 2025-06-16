@@ -232,9 +232,12 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
     if profile is None:
         profile = get_active_profile()
     path = get_config_path(profile)
+    data = asdict(config)
+    validate_config_data(data)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(asdict(config), f, indent=2)
+        json.dump(data, f, indent=2)
 
 
 def export_config(config: Config, path: str) -> None:
