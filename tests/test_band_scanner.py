@@ -15,3 +15,17 @@ def test_scan_bands_parses_output(monkeypatch):
         {"band": "LTE", "channel": "100", "rssi": "-60"},
         {"band": "5G", "channel": "200", "rssi": "-70"},
     ]
+
+
+def test_scan_bands_passes_timeout(monkeypatch):
+    called = {}
+
+    def fake_check_output(*a, **k):
+        called["timeout"] = k.get("timeout")
+        return ""
+
+    monkeypatch.setattr("subprocess.check_output", fake_check_output)
+
+    scan_bands("dummy", timeout=5)
+
+    assert called["timeout"] == 5
