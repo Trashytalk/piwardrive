@@ -1,16 +1,13 @@
 import ast
 import os
 import subprocess
-from types import SimpleNamespace, ModuleType
+from types import SimpleNamespace
 from unittest import mock
 
 import sys
+import importlib
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-aiohttp_mod = ModuleType('aiohttp')
-aiohttp_mod.ClientSession = object
-aiohttp_mod.ClientTimeout = lambda *a, **k: None
-aiohttp_mod.ClientError = Exception
-sys.modules['aiohttp'] = aiohttp_mod
 import utils
 import security
 from typing import Any, Callable, cast
@@ -33,7 +30,13 @@ def _load_control_service() -> Callable[[Any, str, str], Any]:
     return cast(Callable[[Any, str, str], Any], namespace['control_service'])
 
 
-def test_control_service_reports_error(monkeypatch: Any) -> None:
+def test_control_service_reports_error(monkeypatch: Any, add_dummy_module) -> None:
+    add_dummy_module(
+        "aiohttp",
+        ClientSession=object,
+        ClientTimeout=lambda *a, **k: None,
+        ClientError=Exception,
+    )
     monkeypatch.setenv('PW_ADMIN_PASSWORD', 'x')
     func = _load_control_service()
     dummy = SimpleNamespace(
@@ -45,7 +48,13 @@ def test_control_service_reports_error(monkeypatch: Any) -> None:
     rep.assert_called_once_with('Failed to start svc: oops')
 
 
-def test_control_service_prompts_for_password(monkeypatch: Any) -> None:
+def test_control_service_prompts_for_password(monkeypatch: Any, add_dummy_module) -> None:
+    add_dummy_module(
+        "aiohttp",
+        ClientSession=object,
+        ClientTimeout=lambda *a, **k: None,
+        ClientError=Exception,
+    )
     def fake_verify(pw: str, h: str) -> bool:
         calls.append((pw, h))
         return False

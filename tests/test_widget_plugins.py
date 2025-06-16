@@ -3,19 +3,17 @@ import sys
 import importlib
 import subprocess
 from pathlib import Path
-from types import ModuleType
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Provide dummy kivy modules
-mods = {
-    "kivy.uix.behaviors": ModuleType("kivy.uix.behaviors"),
-    "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
-}
-mods["kivy.uix.behaviors"].DragBehavior = type("DragBehavior", (), {})
-mods["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {})
-for n, m in mods.items():
-    sys.modules[n] = m
+
+def _setup_kivy(add_dummy_module):
+    add_dummy_module(
+        "kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {})
+    )
+    add_dummy_module(
+        "kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {})
+    )
 
 
 def _build_c_plugin(plugin_dir: Path) -> None:
@@ -68,7 +66,8 @@ def _build_c_plugin(plugin_dir: Path) -> None:
     ])
 
 
-def test_plugin_discovery(tmp_path, monkeypatch):
+def test_plugin_discovery(tmp_path, monkeypatch, add_dummy_module):
+    _setup_kivy(add_dummy_module)
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
     plugin_file = plugin_dir / "my_widget.py"
@@ -85,7 +84,8 @@ def test_plugin_discovery(tmp_path, monkeypatch):
     assert "ExtraWidget" in widgets.__all__
 
 
-def test_cython_pyo3_plugin(tmp_path, monkeypatch):
+def test_cython_pyo3_plugin(tmp_path, monkeypatch, add_dummy_module):
+    _setup_kivy(add_dummy_module)
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
     _build_c_plugin(plugin_dir)
@@ -97,7 +97,8 @@ def test_cython_pyo3_plugin(tmp_path, monkeypatch):
     assert "CWidget" in widgets.__all__
 
 
-def test_load_error(tmp_path, monkeypatch):
+def test_load_error(tmp_path, monkeypatch, add_dummy_module):
+    _setup_kivy(add_dummy_module)
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
     broken = plugin_dir / "broken.so"

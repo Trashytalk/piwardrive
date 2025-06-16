@@ -23,7 +23,10 @@ graph LR
 - Bettercap
 - GPSD
 - SDR
-- Orientation sensors (gyroscope, accelerometer, OBD-II adapter)
+- Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
+  - ``dbus`` + ``iio-sensor-proxy`` or an external MPU‑6050 are optional;
+    the app falls back gracefully when absent
+
 
 
 ## U/I Features

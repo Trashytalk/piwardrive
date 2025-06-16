@@ -53,6 +53,7 @@ Scheduled Prefetch
 set of tiles based on recent GPS points. ``route_prefetch_lookahead`` controls
 how far ahead of the current location tiles are fetched.
 
+
 Paths
 -----
 

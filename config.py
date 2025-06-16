@@ -111,6 +111,15 @@ class Config:
 DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
 
+# Mapping of environment variable names to configuration keys
+ENV_OVERRIDE_MAP: Dict[str, str] = {
+    f"PW_{name.upper()}": name for name in DEFAULTS.keys()
+}
+
+def list_env_overrides() -> Dict[str, str]:
+    """Return available ``PW_`` environment variable overrides."""
+    return dict(ENV_OVERRIDE_MAP)
+
 
 class FileConfigModel(BaseModel):
     """Validation model for configuration files."""
@@ -208,10 +217,11 @@ def validate_config_data(data: Dict[str, Any]) -> None:
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
+    """Return a copy of ``cfg`` with ``PW_`` environment overrides."""
     result = dict(cfg)
-    for key, default in DEFAULTS.items():
-        raw = os.getenv(f"PW_{key.upper()}")
+    for env_var, key in ENV_OVERRIDE_MAP.items():
+        default = DEFAULTS[key]
+        raw = os.getenv(env_var)
         if raw is not None:
             if key == "theme":
                 try:
@@ -220,6 +230,9 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
                     result[key] = raw
             else:
                 result[key] = _parse_env_value(raw, default)
+        elif key == "remote_sync_url" and result.get(key, default) == "":
+            # Allow missing remote sync URL
+            result[key] = None
     return result
 
 
