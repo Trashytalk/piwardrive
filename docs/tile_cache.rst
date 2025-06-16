@@ -13,6 +13,17 @@ covering a bounding box.  Tiles are saved under ``/mnt/ssd/tiles`` by default an
 ``prefetch_visible_region`` grabs the area currently shown on screen.  These
 functions fetch data from OpenStreetMap so they should be run while online.
 
+Command Line
+------------
+
+Tiles can also be prefetched without launching the GUI using the
+``piwardrive-prefetch`` entry point::
+
+   piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
+
+The four positional arguments represent ``min_lat min_lon max_lat max_lon``.
+Specify ``--folder`` to override the cache directory.
+
 Cache Maintenance
 -----------------
 

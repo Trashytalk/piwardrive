@@ -68,6 +68,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if "screens.map_screen" in sys.modules:
     del sys.modules["screens.map_screen"]
 from screens.map_screen import MapScreen  # noqa: E402
+from screens.map_utils import tile_cache
 
 
 def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
@@ -88,6 +89,7 @@ def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
             local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
             asyncio.run(fake_dl(None, url, local))
     monkeypatch.setattr(tile_cache, "prefetch_tiles", fake_prefetch)
+
     bounds = (0.0, 0.0, 1.0, 1.0)
     screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
     assert (tmp_path / "1" / "1" / "0.png").is_file()
@@ -121,3 +123,15 @@ def test_enforce_cache_limit(tmp_path):
     remaining = list(tmp_path.iterdir())
     assert len(remaining) == 2
     assert files[0] not in remaining
+
+
+def test_prefetch_tiles_error(monkeypatch, tmp_path):
+    screen = MapScreen()
+
+    async def fail_dl(_session, url, local):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(tile_cache, "download_tile_async", fail_dl)
+    bounds = (0.0, 0.0, 1.0, 1.0)
+    screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
+    assert not any(tmp_path.rglob("*.png"))

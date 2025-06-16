@@ -27,7 +27,7 @@ from kivy.properties import (  # pylint: disable=no-name-in-module
     BooleanProperty,
     NumericProperty,
     StringProperty,
-    ListProperty
+    ListProperty,
 )
 from kivymd.app import MDApp
 
@@ -67,6 +67,13 @@ class PiWardriveApp(MDApp):
     widget_battery_status = BooleanProperty(False)
     widget_health_analysis = BooleanProperty(True)
     ui_font_size = NumericProperty(16)
+    log_paths = ListProperty(
+        [
+            "/var/log/syslog",
+            "/var/log/kismet.log",
+            "/var/log/bettercap.log",
+        ]
+    )
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
@@ -110,9 +117,7 @@ class PiWardriveApp(MDApp):
         self.theme_cls.theme_style = self.theme
         for f in fields(Config):
             if hasattr(self.__class__, f.name):
-                self.bind(
-                    **{f.name: lambda _i, v, k=f.name: self._auto_save(k, v)}
-                )
+                self.bind(**{f.name: lambda _i, v, k=f.name: self._auto_save(k, v)})
 
     def build(self) -> Any:
         """Load and return the root widget tree from KV."""
@@ -145,7 +150,7 @@ class PiWardriveApp(MDApp):
                 text=name, on_release=lambda btn, s=name: self.switch_screen(s)
             )
             nav_bar.add_widget(btn)
-        for path in ["/var/log/syslog"]:
+        for path in self.log_paths:
             ev = f"rotate_{os.path.basename(path)}"
             self.scheduler.schedule(
                 ev,
@@ -182,9 +187,7 @@ class PiWardriveApp(MDApp):
             utils.report_error("Unauthorized")
             return
         try:
-            success, _out, err = self._run_service_cmd(
-                svc, action, attempts=3, delay=1
-            )
+            success, _out, err = self._run_service_cmd(svc, action, attempts=3, delay=1)
         except Exception as exc:  # pragma: no cover - subprocess failures
             utils.report_error(f"Failed to {action} {svc}: {exc}")
             return

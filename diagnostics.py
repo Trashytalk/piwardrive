@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 from datetime import datetime
+import time
 import cProfile
 import pstats
 import io
@@ -24,6 +25,7 @@ import config
 import r_integration
 
 _PROFILER: cProfile.Profile | None = None
+_LAST_NETWORK_OK: float | None = None
 
 
 def generate_system_report() -> dict:
@@ -120,10 +122,21 @@ def get_profile_metrics() -> dict | None:
     return {"calls": len(stats), "cumtime": total}
 
 
-def run_network_test(host: str = '8.8.8.8') -> bool:
-    """Ping ``host`` once and return True if reachable."""
+def run_network_test(host: str = '8.8.8.8', cache_seconds: float = 30.0) -> bool:
+    """Ping ``host`` once and return True if reachable.
+
+    If the previous successful check occurred within ``cache_seconds`` the
+    ping call is skipped and ``True`` is returned immediately.
+    """
+    global _LAST_NETWORK_OK
+    now = time.time()
+    if _LAST_NETWORK_OK is not None and now - _LAST_NETWORK_OK < cache_seconds:
+        return True
     proc = subprocess.run(['ping', '-c', '1', host], capture_output=True)
-    return proc.returncode == 0
+    if proc.returncode == 0:
+        _LAST_NETWORK_OK = now
+        return True
+    return False
 
 
 def get_interface_status() -> dict:
