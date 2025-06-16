@@ -1,3 +1,5 @@
+from piwardrive.gpsd_client import *  # noqa: F401,F403
+
 """Thread-safe client for ``gpsd`` with helpers for common queries."""
 
 import logging
@@ -87,3 +89,4 @@ class GPSDClient:
 
 
 client = GPSDClient()
+

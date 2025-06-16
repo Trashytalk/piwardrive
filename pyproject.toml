@@ -3,7 +3,7 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 exclude = ["tests*", "docs*", "benchmarks*", "examples*"]
 
 [tool.setuptools.data-files]
@@ -19,14 +19,14 @@ license = {file = "LICENSE"}
 authors = [{name = "PiWardrive contributors"}]
 
 [project.scripts]
-piwardrive = "main:main"
-piwardrive-service = "service:main"
-health-export = "scripts.health_export:main"
-health-import = "scripts.health_import:main"
-piwardrive-prefetch = "scripts.prefetch_cli:main"
-service-status = "scripts.service_status:main"
-piwardrive-vacuum = "scripts.vacuum_db:main"
-piwardrive-migrate = "scripts.migrate_db:main"
+piwardrive = "piwardrive.main:main"
+piwardrive-service = "piwardrive.service:main"
+health-export = "piwardrive.scripts.health_export:main"
+health-import = "piwardrive.scripts.health_import:main"
+piwardrive-prefetch = "piwardrive.scripts.prefetch_cli:main"
+service-status = "piwardrive.scripts.service_status:main"
+piwardrive-vacuum = "piwardrive.scripts.vacuum_db:main"
+piwardrive-migrate = "piwardrive.scripts.migrate_db:main"
 
 
 

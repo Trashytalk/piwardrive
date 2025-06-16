@@ -1,3 +1,5 @@
+from piwardrive.utils import *  # noqa: F401,F403
+
 """Utility functions for the PiWardrive GUI application."""
 
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check

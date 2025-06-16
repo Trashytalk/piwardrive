@@ -1,3 +1,5 @@
+from piwardrive.orientation_sensors import *  # noqa: F401,F403
+
 """Orientation sensor helpers for gyroscope and accelerometer.
 
 The functions in this module try to read device orientation via different
