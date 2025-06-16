@@ -19,7 +19,12 @@ import asyncio
 import utils
 from scheduler import PollScheduler
 from interfaces import DataCollector, SelfTestCollector
-from persistence import HealthRecord, save_health_record, load_recent_health
+from persistence import (
+    HealthRecord,
+    save_health_record,
+    load_recent_health,
+    purge_old_health,
+)
 from utils import run_async_task
 import config
 import r_integration
@@ -211,6 +216,7 @@ class HealthMonitor:
                 disk_percent=system.get("disk_percent", 0.0),
             )
             await save_health_record(rec)
+            await purge_old_health(30)
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
