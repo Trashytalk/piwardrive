@@ -141,6 +141,7 @@ docker-compose run --rm test
 
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` persists settings between runs.
+  Changes are detected automatically and reloaded at runtime.
 * **Profiles**: alternate configs live in `~/.config/piwardrive/profiles`.
 * **Env Overrides**: configure any option via `PW_<KEY>` variables.
   Common examples:
