@@ -118,7 +118,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.kml_layers = []
 
         self.geofences = []
-        self._cluster_capacity = 8
+        app = App.get_running_app()
+        self._cluster_capacity = getattr(app, "map_cluster_capacity", 8)
         self._last_gps = None
         self._last_time = 0.0
         self._gps_interval = 0.0
@@ -1012,6 +1013,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 progress_cb=progress_cb,
             )
             return
+          
             import sys
             from types import SimpleNamespace
             if "kivymd.toast" not in sys.modules:
