@@ -2,7 +2,8 @@ from __future__ import annotations
 
 """Typed record models used by scanner functions."""
 
-from typing import Optional, Any
+from typing import Any, Optional
+
 
 from pydantic import BaseModel, ConfigDict
 
