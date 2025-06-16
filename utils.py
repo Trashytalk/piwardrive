@@ -26,12 +26,12 @@ except Exception:
 if _RealApp is not None:
     App = _RealApp
 else:
-    class _FallbackApp:
+    class _AppStub:
         @staticmethod
         def get_running_app() -> None:
             return None
 
-    App = _FallbackApp
+    App = _AppStub
 from enum import IntEnum
 
 import psutil
