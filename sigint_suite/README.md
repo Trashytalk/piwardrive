@@ -57,6 +57,7 @@ The suite expects `iwlist` (from the `wireless-tools` package) and either
 `bluetoothctl` (from `bluez`) or the Python `bleak` package to be available on
 the system. Running
 `./sigint_suite/scripts/setup_all.sh` will install these packages and the
-required Python dependencies. The setup script also downloads the IEEE OUI
-registry used to map BSSID prefixes to vendor names.
+required Python dependencies. Vendor lookups use the IEEE OUI registry which is
+automatically downloaded to `~/.config/piwardrive/oui.csv` when first needed and
+refreshed weekly. The setup script can also fetch the file manually.
 

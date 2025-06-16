@@ -2,7 +2,7 @@
 # Download the IEEE OUI registry for vendor lookups.
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DATA_DIR="$(cd "$SCRIPT_DIR/../enrichment" && pwd)"
+DATA_DIR="$HOME/.config/piwardrive"
 URL="https://standards-oui.ieee.org/oui/oui.csv"
 
 mkdir -p "$DATA_DIR"
