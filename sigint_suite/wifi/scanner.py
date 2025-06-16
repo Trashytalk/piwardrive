@@ -26,9 +26,8 @@ def scan_wifi(
     interface: str = "wlan0",
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
-) -> List[WifiNetwork]:
     timeout: int | None = None,
-) -> List[Dict[str, str]]:
+) -> List[WifiNetwork]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
 
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
@@ -64,11 +63,6 @@ def scan_wifi(
         elif "Address" in line:
             bssid = line.split("Address:")[-1].strip()
             current["bssid"] = bssid
-                vendor = lookup_vendor(bssid)
-                if vendor:
-                    current["vendor"] = vendor
-        elif "ESSID" in line:
-            current["ssid"] = line.split(":", 1)[-1].strip('"')
         elif "Frequency" in line:
             current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
         elif "Quality" in line:
