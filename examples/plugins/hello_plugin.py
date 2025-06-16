@@ -21,4 +21,3 @@ class HelloPluginWidget(DashboardWidget):
     def update(self):
         """Update the label with the current time."""
         self.label.text = datetime.now().strftime("Hello %H:%M:%S")
-
