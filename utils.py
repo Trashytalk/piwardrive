@@ -84,6 +84,7 @@ def network_scanning_disabled() -> bool:
         return bool(getattr(app, "disable_scanning", False))
     return os.getenv("PW_DISABLE_SCANNING", "0").lower() in {"1", "true", "yes", "on"}
 
+
 _async_loop = asyncio.new_event_loop()
 _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
 _async_thread.start()
@@ -270,7 +271,6 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
 
 def get_network_throughput() -> tuple[float, float]:
     """Return (rx_kbps, tx_kbps) since the last call."""
-    global _NET_IO_CACHE
     try:
         cur = psutil.net_io_counters()
     except Exception:

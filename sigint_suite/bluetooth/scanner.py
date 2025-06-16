@@ -3,27 +3,26 @@ import os
 """Bluetooth scanning helpers using modern tools."""
 
 import asyncio
-
 import subprocess
 from typing import List, Dict
 
 
-from sigint_suite.models import BluetoothDevice
-
-
-def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
+def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
 
     """Scan for nearby Bluetooth devices using ``hcitool``."""
-    timeout = timeout if timeout is not None else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
-    cmd = ["hcitool", "scan"]
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
+    )
 
     try:
         from bleak import BleakScanner  # type: ignore
 
-        async def _scan() -> List[Dict[str, str]]:
+        async def _scan() -> List[BluetoothDevice]:
             found = await BleakScanner.discover(timeout=timeout)
             return [
-                {"address": dev.address, "name": dev.name or dev.address}
+                BluetoothDevice(address=dev.address, name=dev.name or dev.address)
                 for dev in found
             ]
 
