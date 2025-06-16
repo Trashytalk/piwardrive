@@ -106,3 +106,33 @@ def test_screen_export_ap_data(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Non
     data = json.load(open(out))
     assert len(data) == 1
     assert data[0]["ssid"] == "B"
+
+
+def test_estimate_location_from_rssi() -> None:
+    obs = [
+        {"lat": 1.0, "lon": 1.0, "rssi": -30},
+        {"lat": 2.0, "lon": 2.0, "rssi": -60},
+    ]
+    lat, lon = exp.estimate_location_from_rssi(obs)
+    w1 = 1 / 30
+    w2 = 1 / 60
+    exp_lat = (1.0 * w1 + 2.0 * w2) / (w1 + w2)
+    assert pytest.approx(lat) == exp_lat
+    assert pytest.approx(lon) == exp_lat
+
+
+def test_export_map_kml(tmp_path) -> None:
+    track = [(1.0, 2.0), (3.0, 4.0)]
+    aps = [{"ssid": "A", "lat": 1.0, "lon": 2.0}]
+    bts = [{"name": "bt", "lat": 5.0, "lon": 6.0}]
+    kml = tmp_path / "map.kml"
+    exp.export_map_kml(track, aps, bts, str(kml))
+    text = kml.read_text()
+    assert "<LineString>" in text
+    assert "2.0,1.0" in text
+    assert "6.0,5.0" in text
+    kmz = tmp_path / "map.kmz"
+    exp.export_map_kml(track, aps, bts, str(kmz))
+    import zipfile
+    with zipfile.ZipFile(kmz) as zf:
+        assert "doc.kml" in zf.namelist()
