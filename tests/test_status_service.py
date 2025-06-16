@@ -1,19 +1,19 @@
 import asyncio
 from dataclasses import asdict
 from httpx import AsyncClient, ASGITransport
+import importlib
 
-import sys
-from types import ModuleType
-aiohttp_mod = ModuleType('aiohttp')
-aiohttp_mod.ClientSession = object
-aiohttp_mod.ClientTimeout = lambda *a, **k: None
-aiohttp_mod.ClientError = Exception
-sys.modules['aiohttp'] = aiohttp_mod
-import service
 from persistence import HealthRecord
 
 
-def test_get_status_async(monkeypatch):
+def test_get_status_async(monkeypatch, add_dummy_module):
+    add_dummy_module(
+        "aiohttp",
+        ClientSession=object,
+        ClientTimeout=lambda *a, **k: None,
+        ClientError=Exception,
+    )
+    service = importlib.import_module("service")
     records = [HealthRecord("t", 1.0, 2.0, 3.0, 4.0)]
     async def fake_load(limit=5):
         return records
