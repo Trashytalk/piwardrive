@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
 
 class TowerTracker:
@@ -88,9 +88,7 @@ class TowerTracker:
     def all_towers(self) -> List[Dict[str, float]]:
         """Return all tracked towers."""
 
-        cur = self.conn.execute(
-            "SELECT tower_id, lat, lon, last_seen FROM towers"
-        )
+        cur = self.conn.execute("SELECT tower_id, lat, lon, last_seen FROM towers")
         return [
             {
                 "tower_id": row[0],

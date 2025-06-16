@@ -17,7 +17,6 @@ import json
 import os
 from typing import Any, Dict, List, Mapping
 
-
 DEFAULT_EXPORT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "exports")
 )
@@ -38,7 +37,9 @@ def _load_json(path: str) -> List[Dict[str, Any]]:
     return []
 
 
-def load_data(export_dir: str = DEFAULT_EXPORT_DIR) -> Mapping[str, List[Dict[str, Any]]]:
+def load_data(
+    export_dir: str = DEFAULT_EXPORT_DIR,
+) -> Mapping[str, List[Dict[str, Any]]]:
     """Load Wi-Fi and Bluetooth scan data from ``export_dir``."""
 
     wifi = _load_json(os.path.join(export_dir, "wifi.json"))
@@ -103,4 +104,3 @@ def main() -> None:  # pragma: no cover - small CLI helper
 
 if __name__ == "__main__":  # pragma: no cover - manual execution
     main()
-

@@ -1,6 +1,6 @@
 import csv
 import json
-from typing import Iterable, Mapping, Any
+from typing import Any, Iterable, Mapping
 
 
 def export_json(records: Iterable[Any], path: str) -> None:
@@ -26,4 +26,3 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
             writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
-

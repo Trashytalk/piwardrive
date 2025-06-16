@@ -1,10 +1,10 @@
 import argparse
 import os
 import time
-from sigint_suite.wifi import scan_wifi
+
 from sigint_suite.bluetooth import scan_bluetooth
 from sigint_suite.exports import export_json
-
+from sigint_suite.wifi import scan_wifi
 
 DEFAULT_EXPORT_DIR = os.path.join(os.path.dirname(__file__), "..", "exports")
 
