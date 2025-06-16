@@ -38,4 +38,6 @@ Paths
 
 The ``offline_tile_path`` setting determines the MBTiles file used when
 ``map_use_offline`` is enabled.  It and the cache directory default to
-``/mnt/ssd/tiles``.
+``/mnt/ssd/tiles``.  You can override the MBTiles location at runtime by
+setting the ``PW_OFFLINE_TILE_PATH`` environment variable before launching
+PiWardrive.
