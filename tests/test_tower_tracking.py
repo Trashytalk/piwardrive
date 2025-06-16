@@ -3,31 +3,56 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.cellular.tower_tracker import TowerTracker
+import importlib.util
+import pytest
+
+tracker_path = os.path.join(
+    os.path.dirname(__file__), "..", "sigint_suite", "cellular", "tower_tracker", "tracker.py"
+)
+spec = importlib.util.spec_from_file_location("tower_tracker", tracker_path)
+tracker_mod = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(tracker_mod)
+TowerTracker = tracker_mod.TowerTracker
 
 
-def test_tracker_update_and_query(tmp_path):
+@pytest.mark.asyncio
+async def test_tracker_update_and_query(tmp_path):
     db = tmp_path / "towers.db"
     tracker = TowerTracker(str(db))
-    tracker.update_tower("id1", 1.0, 2.0, last_seen=123)
-    rec = tracker.get_tower("id1")
+    await tracker.update_tower("id1", 1.0, 2.0, last_seen=123)
+    rec = await tracker.get_tower("id1")
     assert rec is not None and rec["lat"] == 1.0
-    all_rec = tracker.all_towers()
+    all_rec = await tracker.all_towers()
     assert len(all_rec) == 1
-    tracker.close()
+    await tracker.close()
 
 
-def test_wifi_and_bluetooth_logging(tmp_path):
+@pytest.mark.asyncio
+async def test_wifi_and_bluetooth_logging(tmp_path):
     db = tmp_path / "towers.db"
     tr = TowerTracker(str(db))
 
-    tr.log_wifi("AA:BB:CC", "TestNet", lat=1.0, lon=2.0, timestamp=100)
-    tr.log_bluetooth("11:22:33", "Phone", lat=3.0, lon=4.0, timestamp=200)
+    await tr.log_wifi("AA:BB:CC", "TestNet", lat=1.0, lon=2.0, timestamp=100)
+    await tr.log_bluetooth("11:22:33", "Phone", lat=3.0, lon=4.0, timestamp=200)
 
-    wifi = tr.wifi_history("AA:BB:CC")
-    bt = tr.bluetooth_history("11:22:33")
+    wifi = await tr.wifi_history("AA:BB:CC")
+    bt = await tr.bluetooth_history("11:22:33")
 
     assert wifi and wifi[0]["ssid"] == "TestNet"
     assert bt and bt[0]["name"] == "Phone"
 
-    tr.close()
+    await tr.close()
+
+
+@pytest.mark.asyncio
+async def test_async_logging_and_retrieval(tmp_path):
+    db = tmp_path / "towers.db"
+    tracker = TowerTracker(str(db))
+    await tracker.log_wifi("DE:AD:BE", "Net", timestamp=50)
+    await tracker.log_bluetooth("AA:BB:CC", "Headset", timestamp=60)
+    wifi = await tracker.wifi_history("DE:AD:BE")
+    bt = await tracker.bluetooth_history("AA:BB:CC")
+    assert wifi and wifi[0]["timestamp"] == 50
+    assert bt and bt[0]["timestamp"] == 60
+    await tracker.close()

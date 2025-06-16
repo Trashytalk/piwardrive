@@ -1,18 +1,27 @@
-import sqlite3
+import asyncio
 import time
 from typing import Optional, Dict, List
+
+import aiosqlite
 
 
 class TowerTracker:
     """Maintain a database of observed cell towers."""
 
     def __init__(self, db_path: str = "towers.db") -> None:
-        self.conn = sqlite3.connect(db_path)
-        self.conn.row_factory = sqlite3.Row
-        self._init_db()
+        self.db_path = db_path
+        self.conn: aiosqlite.Connection | None = None
 
-    def _init_db(self) -> None:
-        self.conn.execute(
+    async def _get_conn(self) -> aiosqlite.Connection:
+        if self.conn is None:
+            self.conn = await aiosqlite.connect(self.db_path)
+            self.conn.row_factory = aiosqlite.Row
+            await self._init_db()
+        return self.conn
+
+    async def _init_db(self) -> None:
+        assert self.conn is not None
+        await self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS towers (
                 tower_id TEXT PRIMARY KEY,
@@ -22,7 +31,7 @@ class TowerTracker:
             )
             """
         )
-        self.conn.execute(
+        await self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS wifi_observations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +43,7 @@ class TowerTracker:
             )
             """
         )
-        self.conn.execute(
+        await self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS bluetooth_observations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,16 +55,17 @@ class TowerTracker:
             )
             """
         )
-        self.conn.commit()
+        await self.conn.commit()
 
-    def update_tower(
+    async def update_tower(
         self, tower_id: str, lat: float, lon: float, last_seen: Optional[int] = None
     ) -> None:
         """Insert or update ``tower_id`` with location and timestamp."""
 
         if last_seen is None:
             last_seen = int(time.time())
-        self.conn.execute(
+        conn = await self._get_conn()
+        await conn.execute(
             """
             INSERT INTO towers (tower_id, lat, lon, last_seen)
             VALUES (?, ?, ?, ?)
@@ -66,16 +76,17 @@ class TowerTracker:
             """,
             (tower_id, lat, lon, last_seen),
         )
-        self.conn.commit()
+        await conn.commit()
 
-    def get_tower(self, tower_id: str) -> Optional[Dict[str, float]]:
+    async def get_tower(self, tower_id: str) -> Optional[Dict[str, float]]:
         """Return tower details or ``None`` if not found."""
 
-        cur = self.conn.execute(
+        conn = await self._get_conn()
+        cur = await conn.execute(
             "SELECT tower_id, lat, lon, last_seen FROM towers WHERE tower_id=?",
             (tower_id,),
         )
-        row = cur.fetchone()
+        row = await cur.fetchone()
         if row:
             return {
                 "tower_id": row[0],
@@ -85,12 +96,14 @@ class TowerTracker:
             }
         return None
 
-    def all_towers(self) -> List[Dict[str, float]]:
+    async def all_towers(self) -> List[Dict[str, float]]:
         """Return all tracked towers."""
 
-        cur = self.conn.execute(
+        conn = await self._get_conn()
+        cur = await conn.execute(
             "SELECT tower_id, lat, lon, last_seen FROM towers"
         )
+        rows = await cur.fetchall()
         return [
             {
                 "tower_id": row[0],
@@ -98,19 +111,20 @@ class TowerTracker:
                 "lon": row[2],
                 "last_seen": row[3],
             }
-            for row in cur.fetchall()
+            for row in rows
         ]
 
-    def close(self) -> None:
+    async def close(self) -> None:
         """Close the database connection."""
 
-        self.conn.close()
+        if self.conn is not None:
+            await self.conn.close()
 
     # ------------------------------------------------------------------
     # Wi-Fi helpers
     # ------------------------------------------------------------------
 
-    def log_wifi(
+    async def log_wifi(
         self,
         bssid: str,
         ssid: str,
@@ -122,19 +136,21 @@ class TowerTracker:
 
         if timestamp is None:
             timestamp = int(time.time())
-        self.conn.execute(
+        conn = await self._get_conn()
+        await conn.execute(
             """
             INSERT INTO wifi_observations (bssid, ssid, lat, lon, timestamp)
             VALUES (?, ?, ?, ?, ?)
             """,
             (bssid, ssid, lat, lon, timestamp),
         )
-        self.conn.commit()
+        await conn.commit()
 
-    def wifi_history(self, bssid: str) -> List[Dict[str, float]]:
+    async def wifi_history(self, bssid: str) -> List[Dict[str, float]]:
         """Return all Wi-Fi records for ``bssid`` sorted by newest first."""
 
-        cur = self.conn.execute(
+        conn = await self._get_conn()
+        cur = await conn.execute(
             """
             SELECT bssid, ssid, lat, lon, timestamp
             FROM wifi_observations
@@ -142,13 +158,14 @@ class TowerTracker:
             """,
             (bssid,),
         )
-        return [dict(row) for row in cur.fetchall()]
+        rows = await cur.fetchall()
+        return [dict(row) for row in rows]
 
     # ------------------------------------------------------------------
     # Bluetooth helpers
     # ------------------------------------------------------------------
 
-    def log_bluetooth(
+    async def log_bluetooth(
         self,
         address: str,
         name: str,
@@ -160,19 +177,21 @@ class TowerTracker:
 
         if timestamp is None:
             timestamp = int(time.time())
-        self.conn.execute(
+        conn = await self._get_conn()
+        await conn.execute(
             """
             INSERT INTO bluetooth_observations (address, name, lat, lon, timestamp)
             VALUES (?, ?, ?, ?, ?)
             """,
             (address, name, lat, lon, timestamp),
         )
-        self.conn.commit()
+        await conn.commit()
 
-    def bluetooth_history(self, address: str) -> List[Dict[str, float]]:
+    async def bluetooth_history(self, address: str) -> List[Dict[str, float]]:
         """Return all Bluetooth records for ``address`` sorted by newest first."""
 
-        cur = self.conn.execute(
+        conn = await self._get_conn()
+        cur = await conn.execute(
             """
             SELECT address, name, lat, lon, timestamp
             FROM bluetooth_observations
@@ -180,4 +199,5 @@ class TowerTracker:
             """,
             (address,),
         )
-        return [dict(row) for row in cur.fetchall()]
+        rows = await cur.fetchall()
+        return [dict(row) for row in rows]
