@@ -53,3 +53,22 @@ def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
     rows = asyncio.run(persistence.load_recent_health(1))
     assert rows and rows[0].cpu_temp == 2.0
 
+
+def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
+    setup_tmp(tmp_path)
+    loop1 = asyncio.new_event_loop()
+    conn1 = loop1.run_until_complete(persistence._get_conn())
+    loop1.run_until_complete(conn1.execute("SELECT 1"))
+    loop1.run_until_complete(loop1.shutdown_asyncgens())
+    loop1.close()
+
+    loop2 = asyncio.new_event_loop()
+    conn2 = loop2.run_until_complete(persistence._get_conn())
+    loop2.run_until_complete(conn2.execute("SELECT 1"))
+    loop2.run_until_complete(loop2.shutdown_asyncgens())
+    loop2.close()
+
+    assert conn2 is not conn1
+    assert conn1._connection is None
+
+

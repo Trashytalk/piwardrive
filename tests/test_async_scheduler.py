@@ -99,7 +99,73 @@ def test_async_scheduler_runs_tasks(monkeypatch: Any) -> None:
         scheduler.schedule("job", update, 0.1)
         await asyncio.sleep(0)
         await asyncio.sleep(0)
-        scheduler.cancel_all()
+        await scheduler.cancel_all()
+        sched.utils.shutdown_async_loop()
 
     asyncio.run(runner())
     assert async_calls
+
+
+def test_async_scheduler_cancel_all_waits(monkeypatch: Any) -> None:
+    sched, _clock = load_scheduler(monkeypatch)
+    finished: list[str] = []
+
+    done = asyncio.Event()
+
+    async def job() -> None:
+        try:
+            await done.wait()
+        finally:
+            finished.append("done")
+
+    scheduler = sched.AsyncScheduler()
+    orig_sleep = asyncio.sleep
+
+    async def fast_sleep(_):
+        await orig_sleep(0)
+
+    monkeypatch.setattr(sched.asyncio, "sleep", fast_sleep)
+
+    async def runner():
+        scheduler.schedule("job", job, 0.1)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        await scheduler.cancel_all()
+        sched.utils.shutdown_async_loop()
+
+    asyncio.run(runner())
+    assert finished == ["done"]
+
+
+def test_async_scheduler_cancel_all_gathers_exceptions(monkeypatch: Any) -> None:
+    sched, _clock = load_scheduler(monkeypatch)
+    errors: list[Any] = []
+
+    done = asyncio.Event()
+
+    async def job() -> None:
+        try:
+            await done.wait()
+        finally:
+            raise RuntimeError("boom")
+
+    scheduler = sched.AsyncScheduler()
+    orig_sleep = asyncio.sleep
+
+    async def fast_sleep(_):
+        await orig_sleep(0)
+
+    monkeypatch.setattr(sched.asyncio, "sleep", fast_sleep)
+
+    async def runner():
+        loop = asyncio.get_running_loop()
+        loop.set_exception_handler(lambda _l, ctx: errors.append(ctx))
+        scheduler.schedule("job", job, 0.1)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        await scheduler.cancel_all()
+        await asyncio.sleep(0)
+        sched.utils.shutdown_async_loop()
+
+    asyncio.run(runner())
+    assert not errors
