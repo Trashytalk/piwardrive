@@ -65,6 +65,15 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
   Scan timeouts can be tuned via environment variables such as
   `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
+* **Remote Sync**: periodically upload the SQLite database to a central server.
+* **Vector Tiles**: render offline maps from MBTiles for smoother panning.
+* **Network Analytics**: highlight potentially suspicious Wi‑Fi activity.
+* **Track Playback**: review GPS traces from previous drives.
+* **LoRa Scanning**: monitor LoRa/IoT radio traffic alongside Wi‑Fi.
+* **Database Browser**: browse historical records via a lightweight web UI.
+* **Cloud Export**: send exports directly to AWS S3 buckets.
+* **Vehicle Sensors**: read speed from an accelerometer or OBD‑II adapter.
+* **Setup Wizard**: interactive configuration for Kismet, BetterCAP and GPSD.
 
 ## Additional Documentation
 
@@ -478,7 +487,8 @@ docker compose run --rm tests
 
 The `requirements-dev.txt` file includes tools like `flake8`, `mypy` and
 `pytest` along with runtime dependencies required by the tests such as
-`aiosqlite`, `psutil`, `pydantic`, `fastapi` and `httpx`.
+`aiosqlite`, `psutil`, `pydantic`, `fastapi` and `httpx`. Format code and
+imports with `black` and `isort` before opening a pull request.
 
 Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or

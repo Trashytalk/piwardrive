@@ -179,6 +179,20 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 `PW_LANG` – Two-letter code selecting the interface language.
 
 
+## Additional Features
+
+New modules extend PiWardrive with optional capabilities:
+
+- `remote_sync` – upload the SQLite database to a remote server.
+- `vector_tiles` – load offline vector map tiles from MBTiles files.
+- `network_analytics` – heuristics to flag suspicious Wi‑Fi access points.
+- `gps_track_playback` – replay GPS coordinates from previous drives.
+- `lora_scanner` – scan LoRa/IoT radio bands.
+- `db_browser` – serve a simple web UI for browsing records.
+- `cloud_export` – helper to upload files to AWS S3 via the CLI.
+- `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
+- `setup_wizard` – interactive configuration for external services.
+
 ## Further Reference
 
 Additional details on each module are documented in the source code and in the individual RST files under `docs/`.

@@ -99,3 +99,20 @@ required Python dependencies. Vendor lookups use the IEEE OUI registry which is
 automatically downloaded to `~/.config/piwardrive/oui.csv` when first needed and
 refreshed weekly. The setup script can also fetch the file manually.
 
+## Plugins
+
+Place additional scan modules in `~/.config/piwardrive/sigint_plugins` and they
+will be imported automatically. Each plugin must define a `scan()` function that
+returns structured records such as `WifiNetwork` or `BluetoothDevice` models.
+Loaded plugins become available directly from the `sigint_suite` package::
+
+    # ~/.config/piwardrive/sigint_plugins/custom_wifi.py
+    def scan():
+        return [{"ssid": "Example"}]
+
+    import sigint_suite
+    results = sigint_suite.custom_wifi.scan()
+
+Call `sigint_suite.plugins.clear_plugin_cache()` after adding new files so the
+next import picks them up.
+

@@ -17,7 +17,9 @@ import json
 import os
 from typing import Any, Dict, List, Mapping
 
-from sigint_suite import paths
+DEFAULT_EXPORT_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "exports")
+)
 
 
 def _load_json(path: str) -> List[Dict[str, Any]]:
@@ -36,7 +38,7 @@ def _load_json(path: str) -> List[Dict[str, Any]]:
 
 
 def load_data(
-    export_dir: str = paths.EXPORT_DIR,
+    export_dir: str = DEFAULT_EXPORT_DIR,
 ) -> Mapping[str, List[Dict[str, Any]]]:
     """Load Wi-Fi and Bluetooth scan data from ``export_dir``."""
 

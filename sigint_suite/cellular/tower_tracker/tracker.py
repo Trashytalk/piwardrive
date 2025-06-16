@@ -1,8 +1,6 @@
-import asyncio
 import time
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
-import aiosqlite
 
 
 class TowerTracker:
@@ -99,11 +97,7 @@ class TowerTracker:
     async def all_towers(self) -> List[Dict[str, float]]:
         """Return all tracked towers."""
 
-        conn = await self._get_conn()
-        cur = await conn.execute(
-            "SELECT tower_id, lat, lon, last_seen FROM towers"
-        )
-        rows = await cur.fetchall()
+        cur = self.conn.execute("SELECT tower_id, lat, lon, last_seen FROM towers")
         return [
             {
                 "tower_id": row[0],

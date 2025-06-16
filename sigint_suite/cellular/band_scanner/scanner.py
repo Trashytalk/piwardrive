@@ -2,17 +2,16 @@ import logging
 import os
 import shlex
 import subprocess
-import asyncio
 from typing import List, Optional
-import logging
 
-from sigint_suite.models import BandRecord
+
 from sigint_suite.cellular.parsers import parse_band_output
+from sigint_suite.models import BandRecord
 
 logger = logging.getLogger(__name__)
 
 
-def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[BandRecord]:
+def scan_bands(cmd: Optional[str] = None) -> List[BandRecord]:
 
     """Scan for cellular bands and return a list of records.
 
@@ -23,9 +22,9 @@ def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[Ba
 
     cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
-    logger.debug("Executing: %s", " ".join(args))
-
+    timeout = (
+        timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
+    )
     try:
         output = subprocess.check_output(
             args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
