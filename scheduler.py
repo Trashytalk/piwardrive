@@ -42,7 +42,16 @@ class PollScheduler:
     def schedule(self, name: str, callback: Callable, interval: float) -> None:
         """Register ``callback`` to run every ``interval`` seconds."""
         self.cancel(name)
-        self._events[name] = Clock.schedule_interval(callback, interval)
+
+        def _wrapper(dt: float) -> None:
+            try:
+                result = callback(dt)
+                if inspect.isawaitable(result):
+                    utils.run_async_task(result)  # type: ignore[arg-type]
+            except Exception as exc:  # pragma: no cover - scheduled errors
+                logging.exception("Scheduled task %s failed: %s", name, exc)
+
+        self._events[name] = Clock.schedule_interval(_wrapper, interval)
 
         # ------------------------------------------------------------------
     # Widget helpers

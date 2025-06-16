@@ -648,7 +648,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-    def plot_aps(self):
+    async def plot_aps(self) -> None:
 
         """Plot access point markers fetched from Kismet."""
 
@@ -658,40 +658,20 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             return
 
-        mv = self.ids.mapview
-
-        for m in self.ap_markers:
-
-            mv.remove_widget(m)
-
-        self.ap_markers.clear()
         clustering = app.map_cluster_aps
 
-
-
+        aps: list = []
         try:
-            resp = self._http.get(
-                "http://127.0.0.1:2501/devices/all.json", timeout=5
-            )
-            resp.raise_for_status()
-            data = resp.json()
-        except requests.RequestException as e:
-            self._show_error(f"AP overlay request error: {e}")
-            data = {"devices": []}
-        except json.JSONDecodeError as e:
-            self._show_error(f"AP overlay JSON decode error: {e}")
-            data = {"devices": []}
-        except Exception as e:  # pragma: no cover - unexpected
-            self._show_error(f"AP overlay error: {e}")
-            data = {"devices": []}
+            aps, _clients = await utils.fetch_kismet_devices_async()
+        except Exception as exc:  # pragma: no cover - unexpected
+            report_error(f"AP overlay error: {exc}")
 
-        # merge in SIGINT scan exports
         try:
             from sigint_integration import load_sigint_data
 
             for rec in load_sigint_data("wifi"):
                 if "lat" in rec and "lon" in rec:
-                    data.setdefault("devices", []).append(
+                    aps.append(
                         {
                             "bssid": rec.get("bssid"),
                             "ssid": rec.get("ssid"),
@@ -702,34 +682,41 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         except Exception:
             pass
 
-        for d in data.get("devices", []):
-            gps = d.get("gps-info")
-            if gps and len(gps) >= 2:
-                m = MapMarkerPopup(
-                    lat=gps[0],
-                    lon=gps[1],
-                    source="widgets/marker-ap.png",
-                    anchor_x="center",
-                    anchor_y="center",
-                )
-                m.add_widget(
-                    Label(
-                        text=d.get("bssid", "AP"),
-                        size_hint=(None, None),
-                        size=(dp(80), dp(20)),
+        def _apply(_dt: float) -> None:
+            mv = self.ids.mapview
+            for m in self.ap_markers:
+                mv.remove_widget(m)
+            self.ap_markers.clear()
+            for d in aps:
+                gps = d.get("gps-info")
+                if gps and len(gps) >= 2:
+                    m = MapMarkerPopup(
+                        lat=gps[0],
+                        lon=gps[1],
+                        source="widgets/marker-ap.png",
+                        anchor_x="center",
+                        anchor_y="center",
                     )
-                )
-                m.ap_data = {
-                    "bssid": d.get("bssid"),
-                    "ssid": d.get("ssid"),
-                    "encryption": d.get("encryption"),
-                }
-                mv.add_widget(m)
-                self.ap_markers.append(m)
+                    m.add_widget(
+                        Label(
+                            text=d.get("bssid", "AP"),
+                            size_hint=(None, None),
+                            size=(dp(80), dp(20)),
+                        )
+                    )
+                    m.ap_data = {
+                        "bssid": d.get("bssid"),
+                        "ssid": d.get("ssid"),
+                        "encryption": d.get("encryption"),
+                    }
+                    mv.add_widget(m)
+                    self.ap_markers.append(m)
+            if clustering:
+                self.update_clusters_on_zoom(mv, mv.zoom)
 
-        if clustering:
-            # group nearby markers based on current zoom level
-            self.update_clusters_on_zoom(mv, mv.zoom)
+        Clock.schedule_once(_apply, 0)
+
+
 
 
     def plot_bt_devices(self):
@@ -1001,86 +988,17 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
     ) -> None:
 
         """Download PNG tiles covering ``bounds`` to ``folder``."""
-
         try:
-            import sys
-            from types import SimpleNamespace
-            if "kivymd.toast" not in sys.modules:
-                sys.modules["kivymd.toast"] = SimpleNamespace(toast=lambda *a, **k: None)
-            min_lat, min_lon, max_lat, max_lon = bounds
-
-            zoom = int(zoom)
-            # Convert bounding box corners to tile numbers
             from .map_utils import tile_cache
-            from .map_utils.tile_cache import deg2num
-            import aiohttp
 
-            import math
-            import aiohttp
-            import asyncio
-
-            def deg2num(lat: float, lon: float, z: int) -> tuple[int, int]:
-
-                lat_rad = math.radians(lat)
-                n = 2 ** z
-                x = int((lon + 180.0) / 360.0 * n)
-                y = int((1.0 - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi) / 2.0 * n)
-                return x, y
-
-            x1, y1 = deg2num(max_lat, min_lon, zoom)
-            x2, y2 = deg2num(min_lat, max_lon, zoom)
-            x_min, x_max = sorted((x1, x2))
-            y_min, y_max = sorted((y1, y2))
-            tasks = []
-            base_url = "https://tile.openstreetmap.org"
-
-            for x in range(x_min, x_max + 1):
-                for y in range(y_min, y_max + 1):
-                    url = f"{base_url}/{zoom}/{x}/{y}.png"
-                    local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
-                    tasks.append((url, local))
-            total = len(tasks)
-            completed = 0
-
-            async def _run() -> None:
-                sem = asyncio.Semaphore(concurrency or os.cpu_count() or 4)
-                timeout = aiohttp.ClientTimeout(total=10)
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-
-                    async def _task(url: str, local: str) -> None:
-                        nonlocal completed
-                        async with sem:
-                            if not os.path.exists(local):
-                                await self._download_tile_async(session, url, local)
-                        completed += 1
-                        if progress_cb:
-                            progress_cb(completed, total)
-
-                    await asyncio.gather(*[asyncio.create_task(_task(u, l)) for u, l in tasks])
-
-            asyncio.run(_run())
-            try:
-                import aiohttp  # type: ignore
-                asyncio.run(
-                    _run(aiohttp.ClientSession, getattr(aiohttp, "ClientTimeout", None))
-                )
-            except Exception:
-                class DummySession:
-                    def __init__(self, *a, **k) -> None:
-                        pass
-
-                    async def __aenter__(self):
-                        return self
-
-                    async def __aexit__(self, exc_type, exc, tb):
-                        pass
-
-                asyncio.run(_run(DummySession, None))
-
-
-
+            tile_cache.prefetch_tiles(
+                bounds,
+                zoom=zoom,
+                folder=folder,
+                concurrency=concurrency,
+                progress_cb=progress_cb,
+            )
         except Exception as e:  # pragma: no cover - network errors
-
             report_error(f"Prefetch error: {e}")
 
     async def _download_tile_async(self, session, url: str, local: str) -> None:
