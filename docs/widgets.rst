@@ -104,6 +104,13 @@ HealthAnalysisWidget
 Loads the last few :class:`persistence.HealthRecord` entries and computes averaged metrics.
 A small temperature plot is rendered beneath the summary text.
 
+HeatmapWidget
+~~~~~~~~~~~~~
+Shows a heatmap of discovered access point locations. The widget loads
+coordinates from the local database and renders a small image using
+``heatmap.save_png``. The number of grid cells can be adjusted via the
+``bins`` parameter when instantiating the widget.
+
 LogViewer
 ~~~~~~~~~
 Scrollable widget that tails a log file. ``log_path`` selects the file, ``max_lines`` determines
