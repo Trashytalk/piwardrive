@@ -13,6 +13,8 @@ def scan_wifi(
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
 ) -> List[WifiNetwork]:
+    timeout: int | None = None,
+) -> List[Dict[str, str]]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
 
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
@@ -22,8 +24,11 @@ def scan_wifi(
     if priv_cmd:
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
+    timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
     try:
-        output = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
+        output = subprocess.check_output(
+            cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+        )
     except Exception:
         return []
 
@@ -43,12 +48,6 @@ def scan_wifi(
                     current["vendor"] = vendor
         elif "ESSID" in line:
             current["ssid"] = line.split(":", 1)[-1].strip('"')
-        elif "Address" in line:
-            bssid = line.split("Address:")[-1].strip()
-            current["bssid"] = bssid
-            vendor = lookup_vendor(bssid)
-            if vendor:
-                current["vendor"] = vendor
         elif "Frequency" in line:
             current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
         elif "Quality" in line:

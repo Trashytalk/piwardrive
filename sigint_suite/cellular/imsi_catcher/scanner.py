@@ -16,6 +16,9 @@ def scan_imsis(
         Callable[[List[ImsiRecord]], List[ImsiRecord]]
     ] = None,
 ) -> List[ImsiRecord]:
+    timeout: int | None = None,
+) -> List[Dict[str, str]]:
+
     """Scan for IMSI numbers using an external command.
 
     The command output should be comma separated with ``imsi,mcc,mnc,rssi`` per
@@ -27,8 +30,11 @@ def scan_imsis(
 
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
+    timeout = timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
     try:
-        output = subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL)
+        output = subprocess.check_output(
+            args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+        )
     except Exception:
         return []
 
