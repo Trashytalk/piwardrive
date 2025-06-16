@@ -349,6 +349,37 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
         return []
 
 
+async def async_tail_file(path: str, lines: int = 50) -> list[str]:
+    """Asynchronously return the last ``lines`` from ``path``."""
+    try:
+        import aiofiles  # type: ignore
+    except Exception:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, lambda: tail_file(path, lines))
+
+    try:
+        async with aiofiles.open(path, "rb") as f:
+            fd = f.fileno()
+            try:
+                with mmap.mmap(fd, 0, access=mmap.ACCESS_READ) as mm:
+                    pos = mm.size()
+                    for _ in range(lines + 1):
+                        new_pos = mm.rfind(b"\n", 0, pos)
+                        if new_pos == -1:
+                            pos = -1
+                            break
+                        pos = new_pos
+                    start = 0 if pos < 0 else pos + 1
+                    data = mm[start:]
+                    return data.decode("utf-8", errors="ignore").splitlines()[-lines:]
+            except Exception:
+                await f.seek(0)
+                data = await f.read()
+                return data.decode("utf-8", errors="ignore").splitlines()[-lines:]
+    except Exception:
+        return []
+
+
 def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
