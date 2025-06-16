@@ -461,3 +461,24 @@ def test_network_scanning_disabled(monkeypatch: Any) -> None:
     assert utils.network_scanning_disabled() is True
     monkeypatch.delenv("PW_DISABLE_SCANNING")
 
+
+def test_run_async_task() -> None:
+    """The async loop is started on demand and callbacks run."""
+    import importlib, sys
+
+    sys.modules.pop("utils", None)
+    utils_mod = importlib.import_module("utils")
+
+    async def do_work() -> int:
+        return 3
+
+    results: list[int] = []
+
+    def cb(val: int) -> None:
+        results.append(val)
+
+    fut = utils_mod.run_async_task(do_work(), callback=cb)
+    assert fut.result(timeout=1) == 3
+    assert results == [3]
+    utils_mod.shutdown_async_loop()
+
