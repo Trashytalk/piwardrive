@@ -34,6 +34,8 @@ TILE_MAINTENANCE_INTERVAL = 86400  # seconds
 TILE_MAX_AGE_DAYS = 30
 TILE_CACHE_LIMIT_MB = 512
 COMPRESS_OFFLINE_TILES = True
+ROUTE_PREFETCH_INTERVAL = 3600  # seconds
+ROUTE_PREFETCH_LOOKAHEAD = 5
 
 
 def get_config_path(profile: Optional[str] = None) -> str:
@@ -94,6 +96,8 @@ class Config:
     tile_max_age_days: int = TILE_MAX_AGE_DAYS
     tile_cache_limit_mb: int = TILE_CACHE_LIMIT_MB
     compress_offline_tiles: bool = COMPRESS_OFFLINE_TILES
+    route_prefetch_interval: int = ROUTE_PREFETCH_INTERVAL
+    route_prefetch_lookahead: int = ROUTE_PREFETCH_LOOKAHEAD
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
@@ -106,6 +110,15 @@ class Config:
 
 DEFAULT_CONFIG = Config()
 DEFAULTS = asdict(DEFAULT_CONFIG)
+
+# Mapping of environment variable names to configuration keys
+ENV_OVERRIDE_MAP: Dict[str, str] = {
+    f"PW_{name.upper()}": name for name in DEFAULTS.keys()
+}
+
+def list_env_overrides() -> Dict[str, str]:
+    """Return available ``PW_`` environment variable overrides."""
+    return dict(ENV_OVERRIDE_MAP)
 
 
 class FileConfigModel(BaseModel):
@@ -140,6 +153,8 @@ class FileConfigModel(BaseModel):
     tile_max_age_days: Optional[int] = Field(default=None, ge=1)
     tile_cache_limit_mb: Optional[int] = Field(default=None, ge=1)
     compress_offline_tiles: Optional[bool] = None
+    route_prefetch_interval: Optional[int] = Field(default=None, ge=1)
+    route_prefetch_lookahead: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
@@ -202,10 +217,11 @@ def validate_config_data(data: Dict[str, Any]) -> None:
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Return a copy of ``cfg`` with PW_<KEY> environment overrides."""
+    """Return a copy of ``cfg`` with ``PW_`` environment overrides."""
     result = dict(cfg)
-    for key, default in DEFAULTS.items():
-        raw = os.getenv(f"PW_{key.upper()}")
+    for env_var, key in ENV_OVERRIDE_MAP.items():
+        default = DEFAULTS[key]
+        raw = os.getenv(env_var)
         if raw is not None:
             if key == "theme":
                 try:
@@ -214,6 +230,9 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
                     result[key] = raw
             else:
                 result[key] = _parse_env_value(raw, default)
+        elif key == "remote_sync_url" and result.get(key, default) == "":
+            # Allow missing remote sync URL
+            result[key] = None
     return result
 
 
@@ -357,6 +376,8 @@ class AppConfig:
     tile_max_age_days: int = DEFAULTS["tile_max_age_days"]
     tile_cache_limit_mb: int = DEFAULTS["tile_cache_limit_mb"]
     compress_offline_tiles: bool = DEFAULTS["compress_offline_tiles"]
+    route_prefetch_interval: int = DEFAULTS["route_prefetch_interval"]
+    route_prefetch_lookahead: int = DEFAULTS["route_prefetch_lookahead"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")

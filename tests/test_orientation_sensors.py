@@ -3,14 +3,28 @@ from importlib import reload
 
 import os
 import sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import orientation_sensors as osens
+import orientation_sensors as osens  # noqa: E402
 
 
 def test_orientation_to_angle() -> None:
     assert osens.orientation_to_angle("normal") == 0.0
     assert osens.orientation_to_angle("left-up") == 270.0
     assert osens.orientation_to_angle("unknown") is None
+
+
+def test_orientation_to_angle_custom_map() -> None:
+    custom_map = {"flip": 45.0}
+    assert osens.orientation_to_angle("flip", custom_map) == 45.0
+
+
+def test_update_orientation_map() -> None:
+    osens.update_orientation_map({"flip": 45.0})
+    try:
+        assert osens.orientation_to_angle("flip") == 45.0
+    finally:
+        reload(osens)
 
 
 def test_get_orientation_dbus_missing(monkeypatch):
@@ -39,6 +53,9 @@ def test_get_orientation_dbus_success(monkeypatch):
     def interface(_obj, _name):
         return DummyIface()
 
-    dummy_dbus = types.SimpleNamespace(SystemBus=lambda: DummyBus(), Interface=interface)
+    dummy_dbus = types.SimpleNamespace(
+        SystemBus=lambda: DummyBus(),
+        Interface=interface,
+    )
     monkeypatch.setattr(osens, "dbus", dummy_dbus)
     assert osens.get_orientation_dbus() == "right-up"

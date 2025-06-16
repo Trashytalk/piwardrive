@@ -29,3 +29,4 @@ piwardrive-vacuum = "scripts.vacuum_db:main"
 piwardrive-migrate = "scripts.migrate_db:main"
 
 
+

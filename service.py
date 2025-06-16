@@ -10,6 +10,7 @@ from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconn
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 import asyncio
+import time
 
 
 from logconfig import DEFAULT_LOG_PATH
@@ -104,17 +105,24 @@ async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> 
 async def ws_status(websocket: WebSocket) -> None:
     """Stream status and widget metrics periodically over WebSocket."""
     await websocket.accept()
+    seq = 0
+    error_count = 0
     try:
         while True:
             data = {
+                "seq": seq,
+                "timestamp": time.time(),
                 "status": await get_status(),
                 "metrics": await _collect_widget_metrics(),
+                "errors": error_count,
             }
             try:
                 await asyncio.wait_for(websocket.send_json(data), timeout=1)
             except (asyncio.TimeoutError, Exception):
+                error_count += 1
                 await websocket.close()
                 break
+            seq += 1
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         pass
