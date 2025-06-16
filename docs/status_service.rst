@@ -29,6 +29,12 @@ Additional Routes
 
    curl "http://localhost:8000/logs?lines=50"
 
+``/ws/status`` streams the same information over a WebSocket connection. Each
+message combines the ``/status`` and ``/widget-metrics`` responses so clients can
+stay up to date without polling::
+
+   websocat ws://localhost:8000/ws/status
+
 Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
 
 Benchmark

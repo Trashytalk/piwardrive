@@ -67,3 +67,42 @@ def test_rotate_log_gz(tmp_path: Any) -> None:
     log.write_text('third')
     diagnostics.rotate_log(str(log), max_files=2)
     assert (tmp_path / 'test.log.3.gz').exists() is False
+
+
+def test_run_network_test_caches_success(monkeypatch: Any) -> None:
+    diagnostics._LAST_NETWORK_OK = None
+    times = iter([0.0, 10.0])
+    monkeypatch.setattr(diagnostics.time, "time", lambda: next(times))
+
+    call_count = 0
+
+    def fake_run(args, capture_output=True):
+        nonlocal call_count
+        call_count += 1
+        return mock.Mock(returncode=0)
+
+    monkeypatch.setattr(diagnostics.subprocess, "run", fake_run)
+
+    assert diagnostics.run_network_test("example.com") is True
+    assert call_count == 1
+    assert diagnostics.run_network_test("example.com") is True
+    assert call_count == 1
+
+
+def test_run_network_test_cache_expires(monkeypatch: Any) -> None:
+    diagnostics._LAST_NETWORK_OK = None
+    times = iter([0.0, 40.0])
+    monkeypatch.setattr(diagnostics.time, "time", lambda: next(times))
+
+    call_count = 0
+
+    def fake_run(args, capture_output=True):
+        nonlocal call_count
+        call_count += 1
+        return mock.Mock(returncode=0)
+
+    monkeypatch.setattr(diagnostics.subprocess, "run", fake_run)
+
+    assert diagnostics.run_network_test("example.com") is True
+    assert diagnostics.run_network_test("example.com") is True
+    assert call_count == 2

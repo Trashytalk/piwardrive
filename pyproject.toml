@@ -22,6 +22,9 @@ authors = [{name = "PiWardrive contributors"}]
 [project.scripts]
 piwardrive = "main:main"
 piwardrive-service = "service:main"
+health-export = "scripts.health_export:main"
+piwardrive-prefetch = "scripts.prefetch_cli:main"
+
 
 [tool.mypy]
 python_version = "3.12"

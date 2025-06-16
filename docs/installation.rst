@@ -2,6 +2,9 @@ Installation
 ============
 
 This guide covers installing PiWardrive on Raspberry Pi OS and general Linux distributions.
+You can also run ``scripts/quickstart.sh`` from the repository root to
+automatically install the required packages, create ``gui-env/`` and install
+the Python dependencies.
 
 Raspberry Pi OS
 ---------------

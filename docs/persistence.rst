@@ -2,7 +2,8 @@ Persistence
 -----------
 
 The :mod:`persistence` module provides a lightweight SQLite database at
-``~/.config/piwardrive/app.db``. Health monitor metrics are stored as
+``~/.config/piwardrive/app.db`` by default. Set ``PW_DB_PATH`` to override
+this location. Health monitor metrics are stored as
 :class:`HealthRecord` rows and can be queried with ``load_recent_health``.
 The same file stores ``AppState`` which remembers the last active screen and
 the start time of the previous session. When PiWardrive launches these values

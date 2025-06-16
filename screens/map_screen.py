@@ -3,8 +3,9 @@
 
 
 import json
-
 import os
+import asyncio
+import aiohttp
 
 
 from gpsd_client import client as gps_client
@@ -924,6 +925,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # tile management helpers moved to :mod:`screens.map_utils.tile_cache`
 
+    async def _download_tile_async(
+        self, session: aiohttp.ClientSession, url: str, local: str
+    ) -> None:
+        """Fetch a single map tile."""
+        from .map_utils import tile_cache
+
+        await tile_cache.download_tile_async(session, url, local)
+
     def prefetch_tiles(
         self,
         bounds,
@@ -945,6 +954,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             import asyncio
 
             def deg2num(lat: float, lon: float, z: int) -> tuple[int, int]:
+
                 lat_rad = math.radians(lat)
                 n = 2 ** z
                 x = int((lon + 180.0) / 360.0 * n)
@@ -955,6 +965,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             x2, y2 = deg2num(min_lat, max_lon, zoom)
             x_min, x_max = sorted((x1, x2))
             y_min, y_max = sorted((y1, y2))
+
 
             base_url = "https://tile.openstreetmap.org"
             tasks = []
@@ -971,6 +982,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 sem = asyncio.Semaphore(concurrency or os.cpu_count() or 4)
                 timeout = timeout_cls(total=10) if timeout_cls else None
                 async with session_cls(timeout=timeout) as session:
+
                     async def _task(url: str, local: str) -> None:
                         nonlocal completed
                         async with sem:
@@ -999,6 +1011,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                         pass
 
                 asyncio.run(_run(DummySession, None))
+
 
 
         except Exception as e:  # pragma: no cover - network errors

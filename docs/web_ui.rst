@@ -2,7 +2,9 @@ React Web UI
 ============
 
 A small React application lives under ``webui/``. It consumes the HTTP API
-provided by :mod:`service` to display recent status information and logs.
+provided by :mod:`service` to display recent status information and logs.  When
+available the frontend connects to ``/ws/status`` to receive live updates
+without polling.
 
 Build the frontend with npm::
 

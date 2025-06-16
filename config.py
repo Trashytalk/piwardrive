@@ -25,6 +25,7 @@ CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
 ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
+REPORTS_DIR = os.path.join(CONFIG_DIR, "reports")
 
 
 @dataclass
@@ -46,6 +47,13 @@ class Config:
     dashboard_layout: List[Any] = field(default_factory=list)
     debug_mode: bool = False
     offline_tile_path: str = "/mnt/ssd/tiles/offline.mbtiles"
+    log_paths: List[str] = field(
+        default_factory=lambda: [
+            "/var/log/syslog",
+            "/var/log/kismet.log",
+            "/var/log/bettercap.log",
+        ]
+    )
     health_poll_interval: int = 10
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
@@ -78,6 +86,7 @@ class FileConfigModel(BaseModel):
     log_rotate_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_archives: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
+    log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
     admin_password_hash: Optional[str] = ""
 
@@ -87,6 +96,7 @@ class ConfigModel(FileConfigModel):
 
     map_poll_gps: int = Field(..., gt=0)
     ui_font_size: int = Field(default=16, ge=1)
+    log_paths: List[str] = Field(default_factory=list)
 
     theme: Theme
 
@@ -150,9 +160,7 @@ def list_profiles() -> List[str]:
     if not os.path.isdir(PROFILES_DIR):
         return []
     return [
-        os.path.splitext(f)[0]
-        for f in os.listdir(PROFILES_DIR)
-        if f.endswith(".json")
+        os.path.splitext(f)[0] for f in os.listdir(PROFILES_DIR) if f.endswith(".json")
     ]
 
 
@@ -265,6 +273,7 @@ class AppConfig:
     dashboard_layout: List[Any] = field(default_factory=list)
     debug_mode: bool = DEFAULTS["debug_mode"]
     health_poll_interval: int = DEFAULTS["health_poll_interval"]
+    log_paths: List[str] = field(default_factory=lambda: DEFAULTS["log_paths"])
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
@@ -293,9 +302,10 @@ def switch_profile(name: str) -> Config:
 def export_profile(name: str, dest: str) -> None:
     """Write ``name`` profile to ``dest`` path."""
     src = _profile_path(name)
-    with open(src, "r", encoding="utf-8") as fsrc, open(
-        dest, "w", encoding="utf-8"
-    ) as fdst:
+    with (
+        open(src, "r", encoding="utf-8") as fsrc,
+        open(dest, "w", encoding="utf-8") as fdst,
+    ):
         fdst.write(fsrc.read())
 
 
