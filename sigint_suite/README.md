@@ -22,7 +22,7 @@ the main PiWardrive UI when you only need quick scans or exports.
 - **enrichment** – routines to enrich captured data.
 - **exports** – helpers for writing results to JSON/CSV files.
 - **gps** – GPS helpers for tagging results with location.
-- **rf** – generic radio-frequency utilities.
+- **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
 
 ## Running `start_imsi_mode.sh`
