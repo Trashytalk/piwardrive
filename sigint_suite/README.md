@@ -6,14 +6,20 @@ the main PiWardrive UI when you only need quick scans or exports.
 
 ## Modules
 
-- **bluetooth** – scan nearby Bluetooth devices via `hcitool`.
+- **bluetooth** – scan nearby Bluetooth devices via `hcitool`. Set
+  ``BLUETOOTH_SCAN_TIMEOUT`` to change the scan duration (default ``10``
+  seconds).
 - **wifi** – discover Wi-Fi access points using `iwlist`. Results are enriched
   with vendor names when the IEEE OUI registry is available. Set the
-  `IWLIST_CMD` environment variable to override the `iwlist` executable and
-  `IW_PRIV_CMD` to change the privilege wrapper (default ``sudo``).
+  `IWLIST_CMD` environment variable to override the `iwlist` executable,
+  `IW_PRIV_CMD` to change the privilege wrapper (default ``sudo``) and
+  `WIFI_SCAN_TIMEOUT` to adjust the command timeout in seconds (default ``10``).
 - **cellular.band_scanner** – scan available cellular bands via an external
-  command specified by ``BAND_SCAN_CMD``.
-- **cellular.imsi_catcher** – stub for future IMSI catcher logic.
+  command specified by ``BAND_SCAN_CMD``. Set ``BAND_SCAN_TIMEOUT`` to change
+  the timeout (default ``10`` seconds).
+- **cellular.imsi_catcher** – stub for future IMSI catcher logic. Set
+  ``IMSI_SCAN_TIMEOUT`` to control how long the external command may run
+  (default ``10`` seconds).
 - **cellular.parsers** – parsers for raw cellular output.
 - **cellular.tower_tracker** – maintain a SQLite database of observed cell
   towers and expose simple query helpers.

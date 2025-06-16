@@ -10,6 +10,7 @@ def scan_wifi(
     interface: str = "wlan0",
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
+    timeout: int | None = None,
 ) -> List[Dict[str, str]]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
 
@@ -20,8 +21,11 @@ def scan_wifi(
     if priv_cmd:
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
+    timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
     try:
-        output = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
+        output = subprocess.check_output(
+            cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+        )
     except Exception:
         return []
 

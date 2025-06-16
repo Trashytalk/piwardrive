@@ -6,7 +6,7 @@ from typing import List, Dict, Optional
 from sigint_suite.cellular.parsers import parse_band_output
 
 
-def scan_bands(cmd: Optional[str] = None) -> List[Dict[str, str]]:
+def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[Dict[str, str]]:
     """Scan for cellular bands and return a list of records.
 
     The command output is expected to be comma separated with
@@ -16,8 +16,11 @@ def scan_bands(cmd: Optional[str] = None) -> List[Dict[str, str]]:
 
     cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
     args = shlex.split(cmd_str)
+    timeout = timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
     try:
-        output = subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL)
+        output = subprocess.check_output(
+            args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+        )
     except Exception:
         return []
 
