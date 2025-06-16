@@ -87,6 +87,8 @@ See `docs/ckml_build.rst` for troubleshooting compiler issues.
 ## R Integration
 
 `scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
+`scripts/health_export.py` dumps recent metrics to JSON or CSV while
+`scripts/health_import.py` loads such files back into the tracking database.
 
 Additional optional features use `pandas`, `orjson` and `pyprof2calltree` which can be installed via:
 
