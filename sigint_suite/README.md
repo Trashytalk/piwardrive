@@ -36,10 +36,17 @@ command line.
   Bluetooth devices in a SQLite database for historical queries.
 - **dashboard** – minimal dashboard integration.
 - **enrichment** – routines to enrich captured data.
-- **exports** – helpers for writing results to JSON/CSV files.
+- **exports** – helpers for writing results to JSON/CSV/YAML files.
 - **gps** – GPS helpers for tagging results with location.
 - **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
+
+### Async API
+
+All scanner modules also provide asynchronous variants built with
+``asyncio.create_subprocess_exec``. Use ``async_scan_wifi``,
+``async_scan_bluetooth``, ``async_scan_bands`` and ``async_scan_imsis`` when
+running inside an event loop.
 
 Post-processing hooks can be registered with
 `sigint_suite.hooks.register_post_processor` to enrich scan results (e.g.,
@@ -59,7 +66,8 @@ By default the JSON files `wifi.json` and `bluetooth.json` are written to
 this location.
 
 Use `IWLIST_CMD` to specify an alternate `iwlist` path and `IW_PRIV_CMD` to
-change the privilege helper for Wi-Fi scans.
+change the privilege helper for Wi-Fi scans. Set `SIGINT_DEBUG=1` to enable
+debug logging for all scanners.
 
 ## `scan-all` command
 
@@ -70,12 +78,12 @@ cellular bands and IMSI numbers—in one go. Results are written as JSON files i
 
 ## Continuous Scans
 
-`scripts/continuous_scan.py` repeats Wi-Fi and Bluetooth scans at a configurable
-interval. Set `--interval` to change the delay between scans and optionally
-limit the number of iterations with `--iterations`.
+The `continuous-scan` entry point repeats Wi-Fi and Bluetooth scans at a
+configurable interval. Set `--interval` to change the delay between scans and
+optionally limit the number of iterations with `--iterations`.
 
 ```bash
-python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
+continuous-scan --interval 30 --iterations 5
 ```
 
 ## Dependencies

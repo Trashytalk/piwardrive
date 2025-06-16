@@ -22,3 +22,4 @@ bluetooth-scan = "sigint_suite.bluetooth.scanner:main"
 imsi-scan = "sigint_suite.cellular.imsi_catcher.scanner:main"
 band-scan = "sigint_suite.cellular.band_scanner.scanner:main"
 scan-all = "sigint_suite.scan_all:main"
+
