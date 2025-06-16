@@ -33,10 +33,7 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.offline_tile_path == config.DEFAULT_CONFIG.offline_tile_path
     assert data.disable_scanning == config.DEFAULT_CONFIG.disable_scanning
     assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
-    assert (
-        data.map_cluster_capacity
-        == config.DEFAULT_CONFIG.map_cluster_capacity
-    )
+    assert data.map_cluster_capacity == config.DEFAULT_CONFIG.map_cluster_capacity
 
 
 def test_save_and_load_roundtrip(tmp_path: Path) -> None:
@@ -111,12 +108,14 @@ def test_env_override_integer(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setenv("PW_MAP_POLL_BT", "30")
     monkeypatch.setenv("PW_UI_FONT_SIZE", "22")
     monkeypatch.setenv("PW_MAP_CLUSTER_CAPACITY", "15")
+    monkeypatch.setenv("PW_GPS_MOVEMENT_THRESHOLD", "2.5")
     cfg = config.AppConfig.load()
     assert cfg.map_poll_gps == 42
     assert cfg.map_poll_gps_max == 50
     assert cfg.map_poll_bt == 30
     assert cfg.ui_font_size == 22
     assert cfg.map_cluster_capacity == 15
+    assert cfg.gps_movement_threshold == 2.5
 
 
 def test_env_override_boolean(monkeypatch: Any, tmp_path: Path) -> None:
