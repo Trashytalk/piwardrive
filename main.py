@@ -54,6 +54,7 @@ class PiWardriveApp(MDApp):
     map_show_aps = BooleanProperty(True)
     map_show_bt = BooleanProperty(False)
     map_cluster_aps = BooleanProperty(False)
+    map_cluster_capacity = NumericProperty(8)
     map_fullscreen = BooleanProperty(False)
     map_use_offline = BooleanProperty(False)
     theme = StringProperty("Dark")

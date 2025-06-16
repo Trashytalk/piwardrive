@@ -41,6 +41,7 @@ class Config:
     map_show_aps: bool = True
     map_show_bt: bool = False
     map_cluster_aps: bool = False
+    map_cluster_capacity: int = 8
     map_use_offline: bool = False
     kismet_logdir: str = "/mnt/ssd/kismet_logs"
     bettercap_caplet: str = "/usr/local/etc/bettercap/alfa.cap"
@@ -76,6 +77,7 @@ class FileConfigModel(BaseModel):
     map_show_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
+    map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
     kismet_logdir: Optional[str] = Field(default=None, min_length=1)
     bettercap_caplet: Optional[str] = Field(default=None, min_length=1)
@@ -95,6 +97,7 @@ class ConfigModel(FileConfigModel):
     """Extended validation used by :func:`validate_config_data`."""
 
     map_poll_gps: int = Field(..., gt=0)
+    map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
 
@@ -266,6 +269,7 @@ class AppConfig:
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
+    map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
     offline_tile_path: str = DEFAULTS["offline_tile_path"]
     kismet_logdir: str = DEFAULTS["kismet_logdir"]
