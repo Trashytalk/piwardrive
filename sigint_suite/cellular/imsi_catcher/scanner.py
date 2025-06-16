@@ -1,10 +1,10 @@
+import logging
 import os
 import shlex
 import subprocess
-from typing import List, Optional, Callable
+from typing import Callable, List, Optional
 
 from sigint_suite.models import ImsiRecord
-
 from sigint_suite.cellular.parsers import parse_imsi_output
 from sigint_suite.gps import get_position
 from sigint_suite.hooks import apply_post_processors
@@ -13,21 +13,10 @@ from sigint_suite.hooks import apply_post_processors
 def scan_imsis(
     cmd: Optional[str] = None,
     with_location: bool = True,
-    enrich_func: Optional[
-        Callable[[List[ImsiRecord]], List[ImsiRecord]]
-    ] = None,
-) -> List[ImsiRecord]:
+    enrich_func: Optional[Callable[[List[ImsiRecord]], List[ImsiRecord]]] = None,
     timeout: int | None = None,
-) -> List[Dict[str, str]]:
-
-    """Scan for IMSI numbers using an external command.
-
-    The command output should be comma separated with ``imsi,mcc,mnc,rssi`` per
-    line. Set the ``IMSI_CATCH_CMD`` environment variable to override the
-    executable. If ``with_location`` is True, each record will be tagged with the
-    current GPS position when available. ``enrich_func`` can be used to
-    post-process the records (e.g., look up operators).
-    """
+) -> List[ImsiRecord]:
+    """Scan for IMSI numbers using an external command."""
 
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
@@ -36,7 +25,8 @@ def scan_imsis(
         output = subprocess.check_output(
             args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
         )
-    except Exception:
+    except Exception as exc:  # pragma: no cover - external command
+        logging.exception("Failed to run IMSI catcher", exc_info=exc)
         return []
 
     records = parse_imsi_output(output)
@@ -76,17 +66,12 @@ def main() -> None:
 
     data = scan_imsis(args.cmd, with_location=not args.no_location)
     if args.json:
-        print(json.dumps(data, indent=2))
+        print(json.dumps([r.model_dump() for r in data], indent=2))
     else:
         for rec in data:
-            fields = [
-                rec.get("imsi", ""),
-                rec.get("mcc", ""),
-                rec.get("mnc", ""),
-                rec.get("rssi", ""),
-            ]
-            if "lat" in rec and "lon" in rec:
-                fields.extend([str(rec["lat"]), str(rec["lon"])])
+            fields = [rec.imsi, rec.mcc, rec.mnc, rec.rssi]
+            if rec.lat is not None and rec.lon is not None:
+                fields.extend([str(rec.lat), str(rec.lon)])
             print(" ".join(fields))
 
 
