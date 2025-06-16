@@ -114,8 +114,11 @@ coordinates from the local database and renders a small image using
 OrientationWidget
 ~~~~~~~~~~~~~~~~~
 Displays the current device orientation using :func:`orientation_sensors.get_orientation_dbus`.
-If unavailable, raw accelerometer readings from :func:`orientation_sensors.read_mpu6050`
-are shown instead.
+This requires the ``dbus`` Python package and the ``iio-sensor-proxy`` service
+to be running on the system.  When those are missing the helper falls back to
+raw accelerometer data via :func:`orientation_sensors.read_mpu6050`, which uses
+an external MPU‑6050 connected over I\ :sup:`2`\ C.  If neither option is
+available the widget simply reports ``not_available``.
 
 VehicleSpeedWidget
 ~~~~~~~~~~~~~~~~~~

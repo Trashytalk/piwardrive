@@ -1,4 +1,13 @@
-"""Orientation sensor helpers for gyroscope and accelerometer."""
+"""Orientation sensor helpers for gyroscope and accelerometer.
+
+The functions in this module try to read device orientation via different
+approaches.  ``get_orientation_dbus`` uses the `dbus` package to query the
+``iio-sensor-proxy`` service.  If either the Python bindings or the system
+service are unavailable it returns ``None``.  ``read_mpu6050`` accesses an
+external MPU‑6050 sensor using the optional ``mpu6050`` package.  Again,
+``None`` is returned when the module or hardware is missing.  Callers should
+check for ``None`` to gracefully handle setups without these sensors.
+"""
 
 from __future__ import annotations
 
