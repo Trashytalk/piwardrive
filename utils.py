@@ -767,14 +767,16 @@ def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     base = Path(log_folder)
     count = 0
     try:
-        for entry in base.iterdir():
-            if entry.is_dir() and entry.name.endswith('_bettercap'):
-                try:
-                    for file in entry.iterdir():
-                        if file.is_file() and file.name.endswith('.pcap'):
-                            count += 1
-                except OSError:
-                    continue
+        with os.scandir(log_folder) as entries:
+            for entry in entries:
+                if entry.is_dir() and entry.name.endswith('_bettercap'):
+                    try:
+                        with os.scandir(entry.path) as files:
+                            for file in files:
+                                if file.is_file() and file.name.endswith('.pcap'):
+                                    count += 1
+                    except OSError:
+                        continue
     except OSError:
         return 0
     return count
