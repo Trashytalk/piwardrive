@@ -39,6 +39,7 @@ def test_widget_metrics_endpoint() -> None:
     with (
         mock.patch("service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
     ):
@@ -48,6 +49,8 @@ def test_widget_metrics_endpoint() -> None:
         data = resp.json()
         assert data["bssid_count"] == 1
         assert data["handshake_count"] == 5
+        assert data["rx_kbps"] == 1.0
+        assert data["tx_kbps"] == 2.0
 
 
 def test_logs_endpoint_returns_lines() -> None:
@@ -77,6 +80,7 @@ def test_websocket_status_stream() -> None:
         mock.patch("service.load_recent_health", fake_load),
         mock.patch("service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
     ):
@@ -85,3 +89,4 @@ def test_websocket_status_stream() -> None:
             data = ws.receive_json()
             assert data["status"][0]["cpu_percent"] == 2.0
             assert data["metrics"]["bssid_count"] == 1
+            assert data["metrics"]["rx_kbps"] == 1.0

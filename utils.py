@@ -45,6 +45,12 @@ _GPSD_CACHE: dict[str, Any] = {
     "fix": "Unknown",
 }
 
+# Track previous network counters for throughput calculations
+_NET_IO_CACHE = {
+    "timestamp": time.time(),
+    "counters": psutil.net_io_counters(),
+}
+
 
 class ErrorCode(IntEnum):
     """Enumerate application error codes."""
@@ -249,6 +255,26 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
         return psutil.disk_usage(path).percent
     except Exception:
         return None
+
+
+def get_network_throughput() -> tuple[float, float]:
+    """Return (rx_kbps, tx_kbps) since the last call."""
+    global _NET_IO_CACHE
+    try:
+        cur = psutil.net_io_counters()
+    except Exception:
+        return 0.0, 0.0
+    now = time.time()
+    prev = _NET_IO_CACHE.get("counters")
+    prev_ts = _NET_IO_CACHE.get("timestamp", now)
+    dt = now - prev_ts if prev_ts else 0.0
+    rx_kbps = tx_kbps = 0.0
+    if prev is not None and dt > 0:
+        rx_kbps = (cur.bytes_recv - prev.bytes_recv) / dt / 1024.0
+        tx_kbps = (cur.bytes_sent - prev.bytes_sent) / dt / 1024.0
+    _NET_IO_CACHE["counters"] = cur
+    _NET_IO_CACHE["timestamp"] = now
+    return rx_kbps, tx_kbps
 
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
