@@ -270,10 +270,14 @@ def safe_request(
         return None
 
 
+
 def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:
     """Ensure ``service`` is active, attempting a restart if not."""
+    from security import validate_service_name
+
+    validate_service_name(service)
 
     if service_status(service):
         return True
@@ -626,6 +630,9 @@ async def service_status_async(
     service: str, attempts: int = 1, delay: float = 0
 ) -> bool:
     """Return ``True`` if the ``systemd`` service is active."""
+    from security import validate_service_name
+
+    validate_service_name(service)
     try:
         ok, out, _err = await _run_service_cmd_async(
             service, "is-active", attempts=attempts, delay=delay
