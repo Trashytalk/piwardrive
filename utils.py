@@ -37,6 +37,7 @@ from enum import IntEnum
 import psutil
 import requests  # type: ignore
 import aiohttp
+import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
 _GPSD_CACHE: dict[str, Any] = {
@@ -561,11 +562,32 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         results = await asyncio.gather(*(_fetch(url) for url in urls))
         for data in results:
             if data is not None:
-                return (
-                    data.get("access_points", []),
-                    data.get("clients", []),
-                )
+                aps = data.get("access_points", [])
+                clients = data.get("clients", [])
+                try:
+                    await persistence.save_ap_cache(
+                        [
+                            {
+                                "bssid": ap.get("bssid"),
+                                "ssid": ap.get("ssid"),
+                                "encryption": ap.get("encryption"),
+                                "lat": (ap.get("gps-info") or [None, None])[0],
+                                "lon": (ap.get("gps-info") or [None, None])[1],
+                                "last_time": ap.get("last_time"),
+                            }
+                            for ap in aps
+                        ]
+                    )
+                except Exception:
+                    pass
+                return aps, clients
 
+    try:
+        cached = await persistence.load_ap_cache()
+        if cached:
+            return cached, []
+    except Exception:
+        pass
     return [], []
 
 

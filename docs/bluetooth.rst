@@ -2,8 +2,8 @@ Bluetooth Scanning
 ------------------
 
 PiWardrive can display nearby Bluetooth devices on the map. The optional
-scanner uses :mod:`pybluez` to discover devices and plots markers when GPS
-coordinates are available.
+scanner uses the :mod:`bleak` library to discover devices and plots markers when
+GPS coordinates are available.
 
 The poll interval is configured via ``map_poll_bt`` and markers can be hidden
 with ``map_show_bt``. Both options are saved in ``config.json`` and may be

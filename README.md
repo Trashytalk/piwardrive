@@ -148,6 +148,7 @@ docker-compose run --rm test
   Common examples:
   * `PW_MAP_POLL_GPS=5` – poll gpsd every 5s when moving
   * `PW_MAP_POLL_GPS_MAX=30` – maximum delay while stationary
+  * `PW_MAP_POLL_APS=30` – override the AP polling interval
   * `PW_MAP_POLL_BT=15` – Bluetooth scan interval
   * `PW_MAP_SHOW_BT=1` – display Bluetooth markers
   * `PW_WIDGET_BATTERY_STATUS=1` – enable battery widget
@@ -336,6 +337,9 @@ using pandas and Plotly when available.
 
 ### `scripts/health_export.py`
 Exports recent `HealthRecord` rows in CSV or JSON format.
+
+### `scripts/health_import.py`
+Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
 
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
