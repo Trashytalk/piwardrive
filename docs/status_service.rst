@@ -42,6 +42,9 @@ stay up to date without polling::
 
    websocat ws://localhost:8000/ws/status
 
+Each message includes ``seq`` and ``timestamp`` fields plus an ``errors`` counter
+to help detect missed updates.
+
 Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
 
 Benchmark

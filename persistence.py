@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import aiosqlite
 from dataclasses import dataclass, asdict
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Callable, Awaitable
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -24,6 +24,57 @@ def _db_path() -> str:
 _DB_CONN: aiosqlite.Connection | None = None
 _DB_LOOP: asyncio.AbstractEventLoop | None = None
 _DB_DIR: str | None = None
+
+# Schema versioning
+LATEST_VERSION = 1
+Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
+_MIGRATIONS: list[Migration] = []
+
+
+async def _migration_1(conn: aiosqlite.Connection) -> None:
+    """Initial schema creation."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS health_records (
+            timestamp TEXT PRIMARY KEY,
+            cpu_temp REAL,
+            cpu_percent REAL,
+            memory_percent REAL,
+            disk_percent REAL
+        )
+        """
+    )
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS app_state (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            last_screen TEXT,
+            last_start TEXT,
+            first_run INTEGER
+        )
+        """
+    )
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ap_cache (
+            bssid TEXT PRIMARY KEY,
+            ssid TEXT,
+            encryption TEXT,
+            lat REAL,
+            lon REAL,
+            last_time INTEGER
+        )
+        """
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_health_time ON health_records(timestamp)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_apcache_time ON ap_cache(last_time)"
+    )
+
+
+_MIGRATIONS.append(_migration_1)
 
 
 async def _get_conn() -> aiosqlite.Connection:
@@ -69,45 +120,28 @@ class AppState:
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
+    """Create or migrate the SQLite schema to the latest version."""
     await conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS health_records (
-            timestamp TEXT PRIMARY KEY,
-            cpu_temp REAL,
-            cpu_percent REAL,
-            memory_percent REAL,
-            disk_percent REAL
-        )
-        """
+        "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER)"
     )
-    await conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS app_state (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            last_screen TEXT,
-            last_start TEXT,
-            first_run INTEGER
-        )
-        """
-    )
-    await conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS ap_cache (
-            bssid TEXT PRIMARY KEY,
-            ssid TEXT,
-            encryption TEXT,
-            lat REAL,
-            lon REAL,
-            last_time INTEGER
-        )
-        """
-    )
-    await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_health_time ON health_records(timestamp)"
-    )
-    await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_apcache_time ON ap_cache(last_time)"
-    )
+    cur = await conn.execute("SELECT version FROM schema_version")
+    row = await cur.fetchone()
+    current = row["version"] if row else 0
+
+    while current < LATEST_VERSION:
+        migration = _MIGRATIONS[current]
+        await migration(conn)
+        current += 1
+        if row is None:
+            await conn.execute(
+                "INSERT INTO schema_version (version) VALUES (?)", (current,)
+            )
+            row = {"version": current}
+        else:
+            await conn.execute(
+                "UPDATE schema_version SET version = ?", (current,)
+            )
+
     await conn.commit()
 
 
@@ -224,3 +258,8 @@ async def vacuum() -> None:
     conn = await _get_conn()
     await conn.execute("VACUUM")
     await conn.commit()
+
+
+async def migrate() -> None:
+    """Ensure the database schema is up to date."""
+    await _get_conn()

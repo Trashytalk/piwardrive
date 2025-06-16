@@ -107,6 +107,9 @@ def test_websocket_status_stream() -> None:
             assert data["status"][0]["cpu_percent"] == 2.0
             assert data["metrics"]["bssid_count"] == 1
             assert data["metrics"]["rx_kbps"] == 1.0
+            assert data["seq"] == 0
+            assert isinstance(data["timestamp"], float)
+            assert data["errors"] == 0
 
 
 def test_websocket_timeout_closes_connection() -> None:
