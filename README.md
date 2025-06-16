@@ -23,12 +23,13 @@ graph LR
 - Bettercap
 - GPSD
 - SDR
-- Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
+- Orientation sensors (gyroscope, accelerometer, OBD-II adapter)
 
 
 ## U/I Features
 - Service controls for Kismet and BetterCAP
 - Interactive map with offline tile prefetch and rotation
+- Predictive route tile caching
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback

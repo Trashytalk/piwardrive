@@ -85,6 +85,8 @@ class PiWardriveApp(MDApp):
     tile_max_age_days = NumericProperty(30)
     tile_cache_limit_mb = NumericProperty(512)
     compress_offline_tiles = BooleanProperty(True)
+    route_prefetch_interval = NumericProperty(3600)
+    route_prefetch_lookahead = NumericProperty(5)
     last_screen = StringProperty("Map")
 
     def __init__(
@@ -173,6 +175,14 @@ class PiWardriveApp(MDApp):
                 text=name, on_release=lambda btn, s=name: self.switch_screen(s)
             )
             nav_bar.add_widget(btn)
+        map_screen = sm.get_screen("Map")
+        import route_prefetch
+        self.route_prefetcher = route_prefetch.RoutePrefetcher(
+            self.scheduler,
+            map_screen,
+            interval=self.route_prefetch_interval,
+            lookahead=self.route_prefetch_lookahead,
+        )
         if self.cleanup_rotated_logs:
             for path in self.log_paths:
                 ev = f"rotate_{os.path.basename(path)}"
