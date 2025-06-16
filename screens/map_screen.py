@@ -37,6 +37,10 @@ except Exception:  # pragma: no cover - optional for tests
     Animation = None  # type: ignore
 
 from kivy.metrics import dp
+from orientation_sensors import orientation_to_angle
+
+import numpy as np
+from scipy.spatial import cKDTree
 
 
 
@@ -122,6 +126,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._heatmap_markers = []
 
         self._compass_heading = 0.0
+        self._orientation = None
 
         self.kml_layers = []
 
@@ -646,7 +651,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             speed = 0.0
         self._last_gps = (lat, lon)
         self._last_time = now
-        interval = app.map_poll_gps if speed > 1 else app.map_poll_gps_max
+        threshold = getattr(app, "gps_movement_threshold", 1.0)
+        interval = app.map_poll_gps if speed > threshold else app.map_poll_gps_max
         if interval != self._gps_interval:
             self._gps_interval = interval
             Clock.schedule_once(
@@ -1144,9 +1150,18 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Thematic Layers & Filtering
 
-    def filter_ap_markers(self, ssid=None, encryption=None, oui=None):
+    def filter_ap_markers(
+        self,
+        ssid=None,
+        encryption=None,
+        oui=None,
+        min_signal=None,
+        max_age=None,
+    ):
 
-        """Filter AP markers based on SSID, encryption type, or MAC OUI."""
+        """Filter AP markers based on SSID, signal strength, time and more."""
+
+        now = time.time()
 
         for m in self.ap_markers:
 
@@ -1155,16 +1170,23 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             visible = True
 
             if ssid and ssid not in (data.get("ssid") or ""):
-
                 visible = False
 
             if encryption and encryption != data.get("encryption"):
-
                 visible = False
 
             if oui and not (data.get("bssid") or "").startswith(oui):
-
                 visible = False
+
+            if min_signal is not None:
+                sig = data.get("signal_dbm")
+                if sig is None or sig < min_signal:
+                    visible = False
+
+            if max_age is not None:
+                ts = data.get("last_time")
+                if ts is None or now - ts > max_age:
+                    visible = False
 
             m.opacity = 1 if visible else 0
 
@@ -1197,6 +1219,20 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._compass_heading = heading
 
         self.ids.mapview.rotation = -heading
+
+
+    def update_orientation(self, orientation: str | None = None, accel: dict | None = None, gyro: dict | None = None):
+        """Update orientation information from sensors."""
+
+        self._orientation = orientation
+        if orientation:
+            angle = orientation_to_angle(orientation)
+            if angle is not None:
+                self.ids.mapview.rotation = -angle
+        if accel is not None:
+            setattr(self, "sensor_accel", accel)
+        if gyro is not None:
+            setattr(self, "sensor_gyro", gyro)
 
 
 
@@ -1388,26 +1424,51 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if not self.ap_markers:
             return
 
-        # Calculate grid cell size so that fewer clusters are formed when
-        # zoomed out and more clusters when zoomed in. ``_cluster_capacity``
-        # controls how many markers may occupy a cell before collapsing.
+        # Determine clustering radius based on zoom level.
         cell_size = 360 / (2 ** zoom * self._cluster_capacity)
 
-        # Group markers by their grid cell
-        clusters: dict[tuple[int, int], list] = {}
-        for marker in self.ap_markers:
-            key = (int(marker.lat / cell_size), int(marker.lon / cell_size))
-            clusters.setdefault(key, []).append(marker)
+        def _dbscan(points: np.ndarray, eps: float, min_samples: int = 2) -> list[int]:
+            tree = cKDTree(points)
+            labels = [-2] * len(points)
+            cid = 0
+            for i, p in enumerate(points):
+                if labels[i] != -2:
+                    continue
+                neighbors = tree.query_ball_point(p, eps)
+                if len(neighbors) < min_samples:
+                    labels[i] = -1
+                    continue
+                labels[i] = cid
+                seeds = set(neighbors)
+                seeds.discard(i)
+                while seeds:
+                    j = seeds.pop()
+                    if labels[j] == -1:
+                        labels[j] = cid
+                    if labels[j] != -2:
+                        continue
+                    labels[j] = cid
+                    nbs = tree.query_ball_point(points[j], eps)
+                    if len(nbs) >= min_samples:
+                        seeds.update(nbs)
+                cid += 1
+            return labels
 
-        # Replace each group of markers by their averaged position
-        for group in clusters.values():
-            if len(group) <= 1:
+        coords = np.array([[m.lat, m.lon] for m in self.ap_markers])
+        labels = _dbscan(coords, cell_size)
+
+        clusters: dict[int, list] = {}
+        for lbl, marker in zip(labels, self.ap_markers):
+            if lbl == -1:
                 continue
+            clusters.setdefault(lbl, []).append(marker)
+
+        for group in clusters.values():
             lat = sum(m.lat for m in group) / len(group)
             lon = sum(m.lon for m in group) / len(group)
-            for marker in group:
-                marker.lat = lat
-                marker.lon = lon
+            for m in group:
+                m.lat = lat
+                m.lon = lon
 
         # Spread markers that still overlap exactly
         self.spiderfy_markers()

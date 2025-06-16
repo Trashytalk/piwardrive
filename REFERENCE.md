@@ -191,6 +191,7 @@ New modules extend PiWardrive with optional capabilities:
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
 - `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
+- `orientation_sensors` – track device orientation via gyro or accelerometer.
 - `setup_wizard` – interactive configuration for external services.
 
 ## Further Reference

@@ -5,6 +5,8 @@ import os
 import sys
 import pytest
 
+sys.modules.setdefault('psutil', mock.Mock())
+
 modules = {
     "kivy": ModuleType("kivy"),
     "kivy.app": ModuleType("kivy.app"),
@@ -30,8 +32,12 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
 
-modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
-modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
+modules["kivy.app"].App = type(
+    "App", (), {"get_running_app": staticmethod(lambda: None)}
+)
+modules["kivy.clock"].Clock = SimpleNamespace(
+    create_trigger=lambda *a, **k: lambda *a2, **k2: None
+)
 modules["kivy.clock"].mainthread = lambda f: f
 modules["kivy.metrics"].dp = lambda x: x
 modules["kivy.uix.label"].Label = object
@@ -88,7 +94,7 @@ class DummyApp:
     map_poll_bt = 3
     disable_scanning = False
     map_cluster_capacity = 8
-
+    gps_movement_threshold = 1.0
 
     def __init__(self) -> None:
         self.scheduler = DummyScheduler()
@@ -98,7 +104,9 @@ def test_on_enter_and_on_leave(monkeypatch: Any) -> None:
     app = DummyApp()
     monkeypatch.setattr(App, "get_running_app", staticmethod(lambda: app))
     screen = cast(Any, MapScreen())
-    screen.ids = SimpleNamespace(mapview=mock.Mock())
+    ids = SimpleNamespace(mapview=mock.Mock())
+    ids.get = lambda k, d=None: getattr(ids, k, d)  # type: ignore[attr-defined]
+    screen.ids = ids
 
     screen.on_enter()
     assert "map_gps" in app.scheduler.events
@@ -108,3 +116,18 @@ def test_on_enter_and_on_leave(monkeypatch: Any) -> None:
     assert app.scheduler.events == {}
     assert screen._gps_event is None
     assert screen._aps_event is None
+
+def test_update_orientation(monkeypatch: Any) -> None:
+    app = DummyApp()
+    monkeypatch.setattr(App, "get_running_app", staticmethod(lambda: app))
+    screen = cast(Any, MapScreen())
+    mv = mock.Mock()
+    ids2 = SimpleNamespace(mapview=mv)
+    ids2.get = lambda k, d=None: getattr(ids2, k, d)  # type: ignore[attr-defined]
+    screen.ids = ids2
+
+    screen.update_orientation("left-up")
+    assert mv.rotation == -270.0
+    screen.update_orientation(None, {"x": 1}, {"z": 2})
+    assert hasattr(screen, "sensor_accel")
+    assert hasattr(screen, "sensor_gyro")

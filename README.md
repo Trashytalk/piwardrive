@@ -73,6 +73,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Database Browser**: browse historical records via a lightweight web UI.
 * **Cloud Export**: send exports directly to AWS S3 buckets.
 * **Vehicle Sensors**: read speed from an accelerometer or OBD‑II adapter.
+* **Orientation Sensors**: rotate the map using gyro or accelerometer data.
 * **Setup Wizard**: interactive configuration for Kismet, BetterCAP and GPSD.
 
 ## Additional Documentation
@@ -180,6 +181,7 @@ docker-compose run --rm test
   Common examples:
   * `PW_MAP_POLL_GPS=5` – poll gpsd every 5s when moving
   * `PW_MAP_POLL_GPS_MAX=30` – maximum delay while stationary
+  * `PW_GPS_MOVEMENT_THRESHOLD=1.0` – speed in m/s before fast polling
   * `PW_MAP_POLL_APS=30` – override the AP polling interval
   * `PW_MAP_POLL_BT=15` – Bluetooth scan interval
   * `PW_MAP_SHOW_BT=1` – display Bluetooth markers

@@ -24,6 +24,14 @@ modules = {
 }
 modules["kivy.animation"].Animation = object
 
+# Provide lightweight stubs for external dependencies
+modules["persistence"] = ModuleType("persistence")
+modules["persistence"].save_app_state = lambda *a, **k: None
+modules["sigint_suite.models"] = ModuleType("sigint_suite.models")
+modules["sigint_suite.models"].BluetoothDevice = object
+modules["psutil"] = ModuleType("psutil")
+modules["psutil"].net_io_counters = lambda *a, **k: SimpleNamespace()
+
 aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
@@ -125,6 +133,20 @@ def test_update_clusters_on_zoom_merges_markers(monkeypatch: Any) -> None:
     assert pytest.approx(m1.lon, rel=1e-6) == 0.005
     assert m1.lat == m2.lat and m1.lon == m2.lon
     assert m3.lat == 50.0 and m3.lon == 50.0
+
+
+def test_update_clusters_on_zoom_handles_adjacent_cells(monkeypatch: Any) -> None:
+    screen = make_screen()
+    screen._cluster_capacity = 4
+    m1 = SimpleNamespace(lat=0.044, lon=0.0)
+    m2 = SimpleNamespace(lat=0.09, lon=0.0)
+    screen.ap_markers = [m1, m2]
+
+    monkeypatch.setattr(screen, "spiderfy_markers", lambda: None)
+    screen.update_clusters_on_zoom(None, zoom=10)
+
+    assert pytest.approx(m1.lat, rel=1e-6) == pytest.approx(m2.lat, rel=1e-6)
+    assert pytest.approx(m1.lon, rel=1e-6) == pytest.approx(m2.lon, rel=1e-6)
 
 
 def test_spiderfy_markers_spreads_overlaps() -> None:
