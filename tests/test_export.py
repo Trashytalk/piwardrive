@@ -37,6 +37,18 @@ def test_export_records_formats(tmp_path) -> None:
     exp.export_records(recs, str(kml_path), "kml")
     assert "<Placemark>" in kml_path.read_text()
 
+    geo_path = tmp_path / "data.geojson"
+    exp.export_records(recs, str(geo_path), "geojson")
+    gj = json.load(open(geo_path))
+    assert gj["features"][0]["geometry"]["coordinates"] == [2.0, 1.0]
+
+    shp_path = tmp_path / "data.shp"
+    exp.export_records(recs, str(shp_path), "shp")
+    import shapefile
+    r = shapefile.Reader(str(shp_path))
+    assert r.numRecords == 1
+    assert r.shapes()[0].points[0] == [2.0, 1.0]
+
 
 def load_map_screen(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     modules = {

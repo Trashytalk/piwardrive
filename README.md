@@ -331,8 +331,8 @@ Supplies `PollScheduler` and `AsyncScheduler` classes for periodic callbacks.
 Both versions log exceptions while keeping tasks alive.
 
 ### `export.py`
-Filters and exports recorded access-point data in CSV, JSON, GPX, or KML
-formats, raising `ValueError` for unsupported formats.
+Filters and exports recorded access-point data in CSV, JSON, GPX, KML,
+GeoJSON or Shapefile formats, raising `ValueError` for unsupported formats.
 
 ### `analysis.py`
 Computes average health statistics and can plot CPU temperature, optionally
