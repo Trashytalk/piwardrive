@@ -110,6 +110,75 @@ The `docs/` directory contains mermaid diagrams showing scanning, logging and di
 Under `sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python ``bleak`` library are installed (`./sigint_suite/scripts/setup_all.sh` can install them).
 
 
+## Environment Variables
+
+The application recognises numerous `PW_*` variables. Any option in `config.py` can be overridden by prefixing it with `PW_`. Additional variables enable profiling, authentication and localisation.
+
+`PW_THEME` – Select the UI theme.
+
+`PW_MAP_POLL_GPS` – GPS polling interval while moving.
+
+`PW_MAP_POLL_GPS_MAX` – Maximum GPS delay when stationary.
+
+`PW_MAP_POLL_APS` – Wi-Fi access point scan interval.
+
+`PW_MAP_POLL_BT` – Bluetooth scan interval.
+
+`PW_MAP_SHOW_GPS` – Show the GPS marker on the map.
+
+`PW_MAP_SHOW_APS` – Show Wi-Fi markers on the map.
+
+`PW_MAP_SHOW_BT` – Show Bluetooth markers on the map.
+
+`PW_MAP_CLUSTER_APS` – Enable AP clustering.
+
+`PW_MAP_CLUSTER_CAPACITY` – Number of APs per cluster cell.
+
+`PW_MAP_USE_OFFLINE` – Use the offline tile set for map data.
+
+`PW_DISABLE_SCANNING` – Disable all Wi-Fi and Bluetooth scanning.
+
+`PW_KISMET_LOGDIR` – Directory where Kismet writes logs.
+
+`PW_BETTERCAP_CAPLET` – Path to the BetterCAP caplet.
+
+`PW_DASHBOARD_LAYOUT` – JSON encoded dashboard widget layout.
+
+`PW_DEBUG_MODE` – Enable verbose debug output.
+
+`PW_OFFLINE_TILE_PATH` – Location of the offline MBTiles file.
+
+`PW_LOG_PATHS` – JSON array of log files shown in the console screen.
+
+`PW_HEALTH_POLL_INTERVAL` – Interval between health metric polls.
+
+`PW_LOG_ROTATE_INTERVAL` – Seconds between log rotations.
+
+`PW_LOG_ROTATE_ARCHIVES` – Number of rotated archives to keep.
+
+`PW_CLEANUP_ROTATED_LOGS` – Remove rotated logs when `1`.
+
+`PW_WIDGET_BATTERY_STATUS` – Enable the battery status widget.
+
+`PW_UI_FONT_SIZE` – Override the global font size.
+
+`PW_ADMIN_PASSWORD_HASH` – Stored hash for privileged actions.
+
+`PW_ADMIN_PASSWORD` – Plain text admin password prompt override.
+
+`PW_API_PASSWORD_HASH` – HTTP basic auth hash for the API.
+
+`PW_DB_PATH` – Path to the SQLite database.
+
+`PW_PROFILE_NAME` – Configuration profile name to load.
+
+`PW_PROFILE` – Set to `1` to enable runtime profiling.
+
+`PW_PROFILE_CALLGRIND` – Callgrind output path when profiling.
+
+`PW_LANG` – Two-letter code selecting the interface language.
+
+
 ## Further Reference
 
 Additional details on each module are documented in the source code and in the individual RST files under `docs/`.
