@@ -47,8 +47,6 @@ def scan_wifi(
         )
     except Exception as exc:
         logger.exception("Wi-Fi scan failed: %s", exc)
-    except Exception as exc:  # pragma: no cover - platform dependent
-        logging.exception("Failed to run iwlist", exc_info=exc)
         return []
 
     records: List[Dict[str, str]] = []
@@ -140,13 +138,13 @@ async def async_scan_wifi(
     except Exception:
         return []
 
-    networks: List[Dict[str, str]] = []
+    records: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
             if current:
-                networks.append(current)
+                records.append(current)
             bssid = None
             if "Address:" in line:
                 bssid = line.split("Address:")[-1].strip()
@@ -166,9 +164,9 @@ async def async_scan_wifi(
         elif "Quality" in line:
             current["quality"] = line.split("Quality=")[-1].split(" ")[0]
     if current:
-        networks.append(current)
-    networks = apply_post_processors("wifi", networks)
-    return networks
+        records.append(current)
+    records = apply_post_processors("wifi", records)
+    return [WifiNetwork(**rec) for rec in records]
 
 
 def main() -> None:  # pragma: no cover - CLI helper
