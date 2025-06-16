@@ -71,3 +71,6 @@ SIGINT Suite
 ``SIGINT_EXPORT_DIR``
     Directory searched by :func:`sigint_integration.load_sigint_data`.
 
+``SIGINT_DEBUG``
+    Set to ``1`` to enable debug logging for SIGINT scanners.
+
