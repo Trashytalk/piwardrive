@@ -26,6 +26,8 @@ def scan_wifi(
     priv_cmd: Optional[str] = None,
     timeout: Optional[int] = None,
 ) -> List[Dict[str, str]]:
+
+
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
 
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")

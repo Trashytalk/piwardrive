@@ -19,10 +19,10 @@ def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
     try:
         from bleak import BleakScanner  # type: ignore
 
-        async def _scan() -> List[Dict[str, str]]:
+        async def _scan() -> List[BluetoothDevice]:
             found = await BleakScanner.discover(timeout=timeout)
             return [
-                {"address": dev.address, "name": dev.name or dev.address}
+                BluetoothDevice(address=dev.address, name=dev.name or dev.address)
                 for dev in found
             ]
 
