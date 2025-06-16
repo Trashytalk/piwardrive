@@ -6,6 +6,7 @@ import glob
 
 import json
 import asyncio
+from contextlib import asynccontextmanager
 import logging
 import os
 import subprocess
@@ -465,6 +466,21 @@ def _run_service_cmd_sync(
         return False, "", str(exc)
 
 
+@asynccontextmanager
+async def message_bus() -> Any:
+    """Yield a connected ``dbus-fast`` ``MessageBus`` instance."""
+
+    from dbus_fast.aio import MessageBus
+    from dbus_fast import BusType
+
+    bus = MessageBus(bus_type=BusType.SYSTEM)
+    await bus.connect()
+    try:
+        yield bus
+    finally:
+        bus.disconnect()
+
+
 async def _run_service_cmd_async(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
@@ -479,22 +495,16 @@ async def _run_service_cmd_async(
     svc_name = f"{service}.service"
 
     try:
-        from dbus_fast.aio import MessageBus
-        from dbus_fast import BusType
-    except Exception as exc:
-        logging.exception(
-            "dbus-fast unavailable, falling back to synchronous service command: %s",
-            exc,
-        )
+        import dbus_fast.aio  # type: ignore
+        import dbus_fast  # type: ignore
+    except Exception:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
             None, lambda: _run_service_cmd_sync(service, action, attempts, delay)
         )
 
     async def _call() -> tuple[bool, str, str]:
-        bus = MessageBus(bus_type=BusType.SYSTEM)
-        await bus.connect()
-        try:
+        async with message_bus() as bus:
             intro = await bus.introspect(
                 "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
             )
@@ -523,8 +533,6 @@ async def _run_service_cmd_async(
                 "org.freedesktop.systemd1.Unit", "ActiveState"
             )
             return True, str(state), ""
-        finally:
-            bus.disconnect()
 
     async def _retry() -> tuple[bool, str, str]:
         last_exc: Exception | None = None
