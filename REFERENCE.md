@@ -104,7 +104,8 @@ The `docs/` directory contains mermaid diagrams showing scanning, logging and di
 
 ## SIGINT Suite
 
-Under `sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Use :func:`sigint_suite.exports.export_csv` to convert these records to CSV for spreadsheets. Ensure `iwlist` and `hcitool` are installed (`./sigint_suite/scripts/setup_all.sh` can install them).
+Under `sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python ``bleak`` library are installed (`./sigint_suite/scripts/setup_all.sh` can install them).
+
 
 ## Further Reference
 
