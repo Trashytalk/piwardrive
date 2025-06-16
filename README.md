@@ -174,6 +174,8 @@ docker-compose run --rm test
   * `PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles` – MBTiles file
   * `PW_LANG=es` – interface language
   * `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` – callgrind output path
+  * `PW_GPSD_HOST=192.168.1.10` – gpsd host address
+  * `PW_GPSD_PORT=4000` – gpsd port number
   * `IWLIST_CMD=/usr/sbin/iwlist` – Wi‑Fi scanner command
   * `IW_PRIV_CMD=doas` – privilege wrapper for Wi‑Fi scans
   * `IMSI_CATCH_CMD=/usr/local/bin/imsi-catcher` – IMSI catcher command
