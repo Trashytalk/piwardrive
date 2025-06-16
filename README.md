@@ -107,8 +107,9 @@ vendor lookups. The manual steps are listed below.
 
       pip install -r requirements.txt
       # confirm the pinned web framework versions
-      pip install pydantic==2.11.7 fastapi==0.115.12
-      pip install .
+     pip install pydantic==2.11.7 fastapi==0.115.12
+     # project metadata is defined in ``pyproject.toml``
+     pip install .
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
@@ -174,6 +175,8 @@ docker-compose run --rm test
   * `PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles` – MBTiles file
   * `PW_LANG=es` – interface language
   * `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` – callgrind output path
+  * `PW_GPSD_HOST=192.168.1.10` – gpsd host address
+  * `PW_GPSD_PORT=4000` – gpsd port number
   * `IWLIST_CMD=/usr/sbin/iwlist` – Wi‑Fi scanner command
   * `IW_PRIV_CMD=doas` – privilege wrapper for Wi‑Fi scans
   * `IMSI_CATCH_CMD=/usr/local/bin/imsi-catcher` – IMSI catcher command
@@ -370,6 +373,14 @@ Exports recent `HealthRecord` rows in CSV or JSON format.
 ### `scripts/health_import.py`
 Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
 
+### `scripts/service_status.py`
+Prints the active state of key services such as Kismet, BetterCAP and GPSD.
+
+### `scripts/export_logs.py`
+Writes the most recent lines from `app.log` to a file using
+`PiWardriveApp.export_logs`.
+
+
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
 failures and returning `None` on errors.
@@ -440,7 +451,10 @@ Install project and development dependencies and run the tests locally with:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pip install .  # uses metadata from ``pyproject.toml``
+pip install pandas orjson pyprof2calltree
 pip install .
+pre-commit run --all-files
 pytest
 ```
 Alternatively run the suite in Docker:
@@ -457,6 +471,10 @@ Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or
 worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
 opening a pull request.
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` installs the optional
+packages listed above and runs `pre-commit run --all-files` followed by
+`pytest`.
 
 Install pre-commit hooks with:
 ```bash
