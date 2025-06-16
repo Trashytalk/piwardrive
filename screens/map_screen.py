@@ -62,6 +62,7 @@ from kivymd.uix.textfield import MDTextField
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
+import export
 from utils import (
     haversine_distance,
     polygon_area,
@@ -1367,6 +1368,33 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         except Exception as e:
 
             report_error(f"PDF export error: {e}")
+
+    def export_full_kml(self, path, *, compute_position: bool = False):
+        """Export GPS track and markers to ``path`` as KML or KMZ."""
+        ap_records = [
+            {**getattr(m, "ap_data", {}), "lat": m.lat, "lon": m.lon}
+            for m in self.ap_markers
+        ]
+        bt_records = [
+            {
+                "name": getattr(m, "bt_name", None),
+                "address": getattr(m, "bt_address", None),
+                "lat": m.lat,
+                "lon": m.lon,
+            }
+            for m in self.bt_markers
+        ]
+        try:
+            export.export_map_kml(
+                self.track_points,
+                ap_records,
+                bt_records,
+                path,
+                compute_position=compute_position,
+            )
+            Snackbar(text=f"Exported {path}").open()
+        except Exception as e:
+            report_error(f"Export error: {e}")
 
 
 
