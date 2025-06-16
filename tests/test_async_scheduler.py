@@ -60,6 +60,26 @@ def test_poll_scheduler_accepts_async_widget(monkeypatch: Any) -> None:
     assert "coro" in called
 
 
+def test_poll_scheduler_handles_async_callback(monkeypatch: Any) -> None:
+    sched, clock = load_scheduler(monkeypatch)
+
+    called: list[str] = []
+
+    async def job() -> None:
+        called.append("job")
+
+    def fake_run_async(coro: Any) -> None:
+        called.append("run")
+        asyncio.run(coro)
+
+    monkeypatch.setattr(sched.utils, "run_async_task", fake_run_async)
+    scheduler = sched.PollScheduler()
+    scheduler.schedule("job", lambda dt: job(), 1)
+    assert clock.callback is not None
+    clock.callback(0)
+    assert called == ["run", "job"]
+
+
 def test_async_scheduler_runs_tasks(monkeypatch: Any) -> None:
     sched, _clock = load_scheduler(monkeypatch)
     async_calls: list[str] = []

@@ -52,10 +52,12 @@ def scan_wifi(
         line = line.strip()
         if line.startswith("Cell"):
             if current:
-                networks.append(WifiNetwork(**current))
-            current = {"cell": line}
+                networks.append(current)
+            bssid = None
             if "Address:" in line:
                 bssid = line.split("Address:")[-1].strip()
+            current = {"cell": line}
+            if bssid:
                 current["bssid"] = bssid
         elif "ESSID" in line:
             current["ssid"] = line.split(":", 1)[-1].strip('"')
