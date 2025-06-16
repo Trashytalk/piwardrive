@@ -41,6 +41,16 @@ this location.
 Use `IWLIST_CMD` to specify an alternate `iwlist` path and `IW_PRIV_CMD` to
 change the privilege helper for Wi-Fi scans.
 
+## Continuous Scans
+
+`scripts/continuous_scan.py` repeats Wi-Fi and Bluetooth scans at a configurable
+interval. Set `--interval` to change the delay between scans and optionally
+limit the number of iterations with `--iterations`.
+
+```bash
+python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
+```
+
 ## Dependencies
 
 The suite expects `iwlist` (from the `wireless-tools` package) and either
