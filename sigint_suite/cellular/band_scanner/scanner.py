@@ -2,6 +2,7 @@ import logging
 import os
 import shlex
 import subprocess
+import asyncio
 from typing import List, Optional
 
 
@@ -11,7 +12,10 @@ from sigint_suite.models import BandRecord
 logger = logging.getLogger(__name__)
 
 
-def scan_bands(cmd: Optional[str] = None) -> List[BandRecord]:
+def scan_bands(
+    cmd: Optional[str] = None,
+    timeout: int | None = None,
+) -> List[BandRecord]:
 
     """Scan for cellular bands and return a list of records.
 

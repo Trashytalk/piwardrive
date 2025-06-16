@@ -1,13 +1,14 @@
 import os
 import shlex
 import subprocess
+import logging
+import asyncio
 from typing import Callable, List, Optional
 
 from sigint_suite.models import ImsiRecord
 from sigint_suite.cellular.parsers import parse_imsi_output
 from sigint_suite.gps import get_position
 from sigint_suite.hooks import apply_post_processors
-from sigint_suite.models import ImsiRecord
 
 logger = logging.getLogger(__name__)
 
