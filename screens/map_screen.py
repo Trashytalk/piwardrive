@@ -1090,7 +1090,6 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         try:
             from .map_utils import tile_cache
-
             tile_cache.prefetch_tiles(
                 bounds,
                 zoom=zoom,

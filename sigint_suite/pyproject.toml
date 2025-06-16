@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["scripts*"]
+namespaces = true
+
+[project]
+name = "sigint-suite"
+version = "0.1.0"
+description = "Wireless scanning tools used by PiWardrive"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "../LICENSE"}
+authors = [{name = "PiWardrive contributors"}]
+
+[project.scripts]
+wifi-scan = "sigint_suite.wifi.scanner:main"
+bluetooth-scan = "sigint_suite.bluetooth.scanner:main"
+imsi-scan = "sigint_suite.cellular.imsi_catcher.scanner:main"
+band-scan = "sigint_suite.cellular.band_scanner.scanner:main"

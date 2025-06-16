@@ -52,6 +52,27 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
                 name = " ".join(parts[1:])
                 devices.append(BluetoothDevice(address=addr, name=name))
     return devices
+
+def main() -> None:
+    """Command-line interface for Bluetooth scanning."""
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description="Scan for Bluetooth devices")
+    parser.add_argument("--timeout", type=int, default=10, help="scan timeout")
+    parser.add_argument("--json", action="store_true", help="print results as JSON")
+    args = parser.parse_args()
+
+    devices = scan_bluetooth(args.timeout)
+    if args.json:
+        print(json.dumps(devices, indent=2))
+    else:
+        for rec in devices:
+            print(f"{rec['address']} {rec['name']}")
+
+
+if __name__ == "__main__":
+    main()
             try:
                 idx = parts.index("Device")
             except ValueError:
@@ -62,4 +83,3 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
                 devices[addr] = name
 
     return [{"address": a, "name": n} for a, n in devices.items()]
-

@@ -55,3 +55,27 @@ def scan_wifi(
     if current:
         networks.append(WifiNetwork(**current))
     return networks
+
+
+def main() -> None:
+    """Command-line interface for Wi-Fi scanning."""
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description="Scan for Wi-Fi networks")
+    parser.add_argument("--interface", default="wlan0", help="wireless interface")
+    parser.add_argument("--json", action="store_true", help="print results as JSON")
+    args = parser.parse_args()
+
+    nets = scan_wifi(args.interface)
+    if args.json:
+        print(json.dumps(nets, indent=2))
+    else:
+        for rec in nets:
+            ssid = rec.get("ssid", "")
+            bssid = rec.get("bssid", "")
+            print(f"{ssid} {bssid}")
+
+
+if __name__ == "__main__":
+    main()

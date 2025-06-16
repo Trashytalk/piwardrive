@@ -4,6 +4,15 @@ The `sigint_suite` directory provides lightweight command-line tools for
 collecting wireless and RF metadata. These helpers can be used separately from
 the main PiWardrive UI when you only need quick scans or exports.
 
+``sigint_suite`` is published as a standalone package on PyPI. Install it with
+
+```bash
+pip install sigint-suite
+```
+
+The installation provides the ``wifi-scan``, ``bluetooth-scan``, ``imsi-scan``
+and ``band-scan`` entry points for quickly running scans from the command line.
+
 ## Modules
 
 - **bluetooth** – scan nearby Bluetooth devices via `hcitool`. Set
