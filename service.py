@@ -6,7 +6,7 @@ from dataclasses import asdict
 import os
 import inspect
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 import asyncio
@@ -47,8 +47,7 @@ async def get_status(limit: int = 5) -> list[dict]:
     return [asdict(rec) for rec in records]
 
 
-@app.get("/widget-metrics")
-async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
+async def _collect_widget_metrics() -> dict:
     """Return basic metrics used by dashboard widgets."""
     aps, _clients, handshakes = await fetch_metrics_async()
     return {
@@ -62,6 +61,12 @@ async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
     }
 
 
+@app.get("/widget-metrics")
+async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
+    """Return basic metrics used by dashboard widgets."""
+    return await _collect_widget_metrics()
+
+
 @app.get("/logs")
 def get_logs(
     lines: int = 200,
@@ -71,6 +76,22 @@ def get_logs(
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
     return {"path": safe, "lines": tail_file(safe, lines)}
+
+
+@app.websocket("/ws/status")
+async def ws_status(websocket: WebSocket) -> None:
+    """Stream status and widget metrics periodically over WebSocket."""
+    await websocket.accept()
+    try:
+        while True:
+            data = {
+                "status": await get_status(),
+                "metrics": await _collect_widget_metrics(),
+            }
+            await websocket.send_json(data)
+            await asyncio.sleep(2)
+    except WebSocketDisconnect:
+        pass
 
 
 async def main() -> None:
