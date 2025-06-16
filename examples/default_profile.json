@@ -19,5 +19,6 @@
     "log_rotate_archives": 3,
     "cleanup_rotated_logs": true,
     "widget_battery_status": false,
+    "disable_scanning": false,
     "admin_password_hash": "",
 }

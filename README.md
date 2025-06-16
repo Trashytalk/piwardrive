@@ -160,6 +160,7 @@ docker-compose run --rm test
   * `PW_MAP_POLL_APS=30` – override the AP polling interval
   * `PW_MAP_POLL_BT=15` – Bluetooth scan interval
   * `PW_MAP_SHOW_BT=1` – display Bluetooth markers
+  * `PW_DISABLE_SCANNING=1` – skip all Wi-Fi/Bluetooth scans
   * `PW_MAP_CLUSTER_CAPACITY=8` – APs per cluster cell
   * `PW_WIDGET_BATTERY_STATUS=1` – enable battery widget
   * `PW_HEALTH_POLL_INTERVAL=5` – diagnostic poll rate

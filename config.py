@@ -59,6 +59,7 @@ class Config:
     map_cluster_aps: bool = False
     map_cluster_capacity: int = 8
     map_use_offline: bool = False
+    disable_scanning: bool = False
     kismet_logdir: str = "/mnt/ssd/kismet_logs"
     bettercap_caplet: str = "/usr/local/etc/bettercap/alfa.cap"
     dashboard_layout: List[Any] = field(default_factory=list)
@@ -96,6 +97,7 @@ class FileConfigModel(BaseModel):
     map_cluster_aps: Optional[bool] = None
     map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
+    disable_scanning: Optional[bool] = None
     kismet_logdir: Optional[str] = Field(default=None, min_length=1)
     bettercap_caplet: Optional[str] = Field(default=None, min_length=1)
     dashboard_layout: List[Any] = Field(default_factory=list)
@@ -289,6 +291,7 @@ class AppConfig:
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
+    disable_scanning: bool = DEFAULTS["disable_scanning"]
     offline_tile_path: str = DEFAULTS["offline_tile_path"]
     kismet_logdir: str = DEFAULTS["kismet_logdir"]
     bettercap_caplet: str = DEFAULTS["bettercap_caplet"]

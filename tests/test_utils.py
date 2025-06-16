@@ -455,3 +455,9 @@ def test_count_bettercap_handshakes_missing(tmp_path: Any) -> None:
     missing = tmp_path / "nope"
     assert utils.count_bettercap_handshakes(str(missing)) == 0
 
+
+def test_network_scanning_disabled(monkeypatch: Any) -> None:
+    monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
+    assert utils.network_scanning_disabled() is True
+    monkeypatch.delenv("PW_DISABLE_SCANNING")
+

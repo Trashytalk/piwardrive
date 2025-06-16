@@ -29,6 +29,7 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.map_poll_bt == config.DEFAULT_CONFIG.map_poll_bt
     assert data.map_show_bt == config.DEFAULT_CONFIG.map_show_bt
     assert data.offline_tile_path == config.DEFAULT_CONFIG.offline_tile_path
+    assert data.disable_scanning == config.DEFAULT_CONFIG.disable_scanning
     assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
     assert (
         data.map_cluster_capacity
@@ -46,6 +47,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.map_show_bt = True
     orig.ui_font_size = 18
     orig.offline_tile_path = "/tmp/off.mbtiles"
+    orig.disable_scanning = True
     orig.map_cluster_capacity = 12
     config.save_config(orig)
     assert Path(cfg_file).is_file()
@@ -56,6 +58,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.map_poll_bt == 30
     assert loaded.map_show_bt is True
     assert loaded.offline_tile_path == "/tmp/off.mbtiles"
+    assert loaded.disable_scanning is True
     assert loaded.ui_font_size == 18
     assert loaded.map_cluster_capacity == 12
 

@@ -76,6 +76,14 @@ class ErrorCode(IntEnum):
 
 ERROR_PREFIX = "E"
 
+
+def network_scanning_disabled() -> bool:
+    """Return ``True`` if scanning is globally disabled."""
+    app = App.get_running_app()
+    if app is not None:
+        return bool(getattr(app, "disable_scanning", False))
+    return os.getenv("PW_DISABLE_SCANNING", "0").lower() in {"1", "true", "yes", "on"}
+
 _async_loop = asyncio.new_event_loop()
 _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
 _async_thread.start()
@@ -495,6 +503,8 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
 
 def scan_bt_devices() -> list[BluetoothDevice]:
     """Return nearby Bluetooth devices via DBus."""
+    if network_scanning_disabled():
+        return []
     try:
         import dbus  # type: ignore
 
@@ -546,6 +556,9 @@ def fetch_kismet_devices() -> tuple[list, list]:
 
 async def fetch_kismet_devices_async() -> tuple[list, list]:
     """Asynchronously fetch Kismet device data using ``aiohttp``."""
+
+    if network_scanning_disabled():
+        return [], []
 
     urls = [
         "http://127.0.0.1:2501/kismet/devices/all.json",
@@ -623,6 +636,8 @@ async def fetch_metrics_async(
     log_folder: str = '/mnt/ssd/kismet_logs',
 ) -> tuple[list, list, int]:
     """Fetch Kismet devices and BetterCAP handshake count concurrently."""
+    if network_scanning_disabled():
+        return [], [], 0
     aps_clients = fetch_kismet_devices_async()
     handshake = asyncio.to_thread(count_bettercap_handshakes, log_folder)
     aps, clients = await aps_clients
