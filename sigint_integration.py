@@ -6,6 +6,7 @@ from typing import Any, List, Mapping
 
 def _export_dir() -> str:
     """Return the directory containing SIGINT export files."""
+  
     return os.getenv(
         "SIGINT_EXPORT_DIR",
         os.path.join(os.path.dirname(__file__), "sigint_suite", "exports"),

@@ -6,12 +6,15 @@ import zipfile
 import json
 
 from typing import Any
+from pathlib import Path
 from types import ModuleType
+import asyncio
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import persistence
 
 from unittest import mock
 import types
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 sys.modules.setdefault('psutil', mock.Mock())
 aiohttp_mod = types.SimpleNamespace(
     ClientSession=object,
@@ -25,7 +28,6 @@ if 'requests' not in sys.modules:
     dummy_requests.RequestException = Exception
     sys.modules['requests'] = dummy_requests
 import utils
-import asyncio
 from collections import namedtuple
 
 
@@ -294,6 +296,37 @@ def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     assert aps == [1] and clients == [2]
 
 
+def test_fetch_kismet_devices_cache(monkeypatch: Any, tmp_path: Path) -> None:
+    os.environ["PW_DB_PATH"] = str(tmp_path / "app.db")
+
+    asyncio.run(persistence.save_ap_cache([
+        {
+            "bssid": "AA",
+            "ssid": "Test",
+            "encryption": "WPA",
+            "lat": 1.0,
+            "lon": 2.0,
+            "last_time": 1,
+        }
+    ]))
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any):
+            raise utils.aiohttp.ClientError("boom")
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+
+    aps, clients = utils.fetch_kismet_devices()
+    assert aps and aps[0]["bssid"] == "AA"
+    assert clients == []
+
+
 def test_safe_request_retries(monkeypatch: Any) -> None:
     calls: list[str] = []
 
@@ -369,7 +402,9 @@ def test_scan_bt_devices_parses_output(monkeypatch: Any) -> None:
     _patch_bt_dbus(monkeypatch, objs)
 
     devices = utils.scan_bt_devices()
-    assert devices == [{"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}]
+    assert [d.model_dump() for d in devices] == [
+        {"address": "AA:BB:CC:DD:EE:FF", "name": "Foo", "lat": 1.0, "lon": 2.0}
+    ]
 
 
 def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
