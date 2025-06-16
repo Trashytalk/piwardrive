@@ -28,19 +28,35 @@ The plugin directory is scanned lazily and a timestamp is cached to avoid
 repeated filesystem checks. Call :func:`widgets.clear_plugin_cache` after
 installing new plugins so the next import or reload picks them up.
 
-Example::
+Step-by-step example
+~~~~~~~~~~~~~~~~~~~~
 
-    from widgets.base import DashboardWidget
+1. Ensure the plugin directory exists::
 
-    class MyWidget(DashboardWidget):
-        update_interval = 10.0
+      mkdir -p ~/.config/piwardrive/plugins
 
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            # create UI elements here
+2. Add your widget implementation. Save the following as
+   ``~/.config/piwardrive/plugins/my_widget.py``::
 
-        def update(self):
-            pass
+      from widgets.base import DashboardWidget
+
+      class MyWidget(DashboardWidget):
+          update_interval = 10.0
+
+          def __init__(self, **kwargs):
+              super().__init__(**kwargs)
+              # create UI elements here
+
+          def update(self):
+              pass
+
+3. Refresh the cache so PiWardrive notices the new file::
+
+      python -c "import widgets; widgets.clear_plugin_cache()"
+
+4. Launch PiWardrive and open the Dashboard screen. Drag *MyWidget* onto
+   the layout or add ``{"cls": "MyWidget"}`` to ``dashboard_layout`` in
+   ``config.json``.
 
 Compiled extensions written in PyO3 or Cython can also be used. Place the built
 ``.so``/``.pyd`` file or package inside ``~/.config/piwardrive/plugins``. The
