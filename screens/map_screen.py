@@ -718,6 +718,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                         "bssid": d.get("bssid"),
                         "ssid": d.get("ssid"),
                         "encryption": d.get("encryption"),
+                        "signal_dbm": d.get("signal_dbm"),
+                        "last_time": d.get("last_time"),
                     }
                     mv.add_widget(m)
                     self.ap_markers.append(m)
@@ -1127,9 +1129,18 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Thematic Layers & Filtering
 
-    def filter_ap_markers(self, ssid=None, encryption=None, oui=None):
+    def filter_ap_markers(
+        self,
+        ssid=None,
+        encryption=None,
+        oui=None,
+        min_signal=None,
+        max_age=None,
+    ):
 
-        """Filter AP markers based on SSID, encryption type, or MAC OUI."""
+        """Filter AP markers based on SSID, signal strength, time and more."""
+
+        now = time.time()
 
         for m in self.ap_markers:
 
@@ -1138,16 +1149,23 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             visible = True
 
             if ssid and ssid not in (data.get("ssid") or ""):
-
                 visible = False
 
             if encryption and encryption != data.get("encryption"):
-
                 visible = False
 
             if oui and not (data.get("bssid") or "").startswith(oui):
-
                 visible = False
+
+            if min_signal is not None:
+                sig = data.get("signal_dbm")
+                if sig is None or sig < min_signal:
+                    visible = False
+
+            if max_age is not None:
+                ts = data.get("last_time")
+                if ts is None or now - ts > max_age:
+                    visible = False
 
             m.opacity = 1 if visible else 0
 
