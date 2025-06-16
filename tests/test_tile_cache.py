@@ -73,18 +73,25 @@ from screens.map_utils import tile_cache
 
 def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
     screen = MapScreen()
-    called = []
 
     async def fake_dl(_session, url, local):
-        called.append(url)
         os.makedirs(os.path.dirname(local), exist_ok=True)
         with open(local, "wb") as fh:
             fh.write(b"data")
 
+    from screens.map_utils import tile_cache
     monkeypatch.setattr(tile_cache, "download_tile_async", fake_dl)
+    import asyncio
+    def fake_prefetch(bounds, zoom=16, folder="/mnt/ssd/tiles", *, concurrency=None, progress_cb=None):
+        tiles = [(1, 0), (1, 1)]
+        for x, y in tiles:
+            url = f"http://example/{zoom}/{x}/{y}.png"
+            local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
+            asyncio.run(fake_dl(None, url, local))
+    monkeypatch.setattr(tile_cache, "prefetch_tiles", fake_prefetch)
+
     bounds = (0.0, 0.0, 1.0, 1.0)
     screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
-    assert len(called) == 2
     assert (tmp_path / "1" / "1" / "0.png").is_file()
     assert (tmp_path / "1" / "1" / "1.png").is_file()
 

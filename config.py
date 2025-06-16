@@ -25,6 +25,7 @@ CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
 ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
+REPORTS_DIR = os.path.join(CONFIG_DIR, "reports")
 
 
 @dataclass
