@@ -1,14 +1,13 @@
 import os
 import shlex
 import subprocess
-import asyncio
 from typing import Callable, List, Optional
-
 
 from sigint_suite.models import ImsiRecord
 from sigint_suite.cellular.parsers import parse_imsi_output
 from sigint_suite.gps import get_position
 from sigint_suite.hooks import apply_post_processors
+from sigint_suite.models import ImsiRecord
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +16,13 @@ def scan_imsis(
     cmd: Optional[str] = None,
     with_location: bool = True,
     enrich_func: Optional[Callable[[List[ImsiRecord]], List[ImsiRecord]]] = None,
-    timeout: int | None = None,
+    timeout: Optional[int] = None,
 ) -> List[ImsiRecord]:
     """Scan for IMSI numbers using an external command."""
-
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
     )
     try:
         output = subprocess.check_output(
@@ -106,7 +102,7 @@ async def async_scan_imsis(
     return records
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover - CLI helper
     import argparse
     import json
 
@@ -114,15 +110,13 @@ def main() -> None:
     parser.add_argument("--cmd", default=None, help="IMSI catcher command")
     parser.add_argument("--json", action="store_true", help="print results as JSON")
     parser.add_argument(
-        "--no-location",
-        action="store_true",
-        help="disable GPS tagging",
+        "--no-location", action="store_true", help="disable GPS tagging"
     )
     args = parser.parse_args()
 
     data = scan_imsis(args.cmd, with_location=not args.no_location)
     if args.json:
-        print(json.dumps([r.model_dump() for r in data], indent=2))
+        print(json.dumps([d.model_dump() for d in data], indent=2))
     else:
         for rec in data:
             fields = [rec.imsi, rec.mcc, rec.mnc, rec.rssi]
@@ -131,5 +125,5 @@ def main() -> None:
             print(" ".join(fields))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - manual execution
     main()

@@ -2,10 +2,8 @@ import logging
 import os
 import shlex
 import subprocess
-import asyncio
-from typing import Dict, List, Optional
 
-from sigint_suite.models import WifiNetwork
+from typing import Dict, List, Optional
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
 
@@ -30,8 +28,7 @@ def scan_wifi(
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
     timeout: Optional[int] = None,
-) -> List[WifiNetwork]:
-
+) -> List[Dict[str, str]]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
@@ -41,11 +38,8 @@ def scan_wifi(
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
     )
-    logger.debug("Executing: %s", " ".join(cmd))
 
     try:
         output = subprocess.check_output(
@@ -146,7 +140,7 @@ async def async_scan_wifi(
     except Exception:
         return []
 
-    networks: List[WifiNetwork] = []
+    networks: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
@@ -177,7 +171,7 @@ async def async_scan_wifi(
     return networks
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover - CLI helper
     """Command-line interface for Wi-Fi scanning."""
     import argparse
     import json
@@ -197,5 +191,5 @@ def main() -> None:
             print(f"{ssid} {bssid}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - manual execution
     main()

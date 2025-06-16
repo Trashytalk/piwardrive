@@ -1,10 +1,10 @@
 from collections import defaultdict
-from typing import Callable, Dict, List, Any
+from typing import Any, Callable, Dict, List
 
 # registry mapping data types to list of processors
-_POST_PROCESSORS: Dict[str, List[
-    Callable[[List[Dict[str, Any]]], List[Dict[str, Any]]]
-]] = defaultdict(list)
+_POST_PROCESSORS: Dict[
+    str, List[Callable[[List[Dict[str, Any]]], List[Dict[str, Any]]]]
+] = defaultdict(list)
 
 
 def register_post_processor(

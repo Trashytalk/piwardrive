@@ -30,7 +30,6 @@ def spectrum_scan(
     spectrum = np.fft.fftshift(np.fft.fft(samples))
     power = 20 * np.log10(np.abs(spectrum))
     freqs = (
-        np.fft.fftshift(np.fft.fftfreq(len(samples), 1.0 / sample_rate))
-        + center_freq
+        np.fft.fftshift(np.fft.fftfreq(len(samples), 1.0 / sample_rate)) + center_freq
     )
     return freqs.tolist(), power.tolist()
