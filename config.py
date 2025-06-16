@@ -56,6 +56,7 @@ class Config:
     map_show_gps: bool = True
     map_show_aps: bool = True
     map_show_bt: bool = False
+    map_show_heatmap: bool = False
     map_cluster_aps: bool = False
     map_cluster_capacity: int = 8
     map_use_offline: bool = False
@@ -99,6 +100,7 @@ class FileConfigModel(BaseModel):
     map_show_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
+    map_show_heatmap: Optional[bool] = None
     map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
     disable_scanning: Optional[bool] = None
@@ -300,6 +302,7 @@ class AppConfig:
     map_show_gps: bool = DEFAULTS["map_show_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
+    map_show_heatmap: bool = DEFAULTS["map_show_heatmap"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]

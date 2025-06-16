@@ -28,6 +28,7 @@ import asyncio
 
 from kivy.app import App
 import utils
+from heatmap import histogram, histogram_points
 
 from kivy.clock import Clock, mainthread
 from kivy.animation import Animation
@@ -112,6 +113,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.area_points = []
 
         self.breadcrumb = []
+        self._heatmap_markers = []
 
         self._compass_heading = 0.0
 
@@ -188,6 +190,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if self._bt_event:
             app.scheduler.cancel(self._bt_event)
             self._bt_event = None
+        mv = self.ids.get("mapview")
+        if mv:
+            for m in self._heatmap_markers:
+                mv.remove_widget(m)
+        self._heatmap_markers.clear()
 
 # ------------------------------------------------------------------
 
@@ -712,6 +719,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                     self.ap_markers.append(m)
             if clustering:
                 self.update_clusters_on_zoom(mv, mv.zoom)
+            self.update_heatmap()
 
         Clock.schedule_once(_apply, 0)
 
@@ -797,6 +805,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 "on_release": lambda *a, k="map_show_bt": self._toggle(k),
 
             },
+            {
+                "text": "Heatmap",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda *a, k="map_show_heatmap": self._toggle(k),
+            },
 
             {
 
@@ -827,6 +840,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.layer_menu.dismiss()
 
         Snackbar(text=f"{key} = {getattr(app, key)}", duration=1.5).open()
+        if key == "map_show_heatmap":
+            self.update_heatmap()
 
 
 
@@ -1397,6 +1412,29 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 angle = i * step
                 mk.lat = base_lat + radius * math.cos(angle)
                 mk.lon = base_lon + radius * math.sin(angle)
+
+
+    def update_heatmap(self):
+        """Overlay heatmap markers based on AP density."""
+        mv = self.ids.mapview
+        for m in self._heatmap_markers:
+            mv.remove_widget(m)
+        self._heatmap_markers.clear()
+        app = App.get_running_app()
+        if not getattr(app, "map_show_heatmap", False):
+            return
+        points = [(m.lat, m.lon) for m in self.ap_markers]
+        hist, lat_range, lon_range = histogram(points, bins=20)
+        for lat, lon, count in histogram_points(hist, lat_range, lon_range):
+            mark = MapMarker(
+                lat=lat,
+                lon=lon,
+                source="widgets/center-icon.png",
+                anchor_x="center",
+                anchor_y="center",
+            )
+            mv.add_widget(mark)
+            self._heatmap_markers.append(mark)
 
 
 
