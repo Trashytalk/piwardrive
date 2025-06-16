@@ -2,11 +2,14 @@ import os
 import shlex
 import subprocess
 from typing import List, Dict, Optional
+import logging
 
 from sigint_suite.models import WifiNetwork
 
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
+
+logger = logging.getLogger(__name__)
 
 
 def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
@@ -39,11 +42,13 @@ def scan_wifi(
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
     timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    logger.debug("Executing: %s", " ".join(cmd))
     try:
         output = subprocess.check_output(
             cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
         )
-    except Exception:
+    except Exception as exc:
+        logger.exception("Wi-Fi scan failed: %s", exc)
         return []
 
     networks: List[WifiNetwork] = []
