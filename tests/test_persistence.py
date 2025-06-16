@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -33,3 +34,20 @@ def test_save_and_load_app_state(tmp_path: Path) -> None:
     asyncio.run(persistence.save_app_state(state))
     loaded = asyncio.run(persistence.load_app_state())
     assert loaded.last_screen == "Stats"
+
+
+def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
+    setup_tmp(tmp_path)
+    custom = tmp_path / "db" / "custom.db"
+    monkeypatch.setenv("PW_DB_PATH", str(custom))
+    rec = persistence.HealthRecord(
+        timestamp="c",
+        cpu_temp=2.0,
+        cpu_percent=2.5,
+        memory_percent=3.5,
+        disk_percent=4.5,
+    )
+    asyncio.run(persistence.save_health_record(rec))
+    assert custom.is_file()
+    rows = asyncio.run(persistence.load_recent_health(1))
+    assert rows and rows[0].cpu_temp == 2.0
