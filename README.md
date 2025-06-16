@@ -244,6 +244,11 @@ package. A minimal plugin looks like::
 Once the file is created, ``ExtraWidget`` can be added to the dashboard like any
 other built-in widget.
 
+For convenience, a simple example plugin is included at
+``examples/plugins/hello_plugin.py``. Copy or symlink this file into
+``~/.config/piwardrive/plugins`` to see it appear alongside the built‑in
+widgets.
+
 Compiled extensions built with PyO3 or Cython are supported as well. Place the
 resulting ``.so`` (or ``.pyd`` on Windows) in the plugin directory or within a
 package. Ensure the extension is built against the same Python version that
