@@ -16,13 +16,23 @@ from typing import Any, Dict, Optional
 
 try:  # pragma: no cover - optional DBus dependency
     import dbus  # type: ignore
-except Exception:  # pragma: no cover - missing dependency
+except Exception as exc:  # pragma: no cover - missing dependency
     dbus = None  # type: ignore
+    logging.getLogger(__name__).warning(
+        "dbus module not available: %s. Install 'dbus-python' to enable"
+        " orientation via iio-sensor-proxy.",
+        exc,
+    )
 
 try:  # pragma: no cover - optional hardware dependency
     from mpu6050 import mpu6050  # type: ignore
-except Exception:  # pragma: no cover - missing dependency
+except Exception as exc:  # pragma: no cover - missing dependency
     mpu6050 = None  # type: ignore
+    logging.getLogger(__name__).warning(
+        "mpu6050 module not available: %s. Install 'mpu6050' to read sensor"
+        " data.",
+        exc,
+    )
 
 logger = logging.getLogger(__name__)
 

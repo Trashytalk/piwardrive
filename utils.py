@@ -270,7 +270,6 @@ def safe_request(
         return None
 
 
-
 def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:
@@ -539,7 +538,12 @@ async def _run_service_cmd_async(
 
     try:
         import dbus_fast.aio  # type: ignore  # noqa: F401
-    except Exception:
+    except Exception as exc:
+        logging.getLogger(__name__).warning(
+            "dbus-fast not available: %s. Falling back to systemctl. Install"
+            " 'dbus-fast' for DBus control.",
+            exc,
+        )
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
             None, lambda: _run_service_cmd_sync(service, action, attempts, delay)

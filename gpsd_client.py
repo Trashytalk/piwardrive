@@ -8,7 +8,11 @@ try:
     import gpsd
 except Exception as exc:  # pragma: no cover - optional dependency
     gpsd = None  # type: ignore
-    logging.getLogger(__name__).error("gpsd library not available: %s", exc)
+    logging.getLogger(__name__).warning(
+        "gpsd library not available: %s. Install 'gpsd-py3' to enable GPSD"
+        " support.",
+        exc,
+    )
 
 
 class GPSDClient:
