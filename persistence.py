@@ -55,6 +55,7 @@ class AppState:
 
     last_screen: str = "Map"
     last_start: str = ""
+    first_run: bool = True
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -74,7 +75,8 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
         CREATE TABLE IF NOT EXISTS app_state (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             last_screen TEXT,
-            last_start TEXT
+            last_start TEXT,
+            first_run INTEGER
         )
         """
     )
@@ -112,8 +114,8 @@ async def save_app_state(state: AppState) -> None:
     conn = await _get_conn()
     await conn.execute("DELETE FROM app_state WHERE id = 1")
     await conn.execute(
-        "INSERT INTO app_state (id, last_screen, last_start) VALUES (1, ?, ?)",
-        (state.last_screen, state.last_start),
+        "INSERT INTO app_state (id, last_screen, last_start, first_run) VALUES (1, ?, ?, ?)",
+        (state.last_screen, state.last_start, int(state.first_run)),
     )
     await conn.commit()
 
@@ -122,9 +124,13 @@ async def load_app_state() -> AppState:
     """Load persisted :class:`AppState` or defaults."""
     conn = await _get_conn()
     cur = await conn.execute(
-        "SELECT last_screen, last_start FROM app_state WHERE id = 1"
+        "SELECT last_screen, last_start, first_run FROM app_state WHERE id = 1"
     )
     row = await cur.fetchone()
     if row is None:
         return AppState()
-    return AppState(last_screen=row["last_screen"], last_start=row["last_start"])
+    return AppState(
+        last_screen=row["last_screen"],
+        last_start=row["last_start"],
+        first_run=bool(row["first_run"]),
+    )
