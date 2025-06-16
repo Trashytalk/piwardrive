@@ -90,6 +90,10 @@ sequenceDiagram
     Clock-->>Scheduler: event handle
 ```
 
+Schedulers expose basic metrics via ``get_metrics()`` including the next
+scheduled run time and duration of the last callback execution. These values
+aid troubleshooting periodic jobs during development.
+
 ## Quick Start
 
 ### Hardware
