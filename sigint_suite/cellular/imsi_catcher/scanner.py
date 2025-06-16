@@ -16,9 +16,8 @@ def scan_imsis(
     enrich_func: Optional[
         Callable[[List[ImsiRecord]], List[ImsiRecord]]
     ] = None,
-) -> List[ImsiRecord]:
     timeout: int | None = None,
-) -> List[Dict[str, str]]:
+) -> List[ImsiRecord]:
 
     """Scan for IMSI numbers using an external command.
 
