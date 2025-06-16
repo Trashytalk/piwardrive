@@ -28,12 +28,16 @@ class SettingsScreen:
         self.health_poll_field = SimpleNamespace(text=str(app.health_poll_interval))
         self.log_rotate_field = SimpleNamespace(text=str(app.log_rotate_interval))
         self.log_archives_field = SimpleNamespace(text=str(app.log_rotate_archives))
+        self.cleanup_logs_switch = SimpleNamespace(active=app.cleanup_rotated_logs)
         self.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
         self.offline_switch = SimpleNamespace(active=app.map_use_offline)
         self.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
         self.show_aps_switch = SimpleNamespace(active=app.map_show_aps)
         self.show_bt_switch = SimpleNamespace(active=app.map_show_bt)
         self.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
+        self.cluster_capacity_field = SimpleNamespace(
+            text=str(app.map_cluster_capacity)
+        )
         self.debug_switch = SimpleNamespace(active=app.debug_mode)
         self.battery_switch = SimpleNamespace(active=app.widget_battery_status)
         self.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
@@ -81,6 +85,8 @@ class SettingsScreen:
                 raise ValueError
             app.log_rotate_archives = val
 
+            app.cleanup_rotated_logs = self.cleanup_logs_switch.active
+
             val = int(self.gps_poll_field.text)
             if val <= 0:
                 raise ValueError
@@ -90,6 +96,11 @@ class SettingsScreen:
             if val <= 0:
                 raise ValueError
             app.map_poll_gps_max = val
+
+            val = int(self.cluster_capacity_field.text)
+            if val <= 0:
+                raise ValueError
+            app.map_cluster_capacity = val
         except ValueError:
             report_error("GPS poll invalid")
 
@@ -111,12 +122,14 @@ class SettingsScreen:
         cfg.health_poll_interval = app.health_poll_interval
         cfg.log_rotate_interval = app.log_rotate_interval
         cfg.log_rotate_archives = app.log_rotate_archives
+        cfg.cleanup_rotated_logs = app.cleanup_rotated_logs
         cfg.map_poll_gps = app.map_poll_gps
         cfg.map_poll_gps_max = app.map_poll_gps_max
         cfg.map_show_gps = app.map_show_gps
         cfg.map_show_aps = app.map_show_aps
         cfg.map_show_bt = app.map_show_bt
         cfg.map_cluster_aps = app.map_cluster_aps
+        cfg.map_cluster_capacity = app.map_cluster_capacity
         cfg.debug_mode = app.debug_mode
         cfg.widget_battery_status = app.widget_battery_status
         cfg.ui_font_size = app.ui_font_size

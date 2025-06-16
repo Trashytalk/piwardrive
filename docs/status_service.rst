@@ -25,6 +25,10 @@ Additional Routes
 
    curl http://localhost:8000/widget-metrics
 
+The JSON response includes CPU temperature, service status, handshake count,
+average RSSI and network throughput (``rx_kbps``/``tx_kbps``) for external
+dashboards.
+
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length)::
 
    curl "http://localhost:8000/logs?lines=50"

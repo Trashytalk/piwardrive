@@ -279,3 +279,42 @@ BoxLayout:
         size_hint_y: 1
         size_hint_x: 1
         log_path: '/var/log/syslog'
+# Map Screen layout
+<MapScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        MDBoxLayout:
+            id: filter_bar
+            size_hint_y: None
+            height: dp(48)
+            spacing: dp(4)
+            padding: dp(4)
+            MDTextField:
+                id: ssid_filter
+                hint_text: 'SSID'
+                size_hint_x: 0.25
+            MDTextField:
+                id: enc_filter
+                hint_text: 'Encryption'
+                size_hint_x: 0.25
+            MDTextField:
+                id: oui_filter
+                hint_text: 'Vendor OUI'
+                size_hint_x: 0.25
+            MDRaisedButton:
+                text: 'Apply'
+                size_hint_x: 0.12
+                on_release: root.filter_ap_markers(ssid_filter.text or None, enc_filter.text or None, oui_filter.text or None)
+            MDRaisedButton:
+                text: 'Clear'
+                size_hint_x: 0.13
+                on_release:
+                    ssid_filter.text = ''
+                    enc_filter.text = ''
+                    oui_filter.text = ''
+                    root.filter_ap_markers()
+        MapView:
+            id: mapview
+            on_touch_down: root._map_touch_down(self, args[1])
+            on_touch_move: root._map_touch_move(self, args[1])
+            on_touch_up: root._map_touch_up(self, args[1])

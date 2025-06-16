@@ -2,7 +2,9 @@ Building the CKML Extension
 ===========================
 
 PiWardrive ships with two small C extensions ``ckml`` and ``cgeom`` used by the
-GUI. They are compiled automatically when building the project.
+GUI. They are compiled automatically when building the project. Prebuilt wheels
+for Linux, macOS and Windows are uploaded with each GitHub release. Download
+the appropriate wheel to avoid compiling the extensions yourself.
 
 Prerequisites
 -------------

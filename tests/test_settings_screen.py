@@ -61,12 +61,14 @@ class DummyApp:
         self.map_show_aps = True
         self.map_show_bt = False
         self.map_cluster_aps = False
+        self.map_cluster_capacity = 8
         self.debug_mode = False
         self.offline_tile_path = "/valid/tiles"
         self.map_use_offline = False
         self.health_poll_interval = 10
         self.log_rotate_interval = 3600
         self.log_rotate_archives = 3
+        self.cleanup_rotated_logs = True
         self.widget_battery_status = False
         self.ui_font_size = 16
         self.theme = "Dark"
@@ -85,12 +87,16 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.health_poll_field = SimpleNamespace(text=str(app.health_poll_interval))
     screen.log_rotate_field = SimpleNamespace(text=str(app.log_rotate_interval))
     screen.log_archives_field = SimpleNamespace(text=str(app.log_rotate_archives))
+    screen.cleanup_logs_switch = SimpleNamespace(active=app.cleanup_rotated_logs)
     screen.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
     screen.offline_switch = SimpleNamespace(active=app.map_use_offline)
     screen.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
     screen.show_aps_switch = SimpleNamespace(active=app.map_show_aps)
     screen.show_bt_switch = SimpleNamespace(active=app.map_show_bt)
     screen.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
+    screen.cluster_capacity_field = SimpleNamespace(
+        text=str(app.map_cluster_capacity)
+    )
     screen.debug_switch = SimpleNamespace(active=app.debug_mode)
     screen.battery_switch = SimpleNamespace(active=app.widget_battery_status)
     screen.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
@@ -155,7 +161,9 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     screen.health_poll_field.text = "15"
     screen.log_rotate_field.text = "1200"
     screen.log_archives_field.text = "5"
+    screen.cleanup_logs_switch.active = False
     screen.font_size_field.text = "18"
+    screen.cluster_capacity_field.text = "12"
     screen.show_gps_switch.active = False
     screen.show_aps_switch.active = False
     screen.show_bt_switch.active = True
@@ -178,14 +186,17 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert app.health_poll_interval == 15
     assert app.log_rotate_interval == 1200
     assert app.log_rotate_archives == 5
+    assert app.cleanup_rotated_logs is False
     assert app.ui_font_size == 18
     assert app.map_show_gps is False
     assert app.map_show_aps is False
     assert app.map_show_bt is True
     assert app.map_cluster_aps is True
+    assert app.map_cluster_capacity == 12
     assert app.debug_mode is True
     assert app.widget_battery_status is True
     assert saved
+    assert saved.get("map_cluster_capacity") == 12
 
 
 @pytest.mark.asyncio

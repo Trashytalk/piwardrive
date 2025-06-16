@@ -7,7 +7,12 @@ from typing import Any, Iterable, Mapping, Sequence
 
 import csv
 
-EXPORT_FORMATS = ("csv", "json", "gpx", "kml")
+try:  # Optional dependency for shapefile export
+    import shapefile  # type: ignore
+except Exception:  # pragma: no cover - optional
+    shapefile = None
+
+EXPORT_FORMATS = ("csv", "json", "gpx", "kml", "geojson", "shp")
 
 
 def filter_records(
@@ -100,11 +105,68 @@ def export_records(
             ET.SubElement(point, "coordinates").text = f"{lon},{lat}"
         ET.ElementTree(root).write(p, encoding="utf-8", xml_declaration=True)
 
+    def export_geojson(
+        rs: Sequence[Mapping[str, Any]],
+        p: str,
+        f: Sequence[str] | None,
+    ) -> None:
+        features = []
+        for rec in rs:
+            lat = rec.get("lat")
+            lon = rec.get("lon")
+            if lat is None or lon is None:
+                continue
+            props = dict(rec)
+            props.pop("lat", None)
+            props.pop("lon", None)
+            if f is not None:
+                props = {k: props.get(k) for k in f if k not in {"lat", "lon"}}
+            features.append(
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [lon, lat]},
+                    "properties": props,
+                }
+            )
+        with open(p, "w", encoding="utf-8") as fh:
+            json.dump({"type": "FeatureCollection", "features": features}, fh)
+
+    def export_shp(
+        rs: Sequence[Mapping[str, Any]],
+        p: str,
+        f: Sequence[str] | None,
+    ) -> None:
+        if shapefile is None:
+            raise RuntimeError("pyshp is required for shapefile export")
+        rs = list(rs)
+        base = p[:-4] if p.lower().endswith(".shp") else p
+        writer = shapefile.Writer(base, shapefile.POINT)
+        fieldnames = f or (list(rs[0].keys()) if rs else [])
+        for name in fieldnames:
+            if name in {"lat", "lon"}:
+                continue
+            writer.field(name[:10], "C")
+        for rec in rs:
+            lat = rec.get("lat")
+            lon = rec.get("lon")
+            if lat is None or lon is None:
+                continue
+            writer.point(lon, lat)
+            record = []
+            for name in fieldnames:
+                if name in {"lat", "lon"}:
+                    continue
+                record.append(rec.get(name))
+            writer.record(*record)
+        writer.close()
+
     exporters = {
         "csv": export_csv,
         "json": export_json,
         "gpx": export_gpx,
         "kml": export_kml,
+        "geojson": export_geojson,
+        "shp": export_shp,
     }
 
     try:
