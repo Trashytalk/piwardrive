@@ -46,6 +46,15 @@ automatically. Old tiles are purged and the cache limit enforced.  If
 ``compress_offline_tiles`` is ``true`` the offline MBTiles file is compacted
 with ``VACUUM`` during each run.
 
+Command Line Maintenance
+-----------------------
+
+Run maintenance without the GUI using the ``piwardrive-maintain-tiles``
+command. Combine ``--purge``, ``--limit`` and ``--vacuum`` to control which
+operations execute::
+
+   piwardrive-maintain-tiles --purge --limit --vacuum --offline /path/offline.mbtiles
+
 Paths
 -----
 
