@@ -24,6 +24,7 @@ from typing import Callable
 import csv
 
 import math
+import asyncio
 
 from kivy.app import App
 import utils
@@ -56,6 +57,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 
 from kivymd.uix.snackbar import Snackbar
+from persistence import save_app_state
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.progressbar import MDProgressBar
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -165,6 +167,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         )
         # React to zoom level changes by updating clusters
         self.ids.mapview.bind(zoom=self.update_clusters_on_zoom)
+
+        if getattr(app, "app_state", None) and app.app_state.first_run:
+            Clock.schedule_once(lambda _dt: self.start_first_run_tour(), 0.5)
 
 
 
@@ -845,6 +850,28 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         MDDialog(title="Map Help", text=help_text, size_hint=(0.8, 0.6)).open()
 
+    def start_first_run_tour(self):
+        self._tour_hints = [
+            "Tap ⛶ to center on GPS",
+            "Tap +/– to zoom in or out",
+            "Long-press anywhere for more options",
+        ]
+        self._tour_index = 0
+        self._show_next_tour_hint()
+
+    def _show_next_tour_hint(self, _dt=None):
+        if self._tour_index >= len(self._tour_hints):
+            app = App.get_running_app()
+            app.app_state.first_run = False
+            try:
+                asyncio.run(save_app_state(app.app_state))
+            except Exception:  # pragma: no cover - best effort
+                pass
+            return
+        Snackbar(text=self._tour_hints[self._tour_index], duration=3).open()
+        self._tour_index += 1
+        Clock.schedule_once(self._show_next_tour_hint, 3.5)
+
 
 
     # Helpers
@@ -917,6 +944,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self.area_points.clear()
 
+    async def _download_tile_async(self, session, url, local):
+        from .map_utils import tile_cache
+        await tile_cache.download_tile_async(session, url, local)
+
 
 
     # ------------------------------------------------------------------
@@ -946,9 +977,18 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Download PNG tiles covering ``bounds`` to ``folder``."""
 
         try:
+            import sys
+            from types import SimpleNamespace
+            if "kivymd.toast" not in sys.modules:
+                sys.modules["kivymd.toast"] = SimpleNamespace(toast=lambda *a, **k: None)
             min_lat, min_lon, max_lat, max_lon = bounds
 
             zoom = int(zoom)
+            # Convert bounding box corners to tile numbers
+            from .map_utils import tile_cache
+            from .map_utils.tile_cache import deg2num
+            import aiohttp
+
             import math
             import aiohttp
             import asyncio
@@ -965,23 +1005,21 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             x2, y2 = deg2num(min_lat, max_lon, zoom)
             x_min, x_max = sorted((x1, x2))
             y_min, y_max = sorted((y1, y2))
-
-
-            base_url = "https://tile.openstreetmap.org"
             tasks = []
+            base_url = "https://tile.openstreetmap.org"
+
             for x in range(x_min, x_max + 1):
                 for y in range(y_min, y_max + 1):
                     url = f"{base_url}/{zoom}/{x}/{y}.png"
                     local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
                     tasks.append((url, local))
-
             total = len(tasks)
             completed = 0
 
-            async def _run(session_cls, timeout_cls) -> None:
+            async def _run() -> None:
                 sem = asyncio.Semaphore(concurrency or os.cpu_count() or 4)
-                timeout = timeout_cls(total=10) if timeout_cls else None
-                async with session_cls(timeout=timeout) as session:
+                timeout = aiohttp.ClientTimeout(total=10)
+                async with aiohttp.ClientSession(timeout=timeout) as session:
 
                     async def _task(url: str, local: str) -> None:
                         nonlocal completed
@@ -994,6 +1032,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
                     await asyncio.gather(*[asyncio.create_task(_task(u, l)) for u, l in tasks])
 
+            asyncio.run(_run())
             try:
                 import aiohttp  # type: ignore
                 asyncio.run(

@@ -30,10 +30,11 @@ def test_save_and_load_health_record(tmp_path: Path) -> None:
 
 def test_save_and_load_app_state(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
-    state = persistence.AppState(last_screen="Stats", last_start="now")
+    state = persistence.AppState(last_screen="Stats", last_start="now", first_run=False)
     asyncio.run(persistence.save_app_state(state))
     loaded = asyncio.run(persistence.load_app_state())
     assert loaded.last_screen == "Stats"
+    assert loaded.first_run is False
 
 
 def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
@@ -51,3 +52,4 @@ def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
     assert custom.is_file()
     rows = asyncio.run(persistence.load_recent_health(1))
     assert rows and rows[0].cpu_temp == 2.0
+

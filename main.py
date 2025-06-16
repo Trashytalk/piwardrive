@@ -13,7 +13,7 @@ from scheduler import PollScheduler
 from config import load_config, save_config, Config
 
 from security import hash_password
-from persistence import save_app_state
+from persistence import save_app_state, load_app_state, AppState
 
 import diagnostics
 import utils
@@ -91,6 +91,8 @@ class PiWardriveApp(MDApp):
 
         # load persisted configuration
         self.config_data: Config = load_config()
+        self.app_state: AppState = asyncio.run(load_app_state())
+        self.last_screen = self.app_state.last_screen
         for key, val in asdict(self.config_data).items():
             if hasattr(self, key):
                 setattr(self, key, val)
