@@ -10,6 +10,10 @@ To enable the optional battery widget set ``widget_battery_status`` to ``true``:
 
    PW_WIDGET_BATTERY_STATUS=1 python main.py
 
+Disable all network scanning when operating offline with::
+
+   PW_DISABLE_SCANNING=1 python main.py
+
 Set ``PW_ADMIN_PASSWORD`` to allow privileged service actions without being
 prompted for a password::
 

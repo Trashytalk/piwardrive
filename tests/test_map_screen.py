@@ -86,6 +86,7 @@ class DummyApp:
     map_poll_gps = 1
     map_poll_aps = 2
     map_poll_bt = 3
+    disable_scanning = False
 
     def __init__(self) -> None:
         self.scheduler = DummyScheduler()

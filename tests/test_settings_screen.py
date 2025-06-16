@@ -64,6 +64,7 @@ class DummyApp:
         self.debug_mode = False
         self.offline_tile_path = "/valid/tiles"
         self.map_use_offline = False
+        self.disable_scanning = False
         self.health_poll_interval = 10
         self.log_rotate_interval = 3600
         self.log_rotate_archives = 3

@@ -148,24 +148,22 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 report_error(f"Offline tiles error: {e}")
 
         self._gps_event = "map_gps"
-
         self._aps_event = "map_aps"
 
         app.scheduler.schedule(
-
             self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
-
         )
 
-        app.scheduler.schedule(
+        from utils import network_scanning_disabled
 
-            self._aps_event, lambda dt: self.plot_aps(), app.map_poll_aps
-
-        )
-        self._bt_event = "map_bt"
-        app.scheduler.schedule(
-            self._bt_event, lambda dt: self.plot_bt_devices(), app.map_poll_bt
-        )
+        if not network_scanning_disabled():
+            app.scheduler.schedule(
+                self._aps_event, lambda dt: self.plot_aps(), app.map_poll_aps
+            )
+            self._bt_event = "map_bt"
+            app.scheduler.schedule(
+                self._bt_event, lambda dt: self.plot_bt_devices(), app.map_poll_bt
+            )
         # React to zoom level changes by updating clusters
         self.ids.mapview.bind(zoom=self.update_clusters_on_zoom)
 

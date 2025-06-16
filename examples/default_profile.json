@@ -17,5 +17,6 @@
     "log_rotate_interval": 3600,
     "log_rotate_archives": 3,
     "widget_battery_status": false,
+    "disable_scanning": false,
     "admin_password_hash": "",
 }
