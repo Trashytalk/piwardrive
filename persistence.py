@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import aiosqlite
 from dataclasses import dataclass, asdict
-from typing import List, Optional
+from typing import Any, List, Optional
 import asyncio
 
 import config
@@ -84,6 +84,18 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
         )
         """
     )
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ap_cache (
+            bssid TEXT PRIMARY KEY,
+            ssid TEXT,
+            encryption TEXT,
+            lat REAL,
+            lon REAL,
+            last_time INTEGER
+        )
+        """
+    )
     await conn.commit()
 
 
@@ -138,3 +150,28 @@ async def load_app_state() -> AppState:
         last_start=row["last_start"],
         first_run=bool(row["first_run"]),
     )
+
+
+async def save_ap_cache(records: list[dict[str, Any]]) -> None:
+    """Replace ``ap_cache`` contents with ``records``."""
+    conn = await _get_conn()
+    await conn.execute("DELETE FROM ap_cache")
+    if records:
+        await conn.executemany(
+            """
+            INSERT INTO ap_cache (bssid, ssid, encryption, lat, lon, last_time)
+            VALUES (:bssid, :ssid, :encryption, :lat, :lon, :last_time)
+            """,
+            records,
+        )
+    await conn.commit()
+
+
+async def load_ap_cache() -> list[dict[str, Any]]:
+    """Return all rows from ``ap_cache`` as dictionaries."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
+    )
+    rows = await cur.fetchall()
+    return [dict(row) for row in rows]

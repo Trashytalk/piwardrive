@@ -975,12 +975,6 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self.area_points.clear()
 
-    async def _download_tile_async(self, session, url, local):
-        from .map_utils import tile_cache
-        await tile_cache.download_tile_async(session, url, local)
-
-
-
     # ------------------------------------------------------------------
 
     # Offline Map Tile Management
@@ -1037,6 +1031,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         except Exception as e:  # pragma: no cover - network errors
             report_error(f"Prefetch error: {e}")
 
+            
     def prefetch_visible_region(self):
         """Download tiles for the current view if offline mode is active."""
         app = App.get_running_app()
