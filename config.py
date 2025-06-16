@@ -57,6 +57,7 @@ class Config:
     health_poll_interval: int = 10
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
+    cleanup_rotated_logs: bool = True
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
@@ -85,6 +86,7 @@ class FileConfigModel(BaseModel):
     health_poll_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_archives: Optional[int] = Field(default=None, ge=1)
+    cleanup_rotated_logs: Optional[bool] = None
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
@@ -276,6 +278,7 @@ class AppConfig:
     log_paths: List[str] = field(default_factory=lambda: DEFAULTS["log_paths"])
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
+    cleanup_rotated_logs: bool = DEFAULTS["cleanup_rotated_logs"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
