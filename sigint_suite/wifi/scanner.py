@@ -1,3 +1,4 @@
+import logging
 import os
 import shlex
 import subprocess
@@ -27,6 +28,7 @@ def scan_wifi(
     priv_cmd: Optional[str] = None,
     timeout: Optional[int] = None,
 ) -> List[WifiNetwork]:
+
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
@@ -35,15 +37,20 @@ def scan_wifi(
     if priv_cmd:
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
-    timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    )
     try:
         output = subprocess.check_output(
             cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
         )
-    except Exception:
+    except Exception as exc:  # pragma: no cover - platform dependent
+        logging.exception("Failed to run iwlist", exc_info=exc)
         return []
 
     records: List[Dict[str, str]] = []
+    networks: List[Dict[str, str]] = []
+
     current: Dict[str, str] = {}
     enc_lines: List[str] = []
 
@@ -70,6 +77,14 @@ def scan_wifi(
             current["encryption"] = line.split("Encryption key:")[-1].strip()
         elif line.startswith("IE:"):
             enc_lines.append(line.split("IE:", 1)[-1].strip())
+                networks.append(current)
+            current = {"cell": line}
+            if "Address:" in line:
+                current["bssid"] = line.split("Address:")[-1].strip()
+        elif "ESSID" in line:
+            current["ssid"] = line.split(":", 1)[-1].strip('"')
+        elif "Address" in line:
+            current["bssid"] = line.split("Address:")[-1].strip()
         elif "Frequency" in line:
             current["frequency"] = line.split("Frequency:")[-1].split()[0]
             if "(Channel" in line:
@@ -90,6 +105,7 @@ def scan_wifi(
 
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
+
 
 
 def main() -> None:
