@@ -79,6 +79,10 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
 ## Installation
 
+You can automate the basic setup by running ``scripts/quickstart.sh`` from the
+repository root. It installs the required system packages, creates ``gui-env/``
+and installs the Python dependencies. The manual steps are listed below.
+
 1. **Install system packages** (Raspberry Pi OS)::
 
       sudo apt update && sudo apt install -y \
@@ -147,6 +151,7 @@ docker-compose run --rm test
   * `PW_PROFILE_NAME=car_rig` – load the `car_rig` profile
   * `PW_API_PASSWORD_HASH=<hash>` – protect HTTP API endpoints
   * `PW_ADMIN_PASSWORD=<pass>` – enables privileged service actions
+  * `PW_DB_PATH=/tmp/my.db` – location of the SQLite database
   See [docs/configuration.rst](docs/configuration.rst) for all settings.
 * **GPS Polling**: `map_poll_gps` is the fastest interval while
   `map_poll_gps_max` sets the slowest interval when stationary.
@@ -324,6 +329,9 @@ formats, raising `ValueError` for unsupported formats.
 ### `analysis.py`
 Computes average health statistics and can plot CPU temperature, optionally
 using pandas and Plotly when available.
+
+### `scripts/health_export.py`
+Exports recent `HealthRecord` rows in CSV or JSON format.
 
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection

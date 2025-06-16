@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 from datetime import datetime
+import time
 import cProfile
 import pstats
 import io
@@ -18,10 +19,13 @@ import asyncio
 import utils
 from scheduler import PollScheduler
 from interfaces import DataCollector, SelfTestCollector
-from persistence import HealthRecord, save_health_record
+from persistence import HealthRecord, save_health_record, load_recent_health
 from utils import run_async_task
+import config
+import r_integration
 
 _PROFILER: cProfile.Profile | None = None
+_LAST_NETWORK_OK: float | None = None
 
 
 def generate_system_report() -> dict:
@@ -118,10 +122,21 @@ def get_profile_metrics() -> dict | None:
     return {"calls": len(stats), "cumtime": total}
 
 
-def run_network_test(host: str = '8.8.8.8') -> bool:
-    """Ping ``host`` once and return True if reachable."""
+def run_network_test(host: str = '8.8.8.8', cache_seconds: float = 30.0) -> bool:
+    """Ping ``host`` once and return True if reachable.
+
+    If the previous successful check occurred within ``cache_seconds`` the
+    ping call is skipped and ``True`` is returned immediately.
+    """
+    global _LAST_NETWORK_OK
+    now = time.time()
+    if _LAST_NETWORK_OK is not None and now - _LAST_NETWORK_OK < cache_seconds:
+        return True
     proc = subprocess.run(['ping', '-c', '1', host], capture_output=True)
-    return proc.returncode == 0
+    if proc.returncode == 0:
+        _LAST_NETWORK_OK = now
+        return True
+    return False
 
 
 def get_interface_status() -> dict:
@@ -163,6 +178,7 @@ class HealthMonitor:
         scheduler: 'PollScheduler',
         interval: float = 10.0,
         collector: DataCollector | None = None,
+        daily_summary: bool = False,
     ) -> None:
         self._scheduler = scheduler
         self._interval = interval
@@ -174,6 +190,13 @@ class HealthMonitor:
             lambda dt: run_async_task(self._poll()),
             interval,
         )
+        self._summary_event = "health_summary"
+        if daily_summary:
+            scheduler.schedule(
+                self._summary_event,
+                lambda dt: run_async_task(self._run_summary()),
+                86400,
+            )
         asyncio.run(self._poll())
 
     async def _poll(self) -> None:
@@ -190,6 +213,51 @@ class HealthMonitor:
             await save_health_record(rec)
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
+
+    async def _run_summary(self) -> None:
+        from dataclasses import asdict
+        import csv
+        import json
+
+        try:
+            records = await load_recent_health(10000)
+        except Exception as exc:  # pragma: no cover - best-effort
+            logging.exception("HealthMonitor load records failed: %s", exc)
+            return
+
+        if not records:
+            return
+
+        os.makedirs(config.REPORTS_DIR, exist_ok=True)
+        date = datetime.now().strftime("%Y%m%d")
+        csv_path = os.path.join(config.REPORTS_DIR, f"health_{date}.csv")
+        with open(csv_path, "w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(
+                fh,
+                fieldnames=[
+                    "timestamp",
+                    "cpu_temp",
+                    "cpu_percent",
+                    "memory_percent",
+                    "disk_percent",
+                ],
+            )
+            writer.writeheader()
+            writer.writerows(asdict(r) for r in records)
+
+        plot_path = os.path.join(config.REPORTS_DIR, f"health_{date}.png")
+
+        try:
+            result = await asyncio.to_thread(
+                r_integration.health_summary, csv_path, plot_path
+            )
+        except Exception as exc:  # pragma: no cover - optional
+            logging.exception("HealthMonitor summary failed: %s", exc)
+            return
+
+        json_path = os.path.join(config.REPORTS_DIR, f"health_{date}.json")
+        with open(json_path, "w", encoding="utf-8") as fh:
+            json.dump(result, fh)
 
     def stop(self) -> None:
         self._scheduler.cancel(self._event)

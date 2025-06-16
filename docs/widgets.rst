@@ -104,7 +104,9 @@ A small temperature plot is rendered beneath the summary text.
 LogViewer
 ~~~~~~~~~
 Scrollable widget that tails a log file. ``log_path`` selects the file, ``max_lines`` determines
-how many lines are shown and ``poll_interval`` sets how often the file is re-read. A helper
+how many lines are shown and ``poll_interval`` sets how often the file is re-read.  A drop-down
+menu exposes the ``log_paths`` list from configuration so different logs can be selected on the
+fly.  A helper
 ``jump_to_latest_error`` scrolls to the most recent line matching ``error_regex``.
 
 .. note::
