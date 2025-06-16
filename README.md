@@ -248,6 +248,25 @@ flowchart TD
 The configuration is loaded, optional services are started and the scheduler
 begins polling metrics that feed the widgets shown on screen.
 
+### Automated vs Manual Tasks
+
+#### Automated Aspects
+
+* **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
+* **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
+* **Configuration Reloads** – changes to `config.json` and any `PW_` environment variables are detected at runtime and applied without restarting.
+* **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup.
+
+#### Manual Steps
+
+* **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
+* **Launching the App** – activate the environment and start PiWardrive with `python main.py` or enable `piwardrive.service` to start on boot.
+* **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
+* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
+* **Syncing Data** – trigger uploads via `/sync` or by calling `remote_sync.sync_database_to_server`.
+* **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
+
+
 ## Mobile Builds
 
 Build scripts for Android and iOS are provided. Ensure the prerequisites
