@@ -461,3 +461,30 @@ def test_network_scanning_disabled(monkeypatch: Any) -> None:
     assert utils.network_scanning_disabled() is True
     monkeypatch.delenv("PW_DISABLE_SCANNING")
 
+
+def test_get_network_throughput_calculates_kbps(monkeypatch: Any) -> None:
+    net = namedtuple("Net", "bytes_sent bytes_recv")
+    utils._NET_IO_CACHE = {"timestamp": 1.0, "counters": net(1000, 2000)}
+    monkeypatch.setattr(utils.time, "time", lambda: 2.0)
+    monkeypatch.setattr(psutil, "net_io_counters", lambda: net(3000, 6000))
+
+    rx, tx = utils.get_network_throughput()
+
+    assert round(rx, 2) == round((6000 - 2000) / 1024.0, 2)
+    assert round(tx, 2) == round((3000 - 1000) / 1024.0, 2)
+    assert utils._NET_IO_CACHE["counters"].bytes_recv == 6000
+    assert utils._NET_IO_CACHE["timestamp"] == 2.0
+
+
+def test_get_network_throughput_resets_when_cache_missing(monkeypatch: Any) -> None:
+    net = namedtuple("Net", "bytes_sent bytes_recv")
+    utils._NET_IO_CACHE = {}
+    monkeypatch.setattr(psutil, "net_io_counters", lambda: net(500, 700))
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+
+    rx, tx = utils.get_network_throughput()
+
+    assert rx == 0.0 and tx == 0.0
+    assert utils._NET_IO_CACHE["counters"].bytes_sent == 500
+    assert utils._NET_IO_CACHE["timestamp"] == 1.0
+
