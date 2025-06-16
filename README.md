@@ -335,6 +335,9 @@ using pandas and Plotly when available.
 ### `scripts/health_export.py`
 Exports recent `HealthRecord` rows in CSV or JSON format.
 
+### `scripts/health_import.py`
+Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
+
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
 failures and returning `None` on errors.
