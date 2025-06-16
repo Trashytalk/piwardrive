@@ -12,6 +12,9 @@ import config
 
 
 def _db_path() -> str:
+    env = os.getenv("PW_DB_PATH")
+    if env:
+        return os.path.expanduser(env)
     return os.path.join(config.CONFIG_DIR, "app.db")
 
 
@@ -29,8 +32,9 @@ async def _get_conn() -> aiosqlite.Connection:
     if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir:
         if _DB_CONN is not None:
             await _DB_CONN.close()
-        os.makedirs(cur_dir, exist_ok=True)
-        _DB_CONN = await aiosqlite.connect(_db_path())
+        path = _db_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        _DB_CONN = await aiosqlite.connect(path)
         _DB_CONN.row_factory = aiosqlite.Row
         await _init_db(_DB_CONN)
         _DB_LOOP = loop

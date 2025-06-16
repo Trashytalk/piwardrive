@@ -151,6 +151,7 @@ docker-compose run --rm test
   * `PW_PROFILE_NAME=car_rig` – load the `car_rig` profile
   * `PW_API_PASSWORD_HASH=<hash>` – protect HTTP API endpoints
   * `PW_ADMIN_PASSWORD=<pass>` – enables privileged service actions
+  * `PW_DB_PATH=/tmp/my.db` – location of the SQLite database
   See [docs/configuration.rst](docs/configuration.rst) for all settings.
 * **GPS Polling**: `map_poll_gps` is the fastest interval while
   `map_poll_gps_max` sets the slowest interval when stationary.
