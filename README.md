@@ -73,6 +73,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Database Browser**: browse historical records via a lightweight web UI.
 * **Cloud Export**: send exports directly to AWS S3 buckets.
 * **Vehicle Sensors**: read speed from an accelerometer or OBD‑II adapter.
+* **Orientation Sensors**: rotate the map using gyro or accelerometer data.
 * **Setup Wizard**: interactive configuration for Kismet, BetterCAP and GPSD.
 
 ## Additional Documentation
