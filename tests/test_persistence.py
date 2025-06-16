@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -53,6 +54,20 @@ def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
     rows = asyncio.run(persistence.load_recent_health(1))
     assert rows and rows[0].cpu_temp == 2.0
 
+
+def test_purge_old_health(tmp_path: Path) -> None:
+    setup_tmp(tmp_path)
+    now = datetime.now()
+    old_time = (now - timedelta(days=5)).isoformat()
+    new_time = now.isoformat()
+    old_rec = persistence.HealthRecord(old_time, 1.0, 1.0, 1.0, 1.0)
+    new_rec = persistence.HealthRecord(new_time, 2.0, 2.0, 2.0, 2.0)
+    asyncio.run(persistence.save_health_record(old_rec))
+    asyncio.run(persistence.save_health_record(new_rec))
+    asyncio.run(persistence.purge_old_health(2))
+    rows = asyncio.run(persistence.load_recent_health(10))
+    assert len(rows) == 1
+    assert rows[0].timestamp == new_time
 
 def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
     setup_tmp(tmp_path)

@@ -7,6 +7,7 @@ import aiosqlite
 from dataclasses import dataclass, asdict
 from typing import Any, List, Optional
 import asyncio
+from datetime import datetime, timedelta
 import logging
 
 import config
@@ -101,6 +102,12 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
         )
         """
     )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_health_time ON health_records(timestamp)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_apcache_time ON ap_cache(last_time)"
+    )
     await conn.commit()
 
 
@@ -128,6 +135,17 @@ async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
     )
     rows = await cur.fetchall()
     return [HealthRecord(**dict(row)) for row in rows]
+
+
+async def purge_old_health(days: int) -> None:
+    """Delete ``health_records`` older than ``days`` days."""
+    cutoff = (datetime.now() - timedelta(days=days)).isoformat()
+    conn = await _get_conn()
+    await conn.execute(
+        "DELETE FROM health_records WHERE timestamp < ?",
+        (cutoff,),
+    )
+    await conn.commit()
 
 
 async def save_app_state(state: AppState) -> None:
