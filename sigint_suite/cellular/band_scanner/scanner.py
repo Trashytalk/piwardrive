@@ -12,7 +12,11 @@ from sigint_suite.models import BandRecord
 logger = logging.getLogger(__name__)
 
 
-def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[BandRecord]:
+def scan_bands(
+    cmd: Optional[str] = None,
+    timeout: int | None = None,
+) -> List[BandRecord]:
+
     """Scan for cellular bands and return a list of records.
 
     The command output is expected to be comma separated with
