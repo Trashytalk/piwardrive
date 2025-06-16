@@ -34,6 +34,7 @@ def scan_wifi(
                 networks.append(current)
             current = {"cell": line}
             if "Address:" in line:
+
                 bssid = line.split("Address:")[-1].strip()
                 current["bssid"] = bssid
                 vendor = lookup_vendor(bssid)

@@ -25,6 +25,7 @@ aiohttp==3.12.13
 aiosqlite==0.21.0
 dbus-fast==2.44.1
 dbus-python==1.4.0
+bleak==0.22.3
 ## pybluez>=0.23
 ## Re-enable this after testing is done. It is breaking the environment
 gps==3.19
