@@ -85,19 +85,38 @@ def network_scanning_disabled() -> bool:
     return os.getenv("PW_DISABLE_SCANNING", "0").lower() in {"1", "true", "yes", "on"}
 
 
-_async_loop = asyncio.new_event_loop()
-_async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
-_async_thread.start()
+_async_loop: asyncio.AbstractEventLoop | None = None
+_async_thread: threading.Thread | None = None
+
+
+def _ensure_async_loop_running() -> None:
+    """Create and start the background asyncio loop if needed."""
+    global _async_loop, _async_thread
+
+    if _async_loop is None or _async_loop.is_closed():
+        _async_loop = asyncio.new_event_loop()
+        _async_thread = None
+
+    if _async_thread is None or not _async_thread.is_alive():
+        assert _async_loop is not None  # for type checkers
+        _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
+        _async_thread.start()
 
 
 def shutdown_async_loop(timeout: float | None = 5.0) -> None:
     """Stop the background asyncio loop and join its thread."""
-    if _async_thread.is_alive():
-        if _async_loop.is_running():
+    global _async_loop, _async_thread
+
+    if _async_thread is not None and _async_thread.is_alive():
+        if _async_loop is not None and _async_loop.is_running():
             _async_loop.call_soon_threadsafe(_async_loop.stop)
         _async_thread.join(timeout)
-    if not _async_loop.is_closed():
+
+    if _async_loop is not None and not _async_loop.is_closed():
         _async_loop.close()
+
+    _async_thread = None
+    _async_loop = None
 
 
 def format_error(code: int | IntEnum, message: str) -> str:
@@ -161,6 +180,8 @@ def run_async_task(
 ) -> Future[T]:
     """Schedule ``coro`` on the background loop and invoke ``callback``."""
 
+    _ensure_async_loop_running()
+    assert _async_loop is not None  # for mypy
     fut: Future[T] = asyncio.run_coroutine_threadsafe(coro, _async_loop)
 
     if callback is not None:
