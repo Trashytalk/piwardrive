@@ -1,9 +1,7 @@
 import os
 import shlex
 import subprocess
-from typing import List, Dict, Optional
-
-from sigint_suite.models import WifiNetwork
+from typing import Dict, List, Optional
 
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
@@ -28,6 +26,7 @@ def scan_wifi(
     priv_cmd: Optional[str] = None,
     timeout: Optional[int] = None,
 ) -> List[WifiNetwork]:
+
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
 
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
@@ -37,7 +36,9 @@ def scan_wifi(
     if priv_cmd:
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
-    timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    )
     try:
         output = subprocess.check_output(
             cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
@@ -45,7 +46,7 @@ def scan_wifi(
     except Exception:
         return []
 
-    networks: List[WifiNetwork] = []
+    networks: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
