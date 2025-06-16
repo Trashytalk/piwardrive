@@ -79,6 +79,10 @@ services like Kismet and BetterCAP are controlled via helper functions.
 
 ## Installation
 
+You can automate the basic setup by running ``scripts/quickstart.sh`` from the
+repository root. It installs the required system packages, creates ``gui-env/``
+and installs the Python dependencies. The manual steps are listed below.
+
 1. **Install system packages** (Raspberry Pi OS)::
 
       sudo apt update && sudo apt install -y \
