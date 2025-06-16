@@ -1,5 +1,4 @@
-"""Async wrapper for GPSDClient using background threads."""
-"""Async wrapper around :class:`GPSDClient`."""
+"""Async wrapper around :class:`GPSDClient` using background threads."""
 import asyncio
 from gpsd_client import GPSDClient
 

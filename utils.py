@@ -19,12 +19,19 @@ from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
-    from kivy.app import App
+    from kivy.app import App as _RealApp
 except Exception:
-    class App:
+    _RealApp = None  # type: ignore
+
+if _RealApp is not None:
+    App = _RealApp
+else:
+    class _FallbackApp:
         @staticmethod
         def get_running_app() -> None:
             return None
+
+    App = _FallbackApp
 from enum import IntEnum
 
 import psutil
