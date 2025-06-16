@@ -2,6 +2,7 @@
 
 import json
 import os
+import tempfile
 from dataclasses import dataclass, asdict, field
 
 from enum import Enum
@@ -234,8 +235,14 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
         profile = get_active_profile()
     path = get_config_path(profile)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(asdict(config), f, indent=2)
+    dir_name = os.path.dirname(path) or "."
+    with tempfile.NamedTemporaryFile(
+        "w", dir=dir_name, delete=False, encoding="utf-8"
+    ) as tmp:
+        json.dump(asdict(config), tmp, indent=2)
+        tmp.flush()
+        os.fsync(tmp.fileno())
+    os.replace(tmp.name, path)
 
 
 def export_config(config: Config, path: str) -> None:

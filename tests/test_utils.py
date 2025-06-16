@@ -296,6 +296,41 @@ def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     assert aps == [1] and clients == [2]
 
 
+def test_fetch_kismet_devices_async_logs_cache_error(monkeypatch: Any) -> None:
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return '{"access_points": [], "clients": []}'
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any) -> FakeResp:
+            return FakeResp()
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+    monkeypatch.setattr(
+        persistence,
+        "save_ap_cache",
+        mock.AsyncMock(side_effect=Exception("fail")),
+    )
+
+    with mock.patch.object(utils.logging, "exception") as exc_log:
+        asyncio.run(utils.fetch_kismet_devices_async())
+        exc_log.assert_called_once()
+
+
 def test_fetch_kismet_devices_cache(monkeypatch: Any, tmp_path: Path) -> None:
     os.environ["PW_DB_PATH"] = str(tmp_path / "app.db")
 
@@ -460,4 +495,25 @@ def test_network_scanning_disabled(monkeypatch: Any) -> None:
     monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
     assert utils.network_scanning_disabled() is True
     monkeypatch.delenv("PW_DISABLE_SCANNING")
+
+
+def test_run_async_task() -> None:
+    """The async loop is started on demand and callbacks run."""
+    import importlib, sys
+
+    sys.modules.pop("utils", None)
+    utils_mod = importlib.import_module("utils")
+
+    async def do_work() -> int:
+        return 3
+
+    results: list[int] = []
+
+    def cb(val: int) -> None:
+        results.append(val)
+
+    fut = utils_mod.run_async_task(do_work(), callback=cb)
+    assert fut.result(timeout=1) == 3
+    assert results == [3]
+    utils_mod.shutdown_async_loop()
 

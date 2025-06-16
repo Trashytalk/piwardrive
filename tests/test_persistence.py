@@ -71,3 +71,4 @@ def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
     assert conn2 is not conn1
     assert conn1._connection is None
 
+
