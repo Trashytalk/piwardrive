@@ -130,7 +130,10 @@ async def save_app_state(state: AppState) -> None:
     conn = await _get_conn()
     await conn.execute("DELETE FROM app_state WHERE id = 1")
     await conn.execute(
-        "INSERT INTO app_state (id, last_screen, last_start, first_run) VALUES (1, ?, ?, ?)",
+        (
+            "INSERT INTO app_state (id, last_screen, last_start, first_run) "
+            "VALUES (1, ?, ?, ?)"
+        ),
         (state.last_screen, state.last_start, int(state.first_run)),
     )
     await conn.commit()

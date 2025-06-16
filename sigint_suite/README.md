@@ -40,6 +40,13 @@ and ``band-scan`` entry points for quickly running scans from the command line.
 - **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
 
+### Async API
+
+All scanner modules also provide asynchronous variants built with
+``asyncio.create_subprocess_exec``. Use ``async_scan_wifi``,
+``async_scan_bluetooth``, ``async_scan_bands`` and ``async_scan_imsis`` when
+running inside an event loop.
+
 Post-processing hooks can be registered with
 `sigint_suite.hooks.register_post_processor` to enrich scan results (e.g.,
 adding operator names for IMSI captures) without modifying the core library.
@@ -63,12 +70,12 @@ debug logging for all scanners.
 
 ## Continuous Scans
 
-`scripts/continuous_scan.py` repeats Wi-Fi and Bluetooth scans at a configurable
-interval. Set `--interval` to change the delay between scans and optionally
-limit the number of iterations with `--iterations`.
+The `continuous-scan` entry point repeats Wi-Fi and Bluetooth scans at a
+configurable interval. Set `--interval` to change the delay between scans and
+optionally limit the number of iterations with `--iterations`.
 
 ```bash
-python sigint_suite/scripts/continuous_scan.py --interval 30 --iterations 5
+continuous-scan --interval 30 --iterations 5
 ```
 
 ## Dependencies

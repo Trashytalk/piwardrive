@@ -2,22 +2,39 @@ from __future__ import annotations
 
 """Typed record models used by scanner functions."""
 
-from typing import Optional
-from pydantic import BaseModel
+from typing import Optional, Any
+from pydantic import BaseModel, ConfigDict
 
 
-class WifiNetwork(BaseModel):
+class RecordBase(BaseModel):
+    """Base model supporting dict-style access."""
+
+    model_config = ConfigDict(extra="allow")
+
+    def __getitem__(self, key: str) -> Any:  # pragma: no cover - simple proxy
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: Any) -> None:  # pragma: no cover
+        setattr(self, key, value)
+
+    def get(self, key: str, default: Any = None) -> Any:  # pragma: no cover
+        return getattr(self, key, default)
+
+
+class WifiNetwork(RecordBase):
     """Information about a discovered Wi-Fi network."""
 
     cell: str
     ssid: Optional[str] = None
     bssid: Optional[str] = None
     frequency: Optional[str] = None
+    channel: Optional[str] = None
     quality: Optional[str] = None
+    encryption: Optional[str] = None
     vendor: Optional[str] = None
 
 
-class BandRecord(BaseModel):
+class BandRecord(RecordBase):
     """Cellular band scan result."""
 
     band: str
@@ -25,7 +42,7 @@ class BandRecord(BaseModel):
     rssi: str
 
 
-class ImsiRecord(BaseModel):
+class ImsiRecord(RecordBase):
     """IMSI catcher scan result."""
 
     imsi: str
@@ -36,7 +53,7 @@ class ImsiRecord(BaseModel):
     lon: Optional[float] = None
 
 
-class BluetoothDevice(BaseModel):
+class BluetoothDevice(RecordBase):
     """Bluetooth device information."""
 
     address: str
