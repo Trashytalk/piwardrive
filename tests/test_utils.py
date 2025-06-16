@@ -398,6 +398,29 @@ def test_safe_request_retries(monkeypatch: Any) -> None:
     assert calls == ["http://x", "http://x"]
 
 
+def test_safe_request_cache(monkeypatch: Any) -> None:
+    calls: list[str] = []
+
+    class Resp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            pass
+
+    def get(url: str, timeout: int = 5) -> Resp:
+        calls.append(url)
+        return Resp()
+
+    monkeypatch.setattr(utils, "requests", mock.Mock(get=get, RequestException=Exception))
+    monkeypatch.setattr(utils.time, "time", lambda: 0.0)
+    utils._SAFE_REQUEST_CACHE = {}
+
+    first = utils.safe_request("http://x", cache_seconds=5)
+    second = utils.safe_request("http://x", cache_seconds=5)
+    assert first is second
+    assert calls == ["http://x"]
+
+
 def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
     states = [False, True]
 
