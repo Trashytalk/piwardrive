@@ -370,6 +370,9 @@ Exports recent `HealthRecord` rows in CSV or JSON format.
 ### `scripts/health_import.py`
 Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
 
+### `scripts/service_status.py`
+Prints the active state of key services such as Kismet, BetterCAP and GPSD.
+
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
 failures and returning `None` on errors.
