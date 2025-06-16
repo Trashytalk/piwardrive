@@ -11,13 +11,13 @@ from sigint_suite.models import BandRecord
 logger = logging.getLogger(__name__)
 
 
-def scan_bands(cmd: Optional[str] = None) -> List[BandRecord]:
-
+def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[BandRecord]:
     """Scan for cellular bands and return a list of records.
 
     The command output is expected to be comma separated with
     ``band,channel,rssi`` per line. Set the ``BAND_SCAN_CMD`` environment
-    variable to override the executable.
+    variable to override the executable. The timeout defaults to the
+    ``BAND_SCAN_TIMEOUT`` environment variable (``10`` seconds).
     """
 
     cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
