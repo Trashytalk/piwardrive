@@ -446,7 +446,9 @@ Install project and development dependencies and run the tests locally with:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pip install pandas orjson pyprof2calltree
 pip install .
+pre-commit run --all-files
 pytest
 ```
 Alternatively run the suite in Docker:
@@ -463,6 +465,10 @@ Cyclomatic complexity is also checked in CI. The workflow runs
 `scripts/check_complexity.py`, which fails if any function is rated `D` or
 worse by `radon`. Run `radon cc -n D -s .` locally to verify your changes before
 opening a pull request.
+
+The GitHub Actions workflow in `.github/workflows/ci.yml` installs the optional
+packages listed above and runs `pre-commit run --all-files` followed by
+`pytest`.
 
 Install pre-commit hooks with:
 ```bash
