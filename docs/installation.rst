@@ -1,5 +1,8 @@
 Installation
 ============
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 This guide covers installing PiWardrive on Raspberry Pi OS and general Linux distributions.
 You can also run ``scripts/quickstart.sh`` from the repository root to

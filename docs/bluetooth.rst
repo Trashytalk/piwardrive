@@ -1,5 +1,8 @@
 Bluetooth Scanning
 ------------------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 PiWardrive can display nearby Bluetooth devices on the map. The optional
 scanner uses the :mod:`bleak` library to discover devices and plots markers when

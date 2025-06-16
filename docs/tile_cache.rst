@@ -1,5 +1,8 @@
 Tile Cache
 ==========
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 PiWardrive can operate without an internet connection by storing map tiles on disk.  The
 :class:`screens.map_screen.MapScreen` exposes helpers for prefetching tiles and keeping

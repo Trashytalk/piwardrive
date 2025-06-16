@@ -1,5 +1,8 @@
 GPS Polling
 -----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The application polls ``gpsd`` on a timer to center the map and track
 movement. Frequent polling yields more responsive updates but can drain

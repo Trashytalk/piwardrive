@@ -1,5 +1,8 @@
 Status Service
 ==============
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 PiWardrive exposes recent health metrics over HTTP using a small FastAPI
 application. The ``/status`` endpoint is now asynchronous so heavy database

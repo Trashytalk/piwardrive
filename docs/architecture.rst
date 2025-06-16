@@ -1,5 +1,8 @@
 Architecture
 ------------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The diagram below illustrates the main components of PiWardrive and how they
 interact.
