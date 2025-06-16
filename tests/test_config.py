@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from dataclasses import asdict
 from typing import Any
+import pytest
+from pydantic import ValidationError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import config
@@ -84,6 +86,13 @@ def test_load_config_schema_violation(tmp_path: Path) -> None:
     cfg_file.write_text(json.dumps({"map_poll_gps": "oops"}))
     data = config.load_config()
     assert asdict(data) == asdict(config.DEFAULT_CONFIG)
+
+
+def test_save_config_validation_error(tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    cfg = config.Config(map_poll_gps=0)
+    with pytest.raises(ValidationError):
+        config.save_config(cfg)
     
 
 def test_env_override_integer(monkeypatch: Any, tmp_path: Path) -> None:
@@ -145,20 +154,20 @@ def test_export_import_yaml(tmp_path: Path) -> None:
 
 def test_profile_roundtrip(tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
-    cfg = config.Config(theme="Alt")
+    cfg = config.Config(theme="Green")
     config.save_config(cfg, profile="alt")
     path = Path(config.PROFILES_DIR) / "alt.json"
     assert path.is_file()
     config.set_active_profile("alt")
     loaded = config.load_config()
-    assert loaded.theme == "Alt"
+    assert loaded.theme == "Green"
     assert "alt" in config.list_profiles()
 
 
 def test_import_export_profile(tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     src = tmp_path / "src.json"
-    src.write_text('{"theme": "Imp"}')
+    src.write_text('{"theme": "Light"}')
     name = config.import_profile(str(src))
     assert name == "src"
     exported = tmp_path / "exp.json"
