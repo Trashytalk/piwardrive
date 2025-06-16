@@ -28,7 +28,9 @@ class WifiNetwork(RecordBase):
     ssid: Optional[str] = None
     bssid: Optional[str] = None
     frequency: Optional[str] = None
+    channel: Optional[str] = None
     quality: Optional[str] = None
+    encryption: Optional[str] = None
     vendor: Optional[str] = None
 
 

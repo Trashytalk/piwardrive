@@ -26,11 +26,10 @@ def scan_wifi(
     interface: str = "wlan0",
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
-    timeout: int | None = None,
+    timeout: Optional[int] = None,
 ) -> List[WifiNetwork]:
 
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
-
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
@@ -49,12 +48,35 @@ def scan_wifi(
         logging.exception("Failed to run iwlist", exc_info=exc)
         return []
 
+    records: List[Dict[str, str]] = []
     networks: List[Dict[str, str]] = []
+
     current: Dict[str, str] = {}
+    enc_lines: List[str] = []
+
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
             if current:
+                if enc_lines:
+                    if "encryption" in current:
+                        current["encryption"] = f"{current['encryption']} {' '.join(enc_lines)}".strip()
+                    else:
+                        current["encryption"] = " ".join(enc_lines).strip()
+                records.append(current)
+            bssid = None
+            if "Address:" in line:
+                bssid = line.split("Address:")[-1].strip()
+            current = {"cell": line}
+            if bssid:
+                current["bssid"] = bssid
+            enc_lines = []
+        elif "ESSID" in line:
+            current["ssid"] = line.split(":", 1)[-1].strip('"')
+        elif line.startswith("Encryption key:"):
+            current["encryption"] = line.split("Encryption key:")[-1].strip()
+        elif line.startswith("IE:"):
+            enc_lines.append(line.split("IE:", 1)[-1].strip())
                 networks.append(current)
             current = {"cell": line}
             if "Address:" in line:
@@ -64,14 +86,25 @@ def scan_wifi(
         elif "Address" in line:
             current["bssid"] = line.split("Address:")[-1].strip()
         elif "Frequency" in line:
-            current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
+            current["frequency"] = line.split("Frequency:")[-1].split()[0]
+            if "(Channel" in line:
+                ch = line.split("(Channel")[-1].split(")")[0].strip()
+                current["channel"] = ch
+        elif line.startswith("Channel:"):
+            current["channel"] = line.split("Channel:")[-1].strip()
         elif "Quality" in line:
-            current["quality"] = line.split("Quality=")[-1].split(" ")[0]
-    if current:
-        networks.append(current)
+            current["quality"] = line.split("Quality=")[-1].split()[0]
 
-    networks = apply_post_processors("wifi", networks)
-    return [WifiNetwork(**rec) for rec in networks]
+    if current:
+        if enc_lines:
+            if "encryption" in current:
+                current["encryption"] = f"{current['encryption']} {' '.join(enc_lines)}".strip()
+            else:
+                current["encryption"] = " ".join(enc_lines).strip()
+        records.append(current)
+
+    records = apply_post_processors("wifi", records)
+    return [WifiNetwork(**rec) for rec in records]
 
 
 
