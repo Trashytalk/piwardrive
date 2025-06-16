@@ -6,6 +6,7 @@ PiWardrive Documentation
 
    installation
    configuration
+   environment
    widgets
    diagnostics
    persistence

@@ -35,17 +35,19 @@ services like Kismet and BetterCAP are controlled via helper functions.
 ## Features
 
 * **Interactive Map**: Online/offline map tiles, AP overlays, long-press context menus.
-* **Real‑time Metrics**: CPU, memory, disk I/O, GPS fix quality, RSSI, handshake counts.
+* **Real‑time Metrics**: CPU, memory, disk I/O, GPS fix quality, RSSI, handshake counts, network throughput.
 * **Split View**: Simultaneous map + compact metrics panel.
 * **Console & Dashboard**: Tail logs and a drag‑and‑drop widget dashboard with persistent layouts.
 * **Service Management**: Start/stop and configure Kismet & BetterCAP from the GUI.
 * **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`, prefetch visible regions and purge old tiles to stay within the cache limit.
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
-* **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog` and
-  compress archives.
+* **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`,
+  compress archives and remove old backups.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
+* **Historical Records**: Wi‑Fi and Bluetooth observations stored in SQLite for
+  later analysis.
 * **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
   Use `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` to export callgrind data for
   analysis in KCachegrind.
@@ -59,6 +61,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 * **Configuration Profiles**: maintain multiple configs under `~/.config/piwardrive/profiles`.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
+  Scan timeouts can be tuned via environment variables such as
+  `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
 
 ## Hardware Prerequisites
 
@@ -107,8 +111,14 @@ and installs the Python dependencies. The manual steps are listed below.
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
-6. **Compile the C extensions** (``ckml`` and ``cgeom``)::
+6. **Install the C extension wheels** (``ckml`` and ``cgeom``)::
 
+   Prebuilt wheels are published on the GitHub Releases page. Download the
+   wheel matching your platform and Python version and install it with::
+
+      pip install path/to/piwardrive-<version>-*.whl
+
+   To build the extensions locally instead::
 
       pip install build
       python -m build
@@ -141,20 +151,35 @@ docker-compose run --rm test
 
 * **KV File**: `kv/main.kv` defines all screen layouts. Ensure it matches `main.py` IDs.
 * **Config File**: `~/.config/piwardrive/config.json` persists settings between runs.
+  Changes are detected automatically and reloaded at runtime.
 * **Profiles**: alternate configs live in `~/.config/piwardrive/profiles`.
 * **Env Overrides**: configure any option via `PW_<KEY>` variables.
   Common examples:
   * `PW_MAP_POLL_GPS=5` – poll gpsd every 5s when moving
   * `PW_MAP_POLL_GPS_MAX=30` – maximum delay while stationary
+  * `PW_MAP_POLL_APS=30` – override the AP polling interval
   * `PW_MAP_POLL_BT=15` – Bluetooth scan interval
   * `PW_MAP_SHOW_BT=1` – display Bluetooth markers
+  * `PW_MAP_CLUSTER_CAPACITY=8` – APs per cluster cell
   * `PW_WIDGET_BATTERY_STATUS=1` – enable battery widget
   * `PW_HEALTH_POLL_INTERVAL=5` – diagnostic poll rate
   * `PW_PROFILE_NAME=car_rig` – load the `car_rig` profile
   * `PW_API_PASSWORD_HASH=<hash>` – protect HTTP API endpoints
   * `PW_ADMIN_PASSWORD=<pass>` – enables privileged service actions
   * `PW_DB_PATH=/tmp/my.db` – location of the SQLite database
-  See [docs/configuration.rst](docs/configuration.rst) for all settings.
+  * `PW_KISMET_LOGDIR=/var/log/kismet` – where Kismet writes logs
+  * `PW_BETTERCAP_CAPLET=/opt/bettercap/custom.cap` – BetterCAP caplet path
+  * `PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles` – MBTiles file
+  * `PW_LANG=es` – interface language
+  * `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` – callgrind output path
+  * `IWLIST_CMD=/usr/sbin/iwlist` – Wi‑Fi scanner command
+  * `IW_PRIV_CMD=doas` – privilege wrapper for Wi‑Fi scans
+  * `IMSI_CATCH_CMD=/usr/local/bin/imsi-catcher` – IMSI catcher command
+  * `BAND_SCAN_CMD=/usr/local/bin/celltrack` – cellular band scanner
+  * `SIGINT_EXPORT_DIR=/data/exports` – directory for SIGINT JSON files
+  * `EXPORT_DIR=/tmp/exports` – output directory for SIGINT scripts
+  See [docs/configuration.rst](docs/configuration.rst) and
+  [docs/environment.rst](docs/environment.rst) for all settings.
 * **GPS Polling**: `map_poll_gps` is the fastest interval while
   `map_poll_gps_max` sets the slowest interval when stationary.
 * **Validation**: values are checked on load and invalid settings raise errors.
@@ -244,6 +269,11 @@ package. A minimal plugin looks like::
 Once the file is created, ``ExtraWidget`` can be added to the dashboard like any
 other built-in widget.
 
+For convenience, a simple example plugin is included at
+``examples/plugins/hello_plugin.py``. Copy or symlink this file into
+``~/.config/piwardrive/plugins`` to see it appear alongside the built‑in
+widgets.
+
 Compiled extensions built with PyO3 or Cython are supported as well. Place the
 resulting ``.so`` (or ``.pyd`` on Windows) in the plugin directory or within a
 package. Ensure the extension is built against the same Python version that
@@ -325,8 +355,8 @@ Supplies `PollScheduler` and `AsyncScheduler` classes for periodic callbacks.
 Both versions log exceptions while keeping tasks alive.
 
 ### `export.py`
-Filters and exports recorded access-point data in CSV, JSON, GPX, or KML
-formats, raising `ValueError` for unsupported formats.
+Filters and exports recorded access-point data in CSV, JSON, GPX, KML,
+GeoJSON or Shapefile formats, raising `ValueError` for unsupported formats.
 
 ### `analysis.py`
 Computes average health statistics and can plot CPU temperature, optionally
@@ -334,6 +364,9 @@ using pandas and Plotly when available.
 
 ### `scripts/health_export.py`
 Exports recent `HealthRecord` rows in CSV or JSON format.
+
+### `scripts/health_import.py`
+Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
 
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection

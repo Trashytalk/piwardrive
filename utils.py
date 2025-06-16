@@ -16,6 +16,8 @@ import mmap
 
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
+
+from sigint_suite.models import BluetoothDevice
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
@@ -37,12 +39,19 @@ from enum import IntEnum
 import psutil
 import requests  # type: ignore
 import aiohttp
+import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
 _GPSD_CACHE: dict[str, Any] = {
     "timestamp": 0.0,
     "accuracy": None,
     "fix": "Unknown",
+}
+
+# Track previous network counters for throughput calculations
+_NET_IO_CACHE = {
+    "timestamp": time.time(),
+    "counters": psutil.net_io_counters(),
 }
 
 
@@ -249,6 +258,26 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
         return psutil.disk_usage(path).percent
     except Exception:
         return None
+
+
+def get_network_throughput() -> tuple[float, float]:
+    """Return (rx_kbps, tx_kbps) since the last call."""
+    global _NET_IO_CACHE
+    try:
+        cur = psutil.net_io_counters()
+    except Exception:
+        return 0.0, 0.0
+    now = time.time()
+    prev = _NET_IO_CACHE.get("counters")
+    prev_ts = _NET_IO_CACHE.get("timestamp", now)
+    dt = now - prev_ts if prev_ts else 0.0
+    rx_kbps = tx_kbps = 0.0
+    if prev is not None and dt > 0:
+        rx_kbps = (cur.bytes_recv - prev.bytes_recv) / dt / 1024.0
+        tx_kbps = (cur.bytes_sent - prev.bytes_sent) / dt / 1024.0
+    _NET_IO_CACHE["counters"] = cur
+    _NET_IO_CACHE["timestamp"] = now
+    return rx_kbps, tx_kbps
 
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
@@ -464,7 +493,7 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
     return fut.result()
 
 
-def scan_bt_devices() -> list[dict[str, Any]]:
+def scan_bt_devices() -> list[BluetoothDevice]:
     """Return nearby Bluetooth devices via DBus."""
     try:
         import dbus  # type: ignore
@@ -476,7 +505,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
     except Exception:
         return []
 
-    devices: list[dict[str, Any]] = []
+    devices: list[BluetoothDevice] = []
     for ifaces in objects.values():
         dev = ifaces.get("org.bluez.Device1")
         if not dev:
@@ -496,7 +525,7 @@ def scan_bt_devices() -> list[dict[str, Any]]:
                 except Exception:
                     pass
 
-        devices.append(info)
+        devices.append(BluetoothDevice(**info))
 
     return devices
 
@@ -561,11 +590,32 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         results = await asyncio.gather(*(_fetch(url) for url in urls))
         for data in results:
             if data is not None:
-                return (
-                    data.get("access_points", []),
-                    data.get("clients", []),
-                )
+                aps = data.get("access_points", [])
+                clients = data.get("clients", [])
+                try:
+                    await persistence.save_ap_cache(
+                        [
+                            {
+                                "bssid": ap.get("bssid"),
+                                "ssid": ap.get("ssid"),
+                                "encryption": ap.get("encryption"),
+                                "lat": (ap.get("gps-info") or [None, None])[0],
+                                "lon": (ap.get("gps-info") or [None, None])[1],
+                                "last_time": ap.get("last_time"),
+                            }
+                            for ap in aps
+                        ]
+                    )
+                except Exception:
+                    pass
+                return aps, clients
 
+    try:
+        cached = await persistence.load_ap_cache()
+        if cached:
+            return cached, []
+    except Exception:
+        pass
     return [], []
 
 

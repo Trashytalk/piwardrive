@@ -22,6 +22,7 @@ class SettingsScreen(Screen):
     show_aps_switch: Any
     show_bt_switch: Any
     cluster_switch: Any
+    cluster_capacity_field: Any
     debug_switch: Any
     battery_switch: Any
     font_size_field: Any

@@ -87,6 +87,8 @@ See `docs/ckml_build.rst` for troubleshooting compiler issues.
 ## R Integration
 
 `scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
+`scripts/health_export.py` dumps recent metrics to JSON or CSV while
+`scripts/health_import.py` loads such files back into the tracking database.
 
 Additional optional features use `pandas`, `orjson` and `pyprof2calltree` which can be installed via:
 
@@ -104,7 +106,8 @@ The `docs/` directory contains mermaid diagrams showing scanning, logging and di
 
 ## SIGINT Suite
 
-Under `sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and `hcitool` are installed (`./sigint_suite/scripts/setup_all.sh` can install them).
+Under `sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python ``bleak`` library are installed (`./sigint_suite/scripts/setup_all.sh` can install them).
+
 
 ## Further Reference
 
