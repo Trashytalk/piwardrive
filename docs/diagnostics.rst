@@ -1,5 +1,8 @@
 Diagnostics
 ----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The :mod:`diagnostics` module exposes helpers for gathering system metrics and
 rotating log files. Use ``diagnostics.self_test()`` to perform a quick health

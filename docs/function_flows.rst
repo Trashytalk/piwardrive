@@ -1,5 +1,8 @@
 Function Flows
 ==============
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The diagrams below illustrate how key functions operate inside
 PiWardrive. These complement the high level overview in

@@ -1,5 +1,8 @@
 Deployment
 ----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 This document outlines options for packaging PiWardrive so it can run on a dedicated device or inside a container.
 

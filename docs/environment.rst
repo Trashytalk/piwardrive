@@ -1,5 +1,8 @@
 Environment Variables
 =====================
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 PiWardrive and the companion SIGINT suite can be customised using several
 environment variables. Any option in :mod:`config` may be overridden by

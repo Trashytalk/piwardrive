@@ -1,5 +1,8 @@
 Persistence
 -----------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The :mod:`persistence` module provides a lightweight SQLite database at
 ``~/.config/piwardrive/app.db`` by default. Set ``PW_DB_PATH`` to override
