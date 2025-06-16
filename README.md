@@ -154,7 +154,19 @@ docker-compose run --rm test
   * `PW_API_PASSWORD_HASH=<hash>` – protect HTTP API endpoints
   * `PW_ADMIN_PASSWORD=<pass>` – enables privileged service actions
   * `PW_DB_PATH=/tmp/my.db` – location of the SQLite database
-  See [docs/configuration.rst](docs/configuration.rst) for all settings.
+  * `PW_KISMET_LOGDIR=/var/log/kismet` – where Kismet writes logs
+  * `PW_BETTERCAP_CAPLET=/opt/bettercap/custom.cap` – BetterCAP caplet path
+  * `PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles` – MBTiles file
+  * `PW_LANG=es` – interface language
+  * `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` – callgrind output path
+  * `IWLIST_CMD=/usr/sbin/iwlist` – Wi‑Fi scanner command
+  * `IW_PRIV_CMD=doas` – privilege wrapper for Wi‑Fi scans
+  * `IMSI_CATCH_CMD=/usr/local/bin/imsi-catcher` – IMSI catcher command
+  * `BAND_SCAN_CMD=/usr/local/bin/celltrack` – cellular band scanner
+  * `SIGINT_EXPORT_DIR=/data/exports` – directory for SIGINT JSON files
+  * `EXPORT_DIR=/tmp/exports` – output directory for SIGINT scripts
+  See [docs/configuration.rst](docs/configuration.rst) and
+  [docs/environment.rst](docs/environment.rst) for all settings.
 * **GPS Polling**: `map_poll_gps` is the fastest interval while
   `map_poll_gps_max` sets the slowest interval when stationary.
 * **Validation**: values are checked on load and invalid settings raise errors.
