@@ -146,6 +146,11 @@ def test_env_override_battery_widget(monkeypatch: Any, tmp_path: Path) -> None:
     assert cfg.widget_battery_status is True
 
 
+def test_list_env_overrides() -> None:
+    mapping = config.list_env_overrides()
+    assert mapping["PW_UI_FONT_SIZE"] == "ui_font_size"
+
+
 def test_export_import_json(tmp_path: Path) -> None:
     cfg_file = tmp_path / "out.json"
     cfg = config.Config(theme="Green", map_poll_gps=7)
