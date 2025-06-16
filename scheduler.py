@@ -15,11 +15,13 @@ except Exception:  # pragma: no cover - fallback stubs for tests
 
     class _DummyClock:
         @staticmethod
-        def schedule_interval(callback, interval):
+        def schedule_interval(
+            callback: Callable[[float], Any], interval: float
+        ) -> _DummyEvent:
             return _DummyEvent()
 
         @staticmethod
-        def unschedule(event):
+        def unschedule(event: _DummyEvent) -> None:
             pass
 
     Clock = _DummyClock()

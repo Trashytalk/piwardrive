@@ -11,4 +11,5 @@ def get_position() -> Optional[Tuple[float, float]]:
     except Exception:
         return None
 
+
 __all__ = ["get_position"]

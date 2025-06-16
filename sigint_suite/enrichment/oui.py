@@ -27,7 +27,9 @@ def _default_map() -> Dict[str, str]:
     return load_oui_map()
 
 
-def lookup_vendor(bssid: str, oui_map: Optional[Dict[str, str]] = None) -> Optional[str]:
+def lookup_vendor(
+    bssid: str, oui_map: Optional[Dict[str, str]] = None
+) -> Optional[str]:
     """Return vendor name for ``bssid`` if known."""
     if not bssid:
         return None

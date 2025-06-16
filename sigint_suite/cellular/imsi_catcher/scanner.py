@@ -10,7 +10,9 @@ from sigint_suite.gps import get_position
 def scan_imsis(
     cmd: Optional[str] = None,
     with_location: bool = True,
-    enrich_func: Optional[Callable[[List[Dict[str, str]]], List[Dict[str, str]]]] = None,
+    enrich_func: Optional[
+        Callable[[List[Dict[str, str]]], List[Dict[str, str]]]
+    ] = None,
 ) -> List[Dict[str, str]]:
     """Scan for IMSI numbers using an external command.
 
@@ -54,7 +56,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Scan for IMSI numbers")
     parser.add_argument("--cmd", default=None, help="IMSI catcher command")
     parser.add_argument("--json", action="store_true", help="print results as JSON")
-    parser.add_argument("--no-location", action="store_true", help="disable GPS tagging")
+    parser.add_argument(
+        "--no-location",
+        action="store_true",
+        help="disable GPS tagging",
+    )
     args = parser.parse_args()
 
     data = scan_imsis(args.cmd, with_location=not args.no_location)
@@ -62,7 +68,12 @@ def main() -> None:
         print(json.dumps(data, indent=2))
     else:
         for rec in data:
-            fields = [rec.get("imsi", ""), rec.get("mcc", ""), rec.get("mnc", ""), rec.get("rssi", "")]
+            fields = [
+                rec.get("imsi", ""),
+                rec.get("mcc", ""),
+                rec.get("mnc", ""),
+                rec.get("rssi", ""),
+            ]
             if "lat" in rec and "lon" in rec:
                 fields.extend([str(rec["lat"]), str(rec["lon"])])
             print(" ".join(fields))
