@@ -672,15 +672,16 @@ def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
     try:
         accuracy = gps_client.get_accuracy()
         fix = gps_client.get_fix_quality()
-        if accuracy is None and fix == "Unknown":
-            return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
-
-        _GPSD_CACHE["timestamp"] = time.time()
-        _GPSD_CACHE["accuracy"] = accuracy
-        _GPSD_CACHE["fix"] = fix
-        return _GPSD_CACHE
     except Exception:
         return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
+
+    if accuracy is None or fix == "Unknown":
+        return _GPSD_CACHE if _GPSD_CACHE["accuracy"] is not None else None
+
+    _GPSD_CACHE["timestamp"] = time.time()
+    _GPSD_CACHE["accuracy"] = accuracy
+    _GPSD_CACHE["fix"] = fix
+    return _GPSD_CACHE
 
 
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:

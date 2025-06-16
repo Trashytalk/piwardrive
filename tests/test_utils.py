@@ -418,8 +418,8 @@ def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
 
 
 def test_gpsd_cache(monkeypatch: Any) -> None:
-    acc_mock = mock.Mock(side_effect=[2, 5])
-    fix_mock = mock.Mock(side_effect=["2D", "3D"])
+    acc_mock = mock.Mock(side_effect=[2, None, 5])
+    fix_mock = mock.Mock(side_effect=["2D", "Unknown", "3D"])
 
     monkeypatch.setattr(utils.gps_client, "get_accuracy", acc_mock)
     monkeypatch.setattr(utils.gps_client, "get_fix_quality", fix_mock)
@@ -431,9 +431,18 @@ def test_gpsd_cache(monkeypatch: Any) -> None:
     assert acc_mock.call_count == 1  # gpsd queried once
     assert fix_mock.call_count == 1
 
-    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    ts_first = utils._GPSD_CACHE["timestamp"]
+
+    # failure should not overwrite timestamp or cached data
+    assert utils.get_gps_accuracy(force_refresh=True) == 2
+    assert utils._GPSD_CACHE["timestamp"] == ts_first
     assert acc_mock.call_count == 2
     assert fix_mock.call_count == 2
+
+    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    assert utils._GPSD_CACHE["timestamp"] > ts_first
+    assert acc_mock.call_count == 3
+    assert fix_mock.call_count == 3
 
 
 def test_count_bettercap_handshakes(tmp_path: Any) -> None:
