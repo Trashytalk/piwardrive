@@ -1,10 +1,11 @@
 import os
 import sys
 import types
+import asyncio
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.cellular.band_scanner.scanner import scan_bands
+from sigint_suite.cellular.band_scanner.scanner import scan_bands, async_scan_bands
 
 
 def test_scan_bands_parses_output(monkeypatch):
@@ -29,3 +30,26 @@ def test_scan_bands_passes_timeout(monkeypatch):
     scan_bands("dummy", timeout=5)
 
     assert called["timeout"] == 5
+
+
+def test_async_scan_bands(monkeypatch):
+    output = "LTE,100,-60\n5G,200,-70"
+
+    class DummyProc:
+        async def communicate(self):
+            return output.encode(), b""
+
+    async def fake_create(*args, **kwargs):
+        return DummyProc()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create)
+    monkeypatch.setattr(asyncio, "wait_for", lambda coro, timeout: coro)
+
+    async def run():
+        return await async_scan_bands("dummy")
+
+    records = asyncio.run(run())
+    assert [r.model_dump() for r in records] == [
+        {"band": "LTE", "channel": "100", "rssi": "-60"},
+        {"band": "5G", "channel": "200", "rssi": "-70"},
+    ]
