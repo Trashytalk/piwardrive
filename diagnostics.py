@@ -24,6 +24,7 @@ from persistence import (
     save_health_record,
     load_recent_health,
     purge_old_health,
+    vacuum,
 )
 from utils import run_async_task
 import config
@@ -230,6 +231,7 @@ class HealthMonitor:
             )
             await save_health_record(rec)
             await purge_old_health(30)
+            await vacuum()
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
