@@ -78,6 +78,7 @@ class PiWardriveApp(MDApp):
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
+    cleanup_rotated_logs = BooleanProperty(True)
     last_screen = StringProperty("Map")
 
     def __init__(
@@ -153,13 +154,16 @@ class PiWardriveApp(MDApp):
                 text=name, on_release=lambda btn, s=name: self.switch_screen(s)
             )
             nav_bar.add_widget(btn)
-        for path in self.log_paths:
-            ev = f"rotate_{os.path.basename(path)}"
-            self.scheduler.schedule(
-                ev,
-                lambda _dt, p=path: diagnostics.rotate_log(p, self.log_rotate_archives),
-                self.log_rotate_interval,
-            )
+        if self.cleanup_rotated_logs:
+            for path in self.log_paths:
+                ev = f"rotate_{os.path.basename(path)}"
+                self.scheduler.schedule(
+                    ev,
+                    lambda _dt, p=path: diagnostics.rotate_log(
+                        p, self.log_rotate_archives
+                    ),
+                    self.log_rotate_interval,
+                )
 
     def switch_screen(self, name: str) -> None:
         """Change the active screen."""

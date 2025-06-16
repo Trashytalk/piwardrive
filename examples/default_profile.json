@@ -17,6 +17,7 @@
     "health_poll_interval": 10,
     "log_rotate_interval": 3600,
     "log_rotate_archives": 3,
+    "cleanup_rotated_logs": true,
     "widget_battery_status": false,
     "admin_password_hash": "",
 }

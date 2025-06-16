@@ -68,6 +68,7 @@ class DummyApp:
         self.health_poll_interval = 10
         self.log_rotate_interval = 3600
         self.log_rotate_archives = 3
+        self.cleanup_rotated_logs = True
         self.widget_battery_status = False
         self.ui_font_size = 16
         self.theme = "Dark"
@@ -86,6 +87,7 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.health_poll_field = SimpleNamespace(text=str(app.health_poll_interval))
     screen.log_rotate_field = SimpleNamespace(text=str(app.log_rotate_interval))
     screen.log_archives_field = SimpleNamespace(text=str(app.log_rotate_archives))
+    screen.cleanup_logs_switch = SimpleNamespace(active=app.cleanup_rotated_logs)
     screen.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
     screen.offline_switch = SimpleNamespace(active=app.map_use_offline)
     screen.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
@@ -159,6 +161,7 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     screen.health_poll_field.text = "15"
     screen.log_rotate_field.text = "1200"
     screen.log_archives_field.text = "5"
+    screen.cleanup_logs_switch.active = False
     screen.font_size_field.text = "18"
     screen.cluster_capacity_field.text = "12"
     screen.show_gps_switch.active = False
@@ -183,6 +186,7 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert app.health_poll_interval == 15
     assert app.log_rotate_interval == 1200
     assert app.log_rotate_archives == 5
+    assert app.cleanup_rotated_logs is False
     assert app.ui_font_size == 18
     assert app.map_show_gps is False
     assert app.map_show_aps is False

@@ -28,6 +28,7 @@ class SettingsScreen:
         self.health_poll_field = SimpleNamespace(text=str(app.health_poll_interval))
         self.log_rotate_field = SimpleNamespace(text=str(app.log_rotate_interval))
         self.log_archives_field = SimpleNamespace(text=str(app.log_rotate_archives))
+        self.cleanup_logs_switch = SimpleNamespace(active=app.cleanup_rotated_logs)
         self.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
         self.offline_switch = SimpleNamespace(active=app.map_use_offline)
         self.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
@@ -84,6 +85,8 @@ class SettingsScreen:
                 raise ValueError
             app.log_rotate_archives = val
 
+            app.cleanup_rotated_logs = self.cleanup_logs_switch.active
+
             val = int(self.gps_poll_field.text)
             if val <= 0:
                 raise ValueError
@@ -119,6 +122,7 @@ class SettingsScreen:
         cfg.health_poll_interval = app.health_poll_interval
         cfg.log_rotate_interval = app.log_rotate_interval
         cfg.log_rotate_archives = app.log_rotate_archives
+        cfg.cleanup_rotated_logs = app.cleanup_rotated_logs
         cfg.map_poll_gps = app.map_poll_gps
         cfg.map_poll_gps_max = app.map_poll_gps_max
         cfg.map_show_gps = app.map_show_gps
