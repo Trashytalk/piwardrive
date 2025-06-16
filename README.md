@@ -44,6 +44,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`,
   compress archives and remove old backups.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
+  Set `PW_LOG_LEVEL=DEBUG` to increase verbosity.
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
 * **Historical Records**: Wi‑Fi and Bluetooth observations stored in SQLite for
@@ -175,6 +176,7 @@ docker-compose run --rm test
   * `PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles` – MBTiles file
   * `PW_LANG=es` – interface language
   * `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` – callgrind output path
+  * `PW_LOG_LEVEL=DEBUG` – root logger verbosity
   * `PW_GPSD_HOST=192.168.1.10` – gpsd host address
   * `PW_GPSD_PORT=4000` – gpsd port number
   * `IWLIST_CMD=/usr/sbin/iwlist` – Wi‑Fi scanner command
