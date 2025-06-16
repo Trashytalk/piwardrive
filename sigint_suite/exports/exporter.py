@@ -26,4 +26,3 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
             writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
-
