@@ -28,4 +28,5 @@ def parse_imsi_output(output: str) -> List[Dict[str, str]]:
         records.append({'imsi': imsi, 'mcc': mcc, 'mnc': mnc, 'rssi': rssi})
     return records
 
-__all__ = ['parse_band_output', 'parse_imsi_output']
+
+__all__ = ["parse_band_output", "parse_imsi_output"]
