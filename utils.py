@@ -54,6 +54,10 @@ _NET_IO_CACHE = {
     "counters": psutil.net_io_counters(),
 }
 
+# Cache for HTTP requests issued via :func:`safe_request`
+SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
+_SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
+
 
 class ErrorCode(IntEnum):
     """Enumerate application error codes."""
@@ -198,10 +202,21 @@ def safe_request(
     *,
     attempts: int = 3,
     timeout: float = 5,
+    cache_seconds: float = SAFE_REQUEST_CACHE_SECONDS,
     fallback: Callable[[], T] | None = None,
     **kwargs: Any,
 ) -> T | Any | None:
-    """Return ``requests.get(url)`` with retries and optional fallback."""
+
+    """Return ``requests.get(url)`` with retries and optional fallback.
+
+    Results are cached for ``cache_seconds`` to avoid repeated network calls.
+    Passing ``cache_seconds`` as ``0`` disables caching.
+    """
+    now = time.time()
+    if cache_seconds and url in _SAFE_REQUEST_CACHE:
+        ts, cached = _SAFE_REQUEST_CACHE[url]
+        if now - ts <= cache_seconds:
+            return cached
 
     def _get() -> Any:
         return requests.get(url, timeout=timeout, **kwargs)
@@ -209,12 +224,15 @@ def safe_request(
     try:
         resp = retry_call(_get, attempts=attempts, delay=1)
         resp.raise_for_status()
+        _SAFE_REQUEST_CACHE[url] = (now, resp)
         return resp
     except Exception as exc:  # pragma: no cover - network errors
         report_error(f"Request error for {url}: {exc}")
         if fallback is not None:
             try:
-                return fallback()
+                result = fallback()
+                _SAFE_REQUEST_CACHE[url] = (time.time(), result)
+                return result
             except Exception as exc2:  # pragma: no cover - fallback failed
                 report_error(f"Fallback for {url} failed: {exc2}")
         return None
