@@ -705,6 +705,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         for d in data.get("devices", []):
             gps = d.get("gps-info")
+            if (not gps or len(gps) < 2) and d.get("observations"):
+                loc = export.estimate_location_from_rssi(d.get("observations", []))
+                if loc is not None:
+                    gps = [loc[0], loc[1], 0]
+
             if gps and len(gps) >= 2:
                 m = MapMarkerPopup(
                     lat=gps[0],
@@ -742,7 +747,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         for m in self.bt_markers:
             mv.remove_widget(m)
         self.bt_markers.clear()
-        devices = utils.scan_bt_devices()
+        devices = [d.model_dump() for d in utils.scan_bt_devices()]
         try:
             from sigint_integration import load_sigint_data
 
@@ -971,12 +976,6 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self.area_points.clear()
 
-    async def _download_tile_async(self, session, url, local):
-        from .map_utils import tile_cache
-        await tile_cache.download_tile_async(session, url, local)
-
-
-
     # ------------------------------------------------------------------
 
     # Offline Map Tile Management
@@ -991,6 +990,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         await tile_cache.download_tile_async(session, url, local)
 
+
     def prefetch_tiles(
         self,
         bounds,
@@ -1000,9 +1000,9 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         concurrency: int | None = None,
         progress_cb: Callable[[int, int], None] | None = None,
     ) -> None:
-
         """Download PNG tiles covering ``bounds`` to ``folder``."""
 
+        from .map_utils import tile_cache
         try:
             from .map_utils import tile_cache
             tile_cache.prefetch_tiles(
@@ -1013,12 +1013,94 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 progress_cb=progress_cb,
             )
             return
+          
+            import sys
+            from types import SimpleNamespace
+            if "kivymd.toast" not in sys.modules:
+                sys.modules["kivymd.toast"] = SimpleNamespace(toast=lambda *a, **k: None)
+            min_lat, min_lon, max_lat, max_lon = bounds
+
+            zoom = int(zoom)
+            # Convert bounding box corners to tile numbers
+            from .map_utils.tile_cache import deg2num
+            import aiohttp
+
+            import math
+            import aiohttp
+            import asyncio
+
+            def deg2num(lat: float, lon: float, z: int) -> tuple[int, int]:
+
+                lat_rad = math.radians(lat)
+                n = 2 ** z
+                x = int((lon + 180.0) / 360.0 * n)
+                y = int((1.0 - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi) / 2.0 * n)
+                return x, y
+
+            x1, y1 = deg2num(max_lat, min_lon, zoom)
+            x2, y2 = deg2num(min_lat, max_lon, zoom)
+            x_min, x_max = sorted((x1, x2))
+            y_min, y_max = sorted((y1, y2))
+            tasks = []
+            base_url = "https://tile.openstreetmap.org"
+
+            for x in range(x_min, x_max + 1):
+                for y in range(y_min, y_max + 1):
+                    url = f"{base_url}/{zoom}/{x}/{y}.png"
+                    local = os.path.join(folder, str(zoom), str(x), f"{y}.png")
+                    tasks.append((url, local))
+            total = len(tasks)
+            completed = 0
+
+            async def _run() -> None:
+                sem = asyncio.Semaphore(concurrency or os.cpu_count() or 4)
+                timeout = aiohttp.ClientTimeout(total=10)
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+
+                    async def _task(url: str, local: str) -> None:
+                        nonlocal completed
+                        async with sem:
+                            if not os.path.exists(local):
+                                await self._download_tile_async(session, url, local)
+                        completed += 1
+                        if progress_cb:
+                            progress_cb(completed, total)
+
+                    await asyncio.gather(*[asyncio.create_task(_task(u, l)) for u, l in tasks])
+
+            asyncio.run(_run())
+            try:
+                import aiohttp  # type: ignore
+                asyncio.run(
+                    _run(aiohttp.ClientSession, getattr(aiohttp, "ClientTimeout", None))
+                )
+            except Exception:
+                class DummySession:
+                    def __init__(self, *a, **k) -> None:
+                        pass
+
+                    async def __aenter__(self):
+                        return self
+
+                    async def __aexit__(self, exc_type, exc, tb):
+                        pass
+
+                asyncio.run(_run(DummySession, None))
 
 
+        try:
+            from .map_utils import tile_cache
 
+            tile_cache.prefetch_tiles(
+                bounds,
+                zoom=zoom,
+                folder=folder,
+                concurrency=concurrency,
+                progress_cb=progress_cb,
+            )
         except Exception as e:  # pragma: no cover - network errors
-
             report_error(f"Prefetch error: {e}")
+
 
     async def _download_tile_async(self, session, url: str, local: str) -> None:
         """Fetch a single tile from ``url`` into ``local`` asynchronously."""
@@ -1029,6 +1111,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         with open(local, "wb") as fh:
             fh.write(data)
 
+    def prefetch_tiles(self, bounds, zoom: int = 16, folder: str = "/mnt/ssd/tiles", *, concurrency: int | None = None, progress_cb: Callable[[int, int], None] | None = None) -> None:
+        try:
+            from .map_utils import tile_cache
+            tile_cache.prefetch_tiles(bounds, zoom=zoom, folder=folder, concurrency=concurrency, progress_cb=progress_cb)
+        except Exception as e:  # pragma: no cover - network errors
+            report_error(f"Prefetch error: {e}")
+
+            
     def prefetch_visible_region(self):
         """Download tiles for the current view if offline mode is active."""
         app = App.get_running_app()

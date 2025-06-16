@@ -46,6 +46,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
+* **Historical Records**: Wi‑Fi and Bluetooth observations stored in SQLite for
+  later analysis.
 * **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
   Use `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` to export callgrind data for
   analysis in KCachegrind.
@@ -59,6 +61,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 * **Configuration Profiles**: maintain multiple configs under `~/.config/piwardrive/profiles`.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
+  Scan timeouts can be tuned via environment variables such as
+  `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
 
 ## Hardware Prerequisites
 
@@ -146,6 +150,7 @@ docker-compose run --rm test
   Common examples:
   * `PW_MAP_POLL_GPS=5` – poll gpsd every 5s when moving
   * `PW_MAP_POLL_GPS_MAX=30` – maximum delay while stationary
+  * `PW_MAP_POLL_APS=30` – override the AP polling interval
   * `PW_MAP_POLL_BT=15` – Bluetooth scan interval
   * `PW_MAP_SHOW_BT=1` – display Bluetooth markers
   * `PW_MAP_CLUSTER_CAPACITY=8` – APs per cluster cell
@@ -335,6 +340,9 @@ using pandas and Plotly when available.
 
 ### `scripts/health_export.py`
 Exports recent `HealthRecord` rows in CSV or JSON format.
+
+### `scripts/health_import.py`
+Imports `HealthRecord` data from a JSON or CSV file back into the tracking database.
 
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection

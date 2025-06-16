@@ -14,7 +14,7 @@ def test_scan_imsis_parses_output_and_tags_location(monkeypatch):
         lambda: (1.0, 2.0),
     )
     records = scan_imsis("dummy")
-    assert records == [
+    assert [r.model_dump() for r in records] == [
         {"imsi": "12345", "mcc": "310", "mnc": "260", "rssi": "-50", "lat": 1.0, "lon": 2.0},
         {"imsi": "67890", "mcc": "311", "mnc": "480", "rssi": "-60", "lat": 1.0, "lon": 2.0},
     ]
