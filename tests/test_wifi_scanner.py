@@ -29,8 +29,8 @@ Cell 02 - Address: 11:22:33:44:55:66
     monkeypatch.setattr("sigint_suite.wifi.scanner.lookup_vendor", _mock_lookup_vendor)
 
     nets = scan_wifi("wlan0")
-    assert nets[0]["vendor"] == "VendorA"
-    assert nets[1]["vendor"] == "VendorB"
+    assert nets[0].vendor == "VendorA"
+    assert nets[1].vendor == "VendorB"
 
 
 def test_scan_wifi_no_vendor(monkeypatch):
@@ -44,4 +44,4 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
     monkeypatch.setattr("sigint_suite.wifi.scanner.lookup_vendor", lambda b: None)
 
     nets = scan_wifi("wlan0")
-    assert "vendor" not in nets[0]
+    assert nets[0].vendor is None
