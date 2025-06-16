@@ -5,6 +5,9 @@ import logging
 import os
 import subprocess
 from typing import List
+import logging
+
+logger = logging.getLogger(__name__)
 
 from sigint_suite.models import BluetoothDevice
 
@@ -12,6 +15,9 @@ from sigint_suite.models import BluetoothDevice
 def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
     """Scan for nearby Bluetooth devices."""
     timeout = timeout if timeout is not None else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
+    cmd = ["hcitool", "scan"]
+    logger.debug("Scanning bluetooth with timeout %s", timeout)
+
 
     try:
         from bleak import BleakScanner  # type: ignore
@@ -24,7 +30,8 @@ def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
             ]
 
         return asyncio.run(_scan())
-    except Exception:
+    except Exception as exc:
+        logger.debug("Bleak unavailable or failed: %s", exc)
         pass
 
     return _scan_bluetoothctl(timeout)
@@ -54,8 +61,11 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
     """Scan using ``bluetoothctl`` as a fallback."""
 
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
+    logger.debug("Executing: %s", " ".join(cmd))
     try:
         output = subprocess.check_output(cmd, text=True)
+    except Exception as exc:
+        logger.exception("Bluetooth scan failed: %s", exc)
     except Exception as exc:  # pragma: no cover - external command
         logging.exception("Failed to run bluetoothctl", exc_info=exc)
         return []

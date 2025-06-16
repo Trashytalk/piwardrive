@@ -65,7 +65,8 @@ By default the JSON files `wifi.json` and `bluetooth.json` are written to
 this location.
 
 Use `IWLIST_CMD` to specify an alternate `iwlist` path and `IW_PRIV_CMD` to
-change the privilege helper for Wi-Fi scans.
+change the privilege helper for Wi-Fi scans. Set `SIGINT_DEBUG=1` to enable
+debug logging for all scanners.
 
 ## Continuous Scans
 

@@ -4,12 +4,15 @@ import shlex
 import subprocess
 import asyncio
 from typing import List, Optional, Callable
+import logging
 
 
 from sigint_suite.models import ImsiRecord
 from sigint_suite.cellular.parsers import parse_imsi_output
 from sigint_suite.gps import get_position
 from sigint_suite.hooks import apply_post_processors
+
+logger = logging.getLogger(__name__)
 
 
 def scan_imsis(
@@ -67,12 +70,15 @@ async def async_scan_imsis(
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
     timeout = timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    logger.debug("Executing: %s", " ".join(args))
     try:
         proc = await asyncio.create_subprocess_exec(
             *args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
+    except Exception as exc:
+        logger.exception("IMSI scan failed: %s", exc)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         output = stdout.decode()
     except Exception:
