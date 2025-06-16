@@ -107,8 +107,9 @@ vendor lookups. The manual steps are listed below.
 
       pip install -r requirements.txt
       # confirm the pinned web framework versions
-      pip install pydantic==2.11.7 fastapi==0.115.12
-      pip install .
+     pip install pydantic==2.11.7 fastapi==0.115.12
+     # project metadata is defined in ``pyproject.toml``
+     pip install .
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
@@ -440,7 +441,7 @@ Install project and development dependencies and run the tests locally with:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-pip install .
+pip install .  # uses metadata from ``pyproject.toml``
 pytest
 ```
 Alternatively run the suite in Docker:
