@@ -169,3 +169,48 @@ def test_async_scheduler_cancel_all_gathers_exceptions(monkeypatch: Any) -> None
 
     asyncio.run(runner())
     assert not errors
+
+
+def test_poll_scheduler_metrics(monkeypatch: Any) -> None:
+    sched, clock = load_scheduler(monkeypatch)
+
+    scheduler = sched.PollScheduler()
+
+    def cb(_dt: float) -> None:
+        pass
+
+    scheduler.schedule("job", cb, 1.0)
+    metrics = scheduler.get_metrics()
+    assert "job" in metrics
+    assert metrics["job"]["next_run"] > 0
+    assert metrics["job"]["last_duration"] != metrics["job"]["last_duration"]  # NaN
+    clock.callback(0)
+    metrics = scheduler.get_metrics()
+    assert metrics["job"]["last_duration"] >= 0
+
+
+def test_async_scheduler_metrics(monkeypatch: Any) -> None:
+    sched, _clock = load_scheduler(monkeypatch)
+    scheduler = sched.AsyncScheduler()
+
+    async def cb() -> None:
+        pass
+
+    orig_sleep = asyncio.sleep
+
+    async def fast_sleep(_):
+        await orig_sleep(0)
+
+    monkeypatch.setattr(sched.asyncio, "sleep", fast_sleep)
+
+    async def runner():
+        scheduler.schedule("job", cb, 0.1)
+        await asyncio.sleep(0)
+        metrics = scheduler.get_metrics()
+        assert "job" in metrics
+        assert metrics["job"]["next_run"] > 0
+        await asyncio.sleep(0)
+        await scheduler.cancel_all()
+        sched.utils.shutdown_async_loop()
+
+    asyncio.run(runner())

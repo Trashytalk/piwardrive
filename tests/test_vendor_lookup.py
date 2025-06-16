@@ -2,6 +2,7 @@ import os
 import sys
 import types
 import importlib
+import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -41,4 +42,16 @@ def test_update_oui_file_downloads(monkeypatch, tmp_path):
     monkeypatch.setattr(oui.requests, "get", fail)
     vendor2 = oui.lookup_vendor("AA:BB:CC:33:44:55")
     assert vendor2 == "VendorX" and not called
+
+
+def test_update_oui_file_logs_error(monkeypatch, tmp_path, caplog):
+    oui = _reload_module(monkeypatch, tmp_path)
+
+    def fail(*a, **k):
+        raise Exception("boom")
+
+    monkeypatch.setattr(oui.requests, "get", fail)
+    with caplog.at_level(logging.ERROR):
+        oui.update_oui_file(max_age=0, path=oui.OUI_PATH)
+    assert "OUI registry download failed" in caplog.text
 

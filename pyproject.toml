@@ -26,5 +26,7 @@ health-import = "scripts.health_import:main"
 piwardrive-prefetch = "scripts.prefetch_cli:main"
 service-status = "scripts.service_status:main"
 piwardrive-vacuum = "scripts.vacuum_db:main"
+piwardrive-migrate = "scripts.migrate_db:main"
+
 
 

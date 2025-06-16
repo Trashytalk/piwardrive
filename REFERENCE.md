@@ -152,6 +152,14 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 
 `PW_HEALTH_POLL_INTERVAL` – Interval between health metric polls.
 
+`PW_HEALTH_EXPORT_INTERVAL` – Hours between health metric exports.
+
+`PW_HEALTH_EXPORT_DIR` – Directory used by the export task.
+
+`PW_COMPRESS_HEALTH_EXPORTS` – Compress exported files when `1`.
+
+`PW_HEALTH_EXPORT_RETENTION` – Days to keep exported files.
+
 `PW_LOG_ROTATE_INTERVAL` – Seconds between log rotations.
 
 `PW_LOG_ROTATE_ARCHIVES` – Number of rotated archives to keep.
@@ -185,13 +193,17 @@ New modules extend PiWardrive with optional capabilities:
 
 - `remote_sync` – upload the SQLite database to a remote server.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
-- `network_analytics` – heuristics to flag suspicious Wi‑Fi access points.
+- `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such
+  as open or WEP networks, duplicate SSIDs on a single BSSID, unusual channels,
+  and unknown vendors.
 - `gps_track_playback` – replay GPS coordinates from previous drives.
 - `lora_scanner` – scan LoRa/IoT radio bands.
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
 - `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
-- `orientation_sensors` – track device orientation via gyro or accelerometer.
+- `orientation_sensors` – track device orientation via DBus
+  (``iio-sensor-proxy``) or an MPU‑6050 sensor. Functions return ``None`` when
+  the optional dependencies are missing.
 - `setup_wizard` – interactive configuration for external services.
 
 ## Further Reference

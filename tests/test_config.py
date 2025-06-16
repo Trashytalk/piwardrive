@@ -34,7 +34,18 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.disable_scanning == config.DEFAULT_CONFIG.disable_scanning
     assert data.map_auto_prefetch == config.DEFAULT_CONFIG.map_auto_prefetch
     assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
-    assert data.map_cluster_capacity == config.DEFAULT_CONFIG.map_cluster_capacity
+    assert (
+        data.map_cluster_capacity
+        == config.DEFAULT_CONFIG.map_cluster_capacity
+    )
+    assert (
+        data.route_prefetch_interval
+        == config.DEFAULT_CONFIG.route_prefetch_interval
+    )
+    assert (
+        data.route_prefetch_lookahead
+        == config.DEFAULT_CONFIG.route_prefetch_lookahead
+    )
 
 
 def test_save_and_load_roundtrip(tmp_path: Path) -> None:
@@ -50,6 +61,8 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.disable_scanning = True
     orig.map_auto_prefetch = True
     orig.map_cluster_capacity = 12
+    orig.route_prefetch_interval = 123
+    orig.route_prefetch_lookahead = 7
     config.save_config(orig)
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
@@ -63,6 +76,8 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.map_auto_prefetch is True
     assert loaded.ui_font_size == 18
     assert loaded.map_cluster_capacity == 12
+    assert loaded.route_prefetch_interval == 123
+    assert loaded.route_prefetch_lookahead == 7
 
 
 def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
@@ -139,11 +154,25 @@ def test_env_override_health_poll(monkeypatch: Any, tmp_path: Path) -> None:
     assert cfg.health_poll_interval == 5
 
 
+def test_env_override_route_prefetch(monkeypatch: Any, tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    monkeypatch.setenv("PW_ROUTE_PREFETCH_INTERVAL", "120")
+    monkeypatch.setenv("PW_ROUTE_PREFETCH_LOOKAHEAD", "4")
+    cfg = config.AppConfig.load()
+    assert cfg.route_prefetch_interval == 120
+    assert cfg.route_prefetch_lookahead == 4
+
+
 def test_env_override_battery_widget(monkeypatch: Any, tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     monkeypatch.setenv("PW_WIDGET_BATTERY_STATUS", "true")
     cfg = config.AppConfig.load()
     assert cfg.widget_battery_status is True
+
+
+def test_list_env_overrides() -> None:
+    mapping = config.list_env_overrides()
+    assert mapping["PW_UI_FONT_SIZE"] == "ui_font_size"
 
 
 def test_export_import_json(tmp_path: Path) -> None:

@@ -1143,24 +1143,36 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             if not os.path.isdir(folder):
                 return
 
-            files = []
+            files: list[tuple[str, int, float]] = []
             total = 0
+            stack = [folder]
 
-            for root, _, fns in os.walk(folder):
-                for fn in fns:
-                    path = os.path.join(root, fn)
-                    size = os.path.getsize(path)
-                    total += size
-                    files.append((path, size))
+            while stack:
+                base = stack.pop()
+                try:
+                    with os.scandir(base) as entries:
+                        for entry in entries:
+                            if entry.is_dir(follow_symlinks=False):
+                                stack.append(entry.path)
+                            elif entry.is_file(follow_symlinks=False):
+                                stat = entry.stat()
+                                size = stat.st_size
+                                total += size
+                                files.append((entry.path, size, stat.st_mtime))
+                except OSError:
+                    continue
 
             max_bytes = limit_mb * 1024 * 1024
             if total <= max_bytes:
                 return
 
-            files.sort(key=lambda x: os.path.getmtime(x[0]))
+            files.sort(key=lambda x: x[2])
 
-            for path, size in files:
-                os.remove(path)
+            for path, size, _ in files:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
                 total -= size
                 if total <= max_bytes:
                     break

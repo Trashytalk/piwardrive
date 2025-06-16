@@ -270,10 +270,14 @@ def safe_request(
         return None
 
 
+
 def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:
     """Ensure ``service`` is active, attempting a restart if not."""
+    from security import validate_service_name
+
+    validate_service_name(service)
 
     if service_status(service):
         return True
@@ -442,12 +446,31 @@ async def async_tail_file(path: str, lines: int = 50) -> list[str]:
         return []
 
 
+def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
+    """Fallback ``systemctl`` invocation capturing output."""
+
+    cmd = ["systemctl", action, f"{service}.service"]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return True, proc.stdout, proc.stderr
+    except subprocess.CalledProcessError as exc:  # pragma: no cover - runtime errors
+        out = exc.stdout or ""
+        err = exc.stderr or str(exc)
+        return False, out, err
+    except Exception as exc:  # pragma: no cover - unexpected failures
+        return False, "", str(exc)
+
+
 def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Execute DBus service commands synchronously as a fallback."""
 
-    import dbus
+    try:
+        import dbus
+    except Exception:  # pragma: no cover - fallback when DBus missing
+        return _run_systemctl(service, action)
+
     from security import validate_service_name
 
     validate_service_name(service)
@@ -482,8 +505,8 @@ def _run_service_cmd_sync(
 
     try:
         return retry_call(_call, attempts=attempts, delay=delay)
-    except Exception as exc:  # pragma: no cover - DBus failures
-        return False, "", str(exc)
+    except Exception:
+        return _run_systemctl(service, action)
 
 
 @asynccontextmanager
@@ -572,7 +595,9 @@ async def _run_service_cmd_async(
         logging.exception(
             "Service command '%s %s' failed: %s", service, action, exc
         )
-        return False, "", str(exc)
+        return await asyncio.get_running_loop().run_in_executor(
+            None, lambda: _run_systemctl(service, action)
+        )
 
 
 def run_service_cmd(
@@ -584,7 +609,13 @@ def run_service_cmd(
         _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
     )
     try:
-        return fut.result()
+        ok, out, err = fut.result()
+        if not ok:
+            if out:
+                logging.error("%s %s stdout: %s", service, action, out.strip())
+            if err:
+                logging.error("%s %s stderr: %s", service, action, err.strip())
+        return ok, out, err
     except Exception as exc:  # pragma: no cover - background failures
         logging.exception(
             "run_service_cmd encountered an error for '%s %s': %s",
@@ -599,6 +630,9 @@ async def service_status_async(
     service: str, attempts: int = 1, delay: float = 0
 ) -> bool:
     """Return ``True`` if the ``systemd`` service is active."""
+    from security import validate_service_name
+
+    validate_service_name(service)
     try:
         ok, out, _err = await _run_service_cmd_async(
             service, "is-active", attempts=attempts, delay=delay
