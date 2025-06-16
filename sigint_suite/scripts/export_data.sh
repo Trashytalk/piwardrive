@@ -3,7 +3,7 @@
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-EXPORT_DIR="$ROOT_DIR/exports"
+EXPORT_DIR="${EXPORT_DIR:-$(python3 -c 'from sigint_suite import paths; print(paths.EXPORT_DIR)') }"
 
 PYTHONPATH="$ROOT_DIR/.." EXPORT_DIR="$EXPORT_DIR" python3 - <<'PY'
 import os, json, csv

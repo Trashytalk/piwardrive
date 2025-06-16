@@ -166,6 +166,41 @@ def test_run_service_cmd_retries_until_success(monkeypatch: Any) -> None:
     assert success is True and out == '' and err == ''
 
 
+def test_message_bus_disconnect_called(monkeypatch: Any) -> None:
+    called = False
+
+    class Bus:
+        def __init__(self, *_a: Any, **_k: Any) -> None:
+            pass
+
+        async def connect(self) -> None:  # pragma: no cover - mock
+            pass
+
+        async def introspect(self, service: str, path: str) -> str:  # pragma: no cover - mock
+            return "intro"
+
+        def get_proxy_object(self, service: str, path: str, _intro: str) -> Any:
+            class Obj:
+                def get_interface(self, iface: str) -> Any:
+                    return mgr if "Manager" in iface else props
+
+            return Obj()
+
+        def disconnect(self) -> None:
+            nonlocal called
+            called = True
+
+    mgr = mock.Mock(call_start_unit=mock.AsyncMock())
+    props = mock.Mock()
+    aio_mod = types.SimpleNamespace(MessageBus=Bus)
+    dbus_mod = types.SimpleNamespace(aio=aio_mod, BusType=types.SimpleNamespace(SYSTEM=1))
+    monkeypatch.setitem(sys.modules, 'dbus_fast', dbus_mod)
+    monkeypatch.setitem(sys.modules, 'dbus_fast.aio', aio_mod)
+
+    success, _out, _err = utils.run_service_cmd('kismet', 'start')
+    assert success is True and called is True
+
+
 def test_service_status_passes_retry_params() -> None:
     async def _svc(_: str, attempts: int = 1, delay: float = 0) -> bool:
         assert attempts == 2 and delay == 0.5
@@ -267,6 +302,18 @@ def test_get_smart_status_ok(monkeypatch: Any) -> None:
     assert utils.get_smart_status('/mnt/ssd') == 'OK'
 
 
+def test_get_smart_status_failure(monkeypatch: Any) -> None:
+    Part = namedtuple('Part', 'device mountpoint fstype opts')
+    part = Part('/dev/sda', '/mnt/ssd', 'ext4', '')
+    monkeypatch.setattr(psutil, 'disk_partitions', lambda all=False: [part])
+    monkeypatch.setattr(
+        utils.subprocess,
+        'run',
+        lambda *a, **k: (_ for _ in ()).throw(utils.subprocess.CalledProcessError(1, 'smartctl')),
+    )
+    assert utils.get_smart_status('/mnt/ssd') is None
+
+
 def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     class FakeResp:
         status = 200
@@ -294,6 +341,41 @@ def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
 
     aps, clients = asyncio.run(utils.fetch_kismet_devices_async())
     assert aps == [1] and clients == [2]
+
+
+def test_fetch_kismet_devices_async_logs_cache_error(monkeypatch: Any) -> None:
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return '{"access_points": [], "clients": []}'
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any) -> FakeResp:
+            return FakeResp()
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+    monkeypatch.setattr(
+        persistence,
+        "save_ap_cache",
+        mock.AsyncMock(side_effect=Exception("fail")),
+    )
+
+    with mock.patch.object(utils.logging, "exception") as exc_log:
+        asyncio.run(utils.fetch_kismet_devices_async())
+        exc_log.assert_called_once()
 
 
 def test_fetch_kismet_devices_cache(monkeypatch: Any, tmp_path: Path) -> None:
@@ -349,6 +431,29 @@ def test_safe_request_retries(monkeypatch: Any) -> None:
         assert resp is not None
         assert rep.call_count == 0
     assert calls == ["http://x", "http://x"]
+
+
+def test_safe_request_cache(monkeypatch: Any) -> None:
+    calls: list[str] = []
+
+    class Resp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            pass
+
+    def get(url: str, timeout: int = 5) -> Resp:
+        calls.append(url)
+        return Resp()
+
+    monkeypatch.setattr(utils, "requests", mock.Mock(get=get, RequestException=Exception))
+    monkeypatch.setattr(utils.time, "time", lambda: 0.0)
+    utils._SAFE_REQUEST_CACHE = {}
+
+    first = utils.safe_request("http://x", cache_seconds=5)
+    second = utils.safe_request("http://x", cache_seconds=5)
+    assert first is second
+    assert calls == ["http://x"]
 
 
 def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
@@ -418,8 +523,8 @@ def test_scan_bt_devices_handles_error(monkeypatch: Any) -> None:
 
 
 def test_gpsd_cache(monkeypatch: Any) -> None:
-    acc_mock = mock.Mock(side_effect=[2, 5])
-    fix_mock = mock.Mock(side_effect=["2D", "3D"])
+    acc_mock = mock.Mock(side_effect=[2, None, 5])
+    fix_mock = mock.Mock(side_effect=["2D", "Unknown", "3D"])
 
     monkeypatch.setattr(utils.gps_client, "get_accuracy", acc_mock)
     monkeypatch.setattr(utils.gps_client, "get_fix_quality", fix_mock)
@@ -431,9 +536,18 @@ def test_gpsd_cache(monkeypatch: Any) -> None:
     assert acc_mock.call_count == 1  # gpsd queried once
     assert fix_mock.call_count == 1
 
-    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    ts_first = utils._GPSD_CACHE["timestamp"]
+
+    # failure should not overwrite timestamp or cached data
+    assert utils.get_gps_accuracy(force_refresh=True) == 2
+    assert utils._GPSD_CACHE["timestamp"] == ts_first
     assert acc_mock.call_count == 2
     assert fix_mock.call_count == 2
+
+    assert utils.get_gps_fix_quality(force_refresh=True) == "3D"
+    assert utils._GPSD_CACHE["timestamp"] > ts_first
+    assert acc_mock.call_count == 3
+    assert fix_mock.call_count == 3
 
 
 def test_count_bettercap_handshakes(tmp_path: Any) -> None:
@@ -460,4 +574,52 @@ def test_network_scanning_disabled(monkeypatch: Any) -> None:
     monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
     assert utils.network_scanning_disabled() is True
     monkeypatch.delenv("PW_DISABLE_SCANNING")
+
+
+def test_get_network_throughput_calculates_kbps(monkeypatch: Any) -> None:
+    net = namedtuple("Net", "bytes_sent bytes_recv")
+    utils._NET_IO_CACHE = {"timestamp": 1.0, "counters": net(1000, 2000)}
+    monkeypatch.setattr(utils.time, "time", lambda: 2.0)
+    monkeypatch.setattr(psutil, "net_io_counters", lambda: net(3000, 6000))
+
+    rx, tx = utils.get_network_throughput()
+
+    assert round(rx, 2) == round((6000 - 2000) / 1024.0, 2)
+    assert round(tx, 2) == round((3000 - 1000) / 1024.0, 2)
+    assert utils._NET_IO_CACHE["counters"].bytes_recv == 6000
+    assert utils._NET_IO_CACHE["timestamp"] == 2.0
+
+
+def test_get_network_throughput_resets_when_cache_missing(monkeypatch: Any) -> None:
+    net = namedtuple("Net", "bytes_sent bytes_recv")
+    utils._NET_IO_CACHE = {}
+    monkeypatch.setattr(psutil, "net_io_counters", lambda: net(500, 700))
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+
+    rx, tx = utils.get_network_throughput()
+
+    assert rx == 0.0 and tx == 0.0
+    assert utils._NET_IO_CACHE["counters"].bytes_sent == 500
+    assert utils._NET_IO_CACHE["timestamp"] == 1.0
+
+def test_run_async_task() -> None:
+    """The async loop is started on demand and callbacks run."""
+    import importlib, sys
+
+    sys.modules.pop("utils", None)
+    utils_mod = importlib.import_module("utils")
+
+    async def do_work() -> int:
+        return 3
+
+    results: list[int] = []
+
+    def cb(val: int) -> None:
+        results.append(val)
+
+    fut = utils_mod.run_async_task(do_work(), callback=cb)
+    assert fut.result(timeout=1) == 3
+    assert results == [3]
+    utils_mod.shutdown_async_loop()
+
 

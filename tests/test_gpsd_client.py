@@ -40,3 +40,11 @@ def test_reconnect_after_error(monkeypatch):
     mod = importlib.reload(gpsd_client)
     assert mod.client.get_position() is None
     assert mod.client.get_position() == (1.0, 2.0)
+
+
+def test_env_overrides(monkeypatch):
+    monkeypatch.setenv("PW_GPSD_HOST", "1.2.3.4")
+    monkeypatch.setenv("PW_GPSD_PORT", "1234")
+    mod = _reload_with_dummy(monkeypatch)
+    assert mod.client.host == "1.2.3.4"
+    assert mod.client.port == 1234

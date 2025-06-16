@@ -5,11 +5,11 @@ import importlib
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import config
+from sigint_suite import paths
 
 
 def _reload_module(monkeypatch, tmp_path):
-    monkeypatch.setattr(config, "CONFIG_DIR", str(tmp_path))
+    monkeypatch.setenv("SIGINT_CONFIG_DIR", str(tmp_path))
     if "sigint_suite.enrichment.oui" in sys.modules:
         monkeypatch.delitem(sys.modules, "sigint_suite.enrichment.oui", raising=False)
     return importlib.import_module("sigint_suite.enrichment.oui")
