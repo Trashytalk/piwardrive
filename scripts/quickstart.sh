@@ -2,8 +2,10 @@
 # Quick environment setup for PiWardrive on Debian-based systems
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # Required system packages
-packages=(git build-essential cmake kismet bettercap gpsd evtest python3-venv)
+packages=(git build-essential cmake kismet bettercap gpsd evtest python3-venv curl)
 
 # Check for apt-get
 if ! command -v apt-get >/dev/null 2>&1; then
@@ -42,6 +44,9 @@ source "$VENV_DIR/bin/activate"
 pip install --upgrade pip
 pip install -r requirements.txt
 pip install .
+
+echo "Fetching latest OUI registry..."
+bash "$SCRIPT_DIR/../sigint_suite/scripts/fetch_oui.sh"
 
 cat <<EOM
 Setup complete. Activate the environment with:
