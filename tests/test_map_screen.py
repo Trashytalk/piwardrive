@@ -30,8 +30,12 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
 
-modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
-modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
+modules["kivy.app"].App = type(
+    "App", (), {"get_running_app": staticmethod(lambda: None)}
+)
+modules["kivy.clock"].Clock = SimpleNamespace(
+    create_trigger=lambda *a, **k: lambda *a2, **k2: None
+)
 modules["kivy.clock"].mainthread = lambda f: f
 modules["kivy.metrics"].dp = lambda x: x
 modules["kivy.uix.label"].Label = object
@@ -88,7 +92,7 @@ class DummyApp:
     map_poll_bt = 3
     disable_scanning = False
     map_cluster_capacity = 8
-
+    gps_movement_threshold = 1.0
 
     def __init__(self) -> None:
         self.scheduler = DummyScheduler()

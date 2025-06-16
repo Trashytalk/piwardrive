@@ -92,6 +92,7 @@ class Config:
     remote_sync_token: str = ""
     remote_sync_timeout: int = 5
     remote_sync_retries: int = 3
+    gps_movement_threshold: float = 1.0
 
 
 DEFAULT_CONFIG = Config()
@@ -133,6 +134,7 @@ class FileConfigModel(BaseModel):
     remote_sync_token: Optional[str] = None
     remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
     remote_sync_retries: Optional[int] = Field(default=None, ge=1)
+    gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
 
 
 class ConfigModel(FileConfigModel):
@@ -146,7 +148,7 @@ class ConfigModel(FileConfigModel):
     health_export_dir: str = DEFAULTS["health_export_dir"]
     compress_health_exports: bool = DEFAULTS["compress_health_exports"]
     health_export_retention: int = Field(default=7, ge=1)
-
+    gps_movement_threshold: float = Field(default=1.0, gt=0)
 
     theme: Theme
 
@@ -343,6 +345,7 @@ class AppConfig:
     remote_sync_token: str = DEFAULTS["remote_sync_token"]
     remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
     remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
+    gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
 
     @classmethod
     def load(cls) -> "AppConfig":
