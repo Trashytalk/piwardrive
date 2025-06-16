@@ -31,6 +31,7 @@ modules = {
     "kivymd.uix.progressbar": ModuleType("kivymd.uix.progressbar"),
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
     "kivymd.uix.label": ModuleType("kivymd.uix.label"),
+    "kivymd.toast": ModuleType("kivymd.toast"),
     "aiohttp": ModuleType("aiohttp"),
     "gps": ModuleType("gps"),
 }
@@ -51,6 +52,7 @@ modules["kivymd.uix.textfield"].MDTextField = object
 modules["kivymd.uix.progressbar"].MDProgressBar = object
 modules["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {"__init__": lambda self, *a, **k: None, "add_widget": lambda self, *a, **k: None})
 modules["kivymd.uix.label"].MDLabel = type("MDLabel", (), {"__init__": lambda self, *a, **k: None})
+modules["kivymd.toast"].toast = lambda *a, **k: None
 
 modules["kivy_garden.mapview"] = SimpleNamespace(
     MapMarker=object,
@@ -66,6 +68,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 if "screens.map_screen" in sys.modules:
     del sys.modules["screens.map_screen"]
 from screens.map_screen import MapScreen  # noqa: E402
+from screens.map_utils import tile_cache
 
 
 def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
@@ -78,7 +81,7 @@ def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
         with open(local, "wb") as fh:
             fh.write(b"data")
 
-    monkeypatch.setattr(screen, "_download_tile_async", fake_dl)
+    monkeypatch.setattr(tile_cache, "download_tile_async", fake_dl)
     bounds = (0.0, 0.0, 1.0, 1.0)
     screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
     assert len(called) == 2
@@ -113,3 +116,15 @@ def test_enforce_cache_limit(tmp_path):
     remaining = list(tmp_path.iterdir())
     assert len(remaining) == 2
     assert files[0] not in remaining
+
+
+def test_prefetch_tiles_error(monkeypatch, tmp_path):
+    screen = MapScreen()
+
+    async def fail_dl(_session, url, local):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(tile_cache, "download_tile_async", fail_dl)
+    bounds = (0.0, 0.0, 1.0, 1.0)
+    screen.prefetch_tiles(bounds, zoom=1, folder=str(tmp_path))
+    assert not any(tmp_path.rglob("*.png"))
