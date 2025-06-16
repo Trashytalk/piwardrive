@@ -4,8 +4,7 @@ import asyncio
 import logging
 import os
 import subprocess
-from typing import List
-import logging
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,7 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
 
 
 
-async def _async_scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
+async def _async_scan_bluetoothctl(timeout: int) -> List[BluetoothDevice]:
     """Async wrapper for ``bluetoothctl``."""
 
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
