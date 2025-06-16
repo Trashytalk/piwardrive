@@ -101,6 +101,8 @@ and installs the Python dependencies. The manual steps are listed below.
 4. **Install Python dependencies**::
 
       pip install -r requirements.txt
+      # confirm the pinned web framework versions
+      pip install pydantic==2.11.7 fastapi==0.115.12
       pip install .
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
