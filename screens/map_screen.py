@@ -34,6 +34,7 @@ from kivy.clock import Clock, mainthread
 from kivy.animation import Animation
 
 from kivy.metrics import dp
+from orientation_sensors import orientation_to_angle
 
 
 
@@ -116,6 +117,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._heatmap_markers = []
 
         self._compass_heading = 0.0
+        self._orientation = None
 
         self.kml_layers = []
 
@@ -1176,6 +1178,20 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._compass_heading = heading
 
         self.ids.mapview.rotation = -heading
+
+
+    def update_orientation(self, orientation: str | None = None, accel: dict | None = None, gyro: dict | None = None):
+        """Update orientation information from sensors."""
+
+        self._orientation = orientation
+        if orientation:
+            angle = orientation_to_angle(orientation)
+            if angle is not None:
+                self.ids.mapview.rotation = -angle
+        if accel is not None:
+            setattr(self, "sensor_accel", accel)
+        if gyro is not None:
+            setattr(self, "sensor_gyro", gyro)
 
 
 
