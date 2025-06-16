@@ -329,6 +329,9 @@ formats, raising `ValueError` for unsupported formats.
 Computes average health statistics and can plot CPU temperature, optionally
 using pandas and Plotly when available.
 
+### `scripts/health_export.py`
+Exports recent `HealthRecord` rows in CSV or JSON format.
+
 ### `gpsd_client.py`
 Maintains a persistent connection to `gpsd`, gracefully handling connection
 failures and returning `None` on errors.
