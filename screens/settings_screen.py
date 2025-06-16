@@ -31,6 +31,7 @@ class SettingsScreen:
         self.cleanup_logs_switch = SimpleNamespace(active=app.cleanup_rotated_logs)
         self.offline_path_field = SimpleNamespace(text=app.offline_tile_path)
         self.offline_switch = SimpleNamespace(active=app.map_use_offline)
+        self.auto_prefetch_switch = SimpleNamespace(active=app.map_auto_prefetch)
         self.show_gps_switch = SimpleNamespace(active=app.map_show_gps)
         self.show_aps_switch = SimpleNamespace(active=app.map_show_aps)
         self.show_bt_switch = SimpleNamespace(active=app.map_show_bt)
@@ -108,6 +109,7 @@ class SettingsScreen:
         app.map_show_aps = self.show_aps_switch.active
         app.map_show_bt = self.show_bt_switch.active
         app.map_cluster_aps = self.cluster_switch.active
+        app.map_auto_prefetch = self.auto_prefetch_switch.active
         app.debug_mode = self.debug_switch.active
         app.widget_battery_status = self.battery_switch.active
 
@@ -129,6 +131,7 @@ class SettingsScreen:
         cfg.map_show_aps = app.map_show_aps
         cfg.map_show_bt = app.map_show_bt
         cfg.map_cluster_aps = app.map_cluster_aps
+        cfg.map_auto_prefetch = app.map_auto_prefetch
         cfg.map_cluster_capacity = app.map_cluster_capacity
         cfg.debug_mode = app.debug_mode
         cfg.widget_battery_status = app.widget_battery_status

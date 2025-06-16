@@ -62,6 +62,7 @@ class DummyApp:
         self.map_show_bt = False
         self.map_cluster_aps = False
         self.map_cluster_capacity = 8
+        self.map_auto_prefetch = False
         self.gps_movement_threshold = 1.0
         self.debug_mode = False
         self.offline_tile_path = "/valid/tiles"
@@ -96,7 +97,10 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.show_aps_switch = SimpleNamespace(active=app.map_show_aps)
     screen.show_bt_switch = SimpleNamespace(active=app.map_show_bt)
     screen.cluster_switch = SimpleNamespace(active=app.map_cluster_aps)
-    screen.cluster_capacity_field = SimpleNamespace(text=str(app.map_cluster_capacity))
+    screen.cluster_capacity_field = SimpleNamespace(
+        text=str(app.map_cluster_capacity)
+    )
+    screen.auto_prefetch_switch = SimpleNamespace(active=app.map_auto_prefetch)
     screen.debug_switch = SimpleNamespace(active=app.debug_mode)
     screen.battery_switch = SimpleNamespace(active=app.widget_battery_status)
     screen.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
@@ -168,6 +172,7 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     screen.show_aps_switch.active = False
     screen.show_bt_switch.active = True
     screen.cluster_switch.active = True
+    screen.auto_prefetch_switch.active = True
     screen.debug_switch.active = True
     screen.battery_switch.active = True
 
@@ -193,10 +198,12 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert app.map_show_bt is True
     assert app.map_cluster_aps is True
     assert app.map_cluster_capacity == 12
+    assert app.map_auto_prefetch is True
     assert app.debug_mode is True
     assert app.widget_battery_status is True
     assert saved
     assert saved.get("map_cluster_capacity") == 12
+    assert saved.get("map_auto_prefetch") is True
 
 
 @pytest.mark.asyncio

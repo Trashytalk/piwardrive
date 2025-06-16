@@ -15,6 +15,8 @@ Use :meth:`~screens.map_screen.MapScreen.prefetch_tiles` to download PNG images
 covering a bounding box.  Tiles are saved under ``/mnt/ssd/tiles`` by default and
 ``prefetch_visible_region`` grabs the area currently shown on screen.  These
 functions fetch data from OpenStreetMap so they should be run while online.
+Enabling ``map_auto_prefetch`` automatically downloads a small region around the
+current GPS location whenever it updates.
 
 Command Line
 ------------

@@ -41,6 +41,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Console & Dashboard**: Tail logs and a drag‑and‑drop widget dashboard with persistent layouts.
 * **Service Management**: Start/stop and configure Kismet & BetterCAP from the GUI.
 * **Offline Support**: Toggle MBTiles stored under `/mnt/ssd/tiles/`, prefetch visible regions and purge old tiles to stay within the cache limit.
+* **Automatic Prefetch**: Optionally download tiles around the current GPS position.
 * **Diagnostic Tools**: Generate system reports and run connectivity tests.
 * **Automatic Log Rotation**: Periodically rotate logs like `/var/log/syslog`,
   compress archives and remove old backups.
