@@ -15,7 +15,6 @@ def export_json(records: Iterable[Any], path: str) -> None:
             data.append(rec)
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2)
-        json.dump(list(records), fh, indent=2)
 
 
 def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
