@@ -321,13 +321,12 @@ def _parse_smartctl_output(output: str) -> str | None:
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
-    """
-    Find the latest file matching pattern under directory.
-    """
-    files = glob.glob(os.path.join(directory, pattern))
+    """Return the newest file matching ``pattern`` under ``directory``."""
+    dir_path = Path(directory)
+    files = list(dir_path.glob(pattern))
     if not files:
         return None
-    return max(files, key=os.path.getmtime)
+    return str(max(files, key=lambda p: p.stat().st_mtime))
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
@@ -647,12 +646,13 @@ async def fetch_metrics_async(
 
 def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     """Count ``.pcap`` handshake files in BetterCAP log directories."""
+    base = Path(log_folder)
     count = 0
     try:
-        for entry in os.scandir(log_folder):
+        for entry in base.iterdir():
             if entry.is_dir() and entry.name.endswith('_bettercap'):
                 try:
-                    for file in os.scandir(entry.path):
+                    for file in entry.iterdir():
                         if file.is_file() and file.name.endswith('.pcap'):
                             count += 1
                 except OSError:

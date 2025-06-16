@@ -2,7 +2,7 @@
 
 import json
 import os
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 
 from enum import Enum
 from pathlib import Path
@@ -21,11 +21,11 @@ class Theme(str, Enum):
     Red = "Red"
 
 
-CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "piwardrive")
-CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
-PROFILES_DIR = os.path.join(CONFIG_DIR, "profiles")
-ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
-REPORTS_DIR = os.path.join(CONFIG_DIR, "reports")
+CONFIG_DIR = str(Path.home() / ".config" / "piwardrive")
+CONFIG_PATH = str(Path(CONFIG_DIR) / "config.json")
+PROFILES_DIR = str(Path(CONFIG_DIR) / "profiles")
+ACTIVE_PROFILE_FILE = str(Path(CONFIG_DIR) / "active_profile")
+REPORTS_DIR = str(Path(CONFIG_DIR) / "reports")
 
 
 def get_config_path(profile: Optional[str] = None) -> str:
@@ -39,7 +39,7 @@ def config_mtime(profile: Optional[str] = None) -> Optional[float]:
     """Return modification time for the active config file if it exists."""
     path = get_config_path(profile)
     try:
-        return os.path.getmtime(path)
+        return Path(path).stat().st_mtime
     except FileNotFoundError:
         return None
 
@@ -175,16 +175,15 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _profile_path(name: str) -> str:
-    return os.path.join(PROFILES_DIR, f"{os.path.basename(name)}.json")
+    return str(Path(PROFILES_DIR) / f"{Path(name).stem}.json")
 
 
 def list_profiles() -> List[str]:
     """Return available profile names under ``PROFILES_DIR``."""
-    if not os.path.isdir(PROFILES_DIR):
+    profiles_dir = Path(PROFILES_DIR)
+    if not profiles_dir.is_dir():
         return []
-    return [
-        os.path.splitext(f)[0] for f in os.listdir(PROFILES_DIR) if f.endswith(".json")
-    ]
+    return [p.stem for p in profiles_dir.iterdir() if p.suffix == ".json"]
 
 
 def get_active_profile() -> Optional[str]:
@@ -202,7 +201,7 @@ def get_active_profile() -> Optional[str]:
 
 def set_active_profile(name: str) -> None:
     """Persist ``name`` as the active profile."""
-    os.makedirs(CONFIG_DIR, exist_ok=True)
+    Path(CONFIG_DIR).mkdir(parents=True, exist_ok=True)
     with open(ACTIVE_PROFILE_FILE, "w", encoding="utf-8") as f:
         f.write(name)
 
@@ -233,7 +232,7 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
     if profile is None:
         profile = get_active_profile()
     path = get_config_path(profile)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(asdict(config), f, indent=2)
 
@@ -241,7 +240,7 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
 def export_config(config: Config, path: str) -> None:
     """Export ``config`` to ``path`` in JSON or YAML format."""
     ext = Path(path).suffix.lower()
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     data = asdict(config)
     if ext == ".json":
         with open(path, "w", encoding="utf-8") as f:
@@ -342,7 +341,7 @@ def import_profile(path: str, name: Optional[str] = None) -> str:
     FileConfigModel(**data)
     cfg = Config(**{**DEFAULTS, **data})
     if name is None:
-        name = os.path.splitext(os.path.basename(path))[0]
+        name = Path(path).stem
     save_config(cfg, profile=name)
     return name
 
