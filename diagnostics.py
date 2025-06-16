@@ -208,6 +208,13 @@ class HealthMonitor:
                 lambda dt: run_async_task(self._run_summary()),
                 86400,
             )
+        self._export_event = "health_export"
+        if config.HEALTH_EXPORT_INTERVAL > 0:
+            scheduler.schedule(
+                self._export_event,
+                lambda dt: run_async_task(self._run_export()),
+                config.HEALTH_EXPORT_INTERVAL * 3600,
+            )
         asyncio.run(self._poll())
 
     async def _poll(self) -> None:
@@ -270,6 +277,43 @@ class HealthMonitor:
         json_path = os.path.join(config.REPORTS_DIR, f"health_{date}.json")
         with open(json_path, "w", encoding="utf-8") as fh:
             json.dump(result, fh)
+
+    async def _run_export(self) -> None:
+        import scripts.health_export as health_export
+
+        try:
+            os.makedirs(config.HEALTH_EXPORT_DIR, exist_ok=True)
+            ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+            path = os.path.join(
+                config.HEALTH_EXPORT_DIR, f"health_{ts}.json"
+            )
+            await asyncio.to_thread(
+                health_export.main,
+                [path, "--format", "json", "--limit", "10000"],
+            )
+            if config.COMPRESS_HEALTH_EXPORTS:
+                with open(path, "rb") as fin, gzip.open(path + ".gz", "wb") as fout:
+                    shutil.copyfileobj(fin, fout)
+                os.remove(path)
+                path += ".gz"
+            await asyncio.to_thread(self._cleanup_exports)
+            logging.info("Exported health data to %s", path)
+        except Exception as exc:  # pragma: no cover - best-effort
+            logging.exception("HealthMonitor export failed: %s", exc)
+
+    def _cleanup_exports(self) -> None:
+        if config.HEALTH_EXPORT_RETENTION <= 0:
+            return
+        cutoff = (
+            datetime.now().timestamp() - config.HEALTH_EXPORT_RETENTION * 86400
+        )
+        for fname in os.listdir(config.HEALTH_EXPORT_DIR):
+            fpath = os.path.join(config.HEALTH_EXPORT_DIR, fname)
+            try:
+                if os.path.isfile(fpath) and os.path.getmtime(fpath) < cutoff:
+                    os.remove(fpath)
+            except Exception:  # pragma: no cover - cleanup best effort
+                logging.exception("Failed to remove old export %s", fpath)
 
     def stop(self) -> None:
         self._scheduler.cancel(self._event)
