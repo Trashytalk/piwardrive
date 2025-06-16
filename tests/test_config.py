@@ -32,6 +32,7 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.map_show_bt == config.DEFAULT_CONFIG.map_show_bt
     assert data.offline_tile_path == config.DEFAULT_CONFIG.offline_tile_path
     assert data.disable_scanning == config.DEFAULT_CONFIG.disable_scanning
+    assert data.map_auto_prefetch == config.DEFAULT_CONFIG.map_auto_prefetch
     assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
     assert (
         data.map_cluster_capacity
@@ -50,6 +51,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.ui_font_size = 18
     orig.offline_tile_path = "/tmp/off.mbtiles"
     orig.disable_scanning = True
+    orig.map_auto_prefetch = True
     orig.map_cluster_capacity = 12
     config.save_config(orig)
     assert Path(cfg_file).is_file()
@@ -61,6 +63,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.map_show_bt is True
     assert loaded.offline_tile_path == "/tmp/off.mbtiles"
     assert loaded.disable_scanning is True
+    assert loaded.map_auto_prefetch is True
     assert loaded.ui_font_size == 18
     assert loaded.map_cluster_capacity == 12
 
@@ -123,9 +126,11 @@ def test_env_override_boolean(monkeypatch: Any, tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     monkeypatch.setenv("PW_MAP_SHOW_GPS", "false")
     monkeypatch.setenv("PW_MAP_SHOW_BT", "true")
+    monkeypatch.setenv("PW_MAP_AUTO_PREFETCH", "1")
     cfg = config.AppConfig.load()
     assert cfg.map_show_gps is False
     assert cfg.map_show_bt is True
+    assert cfg.map_auto_prefetch is True
 
 
 def test_env_override_health_poll(monkeypatch: Any, tmp_path: Path) -> None:

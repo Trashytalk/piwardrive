@@ -57,6 +57,7 @@ class PiWardriveApp(MDApp):
     map_cluster_capacity = NumericProperty(8)
     map_fullscreen = BooleanProperty(False)
     map_use_offline = BooleanProperty(False)
+    map_auto_prefetch = BooleanProperty(False)
     disable_scanning = BooleanProperty(False)
     theme = StringProperty("Dark")
     kismet_logdir = StringProperty("/mnt/ssd/kismet_logs")

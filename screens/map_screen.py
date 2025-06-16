@@ -627,6 +627,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self._check_geofences(lat, lon)
 
+        self._maybe_auto_prefetch(lat, lon)
+
 
     def _adjust_gps_interval(self, lat: float, lon: float) -> None:
         """Dynamically adjust GPS polling based on movement speed."""
@@ -1060,6 +1062,25 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         def _worker() -> None:
             self.prefetch_tiles(tuple(bbox), zoom=mv.zoom, folder=folder, progress_cb=progress)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _maybe_auto_prefetch(self, lat: float, lon: float) -> None:
+        """Prefetch tiles around ``lat``/``lon`` if enabled."""
+        app = App.get_running_app()
+        if not getattr(app, "map_auto_prefetch", False):
+            return
+        if not getattr(app, "map_use_offline", False):
+            return
+        mv = self.ids.get("mapview")
+        if mv is None:
+            return
+        delta = 0.01
+        bbox = (lat - delta, lon - delta, lat + delta, lon + delta)
+        folder = os.path.dirname(getattr(app, "offline_tile_path", "")) or "/mnt/ssd/tiles"
+
+        def _worker() -> None:
+            self.prefetch_tiles(bbox, zoom=mv.zoom, folder=folder)
 
         threading.Thread(target=_worker, daemon=True).start()
 

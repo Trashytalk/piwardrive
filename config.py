@@ -64,6 +64,7 @@ class Config:
     map_cluster_aps: bool = False
     map_cluster_capacity: int = 8
     map_use_offline: bool = False
+    map_auto_prefetch: bool = False
     disable_scanning: bool = False
     kismet_logdir: str = "/mnt/ssd/kismet_logs"
     bettercap_caplet: str = "/usr/local/etc/bettercap/alfa.cap"
@@ -111,6 +112,7 @@ class FileConfigModel(BaseModel):
     map_show_heatmap: Optional[bool] = None
     map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
+    map_auto_prefetch: Optional[bool] = None
     disable_scanning: Optional[bool] = None
     kismet_logdir: Optional[str] = Field(default=None, min_length=1)
     bettercap_caplet: Optional[str] = Field(default=None, min_length=1)
@@ -146,6 +148,7 @@ class ConfigModel(FileConfigModel):
     health_export_dir: str = DEFAULTS["health_export_dir"]
     compress_health_exports: bool = DEFAULTS["compress_health_exports"]
     health_export_retention: int = Field(default=7, ge=1)
+    map_auto_prefetch: bool = DEFAULTS["map_auto_prefetch"]
 
 
     theme: Theme
@@ -321,6 +324,7 @@ class AppConfig:
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
+    map_auto_prefetch: bool = DEFAULTS["map_auto_prefetch"]
     disable_scanning: bool = DEFAULTS["disable_scanning"]
     offline_tile_path: str = DEFAULTS["offline_tile_path"]
     kismet_logdir: str = DEFAULTS["kismet_logdir"]

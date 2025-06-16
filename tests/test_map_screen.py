@@ -88,6 +88,7 @@ class DummyApp:
     map_poll_bt = 3
     disable_scanning = False
     map_cluster_capacity = 8
+    map_auto_prefetch = False
 
 
     def __init__(self) -> None:
@@ -108,3 +109,30 @@ def test_on_enter_and_on_leave(monkeypatch: Any) -> None:
     assert app.scheduler.events == {}
     assert screen._gps_event is None
     assert screen._aps_event is None
+
+
+def test_auto_prefetch(monkeypatch: Any) -> None:
+    app = DummyApp()
+    app.map_use_offline = True
+    app.map_auto_prefetch = True
+    app.offline_tile_path = "/tiles/offline.mbtiles"
+    monkeypatch.setattr(App, "get_running_app", staticmethod(lambda: app))
+    mv = SimpleNamespace(
+        center_on=lambda *a, **k: None,
+        zoom=16,
+        remove_layer=lambda *a, **k: None,
+        add_layer=lambda *a, **k: None,
+    )
+    screen = cast(Any, MapScreen())
+    screen.ids = SimpleNamespace(mapview=mv)
+    called = {}
+
+    def fake_prefetch(bounds, zoom=16, folder="/mnt/ssd/tiles", **_):
+        called["bounds"] = bounds
+        called["zoom"] = zoom
+        called["folder"] = folder
+
+    monkeypatch.setattr(screen, "prefetch_tiles", fake_prefetch)
+    screen._update_map(1.0, 2.0)
+    assert called["folder"].endswith("/tiles")
+    assert called["zoom"] == 16
