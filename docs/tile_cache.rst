@@ -46,6 +46,14 @@ automatically. Old tiles are purged and the cache limit enforced.  If
 ``compress_offline_tiles`` is ``true`` the offline MBTiles file is compacted
 with ``VACUUM`` during each run.
 
+Scheduled Prefetch
+~~~~~~~~~~~~~~~~~~
+
+``route_prefetch_interval`` determines how often PiWardrive predicts the next
+set of tiles based on recent GPS points. ``route_prefetch_lookahead`` controls
+how far ahead of the current location tiles are fetched.
+
+
 Paths
 -----
 

@@ -1,6 +1,7 @@
 """Vendor lookup helpers using the IEEE OUI registry."""
 
 import csv
+import logging
 import os
 import time
 from typing import Dict, Optional
@@ -21,6 +22,8 @@ OUI_MAX_AGE = 7 * 24 * 3600
 _OUI_MAP: Dict[str, str] = {}
 _OUI_MTIME = 0.0
 
+logger = logging.getLogger(__name__)
+
 
 def update_oui_file(
     path: str = OUI_PATH,
@@ -39,7 +42,8 @@ def update_oui_file(
     try:
         resp = requests.get(url, timeout=15)
         resp.raise_for_status()
-    except Exception:
+    except Exception as exc:
+        logger.error("OUI registry download failed: %s", exc)
         return
 
     with open(path, "wb") as fh:
