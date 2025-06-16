@@ -1,5 +1,8 @@
 Widgets
 -------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 The dashboard is composed of small widgets providing metrics such as CPU
 temperature, handshake counts and service status. Every widget subclasses

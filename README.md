@@ -4,7 +4,8 @@ PiWardrive is a headless Raspberry Pi 5 application that combines war-driving to
 A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
 
 For a consolidated overview of all available documentation see
-**REFERENCE.md** in the repository root.
+**REFERENCE.md** in the repository root. Additional guides live under
+the `docs/` directory and are rendered using Sphinx.
 
 ## Architecture Overview
 
@@ -64,6 +65,16 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
   Scan timeouts can be tuned via environment variables such as
   `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
+
+## Additional Documentation
+
+Full guides for installation, configuration and deployment are stored in
+the `docs/` directory. Run ``make html`` inside `docs/` to generate the
+HTML output. The rendered pages cover topics such as mobile builds,
+geofencing, persistence, diagnostics and more.
+
+Reference tables for environment variables and module summaries are also
+available in **REFERENCE.md**.
 
 ## Hardware Prerequisites
 
@@ -482,4 +493,7 @@ Install pre-commit hooks with:
 ```bash
 pre-commit install
 ```
+
+## Legal Notice
+
 Please ensure you comply with all local laws and obtain proper authorization before conducting any wireless or Bluetooth scans. The authors are not responsible for any misuse of this software.

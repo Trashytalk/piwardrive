@@ -1,5 +1,10 @@
 PiWardrive Documentation
 ========================
+.. note::
+   Please read :doc:`legal` and ensure you comply with all local laws and obtain
+   proper authorization before conducting any wireless or Bluetooth scans. The
+   authors are not responsible for any misuse of this software.
+
 
 .. toctree::
    :maxdepth: 1
@@ -24,3 +29,4 @@ PiWardrive Documentation
 
    r_integration
    web_ui
+   legal

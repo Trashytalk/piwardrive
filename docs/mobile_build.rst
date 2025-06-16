@@ -1,5 +1,8 @@
 Mobile Builds
 =============
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 This guide explains how to package PiWardrive for Android and iOS.
 

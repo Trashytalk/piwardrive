@@ -6,6 +6,7 @@ import os
 import subprocess
 from typing import Dict, List
 
+
 from sigint_suite.models import BluetoothDevice
 
 logger = logging.getLogger(__name__)
@@ -89,6 +90,7 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
 
 
 async def _async_scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
+
     """Async wrapper for ``bluetoothctl``."""
 
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]

@@ -1,5 +1,8 @@
 Configuration
 -------------
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 
 Configuration is stored in ``~/.config/piwardrive/config.json``. Most values can
 be overridden using environment variables prefixed with ``PW_``. Changes to the

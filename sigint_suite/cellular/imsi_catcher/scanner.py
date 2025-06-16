@@ -1,4 +1,3 @@
-import logging
 import os
 import shlex
 import subprocess
@@ -55,7 +54,7 @@ def scan_imsis(
         except Exception:
             pass
 
-    return records
+    return [r.model_dump() for r in records]
 
 
 async def async_scan_imsis(
@@ -80,11 +79,10 @@ async def async_scan_imsis(
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
-    except Exception as exc:
-        logger.exception("IMSI scan failed: %s", exc)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         output = stdout.decode()
-    except Exception:
+    except Exception as exc:
+        logger.exception("IMSI scan failed: %s", exc)
         return []
 
     records = parse_imsi_output(output)
