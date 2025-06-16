@@ -111,8 +111,14 @@ and installs the Python dependencies. The manual steps are listed below.
 
 5. **Allow DBus service control**: create a ``polkit`` rule granting ``org.freedesktop.systemd1.manage-units`` to your user.
 
-6. **Compile the C extensions** (``ckml`` and ``cgeom``)::
+6. **Install the C extension wheels** (``ckml`` and ``cgeom``)::
 
+   Prebuilt wheels are published on the GitHub Releases page. Download the
+   wheel matching your platform and Python version and install it with::
+
+      pip install path/to/piwardrive-<version>-*.whl
+
+   To build the extensions locally instead::
 
       pip install build
       python -m build
