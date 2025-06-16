@@ -4,6 +4,7 @@ import sys
 import tempfile
 import zipfile
 import json
+import logging
 
 from typing import Any
 from pathlib import Path
@@ -459,5 +460,13 @@ def test_count_bettercap_handshakes_missing(tmp_path: Any) -> None:
 def test_network_scanning_disabled(monkeypatch: Any) -> None:
     monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
     assert utils.network_scanning_disabled() is True
+    monkeypatch.delenv("PW_DISABLE_SCANNING")
+
+
+def test_network_scanning_disabled_logs(monkeypatch: Any, caplog: Any) -> None:
+    monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
+    with caplog.at_level(logging.DEBUG):
+        assert utils.network_scanning_disabled() is True
+    assert "Network scanning disabled" in caplog.text
     monkeypatch.delenv("PW_DISABLE_SCANNING")
 
