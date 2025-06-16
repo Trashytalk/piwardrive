@@ -995,6 +995,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         await tile_cache.download_tile_async(session, url, local)
 
+
     def prefetch_tiles(
         self,
         bounds,
@@ -1019,6 +1020,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         except Exception as e:  # pragma: no cover - network errors
             report_error(f"Prefetch error: {e}")
 
+
     async def _download_tile_async(self, session, url: str, local: str) -> None:
         """Fetch a single tile from ``url`` into ``local`` asynchronously."""
         async with session.get(url) as resp:
@@ -1027,6 +1029,13 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         os.makedirs(os.path.dirname(local), exist_ok=True)
         with open(local, "wb") as fh:
             fh.write(data)
+
+    def prefetch_tiles(self, bounds, zoom: int = 16, folder: str = "/mnt/ssd/tiles", *, concurrency: int | None = None, progress_cb: Callable[[int, int], None] | None = None) -> None:
+        try:
+            from .map_utils import tile_cache
+            tile_cache.prefetch_tiles(bounds, zoom=zoom, folder=folder, concurrency=concurrency, progress_cb=progress_cb)
+        except Exception as e:  # pragma: no cover - network errors
+            report_error(f"Prefetch error: {e}")
 
     def prefetch_visible_region(self):
         """Download tiles for the current view if offline mode is active."""
