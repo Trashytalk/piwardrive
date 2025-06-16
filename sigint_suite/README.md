@@ -15,8 +15,8 @@ the main PiWardrive UI when you only need quick scans or exports.
   command specified by ``BAND_SCAN_CMD``.
 - **cellular.imsi_catcher** – stub for future IMSI catcher logic.
 - **cellular.parsers** – parsers for raw cellular output.
-- **cellular.tower_tracker** – maintain a SQLite database of observed cell
-  towers and expose simple query helpers.
+- **cellular.tower_tracker** – persist cell towers, Wi‑Fi access points and
+  Bluetooth devices in a SQLite database for historical queries.
 - **dashboard** – minimal dashboard integration.
 - **enrichment** – routines to enrich captured data.
 - **exports** – helpers for writing results to JSON/CSV files.

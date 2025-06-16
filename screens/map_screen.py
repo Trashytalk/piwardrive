@@ -1003,6 +1003,15 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Download PNG tiles covering ``bounds`` to ``folder``."""
 
         try:
+            from .map_utils import tile_cache
+            tile_cache.prefetch_tiles(
+                bounds,
+                zoom=zoom,
+                folder=folder,
+                concurrency=concurrency,
+                progress_cb=progress_cb,
+            )
+            return
             import sys
             from types import SimpleNamespace
             if "kivymd.toast" not in sys.modules:
@@ -1011,7 +1020,6 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             zoom = int(zoom)
             # Convert bounding box corners to tile numbers
-            from .map_utils import tile_cache
             from .map_utils.tile_cache import deg2num
             import aiohttp
 

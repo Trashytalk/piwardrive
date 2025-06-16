@@ -46,6 +46,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Structured Logging**: Application events recorded as JSON under `~/.config/piwardrive/app.log`.
 * **Disk SMART Check**: Periodically query SMART status for `/mnt/ssd`.
 * **Async Metrics**: Wi‑Fi data and handshake counts fetched concurrently.
+* **Historical Records**: Wi‑Fi and Bluetooth observations stored in SQLite for
+  later analysis.
 * **Optional Profiling**: Set `PW_PROFILE=1` to log performance stats on exit.
   Use `PW_PROFILE_CALLGRIND=/tmp/out.callgrind` to export callgrind data for
   analysis in KCachegrind.
