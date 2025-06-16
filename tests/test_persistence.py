@@ -53,3 +53,21 @@ def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
     rows = asyncio.run(persistence.load_recent_health(1))
     assert rows and rows[0].cpu_temp == 2.0
 
+
+def test_table_counts(tmp_path: Path) -> None:
+    setup_tmp(tmp_path)
+    rec = persistence.HealthRecord(
+        timestamp="1",
+        cpu_temp=1.1,
+        cpu_percent=2.2,
+        memory_percent=3.3,
+        disk_percent=4.4,
+    )
+    asyncio.run(persistence.save_health_record(rec))
+    asyncio.run(persistence.save_app_state(persistence.AppState(last_screen="Map")))
+    asyncio.run(persistence.save_ap_cache([{"bssid": "1", "ssid": "x", "encryption": "wpa", "lat": 0.0, "lon": 0.0, "last_time": 1}]))
+    counts = asyncio.run(persistence.get_table_counts())
+    assert counts.get("health_records", 0) == 1
+    assert counts.get("app_state", 0) == 1
+    assert counts.get("ap_cache", 0) == 1
+
