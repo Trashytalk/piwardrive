@@ -176,7 +176,9 @@ def export_records(
     exporter(records, path, fields)
 
 
-def estimate_location_from_rssi(points: Sequence[Mapping[str, float]]) -> tuple[float, float] | None:
+def estimate_location_from_rssi(
+    points: Sequence[Mapping[str, float]],
+) -> tuple[float, float] | None:
     """Return weighted centroid of ``points`` using ``rssi`` as weight."""
     total = 0.0
     sum_lat = 0.0
@@ -253,4 +255,3 @@ def export_map_kml(
                 zf.write(kml_path, "doc.kml")
     else:
         ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
-

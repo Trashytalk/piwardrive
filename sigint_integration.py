@@ -18,4 +18,3 @@ def load_sigint_data(name: str) -> List[Mapping[str, Any]]:
     except Exception:
         pass
     return []
-

@@ -13,7 +13,11 @@ def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[Ba
 
     cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
+    )
     try:
         output = subprocess.check_output(
             args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
