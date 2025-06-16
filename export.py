@@ -4,6 +4,7 @@ import tempfile
 import zipfile
 import xml.etree.ElementTree as ET
 from typing import Any, Iterable, Mapping, Sequence
+import time
 
 import csv
 
@@ -20,9 +21,12 @@ def filter_records(
     ssid: str | None = None,
     encryption: str | None = None,
     oui: str | None = None,
+    min_signal: float | None = None,
+    max_age: float | None = None,
 ) -> list[dict[str, Any]]:
-    """Return records matching optional SSID, encryption or OUI filters."""
+    """Return records matching optional SSID, encryption, signal or age filters."""
     result: list[dict[str, Any]] = []
+    now = time.time()
     for rec in records:
         if ssid and ssid not in (rec.get("ssid") or ""):
             continue
@@ -30,6 +34,14 @@ def filter_records(
             continue
         if oui and not (rec.get("bssid") or "").startswith(oui):
             continue
+        if min_signal is not None:
+            sig = rec.get("signal_dbm")
+            if sig is None or float(sig) < min_signal:
+                continue
+        if max_age is not None:
+            ts = rec.get("last_time")
+            if ts is None or now - float(ts) > max_age:
+                continue
         result.append(dict(rec))
     return result
 

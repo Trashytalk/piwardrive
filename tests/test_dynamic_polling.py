@@ -30,7 +30,9 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
 
-modules["kivy.app"].App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
+modules["kivy.app"].App = type(
+    "App", (), {"get_running_app": staticmethod(lambda: None)}
+)
 modules["kivy.clock"].Clock = SimpleNamespace(
     create_trigger=lambda *a, **k: (lambda *a2, **k2: None),
     schedule_once=lambda cb, dt=0: cb(dt),
@@ -79,19 +81,21 @@ class DummyScheduler:
         self.events[name] = (callback, interval)
 
 
-
-
 class DummyApp:
     map_poll_gps = 5
     map_poll_gps_max = 20
+    gps_movement_threshold = 1.0
 
     def __init__(self) -> None:
         self.scheduler = DummyScheduler()
 
 
-@pytest.mark.parametrize("moves,expected", [
-    ([(0.0, 0.0), (0.0, 0.00005), (0.001, 0.00005)], [20, 20, 5]),
-])
+@pytest.mark.parametrize(
+    "moves,expected",
+    [
+        ([(0.0, 0.0), (0.0, 0.00005), (0.001, 0.00005)], [20, 20, 5]),
+    ],
+)
 def test_dynamic_polling(monkeypatch, moves, expected):
     app = DummyApp()
     monkeypatch.setattr(App, "get_running_app", staticmethod(lambda: app))

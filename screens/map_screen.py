@@ -31,9 +31,16 @@ import utils
 from heatmap import histogram, histogram_points
 
 from kivy.clock import Clock, mainthread
-from kivy.animation import Animation
+try:
+    from kivy.animation import Animation
+except Exception:  # pragma: no cover - optional for tests
+    Animation = None  # type: ignore
 
 from kivy.metrics import dp
+from orientation_sensors import orientation_to_angle
+
+import numpy as np
+from scipy.spatial import cKDTree
 
 
 
@@ -60,9 +67,12 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.snackbar import Snackbar
 from persistence import save_app_state
 from kivymd.uix.textfield import MDTextField
-from kivymd.uix.progressbar import MDProgressBar
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.label import MDLabel
+try:
+    from kivymd.uix.progressbar import MDProgressBar
+    from kivymd.uix.boxlayout import MDBoxLayout
+    from kivymd.uix.label import MDLabel
+except Exception:  # pragma: no cover - optional for tests
+    MDProgressBar = MDBoxLayout = MDLabel = object  # type: ignore
 import export
 from utils import (
     haversine_distance,
@@ -116,6 +126,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._heatmap_markers = []
 
         self._compass_heading = 0.0
+        self._orientation = None
 
         self.kml_layers = []
 
@@ -149,6 +160,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             except Exception as e:
 
                 report_error(f"Offline tiles error: {e}")
+
+        self.load_saved_geofences()
 
         self._gps_event = "map_gps"
         self._aps_event = "map_aps"
@@ -642,7 +655,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             speed = 0.0
         self._last_gps = (lat, lon)
         self._last_time = now
-        interval = app.map_poll_gps if speed > 1 else app.map_poll_gps_max
+        threshold = getattr(app, "gps_movement_threshold", 1.0)
+        interval = app.map_poll_gps if speed > threshold else app.map_poll_gps_max
         if interval != self._gps_interval:
             self._gps_interval = interval
             Clock.schedule_once(
@@ -656,7 +670,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
 
-    async def plot_aps(self) -> None:
+    def plot_aps(self) -> None:
 
         """Plot access point markers fetched from Kismet."""
 
@@ -668,62 +682,67 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         clustering = app.map_cluster_aps
 
-        aps: list = []
-        try:
-            aps, _clients = await utils.fetch_kismet_devices_async()
-        except Exception as exc:  # pragma: no cover - unexpected
-            report_error(f"AP overlay error: {exc}")
+        async def _load() -> list[dict]:
+            aps: list = []
+            try:
+                aps, _clients = await utils.fetch_kismet_devices_async()
+            except Exception as exc:  # pragma: no cover - unexpected
+                report_error(f"AP overlay error: {exc}")
 
-        try:
-            from sigint_integration import load_sigint_data
+            try:
+                from sigint_integration import load_sigint_data
 
-            for rec in load_sigint_data("wifi"):
-                if "lat" in rec and "lon" in rec:
-                    aps.append(
-                        {
-                            "bssid": rec.get("bssid"),
-                            "ssid": rec.get("ssid"),
-                            "encryption": rec.get("encryption"),
-                            "gps-info": [rec["lat"], rec["lon"], 0],
-                        }
-                    )
-        except Exception:
-            pass
-
-        def _apply(_dt: float) -> None:
-            mv = self.ids.mapview
-            for m in self.ap_markers:
-                mv.remove_widget(m)
-            self.ap_markers.clear()
-            for d in aps:
-                gps = d.get("gps-info")
-                if gps and len(gps) >= 2:
-                    m = MapMarkerPopup(
-                        lat=gps[0],
-                        lon=gps[1],
-                        source="widgets/marker-ap.png",
-                        anchor_x="center",
-                        anchor_y="center",
-                    )
-                    m.add_widget(
-                        Label(
-                            text=d.get("bssid", "AP"),
-                            size_hint=(None, None),
-                            size=(dp(80), dp(20)),
+                for rec in load_sigint_data("wifi"):
+                    if "lat" in rec and "lon" in rec:
+                        aps.append(
+                            {
+                                "bssid": rec.get("bssid"),
+                                "ssid": rec.get("ssid"),
+                                "encryption": rec.get("encryption"),
+                                "gps-info": [rec["lat"], rec["lon"], 0],
+                            }
                         )
-                    )
-                    m.ap_data = {
-                        "bssid": d.get("bssid"),
-                        "ssid": d.get("ssid"),
-                        "encryption": d.get("encryption"),
-                    }
-                    mv.add_widget(m)
-                    self.ap_markers.append(m)
-            if clustering:
-                self.update_clusters_on_zoom(mv, mv.zoom)
-            self.update_heatmap()
+            except Exception:
+                pass
+            return aps
 
-        Clock.schedule_once(_apply, 0)
+        def _apply(aps: list[dict]) -> None:
+            def _do(_dt: float) -> None:
+                mv = self.ids.mapview
+                for m in self.ap_markers:
+                    mv.remove_widget(m)
+                self.ap_markers.clear()
+                for d in aps:
+                    gps = d.get("gps-info")
+                    if gps and len(gps) >= 2:
+                        m = MapMarkerPopup(
+                            lat=gps[0],
+                            lon=gps[1],
+                            source="widgets/marker-ap.png",
+                            anchor_x="center",
+                            anchor_y="center",
+                        )
+                        m.add_widget(
+                            Label(
+                                text=d.get("bssid", "AP"),
+                                size_hint=(None, None),
+                                size=(dp(80), dp(20)),
+                            )
+                        )
+                        m.ap_data = {
+                            "bssid": d.get("bssid"),
+                            "ssid": d.get("ssid"),
+                            "encryption": d.get("encryption"),
+                        }
+                        mv.add_widget(m)
+                        self.ap_markers.append(m)
+                if clustering:
+                    self.update_clusters_on_zoom(mv, mv.zoom)
+                self.update_heatmap()
+
+            Clock.schedule_once(_do, 0)
+
+        utils.run_async_task(_load(), _apply)
 
 
 
@@ -734,37 +753,47 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if not app.map_show_bt:
             return
         mv = self.ids.mapview
-        for m in self.bt_markers:
-            mv.remove_widget(m)
-        self.bt_markers.clear()
-        devices = [d.model_dump() for d in utils.scan_bt_devices()]
-        try:
-            from sigint_integration import load_sigint_data
 
-            devices.extend(load_sigint_data("bluetooth"))
-        except Exception:
-            pass
-        for d in devices:
-            lat = d.get("lat")
-            lon = d.get("lon")
-            if lat is None or lon is None:
-                continue
-            m = MapMarkerPopup(
-                lat=lat,
-                lon=lon,
-                source="widgets/marker-ap.png",
-                anchor_x="center",
-                anchor_y="center",
-            )
-            m.add_widget(
-                Label(
-                    text=d.get("name", d.get("address", "BT")),
-                    size_hint=(None, None),
-                    size=(dp(80), dp(20)),
-                )
-            )
-            mv.add_widget(m)
-            self.bt_markers.append(m)
+        async def _load() -> list[dict]:
+            devices = [d.model_dump() for d in utils.scan_bt_devices()]
+            try:
+                from sigint_integration import load_sigint_data
+
+                devices.extend(load_sigint_data("bluetooth"))
+            except Exception:
+                pass
+            return devices
+
+        def _apply(devices: list[dict]) -> None:
+            def _do(_dt: float) -> None:
+                for m in self.bt_markers:
+                    mv.remove_widget(m)
+                self.bt_markers.clear()
+                for d in devices:
+                    lat = d.get("lat")
+                    lon = d.get("lon")
+                    if lat is None or lon is None:
+                        continue
+                    m = MapMarkerPopup(
+                        lat=lat,
+                        lon=lon,
+                        source="widgets/marker-ap.png",
+                        anchor_x="center",
+                        anchor_y="center",
+                    )
+                    m.add_widget(
+                        Label(
+                            text=d.get("name", d.get("address", "BT")),
+                            size_hint=(None, None),
+                            size=(dp(80), dp(20)),
+                        )
+                    )
+                    mv.add_widget(m)
+                    self.bt_markers.append(m)
+
+            Clock.schedule_once(_do, 0)
+
+        utils.run_async_task(_load(), _apply)
 
 
 
@@ -1144,9 +1173,18 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Thematic Layers & Filtering
 
-    def filter_ap_markers(self, ssid=None, encryption=None, oui=None):
+    def filter_ap_markers(
+        self,
+        ssid=None,
+        encryption=None,
+        oui=None,
+        min_signal=None,
+        max_age=None,
+    ):
 
-        """Filter AP markers based on SSID, encryption type, or MAC OUI."""
+        """Filter AP markers based on SSID, signal strength, time and more."""
+
+        now = time.time()
 
         for m in self.ap_markers:
 
@@ -1155,16 +1193,23 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             visible = True
 
             if ssid and ssid not in (data.get("ssid") or ""):
-
                 visible = False
 
             if encryption and encryption != data.get("encryption"):
-
                 visible = False
 
             if oui and not (data.get("bssid") or "").startswith(oui):
-
                 visible = False
+
+            if min_signal is not None:
+                sig = data.get("signal_dbm")
+                if sig is None or sig < min_signal:
+                    visible = False
+
+            if max_age is not None:
+                ts = data.get("last_time")
+                if ts is None or now - ts > max_age:
+                    visible = False
 
             m.opacity = 1 if visible else 0
 
@@ -1199,6 +1244,20 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self.ids.mapview.rotation = -heading
 
 
+    def update_orientation(self, orientation: str | None = None, accel: dict | None = None, gyro: dict | None = None):
+        """Update orientation information from sensors."""
+
+        self._orientation = orientation
+        if orientation:
+            angle = orientation_to_angle(orientation)
+            if angle is not None:
+                self.ids.mapview.rotation = -angle
+        if accel is not None:
+            setattr(self, "sensor_accel", accel)
+        if gyro is not None:
+            setattr(self, "sensor_gyro", gyro)
+
+
 
 
 
@@ -1217,7 +1276,27 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     def add_geofence(self, name, polygon, on_enter=None, on_exit=None):
 
-        """Register a geofence polygon with optional enter/exit callbacks."""
+        """Register a geofence polygon with optional callbacks.
+
+        ``on_enter`` and ``on_exit`` may be callables or message strings. If a
+        string is supplied, a :class:`~kivymd.uix.snackbar.Snackbar` displaying
+        the message is shown. ``{name}`` placeholders are replaced with the
+        geofence name.
+        """
+
+        def _wrap(message: str | None) -> Callable[[str], None] | None:
+            if message is None:
+                return None
+
+            def _cb(gname: str, msg: str = message) -> None:
+                Snackbar(text=msg.format(name=gname)).open()
+
+            return _cb
+
+        if isinstance(on_enter, str):
+            on_enter = _wrap(on_enter)
+        if isinstance(on_exit, str):
+            on_exit = _wrap(on_exit)
 
         self.geofences.append(
 
@@ -1236,6 +1315,31 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             }
 
         )
+
+    def load_saved_geofences(self) -> None:
+        """Load polygons saved by :class:`~screens.geofence_editor.GeofenceEditor`."""
+        from screens.geofence_editor import GeofenceEditor
+
+        try:
+            with open(GeofenceEditor.GEOFENCE_FILE, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except FileNotFoundError:
+            return
+        except Exception as exc:  # pragma: no cover - file errors
+            report_error(f"Geofence load error: {exc}")
+            return
+
+        if isinstance(data, list):
+            for poly in data:
+                points = poly.get("points") or []
+                if len(points) < 3:
+                    continue
+                self.add_geofence(
+                    poly.get("name", "geofence"),
+                    points,
+                    on_enter=poly.get("enter_message"),
+                    on_exit=poly.get("exit_message"),
+                )
 
 
 
@@ -1388,26 +1492,51 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if not self.ap_markers:
             return
 
-        # Calculate grid cell size so that fewer clusters are formed when
-        # zoomed out and more clusters when zoomed in. ``_cluster_capacity``
-        # controls how many markers may occupy a cell before collapsing.
+        # Determine clustering radius based on zoom level.
         cell_size = 360 / (2 ** zoom * self._cluster_capacity)
 
-        # Group markers by their grid cell
-        clusters: dict[tuple[int, int], list] = {}
-        for marker in self.ap_markers:
-            key = (int(marker.lat / cell_size), int(marker.lon / cell_size))
-            clusters.setdefault(key, []).append(marker)
+        def _dbscan(points: np.ndarray, eps: float, min_samples: int = 2) -> list[int]:
+            tree = cKDTree(points)
+            labels = [-2] * len(points)
+            cid = 0
+            for i, p in enumerate(points):
+                if labels[i] != -2:
+                    continue
+                neighbors = tree.query_ball_point(p, eps)
+                if len(neighbors) < min_samples:
+                    labels[i] = -1
+                    continue
+                labels[i] = cid
+                seeds = set(neighbors)
+                seeds.discard(i)
+                while seeds:
+                    j = seeds.pop()
+                    if labels[j] == -1:
+                        labels[j] = cid
+                    if labels[j] != -2:
+                        continue
+                    labels[j] = cid
+                    nbs = tree.query_ball_point(points[j], eps)
+                    if len(nbs) >= min_samples:
+                        seeds.update(nbs)
+                cid += 1
+            return labels
 
-        # Replace each group of markers by their averaged position
-        for group in clusters.values():
-            if len(group) <= 1:
+        coords = np.array([[m.lat, m.lon] for m in self.ap_markers])
+        labels = _dbscan(coords, cell_size)
+
+        clusters: dict[int, list] = {}
+        for lbl, marker in zip(labels, self.ap_markers):
+            if lbl == -1:
                 continue
+            clusters.setdefault(lbl, []).append(marker)
+
+        for group in clusters.values():
             lat = sum(m.lat for m in group) / len(group)
             lon = sum(m.lon for m in group) / len(group)
-            for marker in group:
-                marker.lat = lat
-                marker.lon = lon
+            for m in group:
+                m.lat = lat
+                m.lon = lon
 
         # Spread markers that still overlap exactly
         self.spiderfy_markers()

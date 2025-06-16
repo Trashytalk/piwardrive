@@ -63,6 +63,7 @@ class DummyApp:
         self.map_cluster_aps = False
         self.map_cluster_capacity = 8
         self.map_auto_prefetch = False
+        self.gps_movement_threshold = 1.0
         self.debug_mode = False
         self.offline_tile_path = "/valid/tiles"
         self.map_use_offline = False
@@ -210,19 +211,24 @@ async def test_export_logs_button(monkeypatch: Any) -> None:
     module = load_screen(monkeypatch)
     app = DummyApp()
     called = {}
+
     async def fake_export() -> str:
-        called['ok'] = True
-        return '/tmp/logs.txt'
+        called["ok"] = True
+        return "/tmp/logs.txt"
+
     app.export_logs = fake_export
-    monkeypatch.setattr(module.App, 'get_running_app', lambda: app)
+    monkeypatch.setattr(module.App, "get_running_app", lambda: app)
     outputs = {}
+
     class DummySnackbar:
         def __init__(self, *args: Any, **kwargs: Any) -> None:
-            outputs['text'] = kwargs.get('text') or (args[0] if args else '')
+            outputs["text"] = kwargs.get("text") or (args[0] if args else "")
+
         def open(self) -> None:
-            outputs['opened'] = True
-    monkeypatch.setattr(module, 'Snackbar', DummySnackbar)
+            outputs["opened"] = True
+
+    monkeypatch.setattr(module, "Snackbar", DummySnackbar)
     screen = make_screen(module, app)
     await screen._export_logs()
-    assert called.get('ok') is True
-    assert outputs.get('opened') is True
+    assert called.get("ok") is True
+    assert outputs.get("opened") is True
