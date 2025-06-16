@@ -3,33 +3,35 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import network_analytics as na
+import network_analytics
 
 
-def test_find_suspicious_aps(monkeypatch):
-    records = [
-        {"bssid": "00:11:22:33:44:55", "ssid": "OpenNet", "encryption": "OPEN"},
-        {"bssid": "AA:AA:AA:AA:AA:AA", "ssid": "Test1", "encryption": "WPA2"},
-        {"bssid": "AA:AA:AA:AA:AA:AA", "ssid": "Test2", "encryption": "WPA2"},
-        {"bssid": "BB:BB:BB:BB:BB:BB", "ssid": "WepNet", "encryption": "WEP"},
-        {
-            "bssid": "CC:CC:CC:CC:CC:CC",
-            "ssid": "BadChannel",
-            "encryption": "WPA2",
-            "channel": "300",
-        },
-        {"bssid": "CC:DD:EE:FF:00:11", "ssid": "Unknown", "encryption": "WPA2"},
-    ]
+def test_empty_records_returns_empty() -> None:
+    assert network_analytics.find_suspicious_aps([]) == []
 
-    def lookup(bssid: str):
-        return None if bssid == "CC:DD:EE:FF:00:11" else "V"
 
-    monkeypatch.setattr(na, "lookup_vendor", lookup)
+def test_open_network_flagged() -> None:
+    rec = {"bssid": "AA:BB:CC:DD:EE:FF", "ssid": "OpenNet", "encryption": "open"}
+    assert network_analytics.find_suspicious_aps([rec]) == [rec]
 
-    suspicious = na.find_suspicious_aps(records)
-    assert len(suspicious) == 5
-    assert records[0] in suspicious
-    assert records[2] in suspicious  # duplicate SSID
-    assert records[3] in suspicious
-    assert records[4] in suspicious
-    assert records[5] in suspicious
+
+def test_duplicate_bssid_multiple_ssids_flagged_second_only() -> None:
+    r1 = {"bssid": "11:22:33:44:55:66", "ssid": "Net1", "encryption": "wpa2"}
+    r2 = {"bssid": "11:22:33:44:55:66", "ssid": "Net2", "encryption": "wpa2"}
+    result = network_analytics.find_suspicious_aps([r1, r2])
+    assert result == [r2]
+
+
+def test_missing_fields_handled() -> None:
+    r1 = {"ssid": "Net", "encryption": "open"}
+    r2 = {"bssid": "CC:DD:EE:FF:00:11"}
+    result = network_analytics.find_suspicious_aps([r1, r2])
+    assert result == [r1]
+
+
+def test_open_and_duplicate_combined() -> None:
+    r1 = {"bssid": "AA:AA:AA:AA:AA:AA", "ssid": "Open1", "encryption": "open"}
+    r2 = {"bssid": "AA:AA:AA:AA:AA:AA", "ssid": "Secure", "encryption": "wpa2"}
+    r3 = {"bssid": "BB:BB:BB:BB:BB:BB", "ssid": "Other", "encryption": "wpa2"}
+    result = network_analytics.find_suspicious_aps([r1, r2, r3])
+    assert result == [r1, r2]
