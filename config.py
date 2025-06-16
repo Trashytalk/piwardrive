@@ -34,6 +34,8 @@ TILE_MAINTENANCE_INTERVAL = 86400  # seconds
 TILE_MAX_AGE_DAYS = 30
 TILE_CACHE_LIMIT_MB = 512
 COMPRESS_OFFLINE_TILES = True
+ROUTE_PREFETCH_INTERVAL = 3600  # seconds
+ROUTE_PREFETCH_LOOKAHEAD = 5
 
 
 def get_config_path(profile: Optional[str] = None) -> str:
@@ -94,6 +96,8 @@ class Config:
     tile_max_age_days: int = TILE_MAX_AGE_DAYS
     tile_cache_limit_mb: int = TILE_CACHE_LIMIT_MB
     compress_offline_tiles: bool = COMPRESS_OFFLINE_TILES
+    route_prefetch_interval: int = ROUTE_PREFETCH_INTERVAL
+    route_prefetch_lookahead: int = ROUTE_PREFETCH_LOOKAHEAD
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
@@ -149,6 +153,8 @@ class FileConfigModel(BaseModel):
     tile_max_age_days: Optional[int] = Field(default=None, ge=1)
     tile_cache_limit_mb: Optional[int] = Field(default=None, ge=1)
     compress_offline_tiles: Optional[bool] = None
+    route_prefetch_interval: Optional[int] = Field(default=None, ge=1)
+    route_prefetch_lookahead: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
@@ -370,6 +376,8 @@ class AppConfig:
     tile_max_age_days: int = DEFAULTS["tile_max_age_days"]
     tile_cache_limit_mb: int = DEFAULTS["tile_cache_limit_mb"]
     compress_offline_tiles: bool = DEFAULTS["compress_offline_tiles"]
+    route_prefetch_interval: int = DEFAULTS["route_prefetch_interval"]
+    route_prefetch_lookahead: int = DEFAULTS["route_prefetch_lookahead"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")

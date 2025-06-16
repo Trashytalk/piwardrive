@@ -46,14 +46,13 @@ automatically. Old tiles are purged and the cache limit enforced.  If
 ``compress_offline_tiles`` is ``true`` the offline MBTiles file is compacted
 with ``VACUUM`` during each run.
 
-Command Line Maintenance
------------------------
+Scheduled Prefetch
+~~~~~~~~~~~~~~~~~~
 
-Run maintenance without the GUI using the ``piwardrive-maintain-tiles``
-command. Combine ``--purge``, ``--limit`` and ``--vacuum`` to control which
-operations execute::
+``route_prefetch_interval`` determines how often PiWardrive predicts the next
+set of tiles based on recent GPS points. ``route_prefetch_lookahead`` controls
+how far ahead of the current location tiles are fetched.
 
-   piwardrive-maintain-tiles --purge --limit --vacuum --offline /path/offline.mbtiles
 
 Paths
 -----

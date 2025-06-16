@@ -28,9 +28,11 @@ graph LR
     the app falls back gracefully when absent
 
 
+
 ## U/I Features
 - Service controls for Kismet and BetterCAP
 - Interactive map with offline tile prefetch and rotation
+- Predictive route tile caching
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback
