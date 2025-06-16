@@ -8,6 +8,7 @@ requests==2.32.4
 requests-cache==1.2.1
 psutil==5.9.6
 gpsd-py3==0.3.0
+aiofiles==24.1.0
 scipy==1.15.3
 pyrtlsdr==0.3.0
 pydantic==2.11.7

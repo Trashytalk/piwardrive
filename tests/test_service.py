@@ -53,12 +53,26 @@ def test_widget_metrics_endpoint() -> None:
         assert data["tx_kbps"] == 2.0
 
 
-def test_logs_endpoint_returns_lines() -> None:
-    with mock.patch("service.tail_file", return_value=["a", "b"]):
+def test_logs_endpoint_returns_lines_async() -> None:
+    async def fake_tail(_path: str, _lines: int) -> list[str]:
+        return ["a", "b"]
+
+    with mock.patch("service.async_tail_file", fake_tail):
         client = TestClient(service.app)
         resp = client.get("/logs?lines=2")
         assert resp.status_code == 200
         assert resp.json()["lines"] == ["a", "b"]
+
+
+def test_logs_endpoint_handles_sync_function() -> None:
+    def fake_tail(_path: str, _lines: int) -> list[str]:
+        return ["x", "y"]
+
+    with mock.patch("service.async_tail_file", fake_tail):
+        client = TestClient(service.app)
+        resp = client.get("/logs?lines=2")
+        assert resp.status_code == 200
+        assert resp.json()["lines"] == ["x", "y"]
 
 
 def test_websocket_status_stream() -> None:

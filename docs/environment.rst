@@ -30,6 +30,12 @@ General
 ``PW_LANG``
     Two-letter code selecting a translation under ``locales/``.
 
+``PW_GPSD_HOST``
+    Hostname or IP address of the running ``gpsd`` instance.
+
+``PW_GPSD_PORT``
+    Port used to connect to ``gpsd`` (default ``2947``).
+
 Configuration Overrides
 ----------------------
 
