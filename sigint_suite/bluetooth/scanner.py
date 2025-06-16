@@ -4,7 +4,7 @@ import os
 
 import asyncio
 import subprocess
-from typing import Dict, List
+from typing import List, Dict
 
 
 def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
@@ -55,7 +55,6 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
             devices[addr] = name
 
     return [{"address": a, "name": n} for a, n in devices.items()]
-
 
 def main() -> None:
     """Command-line interface for Bluetooth scanning."""
