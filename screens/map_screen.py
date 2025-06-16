@@ -150,6 +150,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
                 report_error(f"Offline tiles error: {e}")
 
+        self.load_saved_geofences()
+
         self._gps_event = "map_gps"
         self._aps_event = "map_aps"
 
@@ -1196,7 +1198,27 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     def add_geofence(self, name, polygon, on_enter=None, on_exit=None):
 
-        """Register a geofence polygon with optional enter/exit callbacks."""
+        """Register a geofence polygon with optional callbacks.
+
+        ``on_enter`` and ``on_exit`` may be callables or message strings. If a
+        string is supplied, a :class:`~kivymd.uix.snackbar.Snackbar` displaying
+        the message is shown. ``{name}`` placeholders are replaced with the
+        geofence name.
+        """
+
+        def _wrap(message: str | None) -> Callable[[str], None] | None:
+            if message is None:
+                return None
+
+            def _cb(gname: str, msg: str = message) -> None:
+                Snackbar(text=msg.format(name=gname)).open()
+
+            return _cb
+
+        if isinstance(on_enter, str):
+            on_enter = _wrap(on_enter)
+        if isinstance(on_exit, str):
+            on_exit = _wrap(on_exit)
 
         self.geofences.append(
 
@@ -1215,6 +1237,31 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             }
 
         )
+
+    def load_saved_geofences(self) -> None:
+        """Load polygons saved by :class:`~screens.geofence_editor.GeofenceEditor`."""
+        from screens.geofence_editor import GeofenceEditor
+
+        try:
+            with open(GeofenceEditor.GEOFENCE_FILE, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except FileNotFoundError:
+            return
+        except Exception as exc:  # pragma: no cover - file errors
+            report_error(f"Geofence load error: {exc}")
+            return
+
+        if isinstance(data, list):
+            for poly in data:
+                points = poly.get("points") or []
+                if len(points) < 3:
+                    continue
+                self.add_geofence(
+                    poly.get("name", "geofence"),
+                    points,
+                    on_enter=poly.get("enter_message"),
+                    on_exit=poly.get("exit_message"),
+                )
 
 
 
