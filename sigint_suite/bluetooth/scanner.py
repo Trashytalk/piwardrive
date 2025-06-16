@@ -1,12 +1,17 @@
+import os
+
 """Bluetooth scanning helpers using modern tools."""
 
 import asyncio
+
 import subprocess
 from typing import Dict, List
 
 
-def scan_bluetooth(timeout: int = 10) -> List[Dict[str, str]]:
-    """Return nearby Bluetooth devices using Bleak or ``bluetoothctl``."""
+def scan_bluetooth(timeout: int | None = None) -> List[Dict[str, str]]:
+    """Scan for nearby Bluetooth devices using ``hcitool``."""
+    timeout = timeout if timeout is not None else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
+    cmd = ["hcitool", "scan"]
 
     try:
         from bleak import BleakScanner  # type: ignore

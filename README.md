@@ -59,6 +59,8 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **Env Overrides**: configure any option via `PW_<KEY>` environment variables.
 * **Configuration Profiles**: maintain multiple configs under `~/.config/piwardrive/profiles`.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
+  Scan timeouts can be tuned via environment variables such as
+  `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
 
 ## Hardware Prerequisites
 
