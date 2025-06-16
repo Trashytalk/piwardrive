@@ -2,8 +2,7 @@ import os
 import shlex
 import subprocess
 import asyncio
-from typing import List, Optional, Callable
-import logging
+from typing import Callable, List, Optional
 
 
 from sigint_suite.models import ImsiRecord

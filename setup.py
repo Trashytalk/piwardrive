@@ -58,4 +58,3 @@ setup(
         Extension("cgeom", ["cgeom.c"]),
     ],
 )
-

@@ -12,4 +12,3 @@ def _setup_logging() -> None:
 
 
 _setup_logging()
-
