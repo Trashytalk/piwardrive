@@ -1,0 +1,34 @@
+##calibration_config.json
+// This configuration file is used to calibrate the Wi-Fi localization system.
+// Adjust the parameters based on your specific environment and requirements.
+
+
+
+{
+  "kalman_enable": true,
+  "kalman_process_variance": 0.0001,
+  "kalman_measurement_variance": 0.01,
+
+  "dbscan_eps": 0.0005,
+  "dbscan_min_samples": 5,
+
+  "path_loss_reference_rssi": -40,
+  "path_loss_exponent": 2.7,
+
+  "centroid_rssi_weight_power": 1.5,
+  "min_points_for_confidence": 5,
+
+  "map_zoom_start": 16,
+
+  "min_ap_overlap": 2,
+
+  "use_multilateration": true,
+  "use_bayesian": true,
+  "hybrid_enable_ensemble": true,
+  "hybrid_weights": {
+    "multilateration": 0.4,
+    "bayesian": 0.3,
+    "weighted_centroid": 0.3
+  }
+}
+

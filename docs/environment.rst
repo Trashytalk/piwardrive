@@ -39,6 +39,9 @@ General
 ``PW_GPSD_PORT``
     Port used to connect to ``gpsd`` (default ``2947``).
 
+``PW_GPS_MOVEMENT_THRESHOLD``
+    Minimum speed in m/s before fast GPS polling is used.
+
 Configuration Overrides
 ----------------------
 
