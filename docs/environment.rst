@@ -84,3 +84,11 @@ SIGINT Suite
 ``SIGINT_EXPORT_DIR``
     Directory searched by :func:`sigint_integration.load_sigint_data`.
 
+Network Scanning
+----------------
+
+``PW_DISABLE_SCANNING``
+    Set to ``1`` to disable all Wi-Fi and Bluetooth scanning. Useful when
+    operating offline or in restricted environments to prevent any wireless
+    probes.
+
