@@ -39,6 +39,7 @@ async def _get_conn() -> aiosqlite.Connection:
         path = _db_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         _DB_CONN = await aiosqlite.connect(path)
+        await _DB_CONN.execute("PRAGMA journal_mode=WAL")
         _DB_CONN.row_factory = aiosqlite.Row
         await _init_db(_DB_CONN)
         _DB_LOOP = loop
