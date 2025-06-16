@@ -98,3 +98,12 @@ def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
     assert conn1._connection is None
 
 
+def test_schema_version(tmp_path: Path) -> None:
+    setup_tmp(tmp_path)
+    asyncio.run(persistence.migrate())
+    conn = asyncio.run(persistence._get_conn())
+    cur = asyncio.run(conn.execute("SELECT version FROM schema_version"))
+    row = asyncio.run(cur.fetchone())
+    assert row["version"] == persistence.LATEST_VERSION
+
+
