@@ -28,6 +28,22 @@ ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
 REPORTS_DIR = os.path.join(CONFIG_DIR, "reports")
 
 
+def get_config_path(profile: Optional[str] = None) -> str:
+    """Return path to ``profile`` or the main ``config.json``."""
+    if profile is None:
+        profile = get_active_profile()
+    return _profile_path(profile) if profile else CONFIG_PATH
+
+
+def config_mtime(profile: Optional[str] = None) -> Optional[float]:
+    """Return modification time for the active config file if it exists."""
+    path = get_config_path(profile)
+    try:
+        return os.path.getmtime(path)
+    except FileNotFoundError:
+        return None
+
+
 @dataclass
 class Config:
     """Persistent application configuration."""
@@ -194,7 +210,7 @@ def load_config(profile: Optional[str] = None) -> Config:
 
     if profile is None:
         profile = get_active_profile()
-    path = _profile_path(profile) if profile else CONFIG_PATH
+    path = get_config_path(profile)
 
     data: Dict[str, Any] = {}
     try:
@@ -214,7 +230,7 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
     """Persist ``config`` dataclass to ``profile`` or ``CONFIG_PATH``."""
     if profile is None:
         profile = get_active_profile()
-    path = _profile_path(profile) if profile else CONFIG_PATH
+    path = get_config_path(profile)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(asdict(config), f, indent=2)
