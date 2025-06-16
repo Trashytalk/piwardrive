@@ -23,7 +23,7 @@ graph LR
 - Bettercap
 - GPSD
 - SDR
-- Other Sensors (read speed from an accelerometer or OBD‑II adapter)
+- Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
 
 
 ## U/I Features
@@ -32,14 +32,16 @@ graph LR
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback
+- Geofencing and cached map tiles
+- Status service with React web UI
 
 
 ## Data Handling
-- Multi-format exports (
+- Multi-format exports (GPX/KML/CSV/JSON)
 - Diagnostics and log rotation
-- Optional remote sync and cloud exports
+- Remote database sync (`remote_sync.py`) and cloud exports
 - Observations stored in SQLite for later analysis
-- 
+- CLI SIGINT tools under `sigint_suite/`
   
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
@@ -108,10 +110,12 @@ pip install -r requirements.txt
 pip install .
 ```
 
+You can run `./scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
+
 ### Running
 
 ```bash
-activate gui-env/bin/activate
+source gui-env/bin/activate
 python main.py
 ```
 
@@ -135,7 +139,11 @@ Scripts under `scripts/` create Android or iOS builds:
 
 ## Configuration
 
-Settings persist in `~/.config/piwardrive/config.json`. Environment variables may override any option via the `PW_` prefix. See `docs/configuration.rst` and `docs/environment.rst` for a full list.
+Settings persist in `~/.config/piwardrive/config.json`. Profiles under
+`~/.config/piwardrive/profiles` can store alternate configurations and may be
+selected via the `PW_PROFILE_NAME` environment variable. Environment variables
+prefixed with `PW_` override any option. See `docs/configuration.rst` and
+`docs/environment.rst` for a full list.
 
 ## Additional Documentation
 
