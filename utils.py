@@ -672,7 +672,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                         ]
                     )
                 except Exception:
-                    pass
+                    logging.exception("Failed to save AP cache")
                 return aps, clients
 
     try:
