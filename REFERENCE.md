@@ -152,6 +152,14 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 
 `PW_HEALTH_POLL_INTERVAL` – Interval between health metric polls.
 
+`PW_HEALTH_EXPORT_INTERVAL` – Hours between health metric exports.
+
+`PW_HEALTH_EXPORT_DIR` – Directory used by the export task.
+
+`PW_COMPRESS_HEALTH_EXPORTS` – Compress exported files when `1`.
+
+`PW_HEALTH_EXPORT_RETENTION` – Days to keep exported files.
+
 `PW_LOG_ROTATE_INTERVAL` – Seconds between log rotations.
 
 `PW_LOG_ROTATE_ARCHIVES` – Number of rotated archives to keep.

@@ -9,10 +9,24 @@ rotating log files. Use ``diagnostics.self_test()`` to perform a quick health
 check of network connectivity and running services. The ``HealthMonitor`` class
 polls ``self_test`` periodically (default 10s, configurable via
 ``health_poll_interval``) and stores the latest results for widgets or other
-components to display. ``self_test`` includes CPU temperature and
-usage statistics, network reachability and service states. Disk SMART
-health is also reported for ``/mnt/ssd`` and surfaced in the stats
-screen.
+components to display. ``self_test`` includes CPU temperature and usage
+statistics, network reachability and service states. Disk SMART health is also
+reported for ``/mnt/ssd`` and surfaced in the stats screen.
+
+Health Monitoring
+~~~~~~~~~~~~~~~~~
+
+``health_poll_interval`` controls how often ``self_test`` runs. Override this in
+``config.json`` or via ``PW_HEALTH_POLL_INTERVAL``. Setting a longer interval
+reduces CPU usage while a shorter one yields more frequent updates.
+
+Exports of :class:`persistence.HealthRecord` data are scheduled when
+``health_export_interval`` is greater than zero. Files are written to
+``health_export_dir`` and may be compressed with ``compress_health_exports``.
+Old exports are deleted after ``health_export_retention`` days. The matching
+environment variables ``PW_HEALTH_EXPORT_INTERVAL``, ``PW_HEALTH_EXPORT_DIR``,
+``PW_COMPRESS_HEALTH_EXPORTS`` and ``PW_HEALTH_EXPORT_RETENTION`` mirror these
+options.
 
 ``scripts/service_status.py`` provides a small command-line interface to
 ``diagnostics.get_service_statuses`` for quick checks outside the GUI.
