@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 exclude = ["tests*", "docs*", "benchmarks*", "examples*"]
 
+[tool.setuptools.data-files]
+"" = ["py.typed"]
+
 [project]
 name = "piwardrive"
 version = "0.1.0"

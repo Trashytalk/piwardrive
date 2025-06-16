@@ -52,6 +52,7 @@ setup(
         "service",
         "utils",
     ],
+    data_files=[("", ["py.typed"])],
     ext_modules=[
         Extension("ckml", ["ckml.c"]),
         Extension("cgeom", ["cgeom.c"]),
