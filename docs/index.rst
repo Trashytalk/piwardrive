@@ -21,6 +21,7 @@ PiWardrive Documentation
    orientation
    geofencing
    status_service
+   remote_sync
    architecture
    function_flows
    deployment
