@@ -35,7 +35,7 @@ services like Kismet and BetterCAP are controlled via helper functions.
 ## Features
 
 * **Interactive Map**: Online/offline map tiles, AP overlays, long-press context menus.
-* **Real‑time Metrics**: CPU, memory, disk I/O, GPS fix quality, RSSI, handshake counts.
+* **Real‑time Metrics**: CPU, memory, disk I/O, GPS fix quality, RSSI, handshake counts, network throughput.
 * **Split View**: Simultaneous map + compact metrics panel.
 * **Console & Dashboard**: Tail logs and a drag‑and‑drop widget dashboard with persistent layouts.
 * **Service Management**: Start/stop and configure Kismet & BetterCAP from the GUI.
