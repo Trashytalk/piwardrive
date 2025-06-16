@@ -41,7 +41,7 @@ graph LR
 - Diagnostics and log rotation
 - Remote database sync (`remote_sync.py`) and cloud exports
 - Observations stored in SQLite for later analysis
-- CLI SIGINT tools under `sigint_suite/`
+- CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
