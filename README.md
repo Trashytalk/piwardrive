@@ -65,6 +65,15 @@ services like Kismet and BetterCAP are controlled via helper functions.
 * **SIGINT Suite**: command-line scanning scripts live in `sigint_suite/`.
   Scan timeouts can be tuned via environment variables such as
   `WIFI_SCAN_TIMEOUT` or `BLUETOOTH_SCAN_TIMEOUT` without touching code.
+* **Remote Sync**: periodically upload the SQLite database to a central server.
+* **Vector Tiles**: render offline maps from MBTiles for smoother panning.
+* **Network Analytics**: highlight potentially suspicious Wi‑Fi activity.
+* **Track Playback**: review GPS traces from previous drives.
+* **LoRa Scanning**: monitor LoRa/IoT radio traffic alongside Wi‑Fi.
+* **Database Browser**: browse historical records via a lightweight web UI.
+* **Cloud Export**: send exports directly to AWS S3 buckets.
+* **Vehicle Sensors**: read speed from an accelerometer or OBD‑II adapter.
+* **Setup Wizard**: interactive configuration for Kismet, BetterCAP and GPSD.
 
 ## Additional Documentation
 

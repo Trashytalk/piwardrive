@@ -6,6 +6,7 @@ from sigint_suite.wifi import scan_wifi
 from sigint_suite.bluetooth import scan_bluetooth
 from sigint_suite.exports import export_json
 
+
 def run_once(export_dir: str) -> None:
     wifi_data = scan_wifi()
     bt_data = scan_bluetooth()

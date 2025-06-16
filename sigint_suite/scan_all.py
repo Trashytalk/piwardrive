@@ -22,7 +22,9 @@ def run_once(export_dir: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Run all wireless scans and export to JSON")
+    parser = argparse.ArgumentParser(
+        description="Run all wireless scans and export to JSON"
+    )
     parser.add_argument(
         "--export-dir",
         default=os.environ.get("EXPORT_DIR", DEFAULT_EXPORT_DIR),

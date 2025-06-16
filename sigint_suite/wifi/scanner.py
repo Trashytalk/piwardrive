@@ -3,8 +3,7 @@ import os
 import shlex
 import subprocess
 import asyncio
-from typing import List, Dict, Optional
-import logging
+from typing import Dict, List, Optional
 
 from sigint_suite.models import WifiNetwork
 from sigint_suite.enrichment import lookup_vendor
@@ -41,7 +40,11 @@ def scan_wifi(
     if priv_cmd:
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
-    timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    )
     logger.debug("Executing: %s", " ".join(cmd))
 
     try:
@@ -65,7 +68,9 @@ def scan_wifi(
             if current:
                 if enc_lines:
                     if "encryption" in current:
-                        current["encryption"] = f"{current['encryption']} {' '.join(enc_lines)}".strip()
+                        current["encryption"] = (
+                            f"{current['encryption']} {' '.join(enc_lines)}"
+                        ).strip()
                     else:
                         current["encryption"] = " ".join(enc_lines).strip()
                 records.append(current)
@@ -82,6 +87,8 @@ def scan_wifi(
             current["encryption"] = line.split("Encryption key:")[-1].strip()
         elif line.startswith("IE:"):
             enc_lines.append(line.split("IE:", 1)[-1].strip())
+        elif "ESSID" in line:
+            current["ssid"] = line.split(":", 1)[-1].strip('"')
         elif "Address" in line:
             current["bssid"] = line.split("Address:")[-1].strip()
         elif "Frequency" in line:
@@ -97,14 +104,15 @@ def scan_wifi(
     if current:
         if enc_lines:
             if "encryption" in current:
-                current["encryption"] = f"{current['encryption']} {' '.join(enc_lines)}".strip()
+                current["encryption"] = (
+                    f"{current['encryption']} {' '.join(enc_lines)}"
+                ).strip()
             else:
                 current["encryption"] = " ".join(enc_lines).strip()
         records.append(current)
 
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
-
 
 
 async def async_scan_wifi(
@@ -122,7 +130,11 @@ async def async_scan_wifi(
     if priv_cmd:
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
-    timeout = timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    )
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,

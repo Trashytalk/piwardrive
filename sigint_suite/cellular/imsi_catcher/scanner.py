@@ -1,10 +1,8 @@
-import logging
 import os
 import shlex
 import subprocess
 import asyncio
-from typing import List, Optional, Callable
-import logging
+from typing import Callable, List, Optional
 
 
 from sigint_suite.models import ImsiRecord
@@ -56,7 +54,7 @@ def scan_imsis(
         except Exception:
             pass
 
-    return records
+    return [r.model_dump() for r in records]
 
 
 async def async_scan_imsis(
@@ -69,7 +67,11 @@ async def async_scan_imsis(
 
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    )
     logger.debug("Executing: %s", " ".join(args))
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -77,11 +79,10 @@ async def async_scan_imsis(
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
-    except Exception as exc:
-        logger.exception("IMSI scan failed: %s", exc)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         output = stdout.decode()
-    except Exception:
+    except Exception as exc:
+        logger.exception("IMSI scan failed: %s", exc)
         return []
 
     records = parse_imsi_output(output)

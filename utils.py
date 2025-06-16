@@ -2,14 +2,13 @@
 
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
-import glob
-
 import json
 import asyncio
 from contextlib import asynccontextmanager
 import logging
 import os
 import subprocess
+from pathlib import Path
 from gpsd_client import client as gps_client
 import time
 import threading
@@ -516,8 +515,7 @@ async def _run_service_cmd_async(
     svc_name = f"{service}.service"
 
     try:
-        import dbus_fast.aio  # type: ignore
-        import dbus_fast  # type: ignore
+        import dbus_fast.aio  # type: ignore  # noqa: F401
     except Exception:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
@@ -764,7 +762,6 @@ async def fetch_metrics_async(
 
 def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     """Count ``.pcap`` handshake files in BetterCAP log directories."""
-    base = Path(log_folder)
     count = 0
     try:
         with os.scandir(log_folder) as entries:
