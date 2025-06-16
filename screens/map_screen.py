@@ -669,18 +669,37 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
 
         try:
-            resp = self._http.get("http://127.0.0.1:2501/devices/all.json", timeout=5)
+            resp = self._http.get(
+                "http://127.0.0.1:2501/devices/all.json", timeout=5
+            )
             resp.raise_for_status()
             data = resp.json()
         except requests.RequestException as e:
             self._show_error(f"AP overlay request error: {e}")
-            return
+            data = {"devices": []}
         except json.JSONDecodeError as e:
             self._show_error(f"AP overlay JSON decode error: {e}")
-            return
+            data = {"devices": []}
         except Exception as e:  # pragma: no cover - unexpected
             self._show_error(f"AP overlay error: {e}")
-            return
+            data = {"devices": []}
+
+        # merge in SIGINT scan exports
+        try:
+            from sigint_integration import load_sigint_data
+
+            for rec in load_sigint_data("wifi"):
+                if "lat" in rec and "lon" in rec:
+                    data.setdefault("devices", []).append(
+                        {
+                            "bssid": rec.get("bssid"),
+                            "ssid": rec.get("ssid"),
+                            "encryption": rec.get("encryption"),
+                            "gps-info": [rec["lat"], rec["lon"], 0],
+                        }
+                    )
+        except Exception:
+            pass
 
         for d in data.get("devices", []):
             gps = d.get("gps-info")
@@ -722,6 +741,12 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             mv.remove_widget(m)
         self.bt_markers.clear()
         devices = utils.scan_bt_devices()
+        try:
+            from sigint_integration import load_sigint_data
+
+            devices.extend(load_sigint_data("bluetooth"))
+        except Exception:
+            pass
         for d in devices:
             lat = d.get("lat")
             lon = d.get("lon")
