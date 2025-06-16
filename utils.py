@@ -409,7 +409,11 @@ async def _run_service_cmd_async(
     try:
         from dbus_fast.aio import MessageBus
         from dbus_fast import BusType
-    except Exception:
+    except Exception as exc:
+        logging.exception(
+            "dbus-fast unavailable, falling back to synchronous service command: %s",
+            exc,
+        )
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
             None, lambda: _run_service_cmd_sync(service, action, attempts, delay)
@@ -466,6 +470,9 @@ async def _run_service_cmd_async(
     try:
         return await _retry()
     except Exception as exc:  # pragma: no cover - DBus failures
+        logging.exception(
+            "Service command '%s %s' failed: %s", service, action, exc
+        )
         return False, "", str(exc)
 
 
@@ -477,7 +484,16 @@ def run_service_cmd(
     fut = run_async_task(
         _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
     )
-    return fut.result()
+    try:
+        return fut.result()
+    except Exception as exc:  # pragma: no cover - background failures
+        logging.exception(
+            "run_service_cmd encountered an error for '%s %s': %s",
+            service,
+            action,
+            exc,
+        )
+        return False, "", str(exc)
 
 
 async def service_status_async(
