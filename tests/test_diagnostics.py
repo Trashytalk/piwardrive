@@ -76,7 +76,7 @@ def test_run_network_test_caches_success(monkeypatch: Any) -> None:
 
     call_count = 0
 
-    def fake_run(args, capture_output=True):
+    def fake_run(args, capture_output=True, check=False):
         nonlocal call_count
         call_count += 1
         return mock.Mock(returncode=0)
@@ -96,7 +96,7 @@ def test_run_network_test_cache_expires(monkeypatch: Any) -> None:
 
     call_count = 0
 
-    def fake_run(args, capture_output=True):
+    def fake_run(args, capture_output=True, check=False):
         nonlocal call_count
         call_count += 1
         return mock.Mock(returncode=0)
@@ -106,3 +106,21 @@ def test_run_network_test_cache_expires(monkeypatch: Any) -> None:
     assert diagnostics.run_network_test("example.com") is True
     assert diagnostics.run_network_test("example.com") is True
     assert call_count == 2
+
+
+def test_run_network_test_handles_failure(monkeypatch: Any) -> None:
+    monkeypatch.setattr(
+        diagnostics.subprocess,
+        "run",
+        lambda *a, **k: (_ for _ in ()).throw(diagnostics.subprocess.CalledProcessError(1, "ping")),
+    )
+    assert diagnostics.run_network_test("example.com") is False
+
+
+def test_list_usb_devices_handles_failure(monkeypatch: Any) -> None:
+    monkeypatch.setattr(
+        diagnostics.subprocess,
+        "run",
+        lambda *a, **k: (_ for _ in ()).throw(diagnostics.subprocess.CalledProcessError(1, "lsusb")),
+    )
+    assert diagnostics.list_usb_devices() == []

@@ -11,6 +11,9 @@ usage statistics, network reachability and service states. Disk SMART
 health is also reported for ``/mnt/ssd`` and surfaced in the stats
 screen.
 
+``scripts/service_status.py`` provides a small command-line interface to
+``diagnostics.get_service_statuses`` for quick checks outside the GUI.
+
 Use :func:`utils.report_error` to surface exceptions consistently. It logs the
 message and displays a dialog via the running application if available.
 

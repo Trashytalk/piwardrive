@@ -7,6 +7,7 @@ import aiosqlite
 from dataclasses import dataclass, asdict
 from typing import Any, List, Optional
 import asyncio
+import logging
 
 import config
 
@@ -31,10 +32,14 @@ async def _get_conn() -> aiosqlite.Connection:
     cur_dir = config.CONFIG_DIR
     if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir:
         if _DB_CONN is not None:
-            await _DB_CONN.close()
+            try:
+                await _DB_CONN.close()
+            except Exception:
+                logging.exception("Error closing previous DB connection")
         path = _db_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         _DB_CONN = await aiosqlite.connect(path)
+        await _DB_CONN.execute("PRAGMA journal_mode=WAL")
         _DB_CONN.row_factory = aiosqlite.Row
         await _init_db(_DB_CONN)
         _DB_LOOP = loop
@@ -178,3 +183,19 @@ async def load_ap_cache() -> list[dict[str, Any]]:
     )
     rows = await cur.fetchall()
     return [dict(row) for row in rows]
+
+
+async def get_table_counts() -> dict[str, int]:
+    """Return row counts for all user tables."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+        " AND name NOT LIKE 'sqlite_%'"
+    )
+    tables = [row["name"] for row in await cur.fetchall()]
+    result: dict[str, int] = {}
+    for name in tables:
+        cur = await conn.execute(f"SELECT COUNT(*) as cnt FROM {name}")
+        row = await cur.fetchone()
+        result[name] = int(row["cnt"]) if row else 0
+    return result
