@@ -704,6 +704,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         for d in data.get("devices", []):
             gps = d.get("gps-info")
+            if (not gps or len(gps) < 2) and d.get("observations"):
+                loc = export.estimate_location_from_rssi(d.get("observations", []))
+                if loc is not None:
+                    gps = [loc[0], loc[1], 0]
+
             if gps and len(gps) >= 2:
                 m = MapMarkerPopup(
                     lat=gps[0],
@@ -989,6 +994,31 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         from .map_utils import tile_cache
 
         await tile_cache.download_tile_async(session, url, local)
+
+
+    def prefetch_tiles(
+        self,
+        bounds,
+        zoom: int = 16,
+        folder: str = "/mnt/ssd/tiles",
+        *,
+        concurrency: int | None = None,
+        progress_cb: Callable[[int, int], None] | None = None,
+    ) -> None:
+        """Download PNG tiles covering ``bounds`` to ``folder``."""
+
+        try:
+            from .map_utils import tile_cache
+
+            tile_cache.prefetch_tiles(
+                bounds,
+                zoom=zoom,
+                folder=folder,
+                concurrency=concurrency,
+                progress_cb=progress_cb,
+            )
+        except Exception as e:  # pragma: no cover - network errors
+            report_error(f"Prefetch error: {e}")
 
 
     async def _download_tile_async(self, session, url: str, local: str) -> None:
