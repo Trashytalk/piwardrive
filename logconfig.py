@@ -26,7 +26,18 @@ def setup_logging(
     log_file: str = DEFAULT_LOG_PATH,
     level: int = logging.INFO,
 ) -> Logger:
-    """Configure root logger with JSON output."""
+    """Configure root logger with JSON output.
+
+    ``PW_LOG_LEVEL`` may override ``level`` with a name like ``DEBUG`` or a
+    numeric value. Invalid values are ignored.
+    """
+    env_level = os.getenv("PW_LOG_LEVEL")
+    if env_level:
+        if env_level.isdigit():
+            level = int(env_level)
+        else:
+            level = getattr(logging, env_level.upper(), level)
+
     logger = logging.getLogger()
     logger.setLevel(level)
     for h in list(logger.handlers):
