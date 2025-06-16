@@ -577,6 +577,28 @@ def test_network_scanning_disabled(monkeypatch: Any) -> None:
     monkeypatch.delenv("PW_DISABLE_SCANNING")
 
 
+def test_get_network_throughput_interface(monkeypatch: Any) -> None:
+    class C:
+        def __init__(self, r: int, s: int) -> None:
+            self.bytes_recv = r
+            self.bytes_sent = s
+
+    calls = [C(100, 200), C(200, 300)]
+
+    def fake_counters(pernic: bool = False) -> Any:
+        if pernic:
+            return {"eth0": calls.pop(0)}
+        return calls.pop(0)
+
+    monkeypatch.setattr(utils.psutil, "net_io_counters", fake_counters)
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+    utils._NET_IO_CACHE.clear()
+    utils.get_network_throughput("eth0")
+    monkeypatch.setattr(utils.time, "time", lambda: 2.0)
+    rx, tx = utils.get_network_throughput("eth0")
+    assert rx == (200 - 100) / 1.0 / 1024.0
+    assert tx == (300 - 200) / 1.0 / 1024.0
+
 def test_network_scanning_disabled_logs(monkeypatch: Any, caplog: Any) -> None:
     monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
     with caplog.at_level(logging.DEBUG):

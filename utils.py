@@ -50,9 +50,11 @@ _GPSD_CACHE: dict[str, Any] = {
 }
 
 # Track previous network counters for throughput calculations
-_NET_IO_CACHE = {
-    "timestamp": time.time(),
-    "counters": psutil.net_io_counters(),
+_NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
+    None: {
+        "timestamp": time.time(),
+        "counters": psutil.net_io_counters(),
+    }
 }
 
 # Cache for HTTP requests issued via :func:`safe_request`
@@ -318,22 +320,33 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
         return None
 
 
-def get_network_throughput() -> tuple[float, float]:
-    """Return (rx_kbps, tx_kbps) since the last call."""
+def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
+    """Return ``(rx_kbps, tx_kbps)`` since the last call.
+
+    If ``iface`` is provided, only counters for that interface are used.
+    The first call for a given ``iface`` returns ``(0.0, 0.0)``.
+    """
     try:
-        cur = psutil.net_io_counters()
+        if iface:
+            counters = psutil.net_io_counters(pernic=True)
+            cur = counters.get(iface)
+            if cur is None:
+                return 0.0, 0.0
+        else:
+            cur = psutil.net_io_counters()
     except Exception:
         return 0.0, 0.0
     now = time.time()
-    prev = _NET_IO_CACHE.get("counters")
-    prev_ts = _NET_IO_CACHE.get("timestamp", now)
+    cache = _NET_IO_CACHE.setdefault(iface, {"counters": cur, "timestamp": now})
+    prev = cache.get("counters")
+    prev_ts = cache.get("timestamp", now)
     dt = now - prev_ts if prev_ts else 0.0
     rx_kbps = tx_kbps = 0.0
     if prev is not None and dt > 0:
         rx_kbps = (cur.bytes_recv - prev.bytes_recv) / dt / 1024.0
         tx_kbps = (cur.bytes_sent - prev.bytes_sent) / dt / 1024.0
-    _NET_IO_CACHE["counters"] = cur
-    _NET_IO_CACHE["timestamp"] = now
+    cache["counters"] = cur
+    cache["timestamp"] = now
     return rx_kbps, tx_kbps
 
 
