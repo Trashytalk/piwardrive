@@ -3,10 +3,3 @@ mypy==1.16.0
 pytest==8.4.0
 radon==6.0.1
 pydocstyle==6.3.0
-aiosqlite==0.21.0
-psutil==5.9.6
-pydantic==2.11.7
-fastapi==0.115.12
-httpx==0.28.1
-gps==3.19
-pyshp==2.3.1
