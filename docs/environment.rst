@@ -47,8 +47,21 @@ Configuration Overrides
 
 The :mod:`config` module exposes many fields such as
 ``offline_tile_path``, ``kismet_logdir`` and ``bettercap_caplet``.
-Prefix these keys with ``PW_`` to override their default paths at run
- time.
+Prefix these keys with ``PW_`` to override their default paths at run time.
+Call :func:`config.list_env_overrides` to see the full mapping of
+environment variables to configuration keys.
+
+.. list-table:: Common overrides
+   :header-rows: 1
+
+   * - Environment variable
+     - Configuration key
+   * - ``PW_THEME``
+     - ``theme``
+   * - ``PW_MAP_POLL_GPS``
+     - ``map_poll_gps``
+   * - ``PW_OFFLINE_TILE_PATH``
+     - ``offline_tile_path``
 
 SIGINT Suite
 ------------
