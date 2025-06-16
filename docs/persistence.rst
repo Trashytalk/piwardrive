@@ -18,3 +18,12 @@ The connection is placed into write-ahead logging mode using
 Inspect the database using ``sqlite3 ~/.config/piwardrive/app.db``. The schema
 is intentionally small and deleting the file only clears history—configuration
 is kept separately in ``config.json``.
+
+Maintenance
+-----------
+
+Run ``persistence.vacuum`` to reclaim free space after deleting rows. A
+convenient ``piwardrive-vacuum`` command is installed which simply calls this
+function::
+
+   piwardrive-vacuum

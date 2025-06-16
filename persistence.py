@@ -217,3 +217,10 @@ async def get_table_counts() -> dict[str, int]:
         row = await cur.fetchone()
         result[name] = int(row["cnt"]) if row else 0
     return result
+
+
+async def vacuum() -> None:
+    """Run ``VACUUM`` on the active database connection."""
+    conn = await _get_conn()
+    await conn.execute("VACUUM")
+    await conn.commit()

@@ -29,13 +29,15 @@ class DummyScheduler:
 def test_health_monitor_polls_self_test() -> None:
     sched = DummyScheduler()
     with mock.patch('diagnostics.self_test', return_value={'system': {'disk_percent': 42}, 'network_ok': True, 'services': {}}), \
-         mock.patch('diagnostics.purge_old_health') as purge:
+         mock.patch('diagnostics.purge_old_health') as purge, \
+         mock.patch('diagnostics.vacuum') as vac:
         mon = diagnostics.HealthMonitor(cast(PollScheduler, sched), interval=5)
         assert sched.scheduled[0][0] == 'health_monitor'
         assert sched.scheduled[0][1] == 5
         assert mon.data is not None
         assert mon.data['system']['disk_percent'] == 42
         purge.assert_called_with(30)
+        assert vac.call_count >= 1
 
 
 def test_health_monitor_daily_summary() -> None:

@@ -69,6 +69,17 @@ def test_purge_old_health(tmp_path: Path) -> None:
     assert len(rows) == 1
     assert rows[0].timestamp == new_time
 
+
+def test_vacuum(tmp_path: Path) -> None:
+    setup_tmp(tmp_path)
+    old_time = (datetime.now() - timedelta(days=1)).isoformat()
+    rec = persistence.HealthRecord(old_time, 1.0, 1.0, 1.0, 1.0)
+    asyncio.run(persistence.save_health_record(rec))
+    asyncio.run(persistence.purge_old_health(0))
+    asyncio.run(persistence.vacuum())
+    rows = asyncio.run(persistence.load_recent_health(10))
+    assert rows == []
+
 def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
     loop1 = asyncio.new_event_loop()
