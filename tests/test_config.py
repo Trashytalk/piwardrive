@@ -8,7 +8,7 @@ from dataclasses import asdict
 from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import config
+import config  # noqa: E402
 
 
 def setup_temp_config(tmp_path: Path) -> Path:
@@ -62,6 +62,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.ui_font_size == 18
     assert loaded.map_cluster_capacity == 12
 
+
 def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
     cfg_file = setup_temp_config(tmp_path)
     cfg = config.Config(theme="Light", ui_font_size=20)
@@ -70,7 +71,15 @@ def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
     loaded = config.load_config()
     assert loaded.theme == "Light"
     assert loaded.ui_font_size == 20
-    
+
+
+def test_save_config_no_temp_files(tmp_path: Path) -> None:
+    cfg_file = setup_temp_config(tmp_path)
+    cfg = config.Config(theme="Temp")
+    config.save_config(cfg)
+    files = sorted(p.name for p in tmp_path.iterdir())
+    assert files == [cfg_file.name]
+
 
 def test_load_config_bad_json(tmp_path: Path) -> None:
     cfg_file = setup_temp_config(tmp_path)
@@ -84,7 +93,7 @@ def test_load_config_schema_violation(tmp_path: Path) -> None:
     cfg_file.write_text(json.dumps({"map_poll_gps": "oops"}))
     data = config.load_config()
     assert asdict(data) == asdict(config.DEFAULT_CONFIG)
-    
+
 
 def test_env_override_integer(monkeypatch: Any, tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
@@ -143,6 +152,7 @@ def test_export_import_yaml(tmp_path: Path) -> None:
     assert loaded.theme == "Red"
     assert loaded.map_poll_aps == 30
 
+
 def test_profile_roundtrip(tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     cfg = config.Config(theme="Alt")
@@ -164,4 +174,3 @@ def test_import_export_profile(tmp_path: Path) -> None:
     exported = tmp_path / "exp.json"
     config.export_profile(name, str(exported))
     assert exported.is_file()
-
