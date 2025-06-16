@@ -267,6 +267,18 @@ def test_get_smart_status_ok(monkeypatch: Any) -> None:
     assert utils.get_smart_status('/mnt/ssd') == 'OK'
 
 
+def test_get_smart_status_failure(monkeypatch: Any) -> None:
+    Part = namedtuple('Part', 'device mountpoint fstype opts')
+    part = Part('/dev/sda', '/mnt/ssd', 'ext4', '')
+    monkeypatch.setattr(psutil, 'disk_partitions', lambda all=False: [part])
+    monkeypatch.setattr(
+        utils.subprocess,
+        'run',
+        lambda *a, **k: (_ for _ in ()).throw(utils.subprocess.CalledProcessError(1, 'smartctl')),
+    )
+    assert utils.get_smart_status('/mnt/ssd') is None
+
+
 def test_fetch_kismet_devices_async(monkeypatch: Any) -> None:
     class FakeResp:
         status = 200
