@@ -101,18 +101,38 @@ refreshed weekly. The setup script can also fetch the file manually.
 
 ## Plugins
 
-Place additional scan modules in `~/.config/piwardrive/sigint_plugins` and they
-will be imported automatically. Each plugin must define a `scan()` function that
-returns structured records such as `WifiNetwork` or `BluetoothDevice` models.
-Loaded plugins become available directly from the `sigint_suite` package::
+PiWardrive exposes a small plugin system so custom scan logic can be added
+without modifying the library itself. Modules placed under
+`~/.config/piwardrive/sigint_plugins` are imported automatically at runtime.  A
+plugin simply needs to provide a ``scan()`` function and may optionally export
+additional helpers.  Once loaded, the module becomes available as an attribute
+of :mod:`sigint_suite`.
 
-    # ~/.config/piwardrive/sigint_plugins/custom_wifi.py
-    def scan():
-        return [{"ssid": "Example"}]
+The process for creating a plugin is outlined below.
 
-    import sigint_suite
-    results = sigint_suite.custom_wifi.scan()
+1. **Create the plugin directory** if it does not already exist::
 
-Call `sigint_suite.plugins.clear_plugin_cache()` after adding new files so the
-next import picks them up.
+       mkdir -p ~/.config/piwardrive/sigint_plugins
+
+2. **Implement the plugin.** Save the following example as
+   ``~/.config/piwardrive/sigint_plugins/custom_wifi.py``::
+
+       from typing import List, Dict
+
+       def scan() -> List[Dict[str, str]]:
+           """Return one or more Wi-Fi network records."""
+           return [{"ssid": "Example"}]
+
+3. **Refresh the plugin cache** so PiWardrive can pick up the new file::
+
+       python -c "import sigint_suite.plugins as p; p.clear_plugin_cache()"
+
+4. **Use the plugin** directly or through convenience commands::
+
+       import sigint_suite
+       networks = sigint_suite.custom_wifi.scan()
+
+Plugins are reloaded automatically when the directory timestamp changes, but
+calling ``clear_plugin_cache()`` ensures immediate discovery during
+development.
 
