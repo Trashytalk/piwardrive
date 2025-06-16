@@ -178,3 +178,19 @@ async def load_ap_cache() -> list[dict[str, Any]]:
     )
     rows = await cur.fetchall()
     return [dict(row) for row in rows]
+
+
+async def get_table_counts() -> dict[str, int]:
+    """Return row counts for all user tables."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+        " AND name NOT LIKE 'sqlite_%'"
+    )
+    tables = [row["name"] for row in await cur.fetchall()]
+    result: dict[str, int] = {}
+    for name in tables:
+        cur = await conn.execute(f"SELECT COUNT(*) as cnt FROM {name}")
+        row = await cur.fetchone()
+        result[name] = int(row["cnt"]) if row else 0
+    return result
