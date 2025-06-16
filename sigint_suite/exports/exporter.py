@@ -25,3 +25,24 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
             writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
             writer.writeheader()
             writer.writerows(rows)
+
+
+def export_yaml(records: Iterable[Any], path: str) -> None:
+    """Export ``records`` to ``path`` in YAML format."""
+    try:
+        import yaml  # type: ignore
+    except Exception as exc:  # pragma: no cover - optional dep
+        raise RuntimeError("PyYAML required for YAML export") from exc
+
+    data = []
+    for rec in records:
+        if hasattr(rec, "model_dump"):
+            data.append(rec.model_dump())
+        elif isinstance(rec, Mapping):
+            data.append(dict(rec))
+        else:
+            data.append(rec)
+
+    with open(path, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(data, fh, sort_keys=False)
+

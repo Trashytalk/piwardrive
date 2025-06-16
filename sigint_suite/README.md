@@ -35,7 +35,7 @@ and ``band-scan`` entry points for quickly running scans from the command line.
   Bluetooth devices in a SQLite database for historical queries.
 - **dashboard** – minimal dashboard integration.
 - **enrichment** – routines to enrich captured data.
-- **exports** – helpers for writing results to JSON/CSV files.
+- **exports** – helpers for writing results to JSON/CSV/YAML files.
 - **gps** – GPS helpers for tagging results with location.
 - **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
