@@ -298,13 +298,14 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
         )
         if not dev:
             return None
-        proc = subprocess.run(
-            ['smartctl', '-H', dev],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if proc.returncode != 0:
+        try:
+            proc = subprocess.run(
+                ['smartctl', '-H', dev],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError:
             return None
         out = proc.stdout + proc.stderr
         return _parse_smartctl_output(out)
