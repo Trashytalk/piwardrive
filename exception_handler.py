@@ -1,4 +1,5 @@
 import logging
+import logging
 from kivy.base import ExceptionHandler, ExceptionManager
 
 

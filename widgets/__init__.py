@@ -25,6 +25,7 @@ _MODULE_MAP: Dict[str, str] = {
     "HealthStatusWidget": "health_status",
     "BatteryStatusWidget": "battery_status",
     "HealthAnalysisWidget": "health_analysis",
+    "DBStatsWidget": "db_stats",
 }
 
 _PLUGIN_CLASSES: Dict[str, type] = {}
@@ -44,6 +45,7 @@ __all__: list[str] = [
     "HealthStatusWidget",
     "BatteryStatusWidget",
     "HealthAnalysisWidget",
+    "DBStatsWidget",
 ]
 
 
