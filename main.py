@@ -80,6 +80,10 @@ class PiWardriveApp(MDApp):
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
     cleanup_rotated_logs = BooleanProperty(True)
+    tile_maintenance_interval = NumericProperty(86400)
+    tile_max_age_days = NumericProperty(30)
+    tile_cache_limit_mb = NumericProperty(512)
+    compress_offline_tiles = BooleanProperty(True)
     last_screen = StringProperty("Map")
 
     def __init__(
@@ -117,6 +121,16 @@ class PiWardriveApp(MDApp):
                 diagnostics.HealthMonitor(self.scheduler, self.health_poll_interval),
             )
         self.health_monitor = self.container.resolve("health_monitor")
+        import tile_maintenance
+        self.tile_maintainer = tile_maintenance.TileMaintainer(
+            self.scheduler,
+            folder=os.path.dirname(self.offline_tile_path) or "/mnt/ssd/tiles",
+            offline_path=self.offline_tile_path,
+            interval=self.tile_maintenance_interval,
+            max_age_days=self.tile_max_age_days,
+            limit_mb=self.tile_cache_limit_mb,
+            vacuum=self.compress_offline_tiles,
+        )
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme

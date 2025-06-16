@@ -30,6 +30,10 @@ HEALTH_EXPORT_DIR = str(Path(CONFIG_DIR) / "health_exports")
 HEALTH_EXPORT_INTERVAL = 6  # hours
 COMPRESS_HEALTH_EXPORTS = True
 HEALTH_EXPORT_RETENTION = 7
+TILE_MAINTENANCE_INTERVAL = 86400  # seconds
+TILE_MAX_AGE_DAYS = 30
+TILE_CACHE_LIMIT_MB = 512
+COMPRESS_OFFLINE_TILES = True
 
 
 def get_config_path(profile: Optional[str] = None) -> str:
@@ -85,6 +89,10 @@ class Config:
     health_export_dir: str = HEALTH_EXPORT_DIR
     compress_health_exports: bool = COMPRESS_HEALTH_EXPORTS
     health_export_retention: int = HEALTH_EXPORT_RETENTION
+    tile_maintenance_interval: int = TILE_MAINTENANCE_INTERVAL
+    tile_max_age_days: int = TILE_MAX_AGE_DAYS
+    tile_cache_limit_mb: int = TILE_CACHE_LIMIT_MB
+    compress_offline_tiles: bool = COMPRESS_OFFLINE_TILES
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
@@ -126,6 +134,10 @@ class FileConfigModel(BaseModel):
     health_export_dir: Optional[str] = Field(default=None, min_length=1)
     compress_health_exports: Optional[bool] = None
     health_export_retention: Optional[int] = Field(default=None, ge=1)
+    tile_maintenance_interval: Optional[int] = Field(default=None, ge=1)
+    tile_max_age_days: Optional[int] = Field(default=None, ge=1)
+    tile_cache_limit_mb: Optional[int] = Field(default=None, ge=1)
+    compress_offline_tiles: Optional[bool] = None
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
@@ -148,7 +160,10 @@ class ConfigModel(FileConfigModel):
     health_export_dir: str = DEFAULTS["health_export_dir"]
     compress_health_exports: bool = DEFAULTS["compress_health_exports"]
     health_export_retention: int = Field(default=7, ge=1)
-    gps_movement_threshold: float = Field(default=1.0, gt=0)
+    tile_maintenance_interval: int = Field(default=86400, ge=1)
+    tile_max_age_days: int = Field(default=30, ge=1)
+    tile_cache_limit_mb: int = Field(default=512, ge=1)
+    compress_offline_tiles: bool = DEFAULTS["compress_offline_tiles"]
 
     theme: Theme
 
@@ -338,6 +353,10 @@ class AppConfig:
     health_export_dir: str = DEFAULTS["health_export_dir"]
     compress_health_exports: bool = DEFAULTS["compress_health_exports"]
     health_export_retention: int = DEFAULTS["health_export_retention"]
+    tile_maintenance_interval: int = DEFAULTS["tile_maintenance_interval"]
+    tile_max_age_days: int = DEFAULTS["tile_max_age_days"]
+    tile_cache_limit_mb: int = DEFAULTS["tile_cache_limit_mb"]
+    compress_offline_tiles: bool = DEFAULTS["compress_offline_tiles"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
