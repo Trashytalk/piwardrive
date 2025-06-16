@@ -15,7 +15,7 @@ Prerequisites
 Build the project from the repository root using ``python -m build``::
 
     pip install build
-    python -m build
+    python -m build  # reads metadata from ``pyproject.toml``
 
 The wheel is written to ``dist/``. An example output path is::
 

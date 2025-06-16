@@ -137,11 +137,14 @@ def run_network_test(host: str = '8.8.8.8', cache_seconds: float = 30.0) -> bool
     now = time.time()
     if _LAST_NETWORK_OK is not None and now - _LAST_NETWORK_OK < cache_seconds:
         return True
-    proc = subprocess.run(['ping', '-c', '1', host], capture_output=True)
-    if proc.returncode == 0:
-        _LAST_NETWORK_OK = now
-        return True
-    return False
+    try:
+        subprocess.run(
+            ['ping', '-c', '1', host], capture_output=True, check=True
+        )
+    except subprocess.CalledProcessError:
+        return False
+    _LAST_NETWORK_OK = now
+    return True
 
 
 def get_interface_status() -> dict:
@@ -151,10 +154,13 @@ def get_interface_status() -> dict:
 
 def list_usb_devices() -> list[str]:
     """Return lines of ``lsusb`` output as a list."""
-    proc = subprocess.run(['lsusb'], capture_output=True, text=True)
-    if proc.returncode == 0:
-        return proc.stdout.strip().splitlines()
-    return []
+    try:
+        proc = subprocess.run(
+            ['lsusb'], capture_output=True, text=True, check=True
+        )
+    except subprocess.CalledProcessError:
+        return []
+    return proc.stdout.strip().splitlines()
 
 
 def get_service_statuses(services: tuple[str, ...] | list[str] | None = None) -> dict:
