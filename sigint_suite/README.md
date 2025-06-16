@@ -10,8 +10,9 @@ the main PiWardrive UI when you only need quick scans or exports.
 pip install sigint-suite
 ```
 
-The installation provides the ``wifi-scan``, ``bluetooth-scan``, ``imsi-scan``
-and ``band-scan`` entry points for quickly running scans from the command line.
+The installation provides the ``wifi-scan``, ``bluetooth-scan``, ``imsi-scan``,
+``band-scan`` and ``scan-all`` entry points for quickly running scans from the
+command line.
 
 ## Modules
 
@@ -67,6 +68,13 @@ this location.
 Use `IWLIST_CMD` to specify an alternate `iwlist` path and `IW_PRIV_CMD` to
 change the privilege helper for Wi-Fi scans. Set `SIGINT_DEBUG=1` to enable
 debug logging for all scanners.
+
+## `scan-all` command
+
+The ``scan-all`` entry point runs all available scans—Wi-Fi, Bluetooth,
+cellular bands and IMSI numbers—in one go. Results are written as JSON files in
+``sigint_suite/exports/`` by default. Override this location with the
+``--export-dir`` option or by setting the ``EXPORT_DIR`` environment variable.
 
 ## Continuous Scans
 

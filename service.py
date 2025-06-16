@@ -22,7 +22,7 @@ from utils import (
     get_network_throughput,
     get_gps_fix_quality,
     service_status_async,
-    tail_file,
+    async_tail_file,
 )
 
 security = HTTPBasic(auto_error=False)
@@ -72,14 +72,19 @@ async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
 
 
 @app.get("/logs")
-def get_logs(
+async def get_logs(
     lines: int = 200,
     path: str = DEFAULT_LOG_PATH,
     _auth: None = Depends(_check_auth),
 ) -> dict:
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
-    return {"path": safe, "lines": tail_file(safe, lines)}
+    data = async_tail_file(safe, lines)
+    if inspect.isawaitable(data):
+        lines_out = await data
+    else:
+        lines_out = data
+    return {"path": safe, "lines": lines_out}
 
 
 @app.websocket("/ws/status")
@@ -92,7 +97,11 @@ async def ws_status(websocket: WebSocket) -> None:
                 "status": await get_status(),
                 "metrics": await _collect_widget_metrics(),
             }
-            await websocket.send_json(data)
+            try:
+                await asyncio.wait_for(websocket.send_json(data), timeout=1)
+            except (asyncio.TimeoutError, Exception):
+                await websocket.close()
+                break
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         pass

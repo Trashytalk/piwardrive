@@ -7,10 +7,10 @@ from typing import Dict, Optional
 
 import requests
 
-import config
+from sigint_suite import paths
 
 # Persist the OUI registry under the main configuration directory
-OUI_PATH = os.path.join(config.CONFIG_DIR, "oui.csv")
+OUI_PATH = paths.OUI_PATH
 
 # Source for the vendor registry
 OUI_URL = "https://standards-oui.ieee.org/oui/oui.csv"

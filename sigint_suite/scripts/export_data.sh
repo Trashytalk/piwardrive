@@ -6,6 +6,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Directory containing JSON exports; may be overridden via the EXPORT_DIR env var
 EXPORT_DIR="${EXPORT_DIR:-$ROOT_DIR/exports}"
 
+
 PYTHONPATH="$ROOT_DIR/.." EXPORT_DIR="$EXPORT_DIR" python3 - <<'PY'
 import os, json, csv
 

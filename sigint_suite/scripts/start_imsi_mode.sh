@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Allow callers to override the output directory via EXPORT_DIR
 EXPORT_DIR="${EXPORT_DIR:-$ROOT_DIR/exports}"
+
 mkdir -p "$EXPORT_DIR"
 
 PYTHONPATH="$ROOT_DIR/.." EXPORT_DIR="$EXPORT_DIR" python3 - <<'PY'
