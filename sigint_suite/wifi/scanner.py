@@ -55,7 +55,6 @@ def scan_wifi(
         return []
 
     records: List[Dict[str, str]] = []
-    networks: List[Dict[str, str]] = []
 
     current: Dict[str, str] = {}
     enc_lines: List[str] = []
@@ -83,12 +82,6 @@ def scan_wifi(
             current["encryption"] = line.split("Encryption key:")[-1].strip()
         elif line.startswith("IE:"):
             enc_lines.append(line.split("IE:", 1)[-1].strip())
-                networks.append(current)
-            current = {"cell": line}
-            if "Address:" in line:
-                current["bssid"] = line.split("Address:")[-1].strip()
-        elif "ESSID" in line:
-            current["ssid"] = line.split(":", 1)[-1].strip('"')
         elif "Address" in line:
             current["bssid"] = line.split("Address:")[-1].strip()
         elif "Frequency" in line:
