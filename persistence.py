@@ -7,6 +7,7 @@ import aiosqlite
 from dataclasses import dataclass, asdict
 from typing import Any, List, Optional
 import asyncio
+import logging
 
 import config
 
@@ -31,7 +32,10 @@ async def _get_conn() -> aiosqlite.Connection:
     cur_dir = config.CONFIG_DIR
     if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir:
         if _DB_CONN is not None:
-            await _DB_CONN.close()
+            try:
+                await _DB_CONN.close()
+            except Exception:
+                logging.exception("Error closing previous DB connection")
         path = _db_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         _DB_CONN = await aiosqlite.connect(path)
