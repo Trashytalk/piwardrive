@@ -2,7 +2,8 @@ Configuration
 -------------
 
 Configuration is stored in ``~/.config/piwardrive/config.json``. Most values can
-be overridden using environment variables prefixed with ``PW_``. For example::
+be overridden using environment variables prefixed with ``PW_``. Changes to the
+file are detected at runtime and applied automatically. For example::
 
    PW_MAP_POLL_GPS=5 python main.py
 

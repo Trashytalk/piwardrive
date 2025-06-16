@@ -19,6 +19,7 @@ from utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
+    get_network_throughput,
     get_gps_fix_quality,
     service_status_async,
     tail_file,
@@ -50,6 +51,7 @@ async def get_status(limit: int = 5) -> list[dict]:
 async def _collect_widget_metrics() -> dict:
     """Return basic metrics used by dashboard widgets."""
     aps, _clients, handshakes = await fetch_metrics_async()
+    rx, tx = get_network_throughput()
     return {
         "cpu_temp": get_cpu_temp(),
         "bssid_count": len(aps),
@@ -58,6 +60,8 @@ async def _collect_widget_metrics() -> dict:
         "kismet_running": await service_status_async("kismet"),
         "bettercap_running": await service_status_async("bettercap"),
         "gps_fix": get_gps_fix_quality(),
+        "rx_kbps": rx,
+        "tx_kbps": tx,
     }
 
 

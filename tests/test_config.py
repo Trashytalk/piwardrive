@@ -31,6 +31,10 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.offline_tile_path == config.DEFAULT_CONFIG.offline_tile_path
     assert data.disable_scanning == config.DEFAULT_CONFIG.disable_scanning
     assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
+    assert (
+        data.map_cluster_capacity
+        == config.DEFAULT_CONFIG.map_cluster_capacity
+    )
 
 
 def test_save_and_load_roundtrip(tmp_path: Path) -> None:
@@ -44,6 +48,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.ui_font_size = 18
     orig.offline_tile_path = "/tmp/off.mbtiles"
     orig.disable_scanning = True
+    orig.map_cluster_capacity = 12
     config.save_config(orig)
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
@@ -55,6 +60,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.offline_tile_path == "/tmp/off.mbtiles"
     assert loaded.disable_scanning is True
     assert loaded.ui_font_size == 18
+    assert loaded.map_cluster_capacity == 12
 
 def test_save_config_dataclass_roundtrip(tmp_path: Path) -> None:
     cfg_file = setup_temp_config(tmp_path)
@@ -86,11 +92,13 @@ def test_env_override_integer(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setenv("PW_MAP_POLL_GPS_MAX", "50")
     monkeypatch.setenv("PW_MAP_POLL_BT", "30")
     monkeypatch.setenv("PW_UI_FONT_SIZE", "22")
+    monkeypatch.setenv("PW_MAP_CLUSTER_CAPACITY", "15")
     cfg = config.AppConfig.load()
     assert cfg.map_poll_gps == 42
     assert cfg.map_poll_gps_max == 50
     assert cfg.map_poll_bt == 30
     assert cfg.ui_font_size == 22
+    assert cfg.map_cluster_capacity == 15
 
 
 def test_env_override_boolean(monkeypatch: Any, tmp_path: Path) -> None:

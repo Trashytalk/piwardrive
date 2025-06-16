@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 
 from scheduler import PollScheduler
-from config import load_config, save_config, Config
+from config import load_config, save_config, Config, config_mtime
 
 from security import hash_password
 from persistence import save_app_state, load_app_state, AppState
@@ -54,6 +54,7 @@ class PiWardriveApp(MDApp):
     map_show_aps = BooleanProperty(True)
     map_show_bt = BooleanProperty(False)
     map_cluster_aps = BooleanProperty(False)
+    map_cluster_capacity = NumericProperty(8)
     map_fullscreen = BooleanProperty(False)
     map_use_offline = BooleanProperty(False)
     disable_scanning = BooleanProperty(False)
@@ -78,6 +79,7 @@ class PiWardriveApp(MDApp):
     health_poll_interval = NumericProperty(10)
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
+    cleanup_rotated_logs = BooleanProperty(True)
     last_screen = StringProperty("Map")
 
     def __init__(
@@ -118,6 +120,9 @@ class PiWardriveApp(MDApp):
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme
+        self._config_stamp = config_mtime()
+        self._updating_config = False
+        self.scheduler.schedule("config_reload", self._reload_config_event, 2)
         for f in fields(Config):
             if hasattr(self.__class__, f.name):
                 self.bind(**{f.name: lambda _i, v, k=f.name: self._auto_save(k, v)})
@@ -153,13 +158,16 @@ class PiWardriveApp(MDApp):
                 text=name, on_release=lambda btn, s=name: self.switch_screen(s)
             )
             nav_bar.add_widget(btn)
-        for path in self.log_paths:
-            ev = f"rotate_{os.path.basename(path)}"
-            self.scheduler.schedule(
-                ev,
-                lambda _dt, p=path: diagnostics.rotate_log(p, self.log_rotate_archives),
-                self.log_rotate_interval,
-            )
+        if self.cleanup_rotated_logs:
+            for path in self.log_paths:
+                ev = f"rotate_{os.path.basename(path)}"
+                self.scheduler.schedule(
+                    ev,
+                    lambda _dt, p=path: diagnostics.rotate_log(
+                        p, self.log_rotate_archives
+                    ),
+                    self.log_rotate_interval,
+                )
 
     def switch_screen(self, name: str) -> None:
         """Change the active screen."""
@@ -238,6 +246,8 @@ class PiWardriveApp(MDApp):
 
     def _auto_save(self, key: str, value: Any) -> None:
         """Update ``config_data`` and persist to disk."""
+        if self._updating_config:
+            return
         if hasattr(self.config_data, key):
             setattr(self.config_data, key, value)
             try:
@@ -245,8 +255,23 @@ class PiWardriveApp(MDApp):
             except OSError as exc:  # pragma: no cover - write errors
                 logging.exception("Failed to auto-save config: %s", exc)
 
+    def _reload_config_event(self, _dt: float) -> None:
+        """Reload settings if ``config.json`` changed."""
+        stamp = config_mtime()
+        if stamp is None or stamp == self._config_stamp:
+            return
+        self._config_stamp = stamp
+        data = load_config()
+        self._updating_config = True
+        self.config_data = data
+        for key, val in asdict(data).items():
+            if hasattr(self, key):
+                setattr(self, key, val)
+        self._updating_config = False
+
     def on_stop(self) -> None:
         """Persist configuration values on application exit."""
+        self.scheduler.cancel("config_reload")
         prof = diagnostics.stop_profiling()
         if prof:
             logging.info("Profiling summary:\n%s", prof)

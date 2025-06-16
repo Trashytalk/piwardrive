@@ -28,6 +28,22 @@ ACTIVE_PROFILE_FILE = os.path.join(CONFIG_DIR, "active_profile")
 REPORTS_DIR = os.path.join(CONFIG_DIR, "reports")
 
 
+def get_config_path(profile: Optional[str] = None) -> str:
+    """Return path to ``profile`` or the main ``config.json``."""
+    if profile is None:
+        profile = get_active_profile()
+    return _profile_path(profile) if profile else CONFIG_PATH
+
+
+def config_mtime(profile: Optional[str] = None) -> Optional[float]:
+    """Return modification time for the active config file if it exists."""
+    path = get_config_path(profile)
+    try:
+        return os.path.getmtime(path)
+    except FileNotFoundError:
+        return None
+
+
 @dataclass
 class Config:
     """Persistent application configuration."""
@@ -41,6 +57,7 @@ class Config:
     map_show_aps: bool = True
     map_show_bt: bool = False
     map_cluster_aps: bool = False
+    map_cluster_capacity: int = 8
     map_use_offline: bool = False
     disable_scanning: bool = False
     kismet_logdir: str = "/mnt/ssd/kismet_logs"
@@ -58,6 +75,7 @@ class Config:
     health_poll_interval: int = 10
     log_rotate_interval: int = 3600
     log_rotate_archives: int = 3
+    cleanup_rotated_logs: bool = True
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
@@ -77,6 +95,7 @@ class FileConfigModel(BaseModel):
     map_show_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
+    map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
     disable_scanning: Optional[bool] = None
     kismet_logdir: Optional[str] = Field(default=None, min_length=1)
@@ -87,6 +106,7 @@ class FileConfigModel(BaseModel):
     health_poll_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_interval: Optional[int] = Field(default=None, ge=1)
     log_rotate_archives: Optional[int] = Field(default=None, ge=1)
+    cleanup_rotated_logs: Optional[bool] = None
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
@@ -97,6 +117,7 @@ class ConfigModel(FileConfigModel):
     """Extended validation used by :func:`validate_config_data`."""
 
     map_poll_gps: int = Field(..., gt=0)
+    map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
 
@@ -191,7 +212,7 @@ def load_config(profile: Optional[str] = None) -> Config:
 
     if profile is None:
         profile = get_active_profile()
-    path = _profile_path(profile) if profile else CONFIG_PATH
+    path = get_config_path(profile)
 
     data: Dict[str, Any] = {}
     try:
@@ -211,7 +232,7 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
     """Persist ``config`` dataclass to ``profile`` or ``CONFIG_PATH``."""
     if profile is None:
         profile = get_active_profile()
-    path = _profile_path(profile) if profile else CONFIG_PATH
+    path = get_config_path(profile)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(asdict(config), f, indent=2)
@@ -268,6 +289,7 @@ class AppConfig:
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
+    map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
     disable_scanning: bool = DEFAULTS["disable_scanning"]
     offline_tile_path: str = DEFAULTS["offline_tile_path"]
@@ -279,6 +301,7 @@ class AppConfig:
     log_paths: List[str] = field(default_factory=lambda: DEFAULTS["log_paths"])
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
+    cleanup_rotated_logs: bool = DEFAULTS["cleanup_rotated_logs"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
