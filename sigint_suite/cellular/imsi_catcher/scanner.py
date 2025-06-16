@@ -1,7 +1,7 @@
 import os
 import shlex
 import subprocess
-from typing import List, Optional, Callable
+from typing import Callable, Dict, List, Optional
 
 from sigint_suite.models import ImsiRecord
 
@@ -13,11 +13,10 @@ from sigint_suite.hooks import apply_post_processors
 def scan_imsis(
     cmd: Optional[str] = None,
     with_location: bool = True,
+    timeout: Optional[int] = None,
     enrich_func: Optional[
         Callable[[List[ImsiRecord]], List[ImsiRecord]]
     ] = None,
-) -> List[ImsiRecord]:
-    timeout: int | None = None,
 ) -> List[Dict[str, str]]:
 
     """Scan for IMSI numbers using an external command.
@@ -31,7 +30,11 @@ def scan_imsis(
 
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    )
     try:
         output = subprocess.check_output(
             args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
