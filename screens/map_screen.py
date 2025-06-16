@@ -35,6 +35,9 @@ from kivy.animation import Animation
 
 from kivy.metrics import dp
 
+import numpy as np
+from scipy.spatial import cKDTree
+
 
 
 from kivy.uix.label import Label
@@ -1368,26 +1371,51 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if not self.ap_markers:
             return
 
-        # Calculate grid cell size so that fewer clusters are formed when
-        # zoomed out and more clusters when zoomed in. ``_cluster_capacity``
-        # controls how many markers may occupy a cell before collapsing.
+        # Determine clustering radius based on zoom level.
         cell_size = 360 / (2 ** zoom * self._cluster_capacity)
 
-        # Group markers by their grid cell
-        clusters: dict[tuple[int, int], list] = {}
-        for marker in self.ap_markers:
-            key = (int(marker.lat / cell_size), int(marker.lon / cell_size))
-            clusters.setdefault(key, []).append(marker)
+        def _dbscan(points: np.ndarray, eps: float, min_samples: int = 2) -> list[int]:
+            tree = cKDTree(points)
+            labels = [-2] * len(points)
+            cid = 0
+            for i, p in enumerate(points):
+                if labels[i] != -2:
+                    continue
+                neighbors = tree.query_ball_point(p, eps)
+                if len(neighbors) < min_samples:
+                    labels[i] = -1
+                    continue
+                labels[i] = cid
+                seeds = set(neighbors)
+                seeds.discard(i)
+                while seeds:
+                    j = seeds.pop()
+                    if labels[j] == -1:
+                        labels[j] = cid
+                    if labels[j] != -2:
+                        continue
+                    labels[j] = cid
+                    nbs = tree.query_ball_point(points[j], eps)
+                    if len(nbs) >= min_samples:
+                        seeds.update(nbs)
+                cid += 1
+            return labels
 
-        # Replace each group of markers by their averaged position
-        for group in clusters.values():
-            if len(group) <= 1:
+        coords = np.array([[m.lat, m.lon] for m in self.ap_markers])
+        labels = _dbscan(coords, cell_size)
+
+        clusters: dict[int, list] = {}
+        for lbl, marker in zip(labels, self.ap_markers):
+            if lbl == -1:
                 continue
+            clusters.setdefault(lbl, []).append(marker)
+
+        for group in clusters.values():
             lat = sum(m.lat for m in group) / len(group)
             lon = sum(m.lon for m in group) / len(group)
-            for marker in group:
-                marker.lat = lat
-                marker.lon = lon
+            for m in group:
+                m.lat = lat
+                m.lon = lon
 
         # Spread markers that still overlap exactly
         self.spiderfy_markers()
