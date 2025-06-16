@@ -56,6 +56,7 @@ class Config:
     map_show_gps: bool = True
     map_show_aps: bool = True
     map_show_bt: bool = False
+    map_show_heatmap: bool = False
     map_cluster_aps: bool = False
     map_cluster_capacity: int = 8
     map_use_offline: bool = False
@@ -79,6 +80,10 @@ class Config:
     widget_battery_status: bool = False
     ui_font_size: int = 16
     admin_password_hash: str = ""
+    remote_sync_url: str = ""
+    remote_sync_token: str = ""
+    remote_sync_timeout: int = 5
+    remote_sync_retries: int = 3
 
 
 DEFAULT_CONFIG = Config()
@@ -95,6 +100,7 @@ class FileConfigModel(BaseModel):
     map_show_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
+    map_show_heatmap: Optional[bool] = None
     map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
     disable_scanning: Optional[bool] = None
@@ -111,6 +117,10 @@ class FileConfigModel(BaseModel):
     log_paths: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
     admin_password_hash: Optional[str] = ""
+    remote_sync_url: Optional[str] = Field(default=None, min_length=1)
+    remote_sync_token: Optional[str] = None
+    remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
+    remote_sync_retries: Optional[int] = Field(default=None, ge=1)
 
 
 class ConfigModel(FileConfigModel):
@@ -120,6 +130,8 @@ class ConfigModel(FileConfigModel):
     map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
+    remote_sync_timeout: int = Field(default=5, ge=1)
+    remote_sync_retries: int = Field(default=3, ge=1)
 
     theme: Theme
 
@@ -290,6 +302,7 @@ class AppConfig:
     map_show_gps: bool = DEFAULTS["map_show_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
+    map_show_heatmap: bool = DEFAULTS["map_show_heatmap"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
@@ -307,6 +320,10 @@ class AppConfig:
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
+    remote_sync_url: str = DEFAULTS["remote_sync_url"]
+    remote_sync_token: str = DEFAULTS["remote_sync_token"]
+    remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
+    remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
 
     @classmethod
     def load(cls) -> "AppConfig":
