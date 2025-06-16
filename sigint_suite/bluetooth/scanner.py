@@ -34,12 +34,57 @@ def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
     return _scan_bluetoothctl(timeout)
 
 
+async def async_scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
+    """Asynchronously scan for nearby Bluetooth devices."""
+
+    timeout = timeout if timeout is not None else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
+
+    try:
+        from bleak import BleakScanner  # type: ignore
+
+        found = await BleakScanner.discover(timeout=timeout)
+        return [
+            {"address": dev.address, "name": dev.name or dev.address}
+            for dev in found
+        ]
+    except Exception:
+        pass
+
+    return await _async_scan_bluetoothctl(timeout)
+
+
 def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
     """Scan using ``bluetoothctl`` as a fallback."""
 
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
     try:
         output = subprocess.check_output(cmd, text=True)
+    except Exception:
+        return []
+
+    devices: List[BluetoothDevice] = []
+    for line in output.splitlines():
+        if "Device" in line and ":" in line:
+            parts = line.split()
+            if len(parts) >= 2:
+                addr = parts[0]
+                name = " ".join(parts[1:])
+                devices.append(BluetoothDevice(address=addr, name=name))
+    return devices
+
+
+async def _async_scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
+    """Async wrapper for ``bluetoothctl``."""
+
+    cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout + 1)
+        output = stdout.decode()
     except Exception:
         return []
 
@@ -73,13 +118,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-            try:
-                idx = parts.index("Device")
-            except ValueError:
-                continue
-            if idx + 1 < len(parts):
-                addr = parts[idx + 1]
-                name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
-                devices[addr] = name
-
-    return [{"address": a, "name": n} for a, n in devices.items()]
