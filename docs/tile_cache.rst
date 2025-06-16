@@ -36,6 +36,14 @@ than ``max_age_days`` (30 days by default).  To avoid filling the SSD,
 tiles when the folder exceeds ``limit_mb`` megabytes.  A 512&nbsp;MB limit works
 well for most deployments.
 
+Automated Maintenance
+~~~~~~~~~~~~~~~~~~~~~
+
+``tile_maintenance_interval`` controls how often the cache is cleaned
+automatically. Old tiles are purged and the cache limit enforced.  If
+``compress_offline_tiles`` is ``true`` the offline MBTiles file is compacted
+with ``VACUUM`` during each run.
+
 Paths
 -----
 
