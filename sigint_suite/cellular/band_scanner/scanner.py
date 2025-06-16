@@ -2,6 +2,7 @@ import logging
 import os
 import shlex
 import subprocess
+import asyncio
 from typing import List, Optional
 
 from sigint_suite.models import BandRecord
@@ -28,6 +29,26 @@ def scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[Ba
         )
     except Exception as exc:  # pragma: no cover - external command
         logging.exception("Failed to run band scanner", exc_info=exc)
+        return []
+
+    return parse_band_output(output)
+
+
+async def async_scan_bands(cmd: Optional[str] = None, timeout: int | None = None) -> List[BandRecord]:
+    """Asynchronously scan for cellular bands."""
+
+    cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
+    args = shlex.split(cmd_str)
+    timeout = timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        output = stdout.decode()
+    except Exception:
         return []
 
     return parse_band_output(output)

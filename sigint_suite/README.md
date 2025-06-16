@@ -40,6 +40,13 @@ and ``band-scan`` entry points for quickly running scans from the command line.
 - **rf** – helpers powered by `pyrtlsdr` for spectrum scans and FM demodulation.
 - **scripts** – shell scripts for running scans and installing dependencies.
 
+### Async API
+
+All scanner modules also provide asynchronous variants built with
+``asyncio.create_subprocess_exec``. Use ``async_scan_wifi``,
+``async_scan_bluetooth``, ``async_scan_bands`` and ``async_scan_imsis`` when
+running inside an event loop.
+
 Post-processing hooks can be registered with
 `sigint_suite.hooks.register_post_processor` to enrich scan results (e.g.,
 adding operator names for IMSI captures) without modifying the core library.

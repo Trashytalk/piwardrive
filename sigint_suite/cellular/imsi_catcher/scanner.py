@@ -2,7 +2,9 @@ import logging
 import os
 import shlex
 import subprocess
-from typing import Callable, List, Optional
+import asyncio
+from typing import List, Optional, Callable
+
 
 from sigint_suite.models import ImsiRecord
 from sigint_suite.cellular.parsers import parse_imsi_output
@@ -31,6 +33,49 @@ def scan_imsis(
         )
     except Exception as exc:  # pragma: no cover - external command
         logging.exception("Failed to run IMSI catcher", exc_info=exc)
+        return []
+
+    records = parse_imsi_output(output)
+
+    if with_location:
+        pos = get_position()
+        if pos:
+            lat, lon = pos
+            for rec in records:
+                rec.lat = lat
+                rec.lon = lon
+
+    records = apply_post_processors("imsi", records)
+
+    if enrich_func:
+        try:
+            records = list(enrich_func(records))
+        except Exception:
+            pass
+
+    return records
+
+
+async def async_scan_imsis(
+    cmd: Optional[str] = None,
+    with_location: bool = True,
+    enrich_func: Optional[Callable[[List[ImsiRecord]], List[ImsiRecord]]] = None,
+    timeout: int | None = None,
+) -> List[ImsiRecord]:
+    """Asynchronously scan for IMSI numbers."""
+
+    cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
+    args = shlex.split(cmd_str)
+    timeout = timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        output = stdout.decode()
+    except Exception:
         return []
 
     records = parse_imsi_output(output)

@@ -1,3 +1,4 @@
 """Wi-Fi scanning utilities for PiWardrive."""
-from .scanner import scan_wifi
-__all__ = ["scan_wifi"]
+from .scanner import scan_wifi, async_scan_wifi
+
+__all__ = ["scan_wifi", "async_scan_wifi"]
