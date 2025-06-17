@@ -50,8 +50,10 @@ Scheduled Prefetch
 ~~~~~~~~~~~~~~~~~~
 
 ``route_prefetch_interval`` determines how often PiWardrive predicts the next
-set of tiles based on recent GPS points. ``route_prefetch_lookahead`` controls
-how far ahead of the current location tiles are fetched.
+set of tiles from recent GPS fixes. The prefetcher computes heading and speed
+from the two most recent points and extrapolates future positions using
+great‑circle math. ``route_prefetch_lookahead`` controls how far ahead of the
+current location tiles are fetched.
 
 
 Paths
