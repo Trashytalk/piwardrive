@@ -1,3 +1,4 @@
+"""Module check_complexity."""
 import logging
 import subprocess
 import sys

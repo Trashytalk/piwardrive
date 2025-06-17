@@ -313,6 +313,11 @@ BoxLayout:
                     enc_filter.text = ''
                     oui_filter.text = ''
                     root.filter_ap_markers()
+            MDRaisedButton:
+                id: follow_btn
+                text: 'Follow ON' if app.map_follow_gps else 'Follow OFF'
+                size_hint_x: 0.18
+                on_release: root.toggle_follow()
         MapView:
             id: mapview
             on_touch_down: root._map_touch_down(self, args[1])

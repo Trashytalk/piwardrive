@@ -1,3 +1,4 @@
+"""Entry point for setup module."""
 from pathlib import Path
 from setuptools import setup, Extension, find_packages
 try:  # Python >=3.11
