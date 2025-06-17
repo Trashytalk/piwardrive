@@ -1,3 +1,4 @@
+"""Module scan_all."""
 import argparse
 import os
 from sigint_suite.wifi import scan_wifi

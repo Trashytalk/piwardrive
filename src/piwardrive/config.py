@@ -30,7 +30,7 @@ HEALTH_EXPORT_DIR = str(Path(CONFIG_DIR) / "health_exports")
 HEALTH_EXPORT_INTERVAL = 6  # hours
 COMPRESS_HEALTH_EXPORTS = True
 HEALTH_EXPORT_RETENTION = 7
-TILE_MAINTENANCE_INTERVAL = 86400  # seconds
+TILE_MAINTENANCE_INTERVAL = 604800  # seconds
 TILE_MAX_AGE_DAYS = 30
 TILE_CACHE_LIMIT_MB = 512
 COMPRESS_OFFLINE_TILES = True
@@ -64,6 +64,7 @@ class Config:
     map_poll_aps: int = 60
     map_poll_bt: int = 60
     map_show_gps: bool = True
+    map_follow_gps: bool = True
     map_show_aps: bool = True
     map_show_bt: bool = False
     map_show_heatmap: bool = False
@@ -116,6 +117,7 @@ ENV_OVERRIDE_MAP: Dict[str, str] = {
     f"PW_{name.upper()}": name for name in DEFAULTS.keys()
 }
 
+
 def list_env_overrides() -> Dict[str, str]:
     """Return available ``PW_`` environment variable overrides."""
     return dict(ENV_OVERRIDE_MAP)
@@ -129,6 +131,7 @@ class FileConfigModel(BaseModel):
     map_poll_gps_max: Optional[int] = None
     map_poll_aps: Optional[int] = None
     map_show_gps: Optional[bool] = None
+    map_follow_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
     map_show_heatmap: Optional[bool] = None
@@ -178,11 +181,13 @@ class ConfigModel(FileConfigModel):
     compress_health_exports: bool = DEFAULTS["compress_health_exports"]
     health_export_retention: int = Field(default=7, ge=1)
     map_auto_prefetch: bool = DEFAULTS["map_auto_prefetch"]
+    map_follow_gps: bool = DEFAULTS["map_follow_gps"]
 
     theme: Theme
 
     @field_validator("theme", mode="before")
     def check_theme(cls, value: Any) -> Theme:
+        """Validate that ``value`` is a known :class:`Theme`."""
         try:
             return Theme(value)
         except Exception as exc:  # pragma: no cover - should raise
@@ -350,6 +355,7 @@ class AppConfig:
     map_poll_aps: int = DEFAULTS["map_poll_aps"]
     map_poll_bt: int = DEFAULTS["map_poll_bt"]
     map_show_gps: bool = DEFAULTS["map_show_gps"]
+    map_follow_gps: bool = DEFAULTS["map_follow_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
     map_show_heatmap: bool = DEFAULTS["map_show_heatmap"]

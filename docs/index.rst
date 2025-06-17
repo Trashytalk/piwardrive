@@ -17,11 +17,13 @@ PiWardrive Documentation
    persistence
    gps_polling
    tile_cache
+   vector_tile_customizer
    bluetooth
    orientation
    geofencing
    status_service
    remote_sync
+   aggregation_service
    architecture
    function_flows
    deployment

@@ -64,7 +64,7 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 ## Status Service and Web UI
 
-Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`. The `/config` route enables remote editing of `config.json` from the web UI.
 
 ## GPS and Bluetooth Polling
 
@@ -193,6 +193,7 @@ New modules extend PiWardrive with optional capabilities:
 
 - `remote_sync` – upload the SQLite database to a remote server.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
+- `vector_tile_customizer` – build and style MBTiles for offline use.
 - `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such
   as open or WEP networks, duplicate SSIDs on a single BSSID, unusual channels,
   and unknown vendors.
@@ -201,7 +202,7 @@ New modules extend PiWardrive with optional capabilities:
 - `lora_scanner` – scan LoRa/IoT radio bands.
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
-- `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
+- `vehicle_sensors` – read speed, RPM and engine load from an OBD‑II adapter.
 - `orientation_sensors` – track device orientation via DBus
   (``iio-sensor-proxy``) or an MPU‑6050 sensor. Functions return ``None`` when
   the optional dependencies are missing.

@@ -1,10 +1,12 @@
+"""Module scanner."""
 import logging
 import os
 import shlex
 import subprocess
 
 from typing import Dict, List, Optional
-from sigint_suite.enrichment import lookup_vendor
+from sigint_suite.enrichment import cached_lookup_vendor
+from sigint_suite.models import WifiNetwork
 from sigint_suite.hooks import apply_post_processors, register_post_processor
 
 logger = logging.getLogger(__name__)
@@ -14,7 +16,7 @@ def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Add vendor names based on BSSID prefixes."""
     for rec in records:
         bssid = rec.get("bssid")
-        vendor = lookup_vendor(bssid)
+        vendor = cached_lookup_vendor(bssid)
         if vendor:
             rec["vendor"] = vendor
     return records
@@ -156,7 +158,7 @@ async def async_scan_wifi(
         elif "Address" in line:
             bssid = line.split("Address:")[-1].strip()
             current["bssid"] = bssid
-            vendor = lookup_vendor(bssid)
+            vendor = cached_lookup_vendor(bssid)
             if vendor:
                 current["vendor"] = vendor
         elif "Frequency" in line:

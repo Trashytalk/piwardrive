@@ -95,6 +95,7 @@ class DummyApp:
     disable_scanning = False
     map_cluster_capacity = 8
     map_auto_prefetch = False
+    map_follow_gps = True
 
     def __init__(self) -> None:
         self.scheduler = DummyScheduler()

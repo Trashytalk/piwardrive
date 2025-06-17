@@ -7,32 +7,83 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import gpsd_client_async
 
 
-def test_async_methods_return_values(monkeypatch):
-    async def direct(func, *args, **kwargs):
-        return func(*args, **kwargs)
+class DummyReader:
+    def __init__(self, lines):
+        self.lines = lines
 
-    monkeypatch.setattr(gpsd_client_async.asyncio, "to_thread", direct)
-    monkeypatch.setattr(gpsd_client_async.GPSDClient, "get_position", lambda self: (1.0, 2.0))
-    monkeypatch.setattr(gpsd_client_async.GPSDClient, "get_accuracy", lambda self: 3.0)
-    monkeypatch.setattr(gpsd_client_async.GPSDClient, "get_fix_quality", lambda self: "3D")
+    async def readline(self):
+        if self.lines:
+            return (self.lines.pop(0) + "\n").encode()
+        return b""
+
+
+class DummyWriter:
+    def __init__(self):
+        self.sent = []
+
+    def write(self, data):
+        self.sent.append(data.decode())
+
+    async def drain(self):
+        pass
+
+    def close(self):
+        pass
+
+    async def wait_closed(self):
+        pass
+
+
+def test_async_methods_return_values(monkeypatch):
+    lines = [
+        '{"class":"VERSION"}',
+        '{"class":"DEVICES"}',
+        '{"class":"WATCH"}',
+        '{"class":"POLL","tpv":[{"mode":3,"lat":1.0,"lon":2.0,"epx":1.0,"epy":2.0}]}',
+        '{"class":"POLL","tpv":[{"mode":3,"lat":1.0,"lon":2.0,"epx":1.0,"epy":2.0}]}',
+        '{"class":"POLL","tpv":[{"mode":3,"lat":1.0,"lon":2.0,"epx":1.0,"epy":2.0}]}',
+        '{"class":"POLL","tpv":[{"mode":3,"lat":1.0,"lon":2.0,"epx":1.0,"epy":2.0}]}',
+    ]
+    writer = DummyWriter()
+
+    async def fake_open_connection(host, port):
+        return DummyReader(lines), writer
+
+    monkeypatch.setattr(asyncio, "open_connection", fake_open_connection)
 
     client = gpsd_client_async.AsyncGPSDClient()
 
-    assert asyncio.run(client.get_position_async()) == (1.0, 2.0)
-    assert asyncio.run(client.get_accuracy_async()) == 3.0
-    assert asyncio.run(client.get_fix_quality_async()) == "3D"
+    async def run():
+        pos = await client.get_position_async()
+        acc = await client.get_accuracy_async()
+        fix = await client.get_fix_quality_async()
+        return pos, acc, fix
+
+    pos, acc, fix = asyncio.run(run())
+
+    assert pos == (1.0, 2.0)
+    assert acc == 2.0
+    assert fix == "3D"
+    assert writer.sent[0].startswith("?WATCH")
+    assert writer.sent.count("?POLL;\n") == 3
+
 
 def test_async_methods_failures(monkeypatch):
-    async def direct(func, *args, **kwargs):
-        return func(*args, **kwargs)
+    async def fake_open_connection(host, port):
+        raise OSError("fail")
 
-    monkeypatch.setattr(gpsd_client_async.asyncio, "to_thread", direct)
-    monkeypatch.setattr(gpsd_client_async.GPSDClient, "get_position", lambda self: None)
-    monkeypatch.setattr(gpsd_client_async.GPSDClient, "get_accuracy", lambda self: None)
-    monkeypatch.setattr(gpsd_client_async.GPSDClient, "get_fix_quality", lambda self: "Unknown")
+    monkeypatch.setattr(asyncio, "open_connection", fake_open_connection)
 
     client = gpsd_client_async.AsyncGPSDClient()
 
-    assert asyncio.run(client.get_position_async()) is None
-    assert asyncio.run(client.get_accuracy_async()) is None
-    assert asyncio.run(client.get_fix_quality_async()) == "Unknown"
+    async def run():
+        pos = await client.get_position_async()
+        acc = await client.get_accuracy_async()
+        fix = await client.get_fix_quality_async()
+        return pos, acc, fix
+
+    pos, acc, fix = asyncio.run(run())
+
+    assert pos is None
+    assert acc is None
+    assert fix == "Unknown"

@@ -1,3 +1,4 @@
+"""Module tile_maintenance_cli."""
 import argparse
 import tile_maintenance
 
