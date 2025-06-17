@@ -30,6 +30,7 @@ PiWardrive Documentation
    workflows
    ckml_build
    mobile_build
+   drone_mapping
 
    r_integration
    web_ui

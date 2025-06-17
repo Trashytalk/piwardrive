@@ -198,6 +198,7 @@ New modules extend PiWardrive with optional capabilities:
   as open or WEP networks, duplicate SSIDs on a single BSSID, unusual channels,
   and unknown vendors.
 - `gps_track_playback` – replay GPS coordinates from previous drives.
+- `drone_mapping` – collect Wi‑Fi and GPS data from a UAV for later playback.
 - `lora_scanner` – scan LoRa/IoT radio bands.
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.

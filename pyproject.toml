@@ -27,7 +27,10 @@ piwardrive-prefetch = "piwardrive.scripts.prefetch_cli:main"
 service-status = "piwardrive.scripts.service_status:main"
 piwardrive-vacuum = "piwardrive.scripts.vacuum_db:main"
 piwardrive-migrate = "piwardrive.scripts.migrate_db:main"
+uav-record = "piwardrive.scripts.uav_record:main"
+uav-track-playback = "piwardrive.scripts.uav_track_playback:main"
 piwardrive-mbtiles = "piwardrive.scripts.vector_tile_customizer_cli:main"
+
 
 
 
