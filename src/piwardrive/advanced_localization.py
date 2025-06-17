@@ -11,6 +11,7 @@ from typing import Dict, Iterable, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
+from scipy import signal
 
 
 @dataclass
@@ -57,23 +58,21 @@ def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
 
 
 def _kalman_1d(series: Iterable[float], q: float, r: float) -> np.ndarray:
-    n = len(series)
-    xhat = np.zeros(n)
-    P = np.zeros(n)
-    xhatminus = np.zeros(n)
-    Pminus = np.zeros(n)
-    K = np.zeros(n)
+    """Return 1D Kalman filtered ``series`` using vectorized operations."""
+    arr = np.asarray(series, dtype=float)
+    if arr.size == 0:
+        return arr
 
-    xhat[0] = series[0]
-    P[0] = 1.0
+    # Steady-state Kalman gain for constant process/measurement variance
+    P = (-q + np.sqrt(q * q + 4 * q * r)) / 2
+    K = (P + q) / (P + q + r)
 
-    for k in range(1, n):
-        xhatminus[k] = xhat[k - 1]
-        Pminus[k] = P[k - 1] + q
-        K[k] = Pminus[k] / (Pminus[k] + r)
-        xhat[k] = xhatminus[k] + K[k] * (series[k] - xhatminus[k])
-        P[k] = (1 - K[k]) * Pminus[k]
-    return xhat
+    # IIR filter coefficients (equivalent to recursion: x[k]=x[k-1]*(1-K)+K*y[k])
+    b = [K]
+    a = [1, -(1 - K)]
+    zi = signal.lfilter_zi(b, a) * arr[0]
+    filtered, _ = signal.lfilter(b, a, arr, zi=zi)
+    return filtered
 
 
 def apply_kalman_filter(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
