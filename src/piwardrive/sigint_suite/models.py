@@ -65,3 +65,12 @@ class BluetoothDevice(RecordBase):
     name: str
     lat: Optional[float] = None
     lon: Optional[float] = None
+
+
+class TowerRecord(RecordBase):
+    """Cell tower observation."""
+
+    tower_id: str
+    rssi: str
+    lat: Optional[float] = None
+    lon: Optional[float] = None
