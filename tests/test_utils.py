@@ -655,3 +655,33 @@ def test_run_async_task() -> None:
     utils_mod.shutdown_async_loop()
 
 
+def test_get_mem_usage_cache(monkeypatch: Any) -> None:
+    utils._MEM_USAGE_CACHE = {"timestamp": 0.0, "percent": None}
+
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+    monkeypatch.setattr(utils.psutil, "virtual_memory", lambda: types.SimpleNamespace(percent=40))
+    assert utils.get_mem_usage() == 40
+
+    monkeypatch.setattr(utils.time, "time", lambda: 2.0)
+    monkeypatch.setattr(utils.psutil, "virtual_memory", lambda: types.SimpleNamespace(percent=50))
+    assert utils.get_mem_usage() == 40
+
+    monkeypatch.setattr(utils.time, "time", lambda: 4.5)
+    assert utils.get_mem_usage() == 50
+
+
+def test_get_disk_usage_cache(monkeypatch: Any) -> None:
+    utils._DISK_USAGE_CACHE.clear()
+
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+    monkeypatch.setattr(utils.psutil, "disk_usage", lambda p: types.SimpleNamespace(percent=70))
+    assert utils.get_disk_usage("/mnt/ssd") == 70
+
+    monkeypatch.setattr(utils.time, "time", lambda: 2.0)
+    monkeypatch.setattr(utils.psutil, "disk_usage", lambda p: types.SimpleNamespace(percent=80))
+    assert utils.get_disk_usage("/mnt/ssd") == 70
+
+    monkeypatch.setattr(utils.time, "time", lambda: 4.5)
+    assert utils.get_disk_usage("/mnt/ssd") == 80
+
+
