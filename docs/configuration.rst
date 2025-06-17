@@ -48,7 +48,7 @@ a profile. Switch via :func:`config.switch_profile` or by editing
 ``active_profile``. Profiles can be exported and imported using
 :func:`config.export_profile` and :func:`config.import_profile`.
 
-An example profile named ``default_profile.json`` is included under ``examples/`` with recommended settings. Copy this file to ``~/.config/piwardrive/profiles`` to bootstrap your own configuration.
+Several sample profiles live in ``examples/``. ``default_profile.json`` mirrors the built-in defaults. ``desktop_kismet.json`` and ``desktop_no_kismet.json`` demonstrate common desktop setups with and without Kismet logging. ``mobile_kismet.json`` and ``mobile_no_kismet.json`` tweak the polling intervals and tile cache for phones or tablets. Copy any of these files to ``~/.config/piwardrive/profiles`` and select them via ``PW_PROFILE_NAME`` or ``active_profile``.
 
 All values are validated on load. Invalid entries or environment overrides
 raise ``ValueError`` with details about the offending fields.

@@ -1,0 +1,15 @@
+{
+    "theme": "Light",
+    "map_poll_gps": 10,
+    "map_poll_gps_max": 30,
+    "map_poll_aps": 60,
+    "map_show_gps": true,
+    "map_show_aps": true,
+    "map_cluster_aps": true,
+    "map_cluster_capacity": 8,
+    "map_use_offline": false,
+    "offline_tile_path": "/mnt/ssd/tiles/offline.mbtiles",
+    "disable_scanning": true,
+    "widget_battery_status": false,
+    "admin_password_hash": "",
+}

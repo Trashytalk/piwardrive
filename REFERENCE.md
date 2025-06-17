@@ -43,7 +43,7 @@ See `docs/installation.rst` and `docs/deployment.rst` for additional tips and tr
 
 Settings are stored in `~/.config/piwardrive/config.json`. Any value can be overridden with environment variables prefixed with `PW_`. Multiple profiles may be kept under `~/.config/piwardrive/profiles`; switch with `PW_PROFILE_NAME` or by editing `active_profile`.
 
-Important options include GPS polling (`map_poll_gps` and `map_poll_gps_max`), Bluetooth scanning (`map_poll_bt` and `map_show_bt`), log rotation intervals and the `health_poll_interval` controlling diagnostics. Invalid values raise errors on startup. Example configuration lives in `examples/default_profile.json`.
+Important options include GPS polling (`map_poll_gps` and `map_poll_gps_max`), Bluetooth scanning (`map_poll_bt` and `map_show_bt`), log rotation intervals and the `health_poll_interval` controlling diagnostics. Invalid values raise errors on startup. Sample profiles under `examples/` provide starting points for common setups, including desktop and mobile variants with or without Kismet logging.
 
 ## Running the Application
 
@@ -186,6 +186,27 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 `PW_PROFILE_CALLGRIND` – Callgrind output path when profiling.
 
 `PW_LANG` – Two-letter code selecting the interface language.
+
+## CLI Tools
+
+Several entry points are installed with the package:
+
+- ``piwardrive-prefetch`` – Download map tiles for a bounding box without starting the GUI. Example::
+
+    piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
+
+- ``service-status`` – Print the systemd state of ``gpsd``, ``kismet`` and ``bettercap``.
+- ``piwardrive-service`` – Launch the FastAPI status server (equivalent to ``python -m service``).
+
+Use ``--help`` on each command for additional options.
+
+## Security
+
+Password helpers in :mod:`security` derive a PBKDF2-HMAC-SHA256 hash with a random salt::
+
+    python -c "import security,sys; print(security.hash_password(sys.argv[1]))" mypass
+
+Store the resulting hash in ``config.json`` or ``PW_ADMIN_PASSWORD_HASH`` and avoid committing plaintext secrets. ``verify_password`` recomputes the hash and returns ``True`` only on success.
 
 
 ## Additional Features
