@@ -31,6 +31,9 @@ command line.
 - **cellular.imsi_catcher** – stub for future IMSI catcher logic. Set
   ``IMSI_SCAN_TIMEOUT`` to control how long the external command may run
   (default ``10`` seconds).
+- **cellular.tower_scanner** – scan LTE/5G towers. Use ``TOWER_SCAN_CMD`` to
+  specify the executable and ``TOWER_SCAN_TIMEOUT`` for the timeout (default
+  ``10`` seconds).
 - **cellular.parsers** – parsers for raw cellular output.
 - **cellular.tower_tracker** – persist cell towers, Wi‑Fi access points and
   Bluetooth devices in a SQLite database for historical queries.

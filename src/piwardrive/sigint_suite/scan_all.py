@@ -4,6 +4,7 @@ from sigint_suite.wifi import scan_wifi
 from sigint_suite.bluetooth import scan_bluetooth
 from sigint_suite.cellular.band_scanner import scan_bands
 from sigint_suite.cellular.imsi_catcher import scan_imsis
+from sigint_suite.cellular.tower_scanner import scan_towers
 from sigint_suite.exports import export_json
 
 DEFAULT_EXPORT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "exports"))
@@ -15,10 +16,12 @@ def run_once(export_dir: str) -> None:
     bt_data = scan_bluetooth()
     band_data = scan_bands()
     imsi_data = scan_imsis()
+    tower_data = scan_towers()
     export_json(wifi_data, os.path.join(export_dir, "wifi.json"))
     export_json(bt_data, os.path.join(export_dir, "bluetooth.json"))
     export_json(band_data, os.path.join(export_dir, "bands.json"))
     export_json(imsi_data, os.path.join(export_dir, "imsis.json"))
+    export_json(tower_data, os.path.join(export_dir, "towers.json"))
 
 
 def main(argv: list[str] | None = None) -> None:
