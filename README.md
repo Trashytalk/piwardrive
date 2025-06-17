@@ -129,6 +129,21 @@ python main.py
 
 The UI renders directly on the framebuffer so no X server is required.
 
+### Optional C Extensions
+
+Two small C modules, `ckml` and `cgeom`, speed up geometry and KML parsing. They
+are optional – pure Python fallbacks are used if compilation fails – but the
+extensions provide a noticeable performance boost. Build them from the repository
+root using `python -m build` and then install the generated wheel:
+
+```bash
+pip install build
+python -m build
+pip install dist/*.whl
+```
+
+See `docs/ckml_build.rst` for troubleshooting tips.
+
 ### Docker
 
 ```bash
