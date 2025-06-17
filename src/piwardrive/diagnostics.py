@@ -94,6 +94,41 @@ def rotate_log(path: str, max_files: int = 3) -> None:
     _upload_to_cloud(f"{tmp}.gz")
 
 
+async def rotate_log_async(path: str, max_files: int = 3) -> None:
+    """Asynchronously rotate and gzip ``path`` using ``aiofiles``."""
+    if not os.path.exists(path):
+        return
+
+    try:
+        import aiofiles  # type: ignore
+    except Exception:  # pragma: no cover - optional dependency
+        await asyncio.to_thread(rotate_log, path, max_files)
+        return
+
+    for ext in (".gz", ""):
+        old = f"{path}.{max_files}{ext}"
+        if os.path.exists(old):
+            os.remove(old)
+
+    for i in range(max_files - 1, 0, -1):
+        src_gz = f"{path}.{i}.gz"
+        dst_gz = f"{path}.{i+1}.gz"
+        if os.path.exists(src_gz):
+            os.rename(src_gz, dst_gz)
+            continue
+        src = f"{path}.{i}"
+        if os.path.exists(src):
+            os.rename(src, dst_gz)
+
+    tmp = f"{path}.1"
+    os.rename(path, tmp)
+    async with aiofiles.open(tmp, "rb") as f_in:
+        data = await f_in.read()
+    async with aiofiles.open(f"{tmp}.gz", "wb") as f_out:
+        await f_out.write(gzip.compress(data))
+    os.remove(tmp)
+
+
 def start_profiling() -> None:
     """Enable global cProfile collection."""
     global _PROFILER
@@ -333,4 +368,5 @@ class HealthMonitor:
                 logging.exception("Failed to remove old export %s", fpath)
 
     def stop(self) -> None:
+        """Cancel the periodic health export task."""
         self._scheduler.cancel(self._event)

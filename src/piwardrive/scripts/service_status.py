@@ -1,3 +1,4 @@
+"""Module service_status."""
 import argparse
 import json
 

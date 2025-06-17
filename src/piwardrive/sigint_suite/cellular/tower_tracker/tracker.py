@@ -1,3 +1,4 @@
+"""Module tracker."""
 import time
 from typing import Dict, List, Optional
 
@@ -49,6 +50,18 @@ class TowerTracker:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 address TEXT,
                 name TEXT,
+                lat REAL,
+                lon REAL,
+                timestamp INTEGER
+            )
+            """
+        )
+        await self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tower_observations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tower_id TEXT,
+                rssi TEXT,
                 lat REAL,
                 lon REAL,
                 timestamp INTEGER
@@ -111,6 +124,47 @@ class TowerTracker:
 
         if self.conn is not None:
             await self.conn.close()
+
+    # ------------------------------------------------------------------
+    # Cellular tower helpers
+    # ------------------------------------------------------------------
+
+    async def log_tower(
+        self,
+        tower_id: str,
+        rssi: str,
+        lat: Optional[float] = None,
+        lon: Optional[float] = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        """Persist a cell tower observation."""
+
+        if timestamp is None:
+            timestamp = int(time.time())
+        conn = await self._get_conn()
+        await conn.execute(
+            """
+            INSERT INTO tower_observations (tower_id, rssi, lat, lon, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (tower_id, rssi, lat, lon, timestamp),
+        )
+        await conn.commit()
+
+    async def tower_history(self, tower_id: str) -> List[Dict[str, float]]:
+        """Return all records for ``tower_id`` sorted by newest first."""
+
+        conn = await self._get_conn()
+        cur = await conn.execute(
+            """
+            SELECT tower_id, rssi, lat, lon, timestamp
+            FROM tower_observations
+            WHERE tower_id=? ORDER BY timestamp DESC
+            """,
+            (tower_id,),
+        )
+        rows = await cur.fetchall()
+        return [dict(row) for row in rows]
 
     # ------------------------------------------------------------------
     # Wi-Fi helpers

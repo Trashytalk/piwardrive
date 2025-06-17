@@ -28,20 +28,21 @@ async def sync_database_to_server(
         raise FileNotFoundError(db_path)
 
     delay = 1.0
-    for attempt in range(1, retries + 1):
-        try:
-            timeout_cfg = aiohttp.ClientTimeout(total=timeout)
-            async with aiohttp.ClientSession(timeout=timeout_cfg) as session:
-                with open(db_path, "rb") as fh:
+    with open(db_path, "rb") as fh:
+        for attempt in range(1, retries + 1):
+            try:
+                fh.seek(0)
+                timeout_cfg = aiohttp.ClientTimeout(total=timeout)
+                async with aiohttp.ClientSession(timeout=timeout_cfg) as session:
                     form = aiohttp.FormData()
                     form.add_field("file", fh, filename=os.path.basename(db_path))
                     async with session.post(url, data=form) as resp:
                         resp.raise_for_status()
-            logger.info("Database %s synced to %s", db_path, url)
-            return
-        except Exception as exc:  # pragma: no cover - network errors
-            if attempt >= retries:
-                logger.error("Sync failed: %s", exc)
-                raise
-            await asyncio.sleep(delay)
-            delay *= 2
+                logger.info("Database %s synced to %s", db_path, url)
+                return
+            except Exception as exc:  # pragma: no cover - network errors
+                if attempt >= retries:
+                    logger.error("Sync failed: %s", exc)
+                    raise
+                await asyncio.sleep(delay)
+                delay *= 2

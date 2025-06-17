@@ -1,3 +1,4 @@
+"""Module models."""
 from __future__ import annotations
 
 """Typed record models used by scanner functions."""
@@ -20,6 +21,7 @@ class RecordBase(BaseModel):
         setattr(self, key, value)
 
     def get(self, key: str, default: Any = None) -> Any:  # pragma: no cover
+        """Return attribute ``key`` if present or ``default`` otherwise."""
         return getattr(self, key, default)
 
 
@@ -34,6 +36,7 @@ class WifiNetwork(RecordBase):
     quality: Optional[str] = None
     encryption: Optional[str] = None
     vendor: Optional[str] = None
+    heading: Optional[float] = None
 
 
 class BandRecord(RecordBase):
@@ -60,5 +63,14 @@ class BluetoothDevice(RecordBase):
 
     address: str
     name: str
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+
+
+class TowerRecord(RecordBase):
+    """Cell tower observation."""
+
+    tower_id: str
+    rssi: str
     lat: Optional[float] = None
     lon: Optional[float] = None
