@@ -26,7 +26,10 @@ except Exception:  # pragma: no cover - missing dependency
 
 logger = logging.getLogger(__name__)
 
-_ORIENTATION_MAP: Dict[str, float] = {
+# Default mapping between orientation strings and rotation angles.  The mapping
+# is copied to ``_ORIENTATION_MAP`` so callers can freely modify the latter
+# without losing the canonical defaults.
+DEFAULT_ORIENTATION_MAP: Dict[str, float] = {
     "normal": 0.0,
     "bottom-up": 180.0,
     "right-up": 90.0,
@@ -38,6 +41,11 @@ _ORIENTATION_MAP: Dict[str, float] = {
     "landscape-right": 270.0,
     "upside-down": 180.0,
 }
+
+# Actual mapping used by :func:`orientation_to_angle`.  It can be customised via
+# :func:`update_orientation_map` and restored using
+# :func:`reset_orientation_map`.
+_ORIENTATION_MAP: Dict[str, float] = DEFAULT_ORIENTATION_MAP.copy()
 
 
 def orientation_to_angle(
@@ -51,11 +59,30 @@ def orientation_to_angle(
     return mapping.get(orientation.lower())
 
 
-def update_orientation_map(new_map: Dict[str, float], *, clear: bool = False) -> None:
-    """Update the global orientation mapping used by :func:`orientation_to_angle`."""
+def clone_orientation_map() -> Dict[str, float]:
+    """Return a copy of the current orientation mapping."""
+    return _ORIENTATION_MAP.copy()
+
+
+def reset_orientation_map() -> None:
+    """Restore :data:`_ORIENTATION_MAP` to the default values."""
+    _ORIENTATION_MAP.clear()
+    _ORIENTATION_MAP.update(DEFAULT_ORIENTATION_MAP)
+
+
+def update_orientation_map(
+    new_map: Dict[str, float], *, clear: bool = False, mapping: Optional[Dict[str, float]] = None
+) -> Dict[str, float]:
+    """Update an orientation mapping.
+
+    If ``mapping`` is ``None`` the global mapping is modified.  The updated
+    mapping is returned so callers can work with a customized copy.
+    """
+    target = _ORIENTATION_MAP if mapping is None else mapping
     if clear:
-        _ORIENTATION_MAP.clear()
-    _ORIENTATION_MAP.update({k.lower(): v for k, v in new_map.items()})
+        target.clear()
+    target.update({k.lower(): v for k, v in new_map.items()})
+    return target
 
 
 def get_orientation_dbus() -> Optional[str]:
