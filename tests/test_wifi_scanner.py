@@ -29,8 +29,9 @@ Cell 02 - Address: 11:22:33:44:55:66
           Quality=20/70  Signal level=-90 dBm
 """
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
+    monkeypatch.setattr("sigint_suite.wifi.scanner.lookup_vendor", _mock_lookup_vendor)
     monkeypatch.setattr(
-        "sigint_suite.wifi.scanner.cached_lookup_vendor", _mock_lookup_vendor
+        "sigint_suite.wifi.scanner.orientation_sensors.get_heading", lambda: 45.0
     )
 
     nets = scan_wifi("wlan0")
@@ -40,6 +41,7 @@ Cell 02 - Address: 11:22:33:44:55:66
     assert nets[0].encryption == "on WPA Version 1"
     assert nets[1].channel == "3"
     assert nets[1].encryption == "off"
+    assert nets[0].heading == 45.0
 
 
 def test_scan_wifi_no_vendor(monkeypatch):
@@ -51,11 +53,13 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
           Quality=70/70  Signal level=-40 dBm
 """
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
+    monkeypatch.setattr("sigint_suite.wifi.scanner.lookup_vendor", lambda b: None)
     monkeypatch.setattr(
-        "sigint_suite.wifi.scanner.cached_lookup_vendor", lambda b: None
+        "sigint_suite.wifi.scanner.orientation_sensors.get_heading", lambda: None
     )
 
     nets = scan_wifi("wlan0")
     assert nets[0].vendor is None
     assert nets[0].channel == "6"
     assert nets[0].encryption == "on"
+    assert nets[0].heading is None

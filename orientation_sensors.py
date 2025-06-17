@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 """Entry point for orientation_sensors module."""
+
 from piwardrive.orientation_sensors import *  # noqa: F401,F403
 
 """Orientation sensor helpers for gyroscope and accelerometer.
@@ -12,10 +15,6 @@ external MPU‑6050 sensor using the optional ``mpu6050`` package.  Again,
 check for ``None`` to gracefully handle setups without these sensors.
 """
 
-
-from __future__ import annotations
-
-from piwardrive.orientation_sensors import *  # noqa: F401,F403
 
 import logging
 from typing import Any, Dict, Optional
@@ -108,3 +107,11 @@ def read_mpu6050(address: int = 0x68) -> Optional[Dict[str, Any]]:
     except Exception as exc:  # pragma: no cover - runtime errors
         logger.error("MPU6050 read failed: %s", exc)
         return None
+
+
+def get_heading(orientation_map: Optional[Dict[str, float]] = None) -> Optional[float]:
+    """Return device heading in degrees if orientation sensors are available."""
+    orient = get_orientation_dbus()
+    if orient:
+        return orientation_to_angle(orient, orientation_map)
+    return None

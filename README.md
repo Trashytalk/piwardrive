@@ -26,6 +26,8 @@ graph LR
 - Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
   - ``dbus`` + ``iio-sensor-proxy`` or an external MPU‑6050 are optional;
     the app falls back gracefully when absent
+  - Wi-Fi scans record the current antenna heading along with RSSI when
+    orientation data is available
 
 
 

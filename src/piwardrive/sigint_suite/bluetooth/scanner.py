@@ -3,10 +3,8 @@ import asyncio
 import logging
 import os
 import subprocess
-from typing import Dict, List
-
-import contextlib
 import logging
+from typing import Dict, List
 
 
 from sigint_suite.models import BluetoothDevice
