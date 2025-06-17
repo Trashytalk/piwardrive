@@ -43,7 +43,7 @@ def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
     pw_hash = os.getenv("PW_API_PASSWORD_HASH")
     if not pw_hash:
         return
-    if not verify_password(credentials.password, pw_hash):
+    if not credentials or not verify_password(credentials.password, pw_hash):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
