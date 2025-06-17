@@ -56,6 +56,13 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
     }
 }
 
+# Cache for frequently polled system metrics
+MEM_USAGE_CACHE_SECONDS = 2.0
+_MEM_USAGE_CACHE: dict[str, Any] = {"timestamp": 0.0, "percent": None}
+
+DISK_USAGE_CACHE_SECONDS = 2.0
+_DISK_USAGE_CACHE: dict[str, dict[str, Any]] = {}
+
 # Cache for HTTP requests issued via :func:`safe_request`
 SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
 _SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
@@ -307,20 +314,37 @@ def get_mem_usage() -> float | None:
     """
     Return system memory usage percentage.
     """
+    now = time.time()
+    pct = _MEM_USAGE_CACHE.get("percent")
+    ts = _MEM_USAGE_CACHE.get("timestamp", 0.0)
+    if pct is not None and now - ts <= MEM_USAGE_CACHE_SECONDS:
+        return pct
     try:
-        return psutil.virtual_memory().percent
+        pct = psutil.virtual_memory().percent
     except Exception:
-        return None
+        return pct
+    _MEM_USAGE_CACHE["timestamp"] = now
+    _MEM_USAGE_CACHE["percent"] = pct
+    return pct
 
 
 def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
     """
     Return disk usage percentage for given path.
     """
+    now = time.time()
+    cache = _DISK_USAGE_CACHE.get(path)
+    if cache is not None:
+        pct_cached = cache.get("percent")
+        ts = cache.get("timestamp", 0.0)
+        if pct_cached is not None and now - ts <= DISK_USAGE_CACHE_SECONDS:
+            return pct_cached
     try:
-        return psutil.disk_usage(path).percent
+        pct = psutil.disk_usage(path).percent
     except Exception:
-        return None
+        return cache.get("percent") if cache else None
+    _DISK_USAGE_CACHE[path] = {"timestamp": now, "percent": pct}
+    return pct
 
 
 def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
