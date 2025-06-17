@@ -64,6 +64,7 @@ class Config:
     map_poll_aps: int = 60
     map_poll_bt: int = 60
     map_show_gps: bool = True
+    map_follow_gps: bool = True
     map_show_aps: bool = True
     map_show_bt: bool = False
     map_show_heatmap: bool = False
@@ -129,6 +130,7 @@ class FileConfigModel(BaseModel):
     map_poll_gps_max: Optional[int] = None
     map_poll_aps: Optional[int] = None
     map_show_gps: Optional[bool] = None
+    map_follow_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
     map_show_heatmap: Optional[bool] = None
@@ -178,6 +180,7 @@ class ConfigModel(FileConfigModel):
     compress_health_exports: bool = DEFAULTS["compress_health_exports"]
     health_export_retention: int = Field(default=7, ge=1)
     map_auto_prefetch: bool = DEFAULTS["map_auto_prefetch"]
+    map_follow_gps: bool = DEFAULTS["map_follow_gps"]
 
     theme: Theme
 
@@ -350,6 +353,7 @@ class AppConfig:
     map_poll_aps: int = DEFAULTS["map_poll_aps"]
     map_poll_bt: int = DEFAULTS["map_poll_bt"]
     map_show_gps: bool = DEFAULTS["map_show_gps"]
+    map_follow_gps: bool = DEFAULTS["map_follow_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
     map_show_heatmap: bool = DEFAULTS["map_show_heatmap"]

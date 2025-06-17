@@ -166,9 +166,13 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._gps_event = "map_gps"
         self._aps_event = "map_aps"
 
-        app.scheduler.schedule(
-            self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
-        )
+        if app.map_follow_gps:
+            app.scheduler.schedule(
+                self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
+            )
+        btn = self.ids.get("follow_btn")
+        if btn:
+            btn.text = "Follow ON" if app.map_follow_gps else "Follow OFF"
 
         from utils import network_scanning_disabled
 
@@ -873,6 +877,25 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         Snackbar(text=f"{key} = {getattr(app, key)}", duration=1.5).open()
         if key == "map_show_heatmap":
             self.update_heatmap()
+
+    def toggle_follow(self) -> None:
+        """Toggle GPS follow mode and (un)schedule centering."""
+        app = App.get_running_app()
+        app.map_follow_gps = not getattr(app, "map_follow_gps")
+        btn = self.ids.get("follow_btn")
+        if btn:
+            btn.text = "Follow ON" if app.map_follow_gps else "Follow OFF"
+        if app.map_follow_gps:
+            if not self._gps_event:
+                self._gps_event = "map_gps"
+            app.scheduler.schedule(
+                self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
+            )
+            Clock.schedule_once(lambda _dt: self.center_on_gps())
+        else:
+            if self._gps_event:
+                app.scheduler.cancel(self._gps_event)
+                self._gps_event = None
 
 
 

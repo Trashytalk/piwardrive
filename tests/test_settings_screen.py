@@ -58,6 +58,7 @@ class DummyApp:
         self.map_poll_aps = 60
         self.map_poll_bt = 60
         self.map_show_gps = True
+        self.map_follow_gps = True
         self.map_show_aps = True
         self.map_show_bt = False
         self.map_cluster_aps = False
