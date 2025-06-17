@@ -13,17 +13,32 @@ EXPORT_FORMATS = ("csv", "json")
 
 
 def _write_csv(records: Iterable[HealthRecord], path: str) -> None:
-    rows = [asdict(r) for r in records]
+    it = iter(records)
+    try:
+        first = next(it)
+    except StopIteration:
+        open(path, "w", newline="", encoding="utf-8").close()
+        return
+
+    first_row = asdict(first)
     with open(path, "w", newline="", encoding="utf-8") as fh:
-        if rows:
-            writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(rows)
+        writer = csv.DictWriter(fh, fieldnames=list(first_row.keys()))
+        writer.writeheader()
+        writer.writerow(first_row)
+        for rec in it:
+            writer.writerow(asdict(rec))
 
 
 def _write_json(records: Iterable[HealthRecord], path: str) -> None:
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump([asdict(r) for r in records], fh)
+        fh.write("[")
+        first = True
+        for r in records:
+            if not first:
+                fh.write(",")
+            json.dump(asdict(r), fh)
+            first = False
+        fh.write("]")
 
 
 async def _load_records(limit: int) -> list[HealthRecord]:

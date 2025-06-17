@@ -65,13 +65,20 @@ def export_records(
         p: str,
         f: Sequence[str] | None,
     ) -> None:
-        rows = list(rows)
+        it = iter(rows)
+        try:
+            first = next(it)
+        except StopIteration:
+            open(p, "w", newline="", encoding="utf-8").close()
+            return
+
+        fieldnames = f or list(first.keys())
         with open(p, "w", newline="", encoding="utf-8") as fh:
-            if rows:
-                fieldnames = f or list(rows[0].keys())
-                writer = csv.DictWriter(fh, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(rows)
+            writer = csv.DictWriter(fh, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerow(first)
+            for row in it:
+                writer.writerow(row)
 
     def export_json(
         rs: Sequence[Mapping[str, Any]],
@@ -79,7 +86,12 @@ def export_records(
         _f: Sequence[str] | None,
     ) -> None:
         with open(p, "w", encoding="utf-8") as fh:
-            json.dump(list(rs), fh)
+            fh.write("[")
+            for i, rec in enumerate(rs):
+                if i:
+                    fh.write(",")
+                json.dump(rec, fh)
+            fh.write("]")
 
     def export_gpx(
         rs: Sequence[Mapping[str, Any]],
