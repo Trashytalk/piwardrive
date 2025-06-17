@@ -1,0 +1,13 @@
+[Unit]
+Description=PiWardrive Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piwardrive
+ExecStart=/home/pi/piwardrive/gui-env/bin/python /home/pi/piwardrive/main.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
