@@ -43,7 +43,8 @@ graph LR
 ## Data Handling
 - Multi-format exports (GPX/KML/CSV/JSON)
 - Diagnostics and log rotation
-- Remote database sync (`remote_sync.py`) and cloud exports
+- Remote database sync (`remote_sync.py`) with a central aggregation service
+  for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
 - CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   

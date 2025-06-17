@@ -22,6 +22,7 @@ PiWardrive Documentation
    geofencing
    status_service
    remote_sync
+   aggregation_service
    architecture
    function_flows
    deployment
