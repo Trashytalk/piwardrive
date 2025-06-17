@@ -459,6 +459,29 @@ def test_safe_request_cache(monkeypatch: Any) -> None:
     assert calls == ["http://x"]
 
 
+def test_safe_request_cache_pruning(monkeypatch: Any) -> None:
+    class Resp:
+        status_code = 200
+
+        def raise_for_status(self) -> None:
+            pass
+
+    def get(_url: str, timeout: int = 5) -> Resp:
+        return Resp()
+
+    monkeypatch.setattr(utils, "requests", mock.Mock(get=get, RequestException=Exception))
+    times = [0.0, 1.0]
+    monkeypatch.setattr(utils.time, "time", lambda: times.pop(0))
+    utils._SAFE_REQUEST_CACHE = {}
+    monkeypatch.setattr(utils, "SAFE_REQUEST_CACHE_MAX_SIZE", 1)
+
+    utils.safe_request("http://a")
+    utils.safe_request("http://b")
+
+    assert "http://a" not in utils._SAFE_REQUEST_CACHE
+    assert "http://b" in utils._SAFE_REQUEST_CACHE
+
+
 def test_ensure_service_running_attempts_restart(monkeypatch: Any) -> None:
     states = [False, True]
 
