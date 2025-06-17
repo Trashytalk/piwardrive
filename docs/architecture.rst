@@ -52,7 +52,9 @@ data on a configurable interval using the scheduler.
 External services such as Kismet, BetterCAP and ``gpsd`` are controlled via
 shell commands. They run outside the Python process but are monitored by the
 application. Structured JSON logs are produced through
-``logconfig.setup_logging`` and written to ``~/.config/piwardrive/app.log``.
+``logconfig.setup_logging`` and written to ``~/.config/piwardrive/app.log`` by
+default. The logger can also emit to ``stdout`` or extra handlers passed into
+``setup_logging`` for easier debugging.
 
 Startup Sequence
 ~~~~~~~~~~~~~~~~

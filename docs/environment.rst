@@ -78,6 +78,12 @@ SIGINT Suite
 ``BAND_SCAN_CMD``
     Command used by :mod:`sigint_suite.cellular.band_scanner.scanner`.
 
+``TOWER_SCAN_CMD``
+    Executable for :mod:`sigint_suite.cellular.tower_scanner.scanner`.
+
+``TOWER_SCAN_TIMEOUT``
+    Timeout in seconds for ``TOWER_SCAN_CMD`` (default ``10``).
+
 ``EXPORT_DIR``
     Output directory for scripts under ``sigint_suite/scripts``.
 

@@ -1,3 +1,4 @@
+"""Module exception_handler."""
 import logging
 from kivy.base import ExceptionHandler, ExceptionManager
 
@@ -6,6 +7,7 @@ class LogExceptionHandler(ExceptionHandler):
     """Logs uncaught Kivy exceptions to the application log."""
 
     def handle_exception(self, inst):
+        """Log the exception and let Kivy continue processing."""
         logging.exception(
             "Unhandled exception",
             exc_info=(type(inst), inst, inst.__traceback__),

@@ -1,3 +1,4 @@
+"""Module scanner."""
 import os
 import shlex
 import subprocess

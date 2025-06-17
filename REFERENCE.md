@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `sigint_sui
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Results are logged to `~/.config/piwardrive/app.log` and persisted in a SQLite database. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -64,7 +64,8 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 ## Status Service and Web UI
 
-Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails the configured log file (`app.log` by default). Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+
 
 ## GPS and Bluetooth Polling
 
@@ -191,16 +192,20 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 
 New modules extend PiWardrive with optional capabilities:
 
-- `remote_sync` – upload the SQLite database to a remote server.
+- `remote_sync` – upload the SQLite database to a remote server using
+  ``remote_sync.sync_database_to_server``.  Configure ``remote_sync_url``,
+  ``remote_sync_timeout`` and ``remote_sync_retries`` in ``config.json``.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
+- `vector_tile_customizer` – build and style MBTiles for offline use.
 - `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such
   as open or WEP networks, duplicate SSIDs on a single BSSID, unusual channels,
   and unknown vendors.
 - `gps_track_playback` – replay GPS coordinates from previous drives.
+- `drone_mapping` – collect Wi‑Fi and GPS data from a UAV for later playback.
 - `lora_scanner` – scan LoRa/IoT radio bands.
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
-- `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
+- `vehicle_sensors` – read speed, RPM and engine load from an OBD‑II adapter.
 - `orientation_sensors` – track device orientation via DBus
   (``iio-sensor-proxy``) or an MPU‑6050 sensor. Functions return ``None`` when
   the optional dependencies are missing.

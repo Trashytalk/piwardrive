@@ -1,3 +1,4 @@
+"""Module prefetch_cli."""
 import argparse
 from screens.map_utils import tile_cache
 

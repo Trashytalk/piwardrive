@@ -1,3 +1,4 @@
+"""Module vacuum_db."""
 import asyncio
 import persistence
 

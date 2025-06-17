@@ -1,3 +1,5 @@
+"""Benchmark the REST status endpoint."""
+
 import asyncio
 import logging
 import time
