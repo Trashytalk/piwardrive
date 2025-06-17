@@ -34,5 +34,4 @@ def setup_logger(name='localization', log_dir='logs', level=logging.INFO):
 
         logger.info(f"Logger initialized. Writing to {log_file}")
 
-    
     return logger

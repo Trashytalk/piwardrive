@@ -77,7 +77,8 @@ async def _merge_points(points: Iterable[Tuple[float, float]]) -> None:
 async def _process_upload(path: str) -> None:
     async with aiosqlite.connect(path) as db:
         cur = await db.execute(
-            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent FROM health_records"
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
+            "disk_percent FROM health_records"
         )
         recs = await cur.fetchall()
         await _merge_records(recs)
@@ -103,7 +104,8 @@ async def stats() -> dict:
     """Return averaged system metrics from all records."""
     conn = await _get_conn()
     cur = await conn.execute(
-        "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent FROM health_records"
+        "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
+        "disk_percent FROM health_records"
     )
     rows = await cur.fetchall()
     records = [HealthRecord(*row) for row in rows]

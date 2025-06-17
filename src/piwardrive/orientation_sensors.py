@@ -71,7 +71,8 @@ def reset_orientation_map() -> None:
 
 
 def update_orientation_map(
-    new_map: Dict[str, float], *, clear: bool = False, mapping: Optional[Dict[str, float]] = None
+    new_map: Dict[str, float], *, clear: bool = False,
+    mapping: Optional[Dict[str, float]] = None
 ) -> Dict[str, float]:
     """Update an orientation mapping.
 
@@ -127,4 +128,3 @@ def get_heading(orientation_map: Optional[Dict[str, float]] = None) -> Optional[
     if orient:
         return orientation_to_angle(orient, orientation_map)
     return None
-

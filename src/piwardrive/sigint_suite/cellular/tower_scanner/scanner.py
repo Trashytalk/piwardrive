@@ -22,7 +22,11 @@ def scan_towers(
     """Scan for nearby cell towers and return a list of records."""
     cmd_str = cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+    )
     try:
         output = subprocess.check_output(
             args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
@@ -53,7 +57,11 @@ async def async_scan_towers(
     """Asynchronously scan for cell towers."""
     cmd_str = cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan")
     args = shlex.split(cmd_str)
-    timeout = timeout if timeout is not None else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+    timeout = (
+        timeout
+        if timeout is not None
+        else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+    )
     logger.debug("Executing: %s", " ".join(args))
     try:
         proc = await asyncio.create_subprocess_exec(

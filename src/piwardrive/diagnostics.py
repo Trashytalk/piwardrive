@@ -42,7 +42,9 @@ def _upload_to_cloud(path: str) -> None:
         return
     key = os.path.join(cfg.cloud_prefix.strip("/"), os.path.basename(path))
     try:
-        cloud_export.upload_to_s3(path, cfg.cloud_bucket, key, cfg.cloud_profile or None)
+        cloud_export.upload_to_s3(
+            path, cfg.cloud_bucket, key, cfg.cloud_profile or None
+        )
     except Exception as exc:  # pragma: no cover - upload errors
         logging.exception("Cloud upload failed: %s", exc)
 
