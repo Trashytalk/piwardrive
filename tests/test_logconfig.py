@@ -1,6 +1,10 @@
 import json
 import logging
 import os
+import sys
+import io
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from logconfig import setup_logging
 from typing import Any
@@ -26,3 +30,16 @@ def test_setup_logging_respects_env(monkeypatch: Any, tmp_path: Any) -> None:
     assert data["level"] == "DEBUG"
     assert logger.level == logging.DEBUG
     monkeypatch.delenv("PW_LOG_LEVEL")
+
+
+def test_setup_logging_stdout(monkeypatch: Any, tmp_path: Any) -> None:
+    log_file = tmp_path / "out.log"
+    stream = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", stream)
+    setup_logging(log_file=str(log_file), stdout=True)
+    logging.warning("stream me")
+    with open(log_file) as f:
+        data = json.loads(f.readline())
+    stdout_data = json.loads(stream.getvalue())
+    assert data["message"] == "stream me"
+    assert stdout_data["message"] == "stream me"
