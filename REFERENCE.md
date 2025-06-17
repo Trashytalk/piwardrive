@@ -64,7 +64,7 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 ## Status Service and Web UI
 
-Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`. The `/config` route enables remote editing of `config.json` from the web UI.
 
 ## GPS and Bluetooth Polling
 
