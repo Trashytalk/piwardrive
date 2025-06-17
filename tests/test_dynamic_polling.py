@@ -85,6 +85,7 @@ class DummyApp:
     map_poll_gps = 5
     map_poll_gps_max = 20
     gps_movement_threshold = 1.0
+    map_follow_gps = True
 
     def __init__(self) -> None:
         self.scheduler = DummyScheduler()

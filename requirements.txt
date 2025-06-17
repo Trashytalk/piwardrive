@@ -29,6 +29,7 @@ aiosqlite==0.21.0
 dbus-fast==2.44.1
 dbus-python==1.4.0
 bleak==0.22.3
+watchdog==6.0.0
 ## pybluez>=0.23
 ## Re-enable this after testing is done. It is breaking the environment
 gps==3.19
@@ -37,3 +38,4 @@ pandas==2.3.0
 pyprof2calltree==1.4.5
 rpy2==3.6.1
 scikit-learn==1.5.0
+watchdog==4.0.1

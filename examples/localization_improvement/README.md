@@ -113,7 +113,7 @@ pip install -r requirements.txt
 
 - 📡 Directional antenna support (heading-based RSSI vectors)
 - 🧠 Fingerprinting & RSSI pattern matching (disabled)
-- 🌐 GIS format export (GeoJSON, KML)
+- 🌐 GIS format export (GeoJSON, KML, Shapefile)
 - 🛰️ Real-time drone/AP mapping
 
 ---

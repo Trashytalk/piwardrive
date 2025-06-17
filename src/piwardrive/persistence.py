@@ -1,8 +1,10 @@
+"""Module persistence."""
 from __future__ import annotations
 
 """Simple persistence helpers using SQLite."""
 
 import os
+import time
 import aiosqlite
 from dataclasses import dataclass, asdict
 from typing import Any, List, Optional, Callable, Awaitable
@@ -24,6 +26,14 @@ def _db_path() -> str:
 _DB_CONN: aiosqlite.Connection | None = None
 _DB_LOOP: asyncio.AbstractEventLoop | None = None
 _DB_DIR: str | None = None
+
+# Pending HealthRecord rows for bulk writes
+_HEALTH_BUFFER: list[dict[str, Any]] = []
+_LAST_FLUSH: float = 0.0
+
+# Flush after this many records or seconds
+_BUFFER_LIMIT = 50
+_FLUSH_INTERVAL = 30.0
 
 # Schema versioning
 LATEST_VERSION = 1
@@ -136,7 +146,7 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
             await conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?)", (current,)
             )
-            row = {"version": current}
+            row = {"version": current}  # type: ignore[assignment]
         else:
             await conn.execute(
                 "UPDATE schema_version SET version = ?", (current,)
@@ -145,22 +155,37 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
     await conn.commit()
 
 
-async def save_health_record(rec: HealthRecord) -> None:
-    """Insert ``rec`` into the ``health_records`` table."""
+async def flush_health_records() -> None:
+    """Write any buffered :class:`HealthRecord` rows to the database."""
+    global _LAST_FLUSH
+    if not _HEALTH_BUFFER:
+        return
     conn = await _get_conn()
-    await conn.execute(
+    await conn.executemany(
         """
         INSERT OR REPLACE INTO health_records
         (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
         VALUES (:timestamp, :cpu_temp, :cpu_percent, :memory_percent, :disk_percent)
         """,
-        asdict(rec),
+        list(_HEALTH_BUFFER),
     )
     await conn.commit()
+    _HEALTH_BUFFER.clear()
+    _LAST_FLUSH = time.time()
+
+
+async def save_health_record(rec: HealthRecord) -> None:
+    """Queue ``rec`` for insertion into ``health_records``."""
+    await _get_conn()  # ensure DB file exists
+    _HEALTH_BUFFER.append(asdict(rec))
+    now = time.time()
+    if len(_HEALTH_BUFFER) >= _BUFFER_LIMIT or now - _LAST_FLUSH >= _FLUSH_INTERVAL:
+        await flush_health_records()
 
 
 async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
     """Return up to ``limit`` most recent :class:`HealthRecord` entries."""
+    await flush_health_records()
     conn = await _get_conn()
     cur = await conn.execute(
         """SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent
@@ -173,6 +198,7 @@ async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
 
 async def purge_old_health(days: int) -> None:
     """Delete ``health_records`` older than ``days`` days."""
+    await flush_health_records()
     cutoff = (datetime.now() - timedelta(days=days)).isoformat()
     conn = await _get_conn()
     await conn.execute(
@@ -255,6 +281,7 @@ async def get_table_counts() -> dict[str, int]:
 
 async def vacuum() -> None:
     """Run ``VACUUM`` on the active database connection."""
+    await flush_health_records()
     conn = await _get_conn()
     await conn.execute("VACUUM")
     await conn.commit()

@@ -4,6 +4,7 @@ from unittest import mock
 from typing import Any, cast
 from pathlib import Path
 import time
+import asyncio
 from types import ModuleType
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # noqa: E402
@@ -17,19 +18,21 @@ from scheduler import PollScheduler
 
 
 class DummyScheduler:
-    def __init__(self) -> None:
+    def __init__(self, run_immediate: bool = True) -> None:
         self.scheduled: list[tuple[str, int]] = []
+        self.run_immediate = run_immediate
 
     def schedule(self, name: str, cb: Any, interval: int) -> None:
         self.scheduled.append((name, interval))
-        cb(0)
+        if self.run_immediate:
+            cb(0)
 
     def cancel(self, name: str) -> None:
         pass
 
 
 def test_health_monitor_polls_self_test() -> None:
-    sched = DummyScheduler()
+    sched = DummyScheduler(run_immediate=False)
     with mock.patch('diagnostics.self_test', return_value={'system': {'disk_percent': 42}, 'network_ok': True, 'services': {}}), \
          mock.patch('diagnostics.purge_old_health') as purge, \
          mock.patch('diagnostics.vacuum') as vac:
@@ -94,3 +97,39 @@ def test_health_monitor_export_cleanup(tmp_path, monkeypatch) -> None:
         exported = list(tmp_path.glob('health_*.json.gz'))
         assert exported and exported[0].suffix == '.gz'
         assert not old.exists()
+
+
+def test_health_monitor_upload_to_cloud(tmp_path, monkeypatch) -> None:
+    sched = DummyScheduler()
+    monkeypatch.setattr(diagnostics.config, "HEALTH_EXPORT_DIR", str(tmp_path))
+    monkeypatch.setattr(diagnostics.config, "HEALTH_EXPORT_INTERVAL", 1)
+    monkeypatch.setattr(diagnostics.config, "COMPRESS_HEALTH_EXPORTS", False)
+    monkeypatch.setattr(diagnostics.config, "HEALTH_EXPORT_RETENTION", 1)
+    monkeypatch.setenv("PW_CLOUD_BUCKET", "bucket")
+    monkeypatch.setenv("PW_CLOUD_PREFIX", "prefix")
+    monkeypatch.setenv("PW_CLOUD_PROFILE", "")
+    class DummyCollector:
+        def collect(self) -> dict:
+            return {"system": {}}
+    created = {}
+    uploaded = {}
+
+    def fake_export(args: list[str]) -> None:
+        created["path"] = args[0]
+        Path(args[0]).write_text("x")
+
+    async def direct(func, *a, **k):
+        return func(*a, **k)
+
+    monkeypatch.setattr(diagnostics.asyncio, "to_thread", direct)
+    monkeypatch.setattr(diagnostics, "run_async_task", lambda coro, cb=None: asyncio.get_event_loop().run_until_complete(coro))
+    monkeypatch.setattr(diagnostics, "save_health_record", lambda *_a, **_k: None)
+    monkeypatch.setattr(diagnostics, "purge_old_health", lambda *_a, **_k: None)
+    monkeypatch.setattr(diagnostics, "vacuum", lambda *_a, **_k: None)
+
+    with mock.patch("scripts.health_export.main", side_effect=fake_export), mock.patch(
+        "piwardrive.diagnostics._upload_to_cloud", lambda p: uploaded.update({"path": p})
+    ):
+        mon = diagnostics.HealthMonitor(cast(PollScheduler, sched), interval=1, collector=DummyCollector())
+        asyncio.run(mon._run_export())
+        assert uploaded["path"] == created["path"]

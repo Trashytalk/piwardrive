@@ -1,5 +1,4 @@
 import types
-from importlib import reload
 
 import os
 import sys
@@ -24,7 +23,15 @@ def test_update_orientation_map() -> None:
     try:
         assert osens.orientation_to_angle("flip") == 45.0
     finally:
-        reload(osens)
+        osens.reset_orientation_map()
+
+
+def test_update_orientation_map_clone() -> None:
+    local_map = osens.clone_orientation_map()
+    osens.update_orientation_map({"flip": 45.0}, mapping=local_map)
+    assert osens.orientation_to_angle("flip", local_map) == 45.0
+    # Global mapping should remain unchanged
+    assert osens.orientation_to_angle("flip") is None
 
 
 def test_get_orientation_dbus_missing(monkeypatch):
@@ -59,3 +66,14 @@ def test_get_orientation_dbus_success(monkeypatch):
     )
     monkeypatch.setattr(osens, "dbus", dummy_dbus)
     assert osens.get_orientation_dbus() == "right-up"
+
+
+def test_get_heading(monkeypatch):
+    monkeypatch.setattr(osens, "get_orientation_dbus", lambda: "right-up")
+    monkeypatch.setattr(osens, "orientation_to_angle", lambda o, m=None: 90.0)
+    assert osens.get_heading() == 90.0
+
+
+def test_get_heading_none(monkeypatch):
+    monkeypatch.setattr(osens, "get_orientation_dbus", lambda: None)
+    assert osens.get_heading() is None
