@@ -5,6 +5,14 @@ import sqlite3
 import time
 from scheduler import PollScheduler
 import utils
+from typing import Optional
+
+try:
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler
+except Exception:  # pragma: no cover - watchdog optional for tests
+    Observer = None  # type: ignore
+    FileSystemEventHandler = object  # type: ignore
 
 
 def purge_old_tiles(folder: str, max_age_days: int) -> None:
@@ -66,6 +74,29 @@ def enforce_cache_limit(folder: str, limit_mb: int) -> None:
         logging.exception("Cache limit enforcement failed: %s", exc)
 
 
+def _folder_stats(folder: str) -> tuple[int, int]:
+    """Return ``(file_count, total_bytes)`` for ``folder``."""
+    count = 0
+    size = 0
+    if not os.path.isdir(folder):
+        return count, size
+    stack = [folder]
+    while stack:
+        base = stack.pop()
+        try:
+            with os.scandir(base) as entries:
+                for entry in entries:
+                    if entry.is_dir(follow_symlinks=False):
+                        stack.append(entry.path)
+                    elif entry.is_file(follow_symlinks=False):
+                        stat = entry.stat()
+                        count += 1
+                        size += stat.st_size
+        except OSError:
+            continue
+    return count, size
+
+
 def vacuum_mbtiles(path: str) -> None:
     """Run VACUUM on an MBTiles file to compress it."""
     try:
@@ -76,8 +107,18 @@ def vacuum_mbtiles(path: str) -> None:
         logging.exception("MBTiles VACUUM failed: %s", exc)
 
 
+class _TileEventHandler(FileSystemEventHandler):
+    """Handle file events for :class:`TileMaintainer`."""
+
+    def __init__(self, maintainer: "TileMaintainer") -> None:
+        self.maintainer = maintainer
+
+    def on_any_event(self, _event) -> None:  # pragma: no cover - thin wrapper
+        self.maintainer.check_thresholds()
+
+
 class TileMaintainer:
-    """Background task for periodic tile cache maintenance."""
+    """Maintain cached tiles using ``watchdog`` and periodic checks."""
 
     def __init__(
         self,
@@ -85,21 +126,34 @@ class TileMaintainer:
         *,
         folder: str = "/mnt/ssd/tiles",
         offline_path: str | None = None,
-        interval: int = 86400,
+        interval: int = 604800,
         max_age_days: int = 30,
         limit_mb: int = 512,
         vacuum: bool = True,
+        trigger_file_count: int = 1000,
+        start_observer: bool = True,
     ) -> None:
         self._folder = folder
         self._offline_path = offline_path
         self._max_age = max_age_days
         self._limit = limit_mb
         self._vacuum = vacuum
-        scheduler.schedule(
-            "tile_maintenance",
-            lambda dt: utils.run_async_task(self._run()),
-            interval,
-        )
+        self._trigger_files = trigger_file_count
+        self._running = False
+        self._observer: Optional[Observer] = None
+
+        if interval > 0:
+            scheduler.schedule(
+                "tile_maintenance",
+                lambda dt: utils.run_async_task(self._run()),
+                interval,
+            )
+
+        if start_observer and Observer is not None:
+            handler = _TileEventHandler(self)
+            self._observer = Observer()
+            self._observer.schedule(handler, self._folder, recursive=True)
+            self._observer.start()
 
     async def _run(self) -> None:
         try:
@@ -109,3 +163,26 @@ class TileMaintainer:
                 await asyncio.to_thread(vacuum_mbtiles, self._offline_path)
         except Exception as exc:  # pragma: no cover - unexpected errors
             logging.exception("Tile maintenance failed: %s", exc)
+
+    def stop(self) -> None:
+        """Stop the ``watchdog`` observer if running."""
+        if self._observer is not None:
+            self._observer.stop()
+            self._observer.join(1)
+            self._observer = None
+
+    def check_thresholds(self) -> None:
+        """Run maintenance if file count or size exceed limits."""
+        count, size = _folder_stats(self._folder)
+        over_files = count >= self._trigger_files
+        over_size = size >= self._limit * 1024 * 1024
+        if (over_files or over_size) and not self._running:
+            self._running = True
+
+            async def _runner() -> None:
+                try:
+                    await self._run()
+                finally:
+                    self._running = False
+
+            utils.run_async_task(_runner())

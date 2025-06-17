@@ -141,7 +141,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 #### Automated Aspects
 
 * **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
-* **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
+* **Tile Cache Maintenance** – a watchdog triggers cleanup when the tile cache grows too large with periodic checks controlled by `tile_maintenance_interval`.
 * **Configuration Reloads** – changes to `config.json` and any `PW_` environment variables are detected at runtime and applied without restarting.
 * **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup.
 
