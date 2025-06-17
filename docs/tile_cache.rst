@@ -41,10 +41,11 @@ well for most deployments.
 Automated Maintenance
 ~~~~~~~~~~~~~~~~~~~~~
 
-``tile_maintenance_interval`` controls how often the cache is cleaned
-automatically. Old tiles are purged and the cache limit enforced.  If
-``compress_offline_tiles`` is ``true`` the offline MBTiles file is compacted
-with ``VACUUM`` during each run.
+``tile_maintenance_interval`` controls how often a periodic cleanup runs.  A
+``watchdog`` observer triggers maintenance whenever the cache size or file count
+exceeds limits, with the scheduled interval (weekly by default) serving as a
+fallback. If ``compress_offline_tiles`` is ``true`` the offline MBTiles file is
+compacted with ``VACUUM`` during each run.
 
 Scheduled Prefetch
 ~~~~~~~~~~~~~~~~~~

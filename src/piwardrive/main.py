@@ -81,7 +81,7 @@ class PiWardriveApp(MDApp):
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
     cleanup_rotated_logs = BooleanProperty(True)
-    tile_maintenance_interval = NumericProperty(86400)
+    tile_maintenance_interval = NumericProperty(604800)
     tile_max_age_days = NumericProperty(30)
     tile_cache_limit_mb = NumericProperty(512)
     compress_offline_tiles = BooleanProperty(True)
