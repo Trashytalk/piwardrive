@@ -6,6 +6,8 @@ import subprocess
 from typing import Dict, List, Optional
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
+from sigint_suite.models import WifiNetwork
+import orientation_sensors
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,7 @@ def scan_wifi(
         logger.exception("Wi-Fi scan failed: %s", exc)
         return []
 
+    heading = orientation_sensors.get_heading()
     records: List[Dict[str, str]] = []
 
     current: Dict[str, str] = {}
@@ -58,6 +61,8 @@ def scan_wifi(
         line = line.strip()
         if line.startswith("Cell"):
             if current:
+                if heading is not None:
+                    current["heading"] = heading
                 if enc_lines:
                     if "encryption" in current:
                         current["encryption"] = (
@@ -94,6 +99,8 @@ def scan_wifi(
             current["quality"] = line.split("Quality=")[-1].split()[0]
 
     if current:
+        if heading is not None:
+            current["heading"] = heading
         if enc_lines:
             if "encryption" in current:
                 current["encryption"] = (
@@ -138,12 +145,16 @@ async def async_scan_wifi(
     except Exception:
         return []
 
+    heading = orientation_sensors.get_heading()
+
     records: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
             if current:
+                if heading is not None:
+                    current["heading"] = heading
                 records.append(current)
             bssid = None
             if "Address:" in line:
@@ -164,6 +175,8 @@ async def async_scan_wifi(
         elif "Quality" in line:
             current["quality"] = line.split("Quality=")[-1].split(" ")[0]
     if current:
+        if heading is not None:
+            current["heading"] = heading
         records.append(current)
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]

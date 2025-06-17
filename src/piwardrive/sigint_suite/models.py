@@ -34,6 +34,7 @@ class WifiNetwork(RecordBase):
     quality: Optional[str] = None
     encryption: Optional[str] = None
     vendor: Optional[str] = None
+    heading: Optional[float] = None
 
 
 class BandRecord(RecordBase):

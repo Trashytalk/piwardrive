@@ -1,8 +1,8 @@
 import asyncio
 import os
 import subprocess
+import logging
 from typing import Dict, List
-
 
 from sigint_suite.models import BluetoothDevice
 
