@@ -10,7 +10,8 @@ from typing import Any, Callable
 
 
 from scheduler import PollScheduler
-from config import load_config, save_config, Config, config_mtime
+from config import load_config, save_config, Config, config_mtime, CONFIG_PATH
+from config_watcher import watch_config
 
 from security import hash_password
 from persistence import save_app_state, load_app_state, AppState
@@ -139,7 +140,9 @@ class PiWardriveApp(MDApp):
         self.theme_cls.theme_style = self.theme
         self._config_stamp = config_mtime()
         self._updating_config = False
-        self.scheduler.schedule("config_reload", self._reload_config_event, 2)
+        self._config_observer = watch_config(
+            CONFIG_PATH, lambda: self._reload_config_event(0)
+        )
         for f in fields(Config):
             if hasattr(self.__class__, f.name):
                 self.bind(**{f.name: lambda _i, v, k=f.name: self._auto_save(k, v)})
@@ -302,7 +305,9 @@ class PiWardriveApp(MDApp):
 
     def on_stop(self) -> None:
         """Persist configuration values on application exit."""
-        self.scheduler.cancel("config_reload")
+        if hasattr(self, "_config_observer"):
+            self._config_observer.stop()
+            self._config_observer.join()
         prof = diagnostics.stop_profiling()
         if prof:
             logging.info("Profiling summary:\n%s", prof)
