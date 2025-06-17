@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `sigint_sui
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Results are logged to `~/.config/piwardrive/app.log` and persisted in a SQLite database. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -43,7 +43,7 @@ See `docs/installation.rst` and `docs/deployment.rst` for additional tips and tr
 
 Settings are stored in `~/.config/piwardrive/config.json`. Any value can be overridden with environment variables prefixed with `PW_`. Multiple profiles may be kept under `~/.config/piwardrive/profiles`; switch with `PW_PROFILE_NAME` or by editing `active_profile`.
 
-Important options include GPS polling (`map_poll_gps` and `map_poll_gps_max`), Bluetooth scanning (`map_poll_bt` and `map_show_bt`), log rotation intervals and the `health_poll_interval` controlling diagnostics. Invalid values raise errors on startup. Example configuration lives in `examples/default_profile.json`.
+Important options include GPS polling (`map_poll_gps` and `map_poll_gps_max`), Bluetooth scanning (`map_poll_bt` and `map_show_bt`), log rotation intervals and the `health_poll_interval` controlling diagnostics. Invalid values raise errors on startup. Sample profiles under `examples/` provide starting points for common setups, including desktop and mobile variants with or without Kismet logging.
 
 ## Running the Application
 
@@ -64,7 +64,8 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 ## Status Service and Web UI
 
-Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails the configured log file (`app.log` by default). Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+
 
 ## GPS and Bluetooth Polling
 
@@ -186,21 +187,46 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 
 `PW_LANG` – Two-letter code selecting the interface language.
 
+## CLI Tools
+
+Several entry points are installed with the package:
+
+- ``piwardrive-prefetch`` – Download map tiles for a bounding box without starting the GUI. Example::
+
+    piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
+
+- ``service-status`` – Print the systemd state of ``gpsd``, ``kismet`` and ``bettercap``.
+- ``piwardrive-service`` – Launch the FastAPI status server (equivalent to ``python -m service``).
+
+Use ``--help`` on each command for additional options.
+
+## Security
+
+Password helpers in :mod:`security` derive a PBKDF2-HMAC-SHA256 hash with a random salt::
+
+    python -c "import security,sys; print(security.hash_password(sys.argv[1]))" mypass
+
+Store the resulting hash in ``config.json`` or ``PW_ADMIN_PASSWORD_HASH`` and avoid committing plaintext secrets. ``verify_password`` recomputes the hash and returns ``True`` only on success.
+
 
 ## Additional Features
 
 New modules extend PiWardrive with optional capabilities:
 
-- `remote_sync` – upload the SQLite database to a remote server.
+- `remote_sync` – upload the SQLite database to a remote server using
+  ``remote_sync.sync_database_to_server``.  Configure ``remote_sync_url``,
+  ``remote_sync_timeout`` and ``remote_sync_retries`` in ``config.json``.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
+- `vector_tile_customizer` – build and style MBTiles for offline use.
 - `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such
   as open or WEP networks, duplicate SSIDs on a single BSSID, unusual channels,
   and unknown vendors.
 - `gps_track_playback` – replay GPS coordinates from previous drives.
+- `drone_mapping` – collect Wi‑Fi and GPS data from a UAV for later playback.
 - `lora_scanner` – scan LoRa/IoT radio bands.
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
-- `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
+- `vehicle_sensors` – read speed, RPM and engine load from an OBD‑II adapter.
 - `orientation_sensors` – track device orientation via DBus
   (``iio-sensor-proxy``) or an MPU‑6050 sensor. Functions return ``None`` when
   the optional dependencies are missing.

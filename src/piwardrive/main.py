@@ -10,7 +10,8 @@ from typing import Any, Callable
 
 
 from scheduler import PollScheduler
-from config import load_config, save_config, Config, config_mtime
+from config import load_config, save_config, Config, config_mtime, CONFIG_PATH
+from config_watcher import watch_config
 
 from security import hash_password
 from persistence import save_app_state, load_app_state, AppState
@@ -51,6 +52,7 @@ class PiWardriveApp(MDApp):
     map_poll_aps = NumericProperty(60)
     map_poll_bt = NumericProperty(60)
     map_show_gps = BooleanProperty(True)
+    map_follow_gps = BooleanProperty(True)
     map_show_aps = BooleanProperty(True)
     map_show_bt = BooleanProperty(False)
     map_cluster_aps = BooleanProperty(False)
@@ -81,7 +83,7 @@ class PiWardriveApp(MDApp):
     log_rotate_interval = NumericProperty(3600)
     log_rotate_archives = NumericProperty(3)
     cleanup_rotated_logs = BooleanProperty(True)
-    tile_maintenance_interval = NumericProperty(86400)
+    tile_maintenance_interval = NumericProperty(604800)
     tile_max_age_days = NumericProperty(30)
     tile_cache_limit_mb = NumericProperty(512)
     compress_offline_tiles = BooleanProperty(True)
@@ -139,7 +141,9 @@ class PiWardriveApp(MDApp):
         self.theme_cls.theme_style = self.theme
         self._config_stamp = config_mtime()
         self._updating_config = False
-        self.scheduler.schedule("config_reload", self._reload_config_event, 2)
+        self._config_observer = watch_config(
+            CONFIG_PATH, lambda: self._reload_config_event(0)
+        )
         for f in fields(Config):
             if hasattr(self.__class__, f.name):
                 self.bind(**{f.name: lambda _i, v, k=f.name: self._auto_save(k, v)})
@@ -188,7 +192,7 @@ class PiWardriveApp(MDApp):
                 ev = f"rotate_{os.path.basename(path)}"
                 self.scheduler.schedule(
                     ev,
-                    lambda _dt, p=path: diagnostics.rotate_log(
+                    lambda _dt, p=path: diagnostics.rotate_log_async(
                         p, self.log_rotate_archives
                     ),
                     self.log_rotate_interval,
@@ -302,7 +306,9 @@ class PiWardriveApp(MDApp):
 
     def on_stop(self) -> None:
         """Persist configuration values on application exit."""
-        self.scheduler.cancel("config_reload")
+        if hasattr(self, "_config_observer"):
+            self._config_observer.stop()
+            self._config_observer.join()
         prof = diagnostics.stop_profiling()
         if prof:
             logging.info("Profiling summary:\n%s", prof)

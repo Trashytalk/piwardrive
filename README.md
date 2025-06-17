@@ -26,6 +26,8 @@ graph LR
 - Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
   - ``dbus`` + ``iio-sensor-proxy`` or an external MPU‑6050 are optional;
     the app falls back gracefully when absent
+  - Wi-Fi scans record the current antenna heading along with RSSI when
+    orientation data is available
 
 
 
@@ -36,14 +38,16 @@ graph LR
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback
+- Drone-based mapping mode
 - Geofencing and cached map tiles
 - Status service with React web UI
 
 
 ## Data Handling
-- Multi-format exports (GPX/KML/CSV/JSON)
+- Multi-format exports (GPX/KML/CSV/JSON/GeoJSON/Shapefile)
 - Diagnostics and log rotation
-- Remote database sync (`remote_sync.py`) and cloud exports
+- Remote database sync (`remote_sync.py`) with a central aggregation service
+  for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
 - CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   
@@ -120,6 +124,18 @@ pip install .
 
 You can run `./scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
 
+#### Optional Dependencies
+
+Some components rely on additional Python packages. Install them only if you need the corresponding feature:
+
+- `dbus-fast` – asynchronous service control via D-Bus; otherwise `systemctl` is used.
+- `dbus-python` or `mpu6050` – provides orientation data from `iio-sensor-proxy` or an external MPU‑6050 sensor.
+- `bleak` – enables Bluetooth scanning on the map and in the `sigint_suite` tools.
+- `rpy2` – required for generating daily health summaries with R.
+- `pandas`, `orjson`, `pyprof2calltree` – used by advanced analytics and profiling helpers.
+
+Activate the virtual environment and run `pip install <package>` for any that apply.
+
 ### Running
 
 ```bash
@@ -128,6 +144,21 @@ python main.py
 ```
 
 The UI renders directly on the framebuffer so no X server is required.
+
+### Optional C Extensions
+
+Two small C modules, `ckml` and `cgeom`, speed up geometry and KML parsing. They
+are optional – pure Python fallbacks are used if compilation fails – but the
+extensions provide a noticeable performance boost. Build them from the repository
+root using `python -m build` and then install the generated wheel:
+
+```bash
+pip install build
+python -m build
+pip install dist/*.whl
+```
+
+See `docs/ckml_build.rst` for troubleshooting tips.
 
 ### Docker
 
@@ -142,17 +173,40 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 
 * **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
 * **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
-* **Configuration Reloads** – changes to `config.json` and any `PW_` environment variables are detected at runtime and applied without restarting.
+* **Configuration Reloads** – a filesystem watcher detects updates to `config.json` and applies them along with any `PW_` overrides without restarting.
 * **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup.
 
 #### Manual Steps
 
 * **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
-* **Launching the App** – activate the environment and start PiWardrive with `python main.py` or enable `piwardrive.service` to start on boot.
+* **Launching the App** – activate the environment and start PiWardrive with `python main.py`.
+* **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
-* **Syncing Data** – trigger uploads via `/sync` or by calling `remote_sync.sync_database_to_server`.
+* **Syncing Data** – set `remote_sync_url` in `~/.config/piwardrive/config.json`
+  and trigger uploads via `/sync` or call
+  `remote_sync.sync_database_to_server` directly.
+* **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
 * **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
+
+
+### Example systemd unit
+
+```ini
+[Unit]
+Description=PiWardrive Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piwardrive
+ExecStart=/home/pi/piwardrive/gui-env/bin/python /home/pi/piwardrive/main.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
 
 
 ## Mobile Builds

@@ -1,10 +1,13 @@
+"""Entry point for utils module."""
 from piwardrive.utils import *  # noqa: F401,F403
+from piwardrive.utils import __all__  # re-export
 
 """Utility functions for the PiWardrive GUI application."""
 
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
 import json
+import fastjson
 import asyncio
 from contextlib import asynccontextmanager
 import logging
@@ -15,6 +18,7 @@ from gpsd_client import client as gps_client
 import time
 import threading
 import mmap
+import glob
 
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
@@ -40,6 +44,7 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
+import requests_cache
 import aiohttp
 import persistence
 
@@ -57,6 +62,16 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
         "counters": psutil.net_io_counters(),
     }
 }
+
+_NET_IO_CACHE_LOCK = threading.Lock()
+
+# Cache for frequently polled system metrics
+MEM_USAGE_CACHE_SECONDS = 2.0
+_MEM_USAGE_CACHE: dict[str, Any] = {"timestamp": 0.0, "percent": None}
+
+DISK_USAGE_CACHE_SECONDS = 2.0
+_DISK_USAGE_CACHE: dict[str, dict[str, Any]] = {}
+
 
 # Cache for HTTP requests issued via :func:`safe_request`
 # Default TTL in seconds and maximum cache size
@@ -159,20 +174,6 @@ def format_error(code: int | IntEnum, message: str) -> str:
     return f"[{ERROR_PREFIX}{int(code):03d}] {message}"
 
 
-try:
-    import orjson as _json  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    logging.debug("orjson not available, falling back to ujson")
-    try:
-        import ujson as _json  # type: ignore
-    except Exception:  # pragma: no cover - fallback
-        logging.debug("ujson not available, using json module")
-        _json = json  # type: ignore
-
-
-def _loads(data: bytes | str) -> Any:
-    """Parse JSON using the fastest available library."""
-    return _json.loads(data)
 
 
 def report_error(message: str) -> None:
@@ -261,7 +262,8 @@ def safe_request(
 
     """Return ``requests.get(url)`` with retries and optional fallback.
 
-    Results are cached for ``cache_seconds`` to avoid repeated network calls.
+    ``requests_cache`` handles caching using :data:`HTTP_SESSION`.
+    The ``cache_seconds`` argument controls the per-request expiration.
     Passing ``cache_seconds`` as ``0`` disables caching.
     """
     now = time.time()
@@ -272,12 +274,18 @@ def safe_request(
             return cached
 
     def _get() -> Any:
-        return requests.get(url, timeout=timeout, **kwargs)
+        return HTTP_SESSION.get(
+            url,
+            timeout=timeout,
+            expire_after=cache_seconds or None,
+            **kwargs,
+        )
 
     try:
         resp = retry_call(_get, attempts=attempts, delay=1)
         resp.raise_for_status()
-        _SAFE_REQUEST_CACHE[url] = (now, resp)
+        with _SAFE_REQUEST_CACHE_LOCK:
+            _SAFE_REQUEST_CACHE[url] = (now, resp)
         return resp
     except requests.Timeout as exc:
         report_error(f"Request timeout for {url}: {exc}")
@@ -334,20 +342,37 @@ def get_mem_usage() -> float | None:
     """
     Return system memory usage percentage.
     """
+    now = time.time()
+    pct = _MEM_USAGE_CACHE.get("percent")
+    ts = _MEM_USAGE_CACHE.get("timestamp", 0.0)
+    if pct is not None and now - ts <= MEM_USAGE_CACHE_SECONDS:
+        return pct
     try:
-        return psutil.virtual_memory().percent
+        pct = psutil.virtual_memory().percent
     except Exception:
-        return None
+        return pct
+    _MEM_USAGE_CACHE["timestamp"] = now
+    _MEM_USAGE_CACHE["percent"] = pct
+    return pct
 
 
 def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
     """
     Return disk usage percentage for given path.
     """
+    now = time.time()
+    cache = _DISK_USAGE_CACHE.get(path)
+    if cache is not None:
+        pct_cached = cache.get("percent")
+        ts = cache.get("timestamp", 0.0)
+        if pct_cached is not None and now - ts <= DISK_USAGE_CACHE_SECONDS:
+            return pct_cached
     try:
-        return psutil.disk_usage(path).percent
+        pct = psutil.disk_usage(path).percent
     except Exception:
-        return None
+        return cache.get("percent") if cache else None
+    _DISK_USAGE_CACHE[path] = {"timestamp": now, "percent": pct}
+    return pct
 
 
 def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
@@ -367,16 +392,17 @@ def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
     except Exception:
         return 0.0, 0.0
     now = time.time()
-    cache = _NET_IO_CACHE.setdefault(iface, {"counters": cur, "timestamp": now})
-    prev = cache.get("counters")
-    prev_ts = cache.get("timestamp", now)
+    with _NET_IO_CACHE_LOCK:
+        cache = _NET_IO_CACHE.setdefault(iface, {"counters": cur, "timestamp": now})
+        prev = cache.get("counters")
+        prev_ts = cache.get("timestamp", now)
+        cache["counters"] = cur
+        cache["timestamp"] = now
     dt = now - prev_ts if prev_ts else 0.0
     rx_kbps = tx_kbps = 0.0
     if prev is not None and dt > 0:
         rx_kbps = (cur.bytes_recv - prev.bytes_recv) / dt / 1024.0
         tx_kbps = (cur.bytes_sent - prev.bytes_sent) / dt / 1024.0
-    cache["counters"] = cur
-    cache["timestamp"] = now
     return rx_kbps, tx_kbps
 
 
@@ -754,7 +780,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                     if resp.status == 200:
                         text = await resp.text()
                         try:
-                            return _loads(text)
+                            return fastjson.loads(text)
                         except Exception as exc:  # pragma: no cover - JSON error
                             report_error(
                                 format_error(
@@ -826,22 +852,25 @@ async def fetch_metrics_async(
     return aps, clients, count
 
 
-def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
-    """Count ``.pcap`` handshake files in BetterCAP log directories."""
-    count = 0
+def count_bettercap_handshakes(
+    log_folder: str = '/mnt/ssd/kismet_logs',
+    *,
+    cache_seconds: float = HANDSHAKE_CACHE_SECONDS,
+) -> int:
+    """Return handshake count using caching and glob lookup."""
+    now = time.time()
+    cached = _HANDSHAKE_CACHE.get(log_folder)
+    if cache_seconds and cached:
+        ts, count = cached
+        if now - ts <= cache_seconds:
+            return count
     try:
-        with os.scandir(log_folder) as entries:
-            for entry in entries:
-                if entry.is_dir() and entry.name.endswith('_bettercap'):
-                    try:
-                        with os.scandir(entry.path) as files:
-                            for file in files:
-                                if file.is_file() and file.name.endswith('.pcap'):
-                                    count += 1
-                    except OSError:
-                        continue
+        pattern = os.path.join(log_folder, '*_bettercap', '**', '*.pcap')
+        files = glob.glob(pattern, recursive=True)
+        count = len(files)
     except OSError:
-        return 0
+        count = 0
+    _HANDSHAKE_CACHE[log_folder] = (now, count)
     return count
 
 

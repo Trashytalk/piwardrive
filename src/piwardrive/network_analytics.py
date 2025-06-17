@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Iterable, Mapping, Any, List
 
-from sigint_suite.enrichment import lookup_vendor
+from sigint_suite.enrichment import cached_lookup_vendor
 
 
-def find_suspicious_aps(records: Iterable[Mapping[str, Any]]) -> List[Mapping[str, Any]]:
+def find_suspicious_aps(
+    records: Iterable[Mapping[str, Any]]
+) -> List[Mapping[str, Any]]:
     """Return Wi-Fi access points that may be suspicious.
 
     Heuristics flag open or WEP networks, duplicate BSSIDs broadcasting
@@ -35,7 +37,7 @@ def find_suspicious_aps(records: Iterable[Mapping[str, Any]]) -> List[Mapping[st
                     suspicious = True
             except ValueError:
                 suspicious = True
-        if bssid and lookup_vendor(bssid) is None:
+        if bssid and cached_lookup_vendor(bssid) is None:
             suspicious = True
 
         if suspicious:

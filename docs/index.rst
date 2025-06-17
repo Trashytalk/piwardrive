@@ -11,24 +11,28 @@ PiWardrive Documentation
 
    installation
    configuration
+   security
    environment
    widgets
    diagnostics
    persistence
    gps_polling
    tile_cache
+   vector_tile_customizer
    bluetooth
    orientation
    geofencing
    status_service
    remote_sync
+   aggregation_service
    architecture
    function_flows
    deployment
    workflows
    ckml_build
    mobile_build
-
+   cli_tools
+   drone_mapping
    r_integration
    web_ui
    legal

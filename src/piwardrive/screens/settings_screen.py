@@ -45,6 +45,7 @@ class SettingsScreen:
 
     # ------------------------------------------------------------------
     def save_settings(self) -> None:  # pragma: no cover - exercised via tests
+        """Persist values from the UI fields back to the running app."""
         app = App.get_running_app()
         if os.path.exists(self.kismet_field.text):
             app.kismet_logdir = self.kismet_field.text
