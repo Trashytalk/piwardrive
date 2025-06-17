@@ -32,7 +32,8 @@ setup(
     ),
     long_description_content_type="text/markdown",
     python_requires=project.get("requires-python", ">=3.10"),
-    packages=find_packages(where="src", exclude=("tests*", "docs*", "benchmarks*", "examples*")),
+    packages=find_packages(where="src", exclude=(
+        "tests*", "docs*", "benchmarks*", "examples*")),
     package_dir={"": "src"},
     data_files=[("", ["src/piwardrive/py.typed"])],
     ext_modules=[

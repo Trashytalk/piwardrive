@@ -1,7 +1,5 @@
-"""Module models."""
-from __future__ import annotations
-
 """Typed record models used by scanner functions."""
+from __future__ import annotations
 
 from typing import Any, Optional
 

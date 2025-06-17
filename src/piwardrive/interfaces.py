@@ -1,7 +1,5 @@
-"""Module interfaces."""
-from __future__ import annotations
-
 """Common service interfaces for PiWardrive components."""
+from __future__ import annotations
 
 from typing import Any, Protocol
 

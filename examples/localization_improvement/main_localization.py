@@ -8,7 +8,6 @@ import sqlite3
 import json
 from sklearn.cluster import DBSCAN
 from folium import Map, Marker
-from folium.plugins import HeatMap
 from logger import setup_logger
 logger = setup_logger()
 
@@ -158,7 +157,7 @@ def main():
     data = load_kismet_data('kismet_logs/Kismet-latest.kismet')
 
     logger.info("[*] Loading fingerprint dataset...")
-    fingerprint_df = load_fingerprint_dataset()
+    load_fingerprint_dataset()
 
     logger.info("[*] Localizing access points...")
     ap_coords = localize_aps(data)

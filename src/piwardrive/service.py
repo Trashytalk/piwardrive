@@ -1,7 +1,5 @@
-"""Module service."""
-from __future__ import annotations
-
 """Simple FastAPI service for health records."""
+from __future__ import annotations
 
 from dataclasses import asdict
 import os

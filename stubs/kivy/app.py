@@ -1,5 +1,6 @@
 """Minimal stubs for Kivy's ``App`` class used during tests."""
 
+
 class App:
     """Simplified application placeholder."""
     @staticmethod

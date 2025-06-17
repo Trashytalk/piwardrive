@@ -1,3 +1,6 @@
 """Entry point for diagnostics module."""
-from piwardrive.diagnostics import *  # noqa: F401,F403
-from piwardrive.diagnostics import __all__  # re-export
+from importlib import import_module
+import sys
+
+module = import_module("piwardrive.diagnostics")
+sys.modules[__name__] = module

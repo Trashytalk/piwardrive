@@ -22,7 +22,10 @@ def _bearing(p1: tuple[float, float], p2: tuple[float, float]) -> float:
     lat2, lon2 = map(math.radians, p2)
     dlon = lon2 - lon1
     x = math.sin(dlon) * math.cos(lat2)
-    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
+    y = (
+        math.cos(lat1) * math.sin(lat2)
+        - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
+    )
     return (math.degrees(math.atan2(x, y)) + 360) % 360
 
 

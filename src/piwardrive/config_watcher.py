@@ -31,5 +31,3 @@ def watch_config(path: str, callback: Callable[[], None]) -> Observer:
     observer.schedule(handler, os.path.dirname(path) or ".", recursive=False)
     observer.start()
     return observer
-
-

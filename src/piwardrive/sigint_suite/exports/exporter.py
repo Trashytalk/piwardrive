@@ -62,4 +62,3 @@ def export_yaml(records: Iterable[Any], path: str) -> None:
             data.append(rec)
     with open(path, "w", encoding="utf-8") as fh:
         yaml.safe_dump(data, fh, sort_keys=False)
-
