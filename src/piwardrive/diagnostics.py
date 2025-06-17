@@ -370,3 +370,18 @@ class HealthMonitor:
     def stop(self) -> None:
         """Cancel the periodic health export task."""
         self._scheduler.cancel(self._event)
+
+
+__all__ = [
+    "generate_system_report",
+    "rotate_log",
+    "start_profiling",
+    "stop_profiling",
+    "get_profile_metrics",
+    "run_network_test",
+    "get_interface_status",
+    "list_usb_devices",
+    "get_service_statuses",
+    "self_test",
+    "HealthMonitor",
+]
