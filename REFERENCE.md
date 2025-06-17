@@ -193,6 +193,7 @@ New modules extend PiWardrive with optional capabilities:
 
 - `remote_sync` – upload the SQLite database to a remote server.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
+- `vector_tile_customizer` – build and style MBTiles for offline use.
 - `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such
   as open or WEP networks, duplicate SSIDs on a single BSSID, unusual channels,
   and unknown vendors.
