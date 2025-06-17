@@ -22,7 +22,7 @@
     "health_export_dir": "~/.config/piwardrive/health_exports",
     "compress_health_exports": true,
     "health_export_retention": 7,
-    "tile_maintenance_interval": 86400,
+    "tile_maintenance_interval": 604800,
     "tile_max_age_days": 30,
     "tile_cache_limit_mb": 512,
     "compress_offline_tiles": true,

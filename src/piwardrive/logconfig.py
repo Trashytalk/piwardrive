@@ -1,3 +1,4 @@
+"""Module logconfig."""
 import json
 import logging
 import os
@@ -11,6 +12,7 @@ class JsonFormatter(logging.Formatter):
     """Format log records as JSON strings."""
 
     def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
+        """Return the JSON formatted string for ``record``."""
         log_record = {
             "time": self.formatTime(record, self.datefmt),
             "level": record.levelname,

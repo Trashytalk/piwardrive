@@ -92,3 +92,12 @@ def read_mpu6050(address: int = 0x68) -> Optional[Dict[str, Any]]:
     except Exception as exc:  # pragma: no cover - runtime errors
         logger.error("MPU6050 read failed: %s", exc)
         return None
+
+
+def get_heading(orientation_map: Optional[Dict[str, float]] = None) -> Optional[float]:
+    """Return device heading in degrees if orientation sensors are available."""
+    orient = get_orientation_dbus()
+    if orient:
+        return orientation_to_angle(orient, orientation_map)
+    return None
+

@@ -1,11 +1,15 @@
+"""Module scanner."""
 import logging
 import os
 import shlex
 import subprocess
 
 from typing import Dict, List, Optional
-from sigint_suite.enrichment import lookup_vendor
+from sigint_suite.enrichment import cached_lookup_vendor
+from sigint_suite.models import WifiNetwork
 from sigint_suite.hooks import apply_post_processors, register_post_processor
+from sigint_suite.models import WifiNetwork
+import orientation_sensors
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +18,7 @@ def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Add vendor names based on BSSID prefixes."""
     for rec in records:
         bssid = rec.get("bssid")
-        vendor = lookup_vendor(bssid)
+        vendor = cached_lookup_vendor(bssid)
         if vendor:
             rec["vendor"] = vendor
     return records
@@ -49,6 +53,7 @@ def scan_wifi(
         logger.exception("Wi-Fi scan failed: %s", exc)
         return []
 
+    heading = orientation_sensors.get_heading()
     records: List[Dict[str, str]] = []
 
     current: Dict[str, str] = {}
@@ -58,6 +63,8 @@ def scan_wifi(
         line = line.strip()
         if line.startswith("Cell"):
             if current:
+                if heading is not None:
+                    current["heading"] = heading
                 if enc_lines:
                     if "encryption" in current:
                         current["encryption"] = (
@@ -94,6 +101,8 @@ def scan_wifi(
             current["quality"] = line.split("Quality=")[-1].split()[0]
 
     if current:
+        if heading is not None:
+            current["heading"] = heading
         if enc_lines:
             if "encryption" in current:
                 current["encryption"] = (
@@ -138,12 +147,16 @@ async def async_scan_wifi(
     except Exception:
         return []
 
+    heading = orientation_sensors.get_heading()
+
     records: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
             if current:
+                if heading is not None:
+                    current["heading"] = heading
                 records.append(current)
             bssid = None
             if "Address:" in line:
@@ -156,7 +169,7 @@ async def async_scan_wifi(
         elif "Address" in line:
             bssid = line.split("Address:")[-1].strip()
             current["bssid"] = bssid
-            vendor = lookup_vendor(bssid)
+            vendor = cached_lookup_vendor(bssid)
             if vendor:
                 current["vendor"] = vendor
         elif "Frequency" in line:
@@ -164,6 +177,8 @@ async def async_scan_wifi(
         elif "Quality" in line:
             current["quality"] = line.split("Quality=")[-1].split(" ")[0]
     if current:
+        if heading is not None:
+            current["heading"] = heading
         records.append(current)
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
