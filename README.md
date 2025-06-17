@@ -36,6 +36,7 @@ graph LR
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback
+- Drone-based mapping mode
 - Geofencing and cached map tiles
 - Status service with React web UI
 
