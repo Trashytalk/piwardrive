@@ -2,9 +2,9 @@ import argparse
 import asyncio
 import csv
 import json
-from typing import Iterable
+from typing import Iterable, cast
 
-from persistence import HealthRecord, save_health_record
+from persistence import HealthRecord, save_health_record, flush_health_records
 
 IMPORT_FORMATS = ("csv", "json")
 
@@ -33,11 +33,16 @@ def _parse_csv(path: str) -> list[HealthRecord]:
     with open(path, newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
-            cpu_temp = row.get("cpu_temp")
+            raw_temp = row.get("cpu_temp")
+            cpu_temp = (
+                float(cast(float | str, raw_temp))
+                if raw_temp not in (None, "")
+                else None
+            )
             records.append(
                 HealthRecord(
                     timestamp=row.get("timestamp", ""),
-                    cpu_temp=float(cpu_temp) if cpu_temp not in (None, "") else None,
+                    cpu_temp=cpu_temp,
                     cpu_percent=float(row.get("cpu_percent", 0.0)),
                     memory_percent=float(row.get("memory_percent", 0.0)),
                     disk_percent=float(row.get("disk_percent", 0.0)),
@@ -49,6 +54,7 @@ def _parse_csv(path: str) -> list[HealthRecord]:
 async def _save_records(records: Iterable[HealthRecord]) -> None:
     for rec in records:
         await save_health_record(rec)
+    await flush_health_records()
 
 
 def main(argv: list[str] | None = None) -> None:
