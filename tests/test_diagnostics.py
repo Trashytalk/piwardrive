@@ -69,6 +69,23 @@ def test_rotate_log_gz(tmp_path: Any) -> None:
     assert (tmp_path / 'test.log.3.gz').exists() is False
 
 
+def test_rotate_log_upload(tmp_path: Any, monkeypatch: Any) -> None:
+    log = tmp_path / 'test.log'
+    log.write_text('data')
+    monkeypatch.setenv("PW_CLOUD_BUCKET", "b")
+    monkeypatch.setenv("PW_CLOUD_PREFIX", "p")
+    monkeypatch.setenv("PW_CLOUD_PROFILE", "")
+    uploaded = {}
+    monkeypatch.setattr(
+        diagnostics.cloud_export,
+        "upload_to_s3",
+        lambda p, b, k, profile=None: uploaded.update({"path": p, "bucket": b, "key": k}),
+    )
+    diagnostics.rotate_log(str(log), max_files=1)
+    assert uploaded["bucket"] == "b"
+    assert uploaded["path"].endswith(".gz")
+
+
 def test_run_network_test_caches_success(monkeypatch: Any) -> None:
     diagnostics._LAST_NETWORK_OK = None
     times = iter([0.0, 10.0])

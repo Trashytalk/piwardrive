@@ -37,6 +37,11 @@ COMPRESS_OFFLINE_TILES = True
 ROUTE_PREFETCH_INTERVAL = 3600  # seconds
 ROUTE_PREFETCH_LOOKAHEAD = 5
 
+# Cloud upload defaults
+CLOUD_BUCKET = ""
+CLOUD_PREFIX = ""
+CLOUD_PROFILE = ""
+
 
 def get_config_path(profile: Optional[str] = None) -> str:
     """Return path to ``profile`` or the main ``config.json``."""
@@ -106,6 +111,9 @@ class Config:
     remote_sync_timeout: int = 5
     remote_sync_retries: int = 3
     gps_movement_threshold: float = 1.0
+    cloud_bucket: str = CLOUD_BUCKET
+    cloud_prefix: str = CLOUD_PREFIX
+    cloud_profile: str = CLOUD_PROFILE
 
 
 DEFAULT_CONFIG = Config()
@@ -164,6 +172,9 @@ class FileConfigModel(BaseModel):
     remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
     remote_sync_retries: Optional[int] = Field(default=None, ge=1)
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
+    cloud_bucket: Optional[str] = None
+    cloud_prefix: Optional[str] = None
+    cloud_profile: Optional[str] = None
 
 
 class ConfigModel(FileConfigModel):
@@ -386,6 +397,9 @@ class AppConfig:
     remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
     remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
+    cloud_bucket: str = DEFAULTS["cloud_bucket"]
+    cloud_prefix: str = DEFAULTS["cloud_prefix"]
+    cloud_profile: str = DEFAULTS["cloud_profile"]
 
     @classmethod
     def load(cls) -> "AppConfig":
