@@ -124,18 +124,24 @@ def estimate_ap_location_centroid(
 
 
 def localize_aps(df: pd.DataFrame, cfg: Config) -> Dict[str, Tuple[float, float]]:
-    coords: Dict[str, Tuple[float, float]] = {}
-    for mac in df["macaddr"].unique():
-        ap = df[df["macaddr"] == mac].sort_values("gpstime")
+    def _process(ap: pd.DataFrame) -> Tuple[float, float] | None:
+        ap = ap.sort_values("gpstime")
         if len(ap) < cfg.min_points_for_confidence:
-            continue
+            return None
         ap = apply_kalman_filter(ap, cfg)
         ap = remove_outliers(ap, cfg)
         if ap.empty:
-            continue
+            return None
         lat, lon = estimate_ap_location_centroid(ap, cfg)
-        coords[mac] = (lat, lon)
-    return coords
+        return lat, lon
+
+    return (
+        df.groupby("macaddr", group_keys=False)
+        .apply(_process, include_groups=False)
+        .dropna()
+        .apply(lambda t: (float(t[0]), float(t[1])))
+        .to_dict()
+    )
 
 
 __all__ = [
