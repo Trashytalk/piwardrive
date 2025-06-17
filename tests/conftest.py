@@ -1,3 +1,5 @@
+"""Pytest fixtures used across the test suite."""
+
 import sys
 import os
 from types import ModuleType

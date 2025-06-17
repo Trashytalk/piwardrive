@@ -1,3 +1,5 @@
+"""Sphinx configuration for building the project documentation."""
+
 project = 'PiWardrive'
 author = 'TRASHYTALK'
 extensions = [

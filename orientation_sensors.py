@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Entry point for orientation_sensors module."""
+
 from piwardrive.orientation_sensors import *  # noqa: F401,F403
 
 """Orientation sensor helpers for gyroscope and accelerometer.
@@ -11,7 +15,6 @@ external MPU‑6050 sensor using the optional ``mpu6050`` package.  Again,
 check for ``None`` to gracefully handle setups without these sensors.
 """
 
-from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Optional
@@ -38,7 +41,10 @@ except Exception as exc:  # pragma: no cover - missing dependency
 
 logger = logging.getLogger(__name__)
 
-_ORIENTATION_MAP: Dict[str, float] = {
+# Default mapping between orientation strings and rotation angles.  A copy is
+# stored in ``_ORIENTATION_MAP`` so callers can tweak the latter without losing
+# the defaults.
+DEFAULT_ORIENTATION_MAP: Dict[str, float] = {
     "normal": 0.0,
     "bottom-up": 180.0,
     "right-up": 90.0,
@@ -50,6 +56,8 @@ _ORIENTATION_MAP: Dict[str, float] = {
     "landscape-right": 270.0,
     "upside-down": 180.0,
 }
+
+_ORIENTATION_MAP: Dict[str, float] = DEFAULT_ORIENTATION_MAP.copy()
 
 
 def orientation_to_angle(
@@ -63,11 +71,30 @@ def orientation_to_angle(
     return mapping.get(orientation.lower())
 
 
-def update_orientation_map(new_map: Dict[str, float], *, clear: bool = False) -> None:
-    """Update the global orientation mapping used by :func:`orientation_to_angle`."""
+def clone_orientation_map() -> Dict[str, float]:
+    """Return a copy of the current orientation mapping."""
+    return _ORIENTATION_MAP.copy()
+
+
+def reset_orientation_map() -> None:
+    """Restore :data:`_ORIENTATION_MAP` to the default values."""
+    _ORIENTATION_MAP.clear()
+    _ORIENTATION_MAP.update(DEFAULT_ORIENTATION_MAP)
+
+
+def update_orientation_map(
+    new_map: Dict[str, float], *, clear: bool = False, mapping: Optional[Dict[str, float]] = None
+) -> Dict[str, float]:
+    """Update an orientation mapping.
+
+    If ``mapping`` is ``None`` the global mapping is modified.  The updated
+    mapping is returned so callers can work with a customized copy.
+    """
+    target = _ORIENTATION_MAP if mapping is None else mapping
     if clear:
-        _ORIENTATION_MAP.clear()
-    _ORIENTATION_MAP.update({k.lower(): v for k, v in new_map.items()})
+        target.clear()
+    target.update({k.lower(): v for k, v in new_map.items()})
+    return target
 
 
 def get_orientation_dbus() -> Optional[str]:
@@ -104,3 +131,11 @@ def read_mpu6050(address: int = 0x68) -> Optional[Dict[str, Any]]:
     except Exception as exc:  # pragma: no cover - runtime errors
         logger.error("MPU6050 read failed: %s", exc)
         return None
+
+
+def get_heading(orientation_map: Optional[Dict[str, float]] = None) -> Optional[float]:
+    """Return device heading in degrees if orientation sensors are available."""
+    orient = get_orientation_dbus()
+    if orient:
+        return orientation_to_angle(orient, orientation_map)
+    return None

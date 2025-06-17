@@ -1,3 +1,5 @@
+"""Benchmark persistence layer throughput."""
+
 import asyncio
 import os
 import tempfile

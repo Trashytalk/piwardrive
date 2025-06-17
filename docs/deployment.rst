@@ -25,7 +25,9 @@ SD Card Image
 
 4. Enable ``kismet``, ``bettercap`` and ``gpsd`` so they start on boot (``systemctl enable <svc>``).
 5. Grant your user permission to manage systemd units over DBus by creating a ``polkit`` rule allowing ``org.freedesktop.systemd1.manage-units``.
-6. (Optional) create ``piwardrive.service`` to autostart ``python /home/pi/piwardrive/main.py``.
+6. (Optional) copy ``examples/piwardrive.service`` into ``/etc/systemd/system/``
+   and enable it with ``sudo systemctl enable --now piwardrive.service`` to
+   autostart ``python /home/pi/piwardrive/main.py``.
 7. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
 
 Docker Container

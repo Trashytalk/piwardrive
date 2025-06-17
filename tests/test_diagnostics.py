@@ -4,6 +4,7 @@ import sys
 import gzip
 from unittest import mock
 from types import ModuleType
+import asyncio
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 aiohttp_mod = ModuleType('aiohttp')
@@ -52,21 +53,38 @@ def test_stop_profiling_writes_callgrind(tmp_path: Any) -> None:
 def test_rotate_log_gz(tmp_path: Any) -> None:
     log = tmp_path / 'test.log'
     log.write_text('first')
-    diagnostics.rotate_log(str(log), max_files=2)
+    asyncio.run(diagnostics.rotate_log_async(str(log), max_files=2))
     gz1 = tmp_path / 'test.log.1.gz'
     assert gz1.is_file()
     with gzip.open(gz1, 'rt') as fh:
         assert fh.read() == 'first'
 
     log.write_text('second')
-    diagnostics.rotate_log(str(log), max_files=2)
+    asyncio.run(diagnostics.rotate_log_async(str(log), max_files=2))
     gz2 = tmp_path / 'test.log.2.gz'
     assert gz1.is_file()
     assert gz2.is_file()
 
     log.write_text('third')
-    diagnostics.rotate_log(str(log), max_files=2)
+    asyncio.run(diagnostics.rotate_log_async(str(log), max_files=2))
     assert (tmp_path / 'test.log.3.gz').exists() is False
+
+
+def test_rotate_log_upload(tmp_path: Any, monkeypatch: Any) -> None:
+    log = tmp_path / 'test.log'
+    log.write_text('data')
+    monkeypatch.setenv("PW_CLOUD_BUCKET", "b")
+    monkeypatch.setenv("PW_CLOUD_PREFIX", "p")
+    monkeypatch.setenv("PW_CLOUD_PROFILE", "")
+    uploaded = {}
+    monkeypatch.setattr(
+        diagnostics.cloud_export,
+        "upload_to_s3",
+        lambda p, b, k, profile=None: uploaded.update({"path": p, "bucket": b, "key": k}),
+    )
+    diagnostics.rotate_log(str(log), max_files=1)
+    assert uploaded["bucket"] == "b"
+    assert uploaded["path"].endswith(".gz")
 
 
 def test_run_network_test_caches_success(monkeypatch: Any) -> None:

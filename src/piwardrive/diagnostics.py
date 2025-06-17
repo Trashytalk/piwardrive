@@ -29,9 +29,22 @@ from persistence import (
 from utils import run_async_task
 import config
 import r_integration
+import cloud_export
 
 _PROFILER: cProfile.Profile | None = None
 _LAST_NETWORK_OK: float | None = None
+
+
+def _upload_to_cloud(path: str) -> None:
+    """Upload ``path`` to configured cloud storage if enabled."""
+    cfg = config.AppConfig.load()
+    if not cfg.cloud_bucket:
+        return
+    key = os.path.join(cfg.cloud_prefix.strip("/"), os.path.basename(path))
+    try:
+        cloud_export.upload_to_s3(path, cfg.cloud_bucket, key, cfg.cloud_profile or None)
+    except Exception as exc:  # pragma: no cover - upload errors
+        logging.exception("Cloud upload failed: %s", exc)
 
 
 def generate_system_report() -> dict:
@@ -77,6 +90,42 @@ def rotate_log(path: str, max_files: int = 3) -> None:
     os.rename(path, tmp)
     with open(tmp, "rb") as f_in, gzip.open(f"{tmp}.gz", "wb") as f_out:
         shutil.copyfileobj(f_in, f_out)
+    os.remove(tmp)
+    _upload_to_cloud(f"{tmp}.gz")
+
+
+async def rotate_log_async(path: str, max_files: int = 3) -> None:
+    """Asynchronously rotate and gzip ``path`` using ``aiofiles``."""
+    if not os.path.exists(path):
+        return
+
+    try:
+        import aiofiles  # type: ignore
+    except Exception:  # pragma: no cover - optional dependency
+        await asyncio.to_thread(rotate_log, path, max_files)
+        return
+
+    for ext in (".gz", ""):
+        old = f"{path}.{max_files}{ext}"
+        if os.path.exists(old):
+            os.remove(old)
+
+    for i in range(max_files - 1, 0, -1):
+        src_gz = f"{path}.{i}.gz"
+        dst_gz = f"{path}.{i+1}.gz"
+        if os.path.exists(src_gz):
+            os.rename(src_gz, dst_gz)
+            continue
+        src = f"{path}.{i}"
+        if os.path.exists(src):
+            os.rename(src, dst_gz)
+
+    tmp = f"{path}.1"
+    os.rename(path, tmp)
+    async with aiofiles.open(tmp, "rb") as f_in:
+        data = await f_in.read()
+    async with aiofiles.open(f"{tmp}.gz", "wb") as f_out:
+        await f_out.write(gzip.compress(data))
     os.remove(tmp)
 
 
@@ -300,6 +349,7 @@ class HealthMonitor:
                 path += ".gz"
             await asyncio.to_thread(self._cleanup_exports)
             logging.info("Exported health data to %s", path)
+            await asyncio.to_thread(_upload_to_cloud, path)
         except Exception as exc:  # pragma: no cover - best-effort
             logging.exception("HealthMonitor export failed: %s", exc)
 
@@ -318,4 +368,20 @@ class HealthMonitor:
                 logging.exception("Failed to remove old export %s", fpath)
 
     def stop(self) -> None:
+        """Cancel the periodic health export task."""
         self._scheduler.cancel(self._event)
+
+
+__all__ = [
+    "generate_system_report",
+    "rotate_log",
+    "start_profiling",
+    "stop_profiling",
+    "get_profile_metrics",
+    "run_network_test",
+    "get_interface_status",
+    "list_usb_devices",
+    "get_service_statuses",
+    "self_test",
+    "HealthMonitor",
+]
