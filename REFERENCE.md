@@ -200,7 +200,7 @@ New modules extend PiWardrive with optional capabilities:
 - `lora_scanner` – scan LoRa/IoT radio bands.
 - `db_browser` – serve a simple web UI for browsing records.
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
-- `vehicle_sensors` – read speed from an accelerometer or OBD‑II adapter.
+- `vehicle_sensors` – read speed, RPM and engine load from an OBD‑II adapter.
 - `orientation_sensors` – track device orientation via DBus
   (``iio-sensor-proxy``) or an MPU‑6050 sensor. Functions return ``None`` when
   the optional dependencies are missing.
