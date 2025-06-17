@@ -17,6 +17,7 @@ PiWardrive Documentation
    persistence
    gps_polling
    tile_cache
+   vector_tile_customizer
    bluetooth
    orientation
    geofencing
