@@ -11,6 +11,7 @@ PiWardrive Documentation
 
    installation
    configuration
+   security
    environment
    widgets
    diagnostics
@@ -28,6 +29,7 @@ PiWardrive Documentation
    workflows
    ckml_build
    mobile_build
+   cli_tools
 
    r_integration
    web_ui
