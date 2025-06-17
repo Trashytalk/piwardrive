@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `sigint_sui
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Results are logged to `~/.config/piwardrive/app.log` and persisted in a SQLite database. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -64,7 +64,7 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 ## Status Service and Web UI
 
-Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails `app.log`. Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails the configured log file (`app.log` by default). Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
 
 ## GPS and Bluetooth Polling
 
