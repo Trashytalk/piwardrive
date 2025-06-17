@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import subprocess
 from typing import Dict, List
@@ -120,10 +121,8 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
     logger.debug("Executing: %s", " ".join(cmd))
     try:
         output = subprocess.check_output(cmd, text=True)
-    except Exception as exc:
-        logger.exception("Bluetooth scan failed: %s", exc)
     except Exception as exc:  # pragma: no cover - external command
-        logging.exception("Failed to run bluetoothctl", exc_info=exc)
+        logger.exception("Bluetooth scan failed: %s", exc)
         return []
 
     devices: Dict[str, str] = {}
