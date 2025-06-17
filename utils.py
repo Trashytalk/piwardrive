@@ -62,12 +62,15 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
     }
 }
 
+_NET_IO_CACHE_LOCK = threading.Lock()
+
 # Cache for frequently polled system metrics
 MEM_USAGE_CACHE_SECONDS = 2.0
 _MEM_USAGE_CACHE: dict[str, Any] = {"timestamp": 0.0, "percent": None}
 
 DISK_USAGE_CACHE_SECONDS = 2.0
 _DISK_USAGE_CACHE: dict[str, dict[str, Any]] = {}
+
 
 # Cache for HTTP requests issued via :func:`safe_request`
 SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
@@ -76,6 +79,8 @@ HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECO
 # Cache for BetterCAP handshake counts
 HANDSHAKE_CACHE_SECONDS = 10.0  # default TTL in seconds
 _HANDSHAKE_CACHE: dict[str, tuple[float, int]] = {}
+
+_SAFE_REQUEST_CACHE_LOCK = threading.Lock()
 
 
 class ErrorCode(IntEnum):
@@ -248,6 +253,14 @@ def safe_request(
     The ``cache_seconds`` argument controls the per-request expiration.
     Passing ``cache_seconds`` as ``0`` disables caching.
     """
+    now = time.time()
+    if cache_seconds:
+        with _SAFE_REQUEST_CACHE_LOCK:
+            entry = _SAFE_REQUEST_CACHE.get(url)
+        if entry is not None:
+            ts, cached = entry
+            if now - ts <= cache_seconds:
+                return cached
 
     def _get() -> Any:
         return HTTP_SESSION.get(
@@ -260,12 +273,18 @@ def safe_request(
     try:
         resp = retry_call(_get, attempts=attempts, delay=1)
         resp.raise_for_status()
+        with _SAFE_REQUEST_CACHE_LOCK:
+            _SAFE_REQUEST_CACHE[url] = (now, resp)
         return resp
     except Exception as exc:  # pragma: no cover - network errors
         report_error(f"Request error for {url}: {exc}")
         if fallback is not None:
             try:
-                return fallback()
+                result = fallback()
+                with _SAFE_REQUEST_CACHE_LOCK:
+                    _SAFE_REQUEST_CACHE[url] = (time.time(), result)
+                return result
+
             except Exception as exc2:  # pragma: no cover - fallback failed
                 report_error(f"Fallback for {url} failed: {exc2}")
         return None
@@ -357,16 +376,17 @@ def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
     except Exception:
         return 0.0, 0.0
     now = time.time()
-    cache = _NET_IO_CACHE.setdefault(iface, {"counters": cur, "timestamp": now})
-    prev = cache.get("counters")
-    prev_ts = cache.get("timestamp", now)
+    with _NET_IO_CACHE_LOCK:
+        cache = _NET_IO_CACHE.setdefault(iface, {"counters": cur, "timestamp": now})
+        prev = cache.get("counters")
+        prev_ts = cache.get("timestamp", now)
+        cache["counters"] = cur
+        cache["timestamp"] = now
     dt = now - prev_ts if prev_ts else 0.0
     rx_kbps = tx_kbps = 0.0
     if prev is not None and dt > 0:
         rx_kbps = (cur.bytes_recv - prev.bytes_recv) / dt / 1024.0
         tx_kbps = (cur.bytes_sent - prev.bytes_sent) / dt / 1024.0
-    cache["counters"] = cur
-    cache["timestamp"] = now
     return rx_kbps, tx_kbps
 
 
