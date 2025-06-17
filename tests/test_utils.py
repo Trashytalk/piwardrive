@@ -10,6 +10,7 @@ from typing import Any
 from pathlib import Path
 from types import ModuleType
 import asyncio
+import requests_cache
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import persistence
@@ -420,13 +421,13 @@ def test_safe_request_retries(monkeypatch: Any) -> None:
         def raise_for_status(self) -> None:
             pass
 
-    def get(url: str, timeout: int = 5) -> Resp:
+    def get(url: str, timeout: int = 5, expire_after=None) -> Resp:  # type: ignore[override]
         calls.append(url)
         if len(calls) == 1:
-            raise utils.requests.RequestException("boom")
+            raise Exception("boom")
         return Resp()
 
-    monkeypatch.setattr(utils, "requests", mock.Mock(get=get, RequestException=Exception))
+    monkeypatch.setattr(utils.HTTP_SESSION, "get", get)
     with mock.patch.object(utils, "report_error") as rep:
         resp = utils.safe_request("http://x")
         assert resp is not None
@@ -443,13 +444,14 @@ def test_safe_request_cache(monkeypatch: Any) -> None:
         def raise_for_status(self) -> None:
             pass
 
-    def get(url: str, timeout: int = 5) -> Resp:
+    session = requests_cache.CachedSession(backend="memory", expire_after=5)
+
+    def request(method: str, url: str, **_kw: Any) -> Resp:
         calls.append(url)
         return Resp()
 
-    monkeypatch.setattr(utils, "requests", mock.Mock(get=get, RequestException=Exception))
-    monkeypatch.setattr(utils.time, "time", lambda: 0.0)
-    utils._SAFE_REQUEST_CACHE = {}
+    session.request = request  # type: ignore[assignment]
+    monkeypatch.setattr(utils, "HTTP_SESSION", session)
 
     first = utils.safe_request("http://x", cache_seconds=5)
     second = utils.safe_request("http://x", cache_seconds=5)

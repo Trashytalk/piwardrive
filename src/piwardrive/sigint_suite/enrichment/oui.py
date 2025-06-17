@@ -6,7 +6,7 @@ import os
 import time
 from typing import Dict, Optional
 
-import requests
+from piwardrive.utils import HTTP_SESSION
 
 from sigint_suite import paths
 
@@ -40,7 +40,7 @@ def update_oui_file(
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
     try:
-        resp = requests.get(url, timeout=15)
+        resp = HTTP_SESSION.get(url, timeout=15)
         resp.raise_for_status()
     except Exception as exc:
         logger.error("OUI registry download failed: %s", exc)
