@@ -10,7 +10,9 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def upload_to_s3(file_path: str, bucket: str, key: str, profile: Optional[str] = None) -> None:
+def upload_to_s3(
+    file_path: str, bucket: str, key: str, profile: Optional[str] = None
+) -> None:
     """Upload ``file_path`` to the given S3 ``bucket`` using the AWS CLI."""
     if not os.path.exists(file_path):
         raise FileNotFoundError(file_path)

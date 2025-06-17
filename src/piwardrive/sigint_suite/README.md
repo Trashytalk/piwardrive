@@ -31,6 +31,9 @@ command line.
 - **cellular.imsi_catcher** – stub for future IMSI catcher logic. Set
   ``IMSI_SCAN_TIMEOUT`` to control how long the external command may run
   (default ``10`` seconds).
+- **cellular.tower_scanner** – scan LTE/5G towers. Use ``TOWER_SCAN_CMD`` to
+  specify the executable and ``TOWER_SCAN_TIMEOUT`` for the timeout (default
+  ``10`` seconds).
 - **cellular.parsers** – parsers for raw cellular output.
 - **cellular.tower_tracker** – persist cell towers, Wi‑Fi access points and
   Bluetooth devices in a SQLite database for historical queries.
@@ -97,7 +100,9 @@ the system. Running
 `./sigint_suite/scripts/setup_all.sh` will install these packages and the
 required Python dependencies. Vendor lookups use the IEEE OUI registry which is
 automatically downloaded to `~/.config/piwardrive/oui.csv` when first needed and
-refreshed weekly. The setup script can also fetch the file manually.
+refreshed weekly. The setup script can also fetch the file manually. Results are
+cached in memory using a least recently used (LRU) cache that holds up to 1024
+entries; the oldest prefix is evicted once the limit is reached.
 
 ## Plugins
 

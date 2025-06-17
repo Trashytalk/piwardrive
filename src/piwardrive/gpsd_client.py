@@ -47,6 +47,7 @@ class GPSDClient:
                 return None
 
     def get_position(self) -> tuple[float, float] | None:
+        """Return the current latitude and longitude if available."""
         pkt = self._get_packet()
         if not pkt:
             return None
@@ -62,6 +63,7 @@ class GPSDClient:
         return None
 
     def get_accuracy(self) -> float | None:
+        """Return horizontal accuracy in meters when available."""
         pkt = self._get_packet()
         if not pkt:
             return None
@@ -72,6 +74,7 @@ class GPSDClient:
             return None
 
     def get_fix_quality(self) -> str:
+        """Return a textual description of the current fix quality."""
         pkt = self._get_packet()
         if not pkt:
             return "Unknown"

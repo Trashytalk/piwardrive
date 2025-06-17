@@ -51,6 +51,9 @@ Raspberry Pi OS
 
       pip install pandas orjson pyprof2calltree
 
+   The ``fastjson`` helper tries ``orjson`` first, then ``ujson`` and finally
+   falls back to the builtin ``json`` module when the accelerators are absent.
+
 
 Generic Linux
 -------------

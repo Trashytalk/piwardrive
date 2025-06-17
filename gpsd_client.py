@@ -1,3 +1,4 @@
+"""Entry point for gpsd_client module."""
 from piwardrive.gpsd_client import *  # noqa: F401,F403
 
 """Thread-safe client for ``gpsd`` with helpers for common queries."""
@@ -53,6 +54,7 @@ class GPSDClient:
                 return None
 
     def get_position(self) -> tuple[float, float] | None:
+        """Return the current latitude/longitude if available."""
         pkt = self._get_packet()
         if not pkt:
             return None
@@ -68,6 +70,7 @@ class GPSDClient:
         return None
 
     def get_accuracy(self) -> float | None:
+        """Return horizontal accuracy in meters when available."""
         pkt = self._get_packet()
         if not pkt:
             return None
@@ -78,6 +81,7 @@ class GPSDClient:
             return None
 
     def get_fix_quality(self) -> str:
+        """Return a textual representation of the current fix quality."""
         pkt = self._get_packet()
         if not pkt:
             return "Unknown"
