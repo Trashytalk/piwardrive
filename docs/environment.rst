@@ -43,7 +43,7 @@ General
     Minimum speed in m/s before fast GPS polling is used.
 
 Configuration Overrides
-----------------------
+-----------------------
 
 The :mod:`config` module exposes many fields such as
 ``offline_tile_path``, ``kismet_logdir`` and ``bettercap_caplet``.

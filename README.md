@@ -122,7 +122,7 @@ pip install -r requirements.txt
 pip install .
 ```
 
-You can run `./scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
+You can run `src/piwardrive/scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
 
 #### Optional Dependencies
 
@@ -178,7 +178,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 
 #### Manual Steps
 
-* **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
+* **Installation** – run `src/piwardrive/scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
 * **Launching the App** – activate the environment and start PiWardrive with `python main.py`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.

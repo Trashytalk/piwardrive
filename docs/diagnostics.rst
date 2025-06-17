@@ -1,5 +1,5 @@
 Diagnostics
-----------
+-----------
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
