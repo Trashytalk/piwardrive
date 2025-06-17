@@ -1,6 +1,9 @@
 Remote Data Sync
 ================
 
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 This guide explains how to backhaul PiWardrive's health data to a server over WireGuard.  It covers configuration on the Pi as well as a minimal FastAPI receiver that can run on your router or another host.
 
 Prerequisites

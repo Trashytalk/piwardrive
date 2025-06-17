@@ -1,6 +1,9 @@
 Centralized Aggregation Service
 ===============================
 
+.. note::
+   Please read the legal notice in the project `README.md` before using PiWardrive.
+
 PiWardrive units can upload their local databases to a single aggregation server.
 The service merges uploaded health and Wi-Fi observations and exposes combined
 statistics along with heatmap data for map overlays.
