@@ -3,6 +3,7 @@ import logging
 import os
 import sqlite3
 import time
+import heapq
 from scheduler import PollScheduler
 import utils
 
@@ -29,9 +30,10 @@ def enforce_cache_limit(folder: str, limit_mb: int) -> None:
         if not os.path.isdir(folder):
             return
 
-        files: list[tuple[str, int, float]] = []
+        max_bytes = limit_mb * 1024 * 1024
         total = 0
         stack = [folder]
+        heap: list[tuple[float, int, str]] = []
 
         while stack:
             base = stack.pop()
@@ -44,24 +46,24 @@ def enforce_cache_limit(folder: str, limit_mb: int) -> None:
                             stat = entry.stat()
                             size = stat.st_size
                             total += size
-                            files.append((entry.path, size, stat.st_mtime))
+                            heapq.heappush(heap, (stat.st_mtime, size, entry.path))
+                            while heap and total > max_bytes:
+                                mtime, sz, path = heapq.heappop(heap)
+                                try:
+                                    os.remove(path)
+                                except OSError:
+                                    pass
+                                total -= sz
             except OSError:
                 continue
 
-        max_bytes = limit_mb * 1024 * 1024
-        if total <= max_bytes:
-            return
-
-        files.sort(key=lambda x: x[2])
-
-        for path, size, _ in files:
+        while heap and total > max_bytes:
+            mtime, sz, path = heapq.heappop(heap)
             try:
                 os.remove(path)
             except OSError:
                 pass
-            total -= size
-            if total <= max_bytes:
-                break
+            total -= sz
     except Exception as exc:  # pragma: no cover - filesystem errors
         logging.exception("Cache limit enforcement failed: %s", exc)
 

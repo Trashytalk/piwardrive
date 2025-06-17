@@ -1,5 +1,3 @@
-from piwardrive.orientation_sensors import *  # noqa: F401,F403
-
 """Orientation sensor helpers for gyroscope and accelerometer.
 
 The functions in this module try to read device orientation via different
@@ -11,7 +9,10 @@ external MPU‑6050 sensor using the optional ``mpu6050`` package.  Again,
 check for ``None`` to gracefully handle setups without these sensors.
 """
 
+
 from __future__ import annotations
+
+from piwardrive.orientation_sensors import *  # noqa: F401,F403
 
 import logging
 from typing import Any, Dict, Optional
