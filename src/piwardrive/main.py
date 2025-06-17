@@ -188,7 +188,7 @@ class PiWardriveApp(MDApp):
                 ev = f"rotate_{os.path.basename(path)}"
                 self.scheduler.schedule(
                     ev,
-                    lambda _dt, p=path: diagnostics.rotate_log(
+                    lambda _dt, p=path: diagnostics.rotate_log_async(
                         p, self.log_rotate_archives
                     ),
                     self.log_rotate_interval,
