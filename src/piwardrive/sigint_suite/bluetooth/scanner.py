@@ -1,3 +1,4 @@
+"""Module scanner."""
 import asyncio
 import os
 import subprocess

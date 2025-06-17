@@ -909,6 +909,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         MDDialog(title="Map Help", text=help_text, size_hint=(0.8, 0.6)).open()
 
     def start_first_run_tour(self):
+        """Display a few onboarding hints to the user."""
         self._tour_hints = [
             "Tap ⛶ to center on GPS",
             "Tap +/– to zoom in or out",
@@ -1050,6 +1051,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             fh.write(data)
 
     def prefetch_tiles(self, bounds, zoom: int = 16, folder: str = "/mnt/ssd/tiles", *, concurrency: int | None = None, progress_cb: Callable[[int, int], None] | None = None) -> None:
+        """Download tiles covering ``bounds`` for offline use."""
         try:
             from .map_utils import tile_cache
             tile_cache.prefetch_tiles(bounds, zoom=zoom, folder=folder, concurrency=concurrency, progress_cb=progress_cb)

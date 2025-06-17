@@ -1,3 +1,5 @@
+"""Check that example project files exist."""
+
 import os
 
 def check_structure():

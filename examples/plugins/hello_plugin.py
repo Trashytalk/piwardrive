@@ -1,3 +1,5 @@
+"""Example dashboard plugin that displays a greeting."""
+
 from datetime import datetime
 from kivy.metrics import dp
 from kivymd.uix.card import MDCard

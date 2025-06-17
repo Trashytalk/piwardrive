@@ -1,3 +1,4 @@
+"""Module service."""
 from __future__ import annotations
 
 """Simple FastAPI service for health records."""

@@ -1,3 +1,5 @@
+"""Simple file logger used by the localization example scripts."""
+
 import logging
 import os
 from datetime import datetime

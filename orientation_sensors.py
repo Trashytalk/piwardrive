@@ -1,3 +1,4 @@
+"""Entry point for orientation_sensors module."""
 from piwardrive.orientation_sensors import *  # noqa: F401,F403
 
 """Orientation sensor helpers for gyroscope and accelerometer.

@@ -1,4 +1,6 @@
-##main_localization.py
+"""Example script demonstrating access point localization."""
+
+# main_localization.py
 
 import pandas as pd
 import numpy as np
