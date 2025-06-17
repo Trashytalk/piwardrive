@@ -1,3 +1,4 @@
+"""Module exporter."""
 import csv
 import json
 from typing import Any, Iterable, Mapping
@@ -5,26 +6,43 @@ from typing import Any, Iterable, Mapping
 
 def export_json(records: Iterable[Any], path: str) -> None:
     """Export ``records`` to ``path`` in JSON format."""
-    data = []
-    for rec in records:
-        if hasattr(rec, "model_dump"):
-            data.append(rec.model_dump())
-        elif isinstance(rec, Mapping):
-            data.append(dict(rec))
-        else:
-            data.append(rec)
+
+    def normalise(record: Any) -> Any:
+        if hasattr(record, "model_dump"):
+            return record.model_dump()
+        if isinstance(record, Mapping):
+            return dict(record)
+        return record
+
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, indent=2)
+        fh.write("[\n")
+        first = True
+        for rec in records:
+            if not first:
+                fh.write(",\n")
+            json.dump(normalise(rec), fh, indent=2)
+            first = False
+        if not first:
+            fh.write("\n")
+        fh.write("]")
 
 
 def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
     """Export ``records`` to ``path`` in CSV format."""
-    rows = list(records)
+
+    it = iter(records)
+    try:
+        first = next(it)
+    except StopIteration:
+        open(path, "w", newline="", encoding="utf-8").close()
+        return
+
     with open(path, "w", newline="", encoding="utf-8") as fh:
-        if rows:
-            writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(rows)
+        writer = csv.DictWriter(fh, fieldnames=list(first.keys()))
+        writer.writeheader()
+        writer.writerow(first)
+        for rec in it:
+            writer.writerow(rec)
 
 
 def export_yaml(records: Iterable[Any], path: str) -> None:

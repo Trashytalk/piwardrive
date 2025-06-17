@@ -1,3 +1,4 @@
+"""Module models."""
 from __future__ import annotations
 
 """Typed record models used by scanner functions."""
@@ -20,6 +21,7 @@ class RecordBase(BaseModel):
         setattr(self, key, value)
 
     def get(self, key: str, default: Any = None) -> Any:  # pragma: no cover
+        """Return attribute ``key`` if present or ``default`` otherwise."""
         return getattr(self, key, default)
 
 

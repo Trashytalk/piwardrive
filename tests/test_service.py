@@ -6,12 +6,13 @@ import asyncio
 import pytest
 from fastapi import WebSocketDisconnect
 
-sys.path.insert(0, '.')
-aiohttp_mod = ModuleType('aiohttp')
+sys.path.insert(0, ".")
+aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
-sys.modules['aiohttp'] = aiohttp_mod
+sys.modules["aiohttp"] = aiohttp_mod
+
 import service
 import persistence
 from fastapi.testclient import TestClient
@@ -25,6 +26,7 @@ def test_status_endpoint_returns_recent_records() -> None:
         memory_percent=3.0,
         disk_percent=4.0,
     )
+
     async def _mock(_: int) -> list:
         return [rec]
 
@@ -135,3 +137,34 @@ def test_websocket_timeout_closes_connection() -> None:
         with pytest.raises(WebSocketDisconnect):
             with client.websocket_connect("/ws/status") as ws:
                 ws.receive_json()
+
+
+def test_get_config_endpoint() -> None:
+    with mock.patch("service.config.load_config") as load:
+        load.return_value = service.config.Config(theme="Green")
+        client = TestClient(service.app)
+        resp = client.get("/config")
+        assert resp.status_code == 200
+        assert resp.json()["theme"] == "Green"
+
+
+def test_update_config_endpoint_success() -> None:
+    cfg = service.config.Config(theme="Dark")
+    with (
+        mock.patch("service.config.load_config", return_value=cfg),
+        mock.patch("service.config.save_config") as save,
+    ):
+        client = TestClient(service.app)
+        resp = client.post("/config", json={"theme": "Light"})
+        assert resp.status_code == 200
+        assert resp.json()["theme"] == "Light"
+        args = save.call_args[0][0]
+        assert args.theme == "Light"
+
+
+def test_update_config_endpoint_invalid_key() -> None:
+    cfg = service.config.Config()
+    with mock.patch("service.config.load_config", return_value=cfg):
+        client = TestClient(service.app)
+        resp = client.post("/config", json={"bad": 1})
+        assert resp.status_code == 400

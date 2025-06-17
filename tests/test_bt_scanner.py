@@ -5,7 +5,8 @@ import builtins
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.bluetooth.scanner import scan_bluetooth
+from sigint_suite.bluetooth import scanner as bt_scanner
+from sigint_suite.bluetooth import scan_bluetooth
 
 
 class DummyDevice(SimpleNamespace):
@@ -29,8 +30,14 @@ def test_scan_bluetooth_bleak(monkeypatch):
 
 
 def test_scan_bluetooth_fallback(monkeypatch):
-    output = """[NEW] Device AA:BB:CC:DD:EE:FF Foo\n[NEW] Device 11:22:33:44:55:66 Bar"""
-    monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
+    async def fake_start() -> None:
+        bt_scanner._devices = {
+            "AA:BB:CC:DD:EE:FF": "Foo",
+            "11:22:33:44:55:66": "Bar",
+        }
+
+    async def fake_sleep(_t: float) -> None:
+        pass
 
     orig_import = builtins.__import__
 
@@ -40,6 +47,8 @@ def test_scan_bluetooth_fallback(monkeypatch):
         return orig_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
+    monkeypatch.setattr(bt_scanner, "start_scanner", fake_start)
+    monkeypatch.setattr(bt_scanner.asyncio, "sleep", fake_sleep)
 
     devices = scan_bluetooth(timeout=1)
     assert {"address": "AA:BB:CC:DD:EE:FF", "name": "Foo"} in devices
