@@ -1,0 +1,80 @@
+import asyncio
+import logging
+import os
+import shlex
+import subprocess
+from typing import List, Optional
+
+from sigint_suite.cellular.parsers import parse_tower_output
+from sigint_suite.models import TowerRecord
+from sigint_suite.gps import get_position
+from sigint_suite.hooks import apply_post_processors
+
+logger = logging.getLogger(__name__)
+
+
+def scan_towers(
+    cmd: Optional[str] = None,
+    *,
+    with_location: bool = True,
+    timeout: Optional[int] = None,
+) -> List[TowerRecord]:
+    """Scan for nearby cell towers and return a list of records."""
+    cmd_str = cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan")
+    args = shlex.split(cmd_str)
+    timeout = timeout if timeout is not None else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+    try:
+        output = subprocess.check_output(
+            args, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+        )
+    except Exception as exc:
+        logger.exception("Tower scan failed: %s", exc)
+        return []
+
+    records = parse_tower_output(output)
+    if with_location:
+        pos = get_position()
+        if pos:
+            lat, lon = pos
+            for rec in records:
+                rec.lat = lat
+                rec.lon = lon
+
+    records = apply_post_processors("tower", [r.model_dump() for r in records])
+    return [TowerRecord(**rec) for rec in records]
+
+
+async def async_scan_towers(
+    cmd: Optional[str] = None,
+    *,
+    with_location: bool = True,
+    timeout: int | None = None,
+) -> List[TowerRecord]:
+    """Asynchronously scan for cell towers."""
+    cmd_str = cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan")
+    args = shlex.split(cmd_str)
+    timeout = timeout if timeout is not None else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+    logger.debug("Executing: %s", " ".join(args))
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        output = stdout.decode()
+    except Exception as exc:
+        logger.exception("Tower scan failed: %s", exc)
+        return []
+
+    records = parse_tower_output(output)
+    if with_location:
+        pos = get_position()
+        if pos:
+            lat, lon = pos
+            for rec in records:
+                rec.lat = lat
+                rec.lon = lon
+
+    records = apply_post_processors("tower", [r.model_dump() for r in records])
+    return [TowerRecord(**rec) for rec in records]

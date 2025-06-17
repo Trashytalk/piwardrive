@@ -26,6 +26,8 @@ graph LR
 - Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
   - ``dbus`` + ``iio-sensor-proxy`` or an external MPU‑6050 are optional;
     the app falls back gracefully when absent
+  - Wi-Fi scans record the current antenna heading along with RSSI when
+    orientation data is available
 
 
 
@@ -36,14 +38,16 @@ graph LR
 - Real-time CPU, memory and network metrics
 - Drag-and-drop dashboard widgets
 - Vector tile renderer and track playback
+- Drone-based mapping mode
 - Geofencing and cached map tiles
 - Status service with React web UI
 
 
 ## Data Handling
-- Multi-format exports (GPX/KML/CSV/JSON)
+- Multi-format exports (GPX/KML/CSV/JSON/GeoJSON/Shapefile)
 - Diagnostics and log rotation
-- Remote database sync (`remote_sync.py`) and cloud exports
+- Remote database sync (`remote_sync.py`) with a central aggregation service
+  for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
 - CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   
@@ -142,7 +146,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 
 * **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
 * **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
-* **Configuration Reloads** – changes to `config.json` and any `PW_` environment variables are detected at runtime and applied without restarting.
+* **Configuration Reloads** – a filesystem watcher detects updates to `config.json` and applies them along with any `PW_` overrides without restarting.
 * **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup.
 
 #### Manual Steps
@@ -151,7 +155,10 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Launching the App** – activate the environment and start PiWardrive with `python main.py` or enable `piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
-* **Syncing Data** – trigger uploads via `/sync` or by calling `remote_sync.sync_database_to_server`.
+* **Syncing Data** – set `remote_sync_url` in `~/.config/piwardrive/config.json`
+  and trigger uploads via `/sync` or call
+  `remote_sync.sync_database_to_server` directly.
+* **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
 * **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
 
 
