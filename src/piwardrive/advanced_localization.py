@@ -11,10 +11,12 @@ from typing import Dict, Iterable, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
+from scipy import signal
 
 
 @dataclass
 class Config:
+    """Parameters controlling localization accuracy algorithms."""
     kalman_enable: bool = True
     kalman_process_variance: float = 0.0001
     kalman_measurement_variance: float = 0.01
@@ -57,31 +59,37 @@ def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
 
 
 def _kalman_1d(series: Iterable[float], q: float, r: float) -> np.ndarray:
-    n = len(series)
-    xhat = np.zeros(n)
-    P = np.zeros(n)
-    xhatminus = np.zeros(n)
-    Pminus = np.zeros(n)
-    K = np.zeros(n)
+    """Return 1D Kalman filtered ``series`` using vectorized operations."""
+    arr = np.asarray(series, dtype=float)
+    if arr.size == 0:
+        return arr
 
-    xhat[0] = series[0]
-    P[0] = 1.0
+    # Steady-state Kalman gain for constant process/measurement variance
+    P = (-q + np.sqrt(q * q + 4 * q * r)) / 2
+    K = (P + q) / (P + q + r)
 
-    for k in range(1, n):
-        xhatminus[k] = xhat[k - 1]
-        Pminus[k] = P[k - 1] + q
-        K[k] = Pminus[k] / (Pminus[k] + r)
-        xhat[k] = xhatminus[k] + K[k] * (series[k] - xhatminus[k])
-        P[k] = (1 - K[k]) * Pminus[k]
-    return xhat
+    # IIR filter coefficients (equivalent to recursion: x[k]=x[k-1]*(1-K)+K*y[k])
+    b = [K]
+    a = [1, -(1 - K)]
+    zi = signal.lfilter_zi(b, a) * arr[0]
+    filtered, _ = signal.lfilter(b, a, arr, zi=zi)
+    return filtered
 
 
 def apply_kalman_filter(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
     if not cfg.kalman_enable or df.empty:
         return df
     df = df.copy()
-    df["lat"] = _kalman_1d(df["lat"].to_numpy(), cfg.kalman_process_variance, cfg.kalman_measurement_variance)
-    df["lon"] = _kalman_1d(df["lon"].to_numpy(), cfg.kalman_process_variance, cfg.kalman_measurement_variance)
+    df["lat"] = _kalman_1d(
+        df["lat"].to_numpy(),
+        cfg.kalman_process_variance,
+        cfg.kalman_measurement_variance,
+    )
+    df["lon"] = _kalman_1d(
+        df["lon"].to_numpy(),
+        cfg.kalman_process_variance,
+        cfg.kalman_measurement_variance,
+    )
     return df
 
 
@@ -89,7 +97,9 @@ def remove_outliers(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
     if df.empty:
         return df
     coords = df[["lat", "lon"]]
-    labels = DBSCAN(eps=cfg.dbscan_eps, min_samples=cfg.dbscan_min_samples).fit_predict(coords)
+    labels = DBSCAN(eps=cfg.dbscan_eps, min_samples=cfg.dbscan_min_samples).fit_predict(
+        coords
+    )
     return df[labels != -1]
 
 
@@ -102,26 +112,36 @@ def rssi_to_distance(rssi: float, reference: float, exponent: float) -> float:
 # Localization
 
 
-def estimate_ap_location_centroid(ap_data: pd.DataFrame, cfg: Config) -> Tuple[float, float]:
-    weights = ap_data["rssi"].apply(lambda r: max(0.01, 1 / ((100 - r) ** cfg.centroid_rssi_weight_power)))
+def estimate_ap_location_centroid(
+    ap_data: pd.DataFrame, cfg: Config
+) -> Tuple[float, float]:
+    weights = ap_data["rssi"].apply(
+        lambda r: max(0.01, 1 / ((100 - r) ** cfg.centroid_rssi_weight_power))
+    )
     lat = np.average(ap_data["lat"], weights=weights)
     lon = np.average(ap_data["lon"], weights=weights)
     return float(lat), float(lon)
 
 
 def localize_aps(df: pd.DataFrame, cfg: Config) -> Dict[str, Tuple[float, float]]:
-    coords: Dict[str, Tuple[float, float]] = {}
-    for mac in df["macaddr"].unique():
-        ap = df[df["macaddr"] == mac].sort_values("gpstime")
+    def _process(ap: pd.DataFrame) -> Tuple[float, float] | None:
+        ap = ap.sort_values("gpstime")
         if len(ap) < cfg.min_points_for_confidence:
-            continue
+            return None
         ap = apply_kalman_filter(ap, cfg)
         ap = remove_outliers(ap, cfg)
         if ap.empty:
-            continue
+            return None
         lat, lon = estimate_ap_location_centroid(ap, cfg)
-        coords[mac] = (lat, lon)
-    return coords
+        return lat, lon
+
+    return (
+        df.groupby("macaddr", group_keys=False)
+        .apply(_process, include_groups=False)
+        .dropna()
+        .apply(lambda t: (float(t[0]), float(t[1])))
+        .to_dict()
+    )
 
 
 __all__ = [

@@ -1,6 +1,7 @@
 import os
 import sys
 from unittest import mock
+import threading
 import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -30,3 +31,30 @@ def test_resolve_missing_key_raises() -> None:
     c = Container()
     with pytest.raises(KeyError):
         c.resolve("missing")
+
+
+def test_concurrent_resolve_creates_single_instance() -> None:
+    c = Container()
+
+    created: list[object] = []
+
+    def factory() -> object:
+        obj = object()
+        created.append(obj)
+        return obj
+
+    c.register_factory("svc", factory)
+
+    results: list[object] = []
+
+    def worker() -> None:
+        results.append(c.resolve("svc"))
+
+    threads = [threading.Thread(target=worker) for _ in range(10)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert len(created) == 1
+    assert all(r is results[0] for r in results)

@@ -154,6 +154,7 @@ class AsyncScheduler:
         self.schedule(cb_name, _call_update, interval)
 
     def cancel(self, name: str) -> None:
+        """Cancel the task registered under ``name`` if it exists."""
         task = self._tasks.pop(name, None)
         if task:
             task.cancel()
@@ -161,6 +162,7 @@ class AsyncScheduler:
         self._durations.pop(name, None)
 
     async def cancel_all(self) -> None:
+        """Cancel all running tasks and wait for them to finish."""
         tasks = list(self._tasks.values())
         self._tasks.clear()
         for task in tasks:

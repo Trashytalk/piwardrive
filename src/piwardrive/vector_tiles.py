@@ -19,6 +19,7 @@ class MBTiles:
         self.path = path
 
     def tiles(self, z: int, x: int, y: int) -> bytes | None:
+        """Return the raw tile data for ``(z, x, y)`` if present."""
         try:
             with sqlite3.connect(self.path) as db:
                 cur = db.execute(

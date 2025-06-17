@@ -1,4 +1,7 @@
+"""Check that example project files exist."""
+
 import os
+
 
 def check_structure():
     required_files = [
@@ -31,5 +34,6 @@ def check_structure():
             for d in missing_dirs:
                 print(f"  - {d}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     check_structure()

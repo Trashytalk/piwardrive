@@ -64,3 +64,26 @@ Use the ``/sync`` endpoint exposed by ``service.py`` or call
 The database will be uploaded to the server where it can be processed or backed
 up as needed.
 
+Python API
+----------
+
+``remote_sync.sync_database_to_server`` is an asynchronous helper that takes the
+path to a SQLite database and an upload URL.  Optional ``timeout`` and
+``retries`` parameters control how long the call waits for a response and how
+many attempts are made before giving up.  The function raises
+``aiohttp.ClientError`` on network failures.
+
+Example::
+
+    import asyncio
+    from piwardrive import remote_sync
+
+    asyncio.run(
+        remote_sync.sync_database_to_server(
+            "~/piwardrive/health.db",
+            "http://10.0.0.2:9000/",
+            timeout=10,
+            retries=5,
+        )
+    )
+

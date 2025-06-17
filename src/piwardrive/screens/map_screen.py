@@ -6,6 +6,7 @@ import json
 import os
 import asyncio
 import aiohttp
+import heapq
 
 
 from gpsd_client import client as gps_client
@@ -166,9 +167,13 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._gps_event = "map_gps"
         self._aps_event = "map_aps"
 
-        app.scheduler.schedule(
-            self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
-        )
+        if app.map_follow_gps:
+            app.scheduler.schedule(
+                self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
+            )
+        btn = self.ids.get("follow_btn")
+        if btn:
+            btn.text = "Follow ON" if app.map_follow_gps else "Follow OFF"
 
         from utils import network_scanning_disabled
 
@@ -874,6 +879,25 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if key == "map_show_heatmap":
             self.update_heatmap()
 
+    def toggle_follow(self) -> None:
+        """Toggle GPS follow mode and (un)schedule centering."""
+        app = App.get_running_app()
+        app.map_follow_gps = not getattr(app, "map_follow_gps")
+        btn = self.ids.get("follow_btn")
+        if btn:
+            btn.text = "Follow ON" if app.map_follow_gps else "Follow OFF"
+        if app.map_follow_gps:
+            if not self._gps_event:
+                self._gps_event = "map_gps"
+            app.scheduler.schedule(
+                self._gps_event, lambda dt: self.center_on_gps(), app.map_poll_gps
+            )
+            Clock.schedule_once(lambda _dt: self.center_on_gps())
+        else:
+            if self._gps_event:
+                app.scheduler.cancel(self._gps_event)
+                self._gps_event = None
+
 
 
     # Search / Jump to coords
@@ -909,6 +933,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         MDDialog(title="Map Help", text=help_text, size_hint=(0.8, 0.6)).open()
 
     def start_first_run_tour(self):
+        """Display a few onboarding hints to the user."""
         self._tour_hints = [
             "Tap ⛶ to center on GPS",
             "Tap +/– to zoom in or out",
@@ -1050,6 +1075,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             fh.write(data)
 
     def prefetch_tiles(self, bounds, zoom: int = 16, folder: str = "/mnt/ssd/tiles", *, concurrency: int | None = None, progress_cb: Callable[[int, int], None] | None = None) -> None:
+        """Download tiles covering ``bounds`` for offline use."""
         try:
             from .map_utils import tile_cache
             tile_cache.prefetch_tiles(bounds, zoom=zoom, folder=folder, concurrency=concurrency, progress_cb=progress_cb)
@@ -1143,9 +1169,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             if not os.path.isdir(folder):
                 return
 
-            files: list[tuple[str, int, float]] = []
+            max_bytes = limit_mb * 1024 * 1024
             total = 0
             stack = [folder]
+            heap: list[tuple[float, int, str]] = []
 
             while stack:
                 base = stack.pop()
@@ -1158,24 +1185,24 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                                 stat = entry.stat()
                                 size = stat.st_size
                                 total += size
-                                files.append((entry.path, size, stat.st_mtime))
+                                heapq.heappush(heap, (stat.st_mtime, size, entry.path))
+                                while heap and total > max_bytes:
+                                    mtime, sz, path = heapq.heappop(heap)
+                                    try:
+                                        os.remove(path)
+                                    except OSError:
+                                        pass
+                                    total -= sz
                 except OSError:
                     continue
 
-            max_bytes = limit_mb * 1024 * 1024
-            if total <= max_bytes:
-                return
-
-            files.sort(key=lambda x: x[2])
-
-            for path, size, _ in files:
+            while heap and total > max_bytes:
+                mtime, sz, path = heapq.heappop(heap)
                 try:
                     os.remove(path)
                 except OSError:
                     pass
-                total -= size
-                if total <= max_bytes:
-                    break
+                total -= sz
         except Exception as e:  # pragma: no cover - filesystem errors
             report_error(f"Cache limit error: {e}")
 
