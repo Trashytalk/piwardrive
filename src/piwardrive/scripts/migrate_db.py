@@ -1,3 +1,4 @@
+"""Module migrate_db."""
 import asyncio
 import persistence
 

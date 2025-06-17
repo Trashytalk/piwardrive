@@ -59,3 +59,14 @@ def test_get_orientation_dbus_success(monkeypatch):
     )
     monkeypatch.setattr(osens, "dbus", dummy_dbus)
     assert osens.get_orientation_dbus() == "right-up"
+
+
+def test_get_heading(monkeypatch):
+    monkeypatch.setattr(osens, "get_orientation_dbus", lambda: "right-up")
+    monkeypatch.setattr(osens, "orientation_to_angle", lambda o, m=None: 90.0)
+    assert osens.get_heading() == 90.0
+
+
+def test_get_heading_none(monkeypatch):
+    monkeypatch.setattr(osens, "get_orientation_dbus", lambda: None)
+    assert osens.get_heading() is None
