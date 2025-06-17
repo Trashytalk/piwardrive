@@ -16,6 +16,7 @@ import argparse
 import json
 import os
 from typing import Any, Dict, List, Mapping
+from sigint_suite import paths
 
 DEFAULT_EXPORT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "exports")

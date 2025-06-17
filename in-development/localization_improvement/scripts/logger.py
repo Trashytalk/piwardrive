@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+
 def setup_logger(name='localization', log_dir='logs', level=logging.INFO):
     """Initializes a logger that logs to both file and console."""
     os.makedirs(log_dir, exist_ok=True)

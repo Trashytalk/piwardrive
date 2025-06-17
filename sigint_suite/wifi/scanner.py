@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import shlex
@@ -6,6 +7,7 @@ import subprocess
 from typing import Dict, List, Optional
 from sigint_suite.enrichment import lookup_vendor
 from sigint_suite.hooks import apply_post_processors, register_post_processor
+from sigint_suite.models import WifiNetwork
 
 logger = logging.getLogger(__name__)
 

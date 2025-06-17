@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import subprocess
 from typing import Dict, List
@@ -7,6 +8,7 @@ from typing import Dict, List
 from sigint_suite.models import BluetoothDevice
 
 logger = logging.getLogger(__name__)
+
 
 def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
     """Scan for nearby Bluetooth devices using ``bleak`` or ``bluetoothctl``."""
@@ -28,8 +30,6 @@ def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
         return asyncio.run(_scan())
     except Exception:
         return _scan_bluetoothctl(timeout)
-
-
 
 
 async def async_scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:

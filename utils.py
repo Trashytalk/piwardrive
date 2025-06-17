@@ -270,7 +270,6 @@ def safe_request(
         return None
 
 
-
 def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:

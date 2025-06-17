@@ -7,7 +7,9 @@ from typing import Iterable, Mapping, Any, List
 from sigint_suite.enrichment import lookup_vendor
 
 
-def find_suspicious_aps(records: Iterable[Mapping[str, Any]]) -> List[Mapping[str, Any]]:
+def find_suspicious_aps(
+    records: Iterable[Mapping[str, Any]]
+) -> List[Mapping[str, Any]]:
     """Return Wi-Fi access points that may be suspicious.
 
     Heuristics flag open or WEP networks, duplicate BSSIDs broadcasting

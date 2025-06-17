@@ -22,7 +22,10 @@ class MBTiles:
         try:
             with sqlite3.connect(self.path) as db:
                 cur = db.execute(
-                    "SELECT tile_data FROM tiles WHERE zoom_level=? AND tile_column=? AND tile_row=?",
+                    (
+                        "SELECT tile_data FROM tiles WHERE zoom_level=? "
+                        "AND tile_column=? AND tile_row=?"
+                    ),
                     (z, x, y),
                 )
                 row = cur.fetchone()

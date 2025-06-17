@@ -116,6 +116,7 @@ ENV_OVERRIDE_MAP: Dict[str, str] = {
     f"PW_{name.upper()}": name for name in DEFAULTS.keys()
 }
 
+
 def list_env_overrides() -> Dict[str, str]:
     """Return available ``PW_`` environment variable overrides."""
     return dict(ENV_OVERRIDE_MAP)

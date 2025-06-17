@@ -25,7 +25,8 @@ def histogram(
 
     if bounds is None:
         if not pts:
-            return [[0 for _ in range(bins_lon)] for _ in range(bins_lat)], (0.0, 0.0), (0.0, 0.0)
+            empty = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
+            return empty, (0.0, 0.0), (0.0, 0.0)
         lats = [p[0] for p in pts]
         lons = [p[1] for p in pts]
         min_lat = min(lats)

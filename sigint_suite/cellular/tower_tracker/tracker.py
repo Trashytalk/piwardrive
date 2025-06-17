@@ -4,7 +4,6 @@ from typing import Dict, List, Optional
 import aiosqlite
 
 
-
 class TowerTracker:
     """Maintain a database of observed cell towers."""
 
