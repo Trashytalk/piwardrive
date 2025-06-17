@@ -6,6 +6,7 @@ import json
 import os
 import asyncio
 import aiohttp
+import heapq
 
 
 from gpsd_client import client as gps_client
@@ -1143,9 +1144,10 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             if not os.path.isdir(folder):
                 return
 
-            files: list[tuple[str, int, float]] = []
+            max_bytes = limit_mb * 1024 * 1024
             total = 0
             stack = [folder]
+            heap: list[tuple[float, int, str]] = []
 
             while stack:
                 base = stack.pop()
@@ -1158,24 +1160,24 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                                 stat = entry.stat()
                                 size = stat.st_size
                                 total += size
-                                files.append((entry.path, size, stat.st_mtime))
+                                heapq.heappush(heap, (stat.st_mtime, size, entry.path))
+                                while heap and total > max_bytes:
+                                    mtime, sz, path = heapq.heappop(heap)
+                                    try:
+                                        os.remove(path)
+                                    except OSError:
+                                        pass
+                                    total -= sz
                 except OSError:
                     continue
 
-            max_bytes = limit_mb * 1024 * 1024
-            if total <= max_bytes:
-                return
-
-            files.sort(key=lambda x: x[2])
-
-            for path, size, _ in files:
+            while heap and total > max_bytes:
+                mtime, sz, path = heapq.heappop(heap)
                 try:
                     os.remove(path)
                 except OSError:
                     pass
-                total -= size
-                if total <= max_bytes:
-                    break
+                total -= sz
         except Exception as e:  # pragma: no cover - filesystem errors
             report_error(f"Cache limit error: {e}")
 
