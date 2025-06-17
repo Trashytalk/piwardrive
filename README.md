@@ -120,6 +120,18 @@ pip install .
 
 You can run `./scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
 
+#### Optional Dependencies
+
+Some components rely on additional Python packages. Install them only if you need the corresponding feature:
+
+- `dbus-fast` – asynchronous service control via D-Bus; otherwise `systemctl` is used.
+- `dbus-python` or `mpu6050` – provides orientation data from `iio-sensor-proxy` or an external MPU‑6050 sensor.
+- `bleak` – enables Bluetooth scanning on the map and in the `sigint_suite` tools.
+- `rpy2` – required for generating daily health summaries with R.
+- `pandas`, `orjson`, `pyprof2calltree` – used by advanced analytics and profiling helpers.
+
+Activate the virtual environment and run `pip install <package>` for any that apply.
+
 ### Running
 
 ```bash
