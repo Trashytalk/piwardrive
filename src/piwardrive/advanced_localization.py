@@ -80,8 +80,16 @@ def apply_kalman_filter(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
     if not cfg.kalman_enable or df.empty:
         return df
     df = df.copy()
-    df["lat"] = _kalman_1d(df["lat"].to_numpy(), cfg.kalman_process_variance, cfg.kalman_measurement_variance)
-    df["lon"] = _kalman_1d(df["lon"].to_numpy(), cfg.kalman_process_variance, cfg.kalman_measurement_variance)
+    df["lat"] = _kalman_1d(
+        df["lat"].to_numpy(),
+        cfg.kalman_process_variance,
+        cfg.kalman_measurement_variance,
+    )
+    df["lon"] = _kalman_1d(
+        df["lon"].to_numpy(),
+        cfg.kalman_process_variance,
+        cfg.kalman_measurement_variance,
+    )
     return df
 
 
@@ -89,7 +97,9 @@ def remove_outliers(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
     if df.empty:
         return df
     coords = df[["lat", "lon"]]
-    labels = DBSCAN(eps=cfg.dbscan_eps, min_samples=cfg.dbscan_min_samples).fit_predict(coords)
+    labels = DBSCAN(eps=cfg.dbscan_eps, min_samples=cfg.dbscan_min_samples).fit_predict(
+        coords
+    )
     return df[labels != -1]
 
 
@@ -102,8 +112,12 @@ def rssi_to_distance(rssi: float, reference: float, exponent: float) -> float:
 # Localization
 
 
-def estimate_ap_location_centroid(ap_data: pd.DataFrame, cfg: Config) -> Tuple[float, float]:
-    weights = ap_data["rssi"].apply(lambda r: max(0.01, 1 / ((100 - r) ** cfg.centroid_rssi_weight_power)))
+def estimate_ap_location_centroid(
+    ap_data: pd.DataFrame, cfg: Config
+) -> Tuple[float, float]:
+    weights = ap_data["rssi"].apply(
+        lambda r: max(0.01, 1 / ((100 - r) ** cfg.centroid_rssi_weight_power))
+    )
     lat = np.average(ap_data["lat"], weights=weights)
     lon = np.average(ap_data["lon"], weights=weights)
     return float(lat), float(lon)
