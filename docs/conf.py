@@ -5,6 +5,7 @@ author = 'TRASHYTALK'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.graphviz',
+    'sphinxcontrib.mermaid',
 ]
 html_theme = 'alabaster'
 
