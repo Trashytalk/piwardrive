@@ -41,7 +41,7 @@ graph LR
 
 
 ## Data Handling
-- Multi-format exports (GPX/KML/CSV/JSON)
+- Multi-format exports (GPX/KML/CSV/JSON/GeoJSON/Shapefile)
 - Diagnostics and log rotation
 - Remote database sync (`remote_sync.py`) with a central aggregation service
   for combined statistics and map overlays
