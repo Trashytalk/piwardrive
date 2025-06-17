@@ -4,6 +4,7 @@ import csv
 import logging
 import os
 import time
+from functools import lru_cache
 from typing import Dict, Optional
 
 import requests
@@ -98,4 +99,10 @@ def lookup_vendor(
     return (oui_map or _default_map()).get(prefix)
 
 
-__all__ = ["load_oui_map", "lookup_vendor", "update_oui_file"]
+@lru_cache(maxsize=1024)
+def cached_lookup_vendor(bssid: str) -> Optional[str]:
+    """LRU cached wrapper for :func:`lookup_vendor`."""
+    return lookup_vendor(bssid)
+
+
+__all__ = ["load_oui_map", "lookup_vendor", "cached_lookup_vendor", "update_oui_file"]
