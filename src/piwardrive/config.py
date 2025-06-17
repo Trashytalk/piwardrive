@@ -183,6 +183,7 @@ class ConfigModel(FileConfigModel):
 
     @field_validator("theme", mode="before")
     def check_theme(cls, value: Any) -> Theme:
+        """Validate that ``value`` is a known :class:`Theme`."""
         try:
             return Theme(value)
         except Exception as exc:  # pragma: no cover - should raise

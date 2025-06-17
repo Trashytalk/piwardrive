@@ -1,3 +1,4 @@
+"""Entry point for utils module."""
 from piwardrive.utils import *  # noqa: F401,F403
 
 """Utility functions for the PiWardrive GUI application."""

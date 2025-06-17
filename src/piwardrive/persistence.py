@@ -1,3 +1,4 @@
+"""Module persistence."""
 from __future__ import annotations
 
 """Simple persistence helpers using SQLite."""

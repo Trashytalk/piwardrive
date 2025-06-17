@@ -1,3 +1,4 @@
+"""Module plugins."""
 from __future__ import annotations
 
 """Plugin loader for sigint_suite.

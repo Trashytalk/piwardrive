@@ -1,3 +1,4 @@
+"""Module scanner."""
 import logging
 import os
 import shlex

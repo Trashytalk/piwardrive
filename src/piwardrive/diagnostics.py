@@ -353,4 +353,5 @@ class HealthMonitor:
                 logging.exception("Failed to remove old export %s", fpath)
 
     def stop(self) -> None:
+        """Cancel the periodic health export task."""
         self._scheduler.cancel(self._event)

@@ -1,3 +1,5 @@
+"""Visualize benchmark results from CSV files."""
+
 import time
 from pathlib import Path
 

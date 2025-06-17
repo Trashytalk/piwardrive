@@ -16,6 +16,7 @@ from scipy import signal
 
 @dataclass
 class Config:
+    """Parameters controlling localization accuracy algorithms."""
     kalman_enable: bool = True
     kalman_process_variance: float = 0.0001
     kalman_measurement_variance: float = 0.01
