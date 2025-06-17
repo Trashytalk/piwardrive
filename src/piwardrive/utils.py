@@ -3,6 +3,7 @@
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
 import json
+from . import fastjson
 import asyncio
 from contextlib import asynccontextmanager
 import logging
@@ -61,7 +62,6 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
 SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
 HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
 
-
 class ErrorCode(IntEnum):
     """Enumerate application error codes."""
 
@@ -80,9 +80,7 @@ class ErrorCode(IntEnum):
     KISMET_API_JSON_ERROR = 302
     KISMET_API_ERROR = 303
 
-
 ERROR_PREFIX = "E"
-
 
 def network_scanning_disabled() -> bool:
     """Return ``True`` if scanning is globally disabled."""
@@ -100,10 +98,8 @@ def network_scanning_disabled() -> bool:
         logging.debug("Network scanning disabled")
     return disabled
 
-
 _async_loop: asyncio.AbstractEventLoop | None = None
 _async_thread: threading.Thread | None = None
-
 
 def _ensure_async_loop_running() -> None:
     """Create and start the background asyncio loop if needed."""
@@ -117,7 +113,6 @@ def _ensure_async_loop_running() -> None:
         assert _async_loop is not None  # for type checkers
         _async_thread = threading.Thread(target=_async_loop.run_forever, daemon=True)
         _async_thread.start()
-
 
 def shutdown_async_loop(timeout: float | None = 5.0) -> None:
     """Stop the background asyncio loop and join its thread."""
@@ -134,27 +129,9 @@ def shutdown_async_loop(timeout: float | None = 5.0) -> None:
     _async_thread = None
     _async_loop = None
 
-
 def format_error(code: int | IntEnum, message: str) -> str:
     """Return standardized error string like ``[E001] message``."""
     return f"[{ERROR_PREFIX}{int(code):03d}] {message}"
-
-
-try:
-    import orjson as _json  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    logging.debug("orjson not available, falling back to ujson")
-    try:
-        import ujson as _json  # type: ignore
-    except Exception:  # pragma: no cover - fallback
-        logging.debug("ujson not available, using json module")
-        _json = json  # type: ignore
-
-
-def _loads(data: bytes | str) -> Any:
-    """Parse JSON using the fastest available library."""
-    return _json.loads(data)
-
 
 def report_error(message: str) -> None:
     """Log the error and show an alert via the running app if possible.
@@ -169,9 +146,7 @@ def report_error(message: str) -> None:
     except Exception as exc:  # pragma: no cover - app may not be running
         logging.exception("Failed to display error alert: %s", exc)
 
-
 T = TypeVar("T")
-
 
 def require_id(widget: Any, name: str) -> Any:
     """Return ``widget.ids[name]`` or raise with context.
@@ -188,7 +163,6 @@ def require_id(widget: Any, name: str) -> Any:
         raise RuntimeError(
             f"ID '{name}' not found. Ensure kv/main.kv matches. Available IDs: {ids}"
         ) from exc
-
 
 def run_async_task(
     coro: Coroutine[Any, Any, T],
@@ -214,7 +188,6 @@ def run_async_task(
 
     return fut
 
-
 def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
     """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""
     last_exc: Exception | None = None
@@ -228,7 +201,6 @@ def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
     if last_exc is not None:
         raise last_exc
     raise RuntimeError("Unreachable")
-
 
 def safe_request(
     url: str,
@@ -268,8 +240,6 @@ def safe_request(
                 report_error(f"Fallback for {url} failed: {exc2}")
         return None
 
-
-
 def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:
@@ -288,7 +258,6 @@ def ensure_service_running(
         report_error(f"Failed to restart {service}: {msg or 'Unknown error'}")
     return ok and service_status(service)
 
-
 def get_cpu_temp() -> float | None:
     """
     Read the Raspberry Pi CPU temperature from sysfs.
@@ -301,7 +270,6 @@ def get_cpu_temp() -> float | None:
     except Exception:
         return None
 
-
 def get_mem_usage() -> float | None:
     """
     Return system memory usage percentage.
@@ -311,7 +279,6 @@ def get_mem_usage() -> float | None:
     except Exception:
         return None
 
-
 def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
     """
     Return disk usage percentage for given path.
@@ -320,7 +287,6 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
         return psutil.disk_usage(path).percent
     except Exception:
         return None
-
 
 def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
     """Return ``(rx_kbps, tx_kbps)`` since the last call.
@@ -351,7 +317,6 @@ def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
     cache["timestamp"] = now
     return rx_kbps, tx_kbps
 
-
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
     """Return SMART health status for the device mounted at ``mount_point``."""
     try:
@@ -376,14 +341,12 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
     except Exception:
         return None
 
-
 def _parse_smartctl_output(output: str) -> str | None:
     """Map smartctl output to a simple status string."""
     for key, val in {"PASSED": "OK", "FAILED": "FAIL", "WARNING": "WARN"}.items():
         if key in output:
             return val
     return output.strip().splitlines()[-1] if output else None
-
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
     """Return the newest file matching ``pattern`` under ``directory``."""
@@ -392,7 +355,6 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
     if not files:
         return None
     return str(max(files, key=lambda p: p.stat().st_mtime))
-
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
     """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
@@ -412,7 +374,6 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
             return text.decode("utf-8", errors="ignore").splitlines()[-lines:]
     except Exception:
         return []
-
 
 async def async_tail_file(path: str, lines: int = 50) -> list[str]:
     """Asynchronously return the last ``lines`` from ``path``."""
@@ -444,7 +405,6 @@ async def async_tail_file(path: str, lines: int = 50) -> list[str]:
     except Exception:
         return []
 
-
 def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
     """Fallback ``systemctl`` invocation capturing output."""
 
@@ -458,7 +418,6 @@ def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
         return False, out, err
     except Exception as exc:  # pragma: no cover - unexpected failures
         return False, "", str(exc)
-
 
 def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
@@ -507,7 +466,6 @@ def _run_service_cmd_sync(
     except Exception:
         return _run_systemctl(service, action)
 
-
 @asynccontextmanager
 async def message_bus() -> Any:
     """Yield a connected ``dbus-fast`` ``MessageBus`` instance."""
@@ -521,7 +479,6 @@ async def message_bus() -> Any:
         yield bus
     finally:
         bus.disconnect()
-
 
 async def _run_service_cmd_async(
     service: str, action: str, attempts: int = 1, delay: float = 0
@@ -598,7 +555,6 @@ async def _run_service_cmd_async(
             None, lambda: _run_systemctl(service, action)
         )
 
-
 def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
@@ -624,7 +580,6 @@ def run_service_cmd(
         )
         return False, "", str(exc)
 
-
 async def service_status_async(
     service: str, attempts: int = 1, delay: float = 0
 ) -> bool:
@@ -640,14 +595,12 @@ async def service_status_async(
     except Exception:
         return False
 
-
 def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
     """Check a service's status using the asynchronous helper."""
     fut = run_async_task(
         service_status_async(service, attempts=attempts, delay=delay)
     )
     return fut.result()
-
 
 def scan_bt_devices() -> list[BluetoothDevice]:
     """Return nearby Bluetooth devices via DBus."""
@@ -687,20 +640,17 @@ def scan_bt_devices() -> list[BluetoothDevice]:
 
     return devices
 
-
 def now_timestamp() -> str:
     """
     Return the current time as a formatted string.
     """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
 def fetch_kismet_devices() -> tuple[list, list]:
     """Synchronize Kismet device data using the async helper."""
 
     fut = run_async_task(fetch_kismet_devices_async())
     return fut.result()
-
 
 async def fetch_kismet_devices_async() -> tuple[list, list]:
     """Asynchronously fetch Kismet device data using ``aiohttp``."""
@@ -721,7 +671,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                     if resp.status == 200:
                         text = await resp.text()
                         try:
-                            return _loads(text)
+                            return fastjson.loads(text)
                         except Exception as exc:  # pragma: no cover - JSON error
                             report_error(
                                 format_error(
@@ -779,7 +729,6 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
         pass
     return [], []
 
-
 async def fetch_metrics_async(
     log_folder: str = '/mnt/ssd/kismet_logs',
 ) -> tuple[list, list, int]:
@@ -791,7 +740,6 @@ async def fetch_metrics_async(
     aps, clients = await aps_clients
     count = await handshake
     return aps, clients, count
-
 
 def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     """Count ``.pcap`` handshake files in BetterCAP log directories."""
@@ -810,7 +758,6 @@ def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
     except OSError:
         return 0
     return count
-
 
 def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
     """Return cached GPSD data or refresh if stale."""
@@ -833,7 +780,6 @@ def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
     _GPSD_CACHE["fix"] = fix
     return _GPSD_CACHE
 
-
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:
     """Return GPS accuracy from cached GPSD data."""
     data = _get_cached_gps_data(force_refresh)
@@ -841,14 +787,12 @@ def get_gps_accuracy(force_refresh: bool = False) -> float | None:
         return None
     return data.get("accuracy")
 
-
 def get_gps_fix_quality(force_refresh: bool = False) -> str:
     """Return human readable GPS fix quality from cached data."""
     data = _get_cached_gps_data(force_refresh)
     if not data:
         return "Unknown"
     return str(data.get("fix", "Unknown"))
-
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
     """
@@ -865,18 +809,15 @@ def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
     except Exception:
         return None
 
-
 def parse_latest_gps_accuracy(force_refresh: bool = False) -> float | None:
     """Alias for :func:`get_gps_accuracy`."""
     return get_gps_accuracy(force_refresh=force_refresh)
-
 
 def tail_log_file(path: str, lines: int = 50) -> list[str]:
     """
     Alias for tail_file.
     """
     return tail_file(path, lines)
-
 
 def get_recent_bssids(limit: int = 5) -> list[str]:
     """Return the most recently observed BSSIDs from the Kismet API."""
@@ -888,7 +829,6 @@ def get_recent_bssids(limit: int = 5) -> list[str]:
         return [ap.get('bssid', 'N/A') for ap in sorted_aps[:limit]]
     except Exception:
         return []
-
 
 def _haversine_distance_py(p1: tuple[float, float], p2: tuple[float, float]) -> float:
     """Return great-circle distance between two ``(lat, lon)`` points in meters."""
@@ -908,7 +848,6 @@ def _haversine_distance_py(p1: tuple[float, float], p2: tuple[float, float]) -> 
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     return r * c
-
 
 def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
     """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
@@ -936,7 +875,6 @@ def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
     meter_per_deg = 111320.0
     return area * (meter_per_deg**2)
 
-
 def _point_in_polygon_py(
     point: tuple[float, float], polygon: Sequence[tuple[float, float]]
 ) -> bool:
@@ -955,7 +893,6 @@ def _point_in_polygon_py(
                 inside = not inside
     return inside
 
-
 try:  # pragma: no cover - optional geometry C extension for speed
     from cgeom import (
         haversine_distance as _haversine_distance_c,  # type: ignore
@@ -971,12 +908,10 @@ haversine_distance = _haversine_distance_c or _haversine_distance_py
 polygon_area = _polygon_area_c or _polygon_area_py
 point_in_polygon = _point_in_polygon_c or _point_in_polygon_py
 
-
 try:  # pragma: no cover - optional C extension for speed
     from ckml import parse_coords as _parse_coords  # type: ignore
 except Exception:  # pragma: no cover - fallback to Python
     _parse_coords = None
-
 
 def _parse_coord_text(text: str) -> list[tuple[float, float]]:
     """Parse a KML ``coordinates`` string into ``(lat, lon)`` tuples."""
@@ -989,7 +924,6 @@ def _parse_coord_text(text: str) -> list[tuple[float, float]]:
         lat = float(parts[1])
         coords.append((lat, lon))
     return coords
-
 
 def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""

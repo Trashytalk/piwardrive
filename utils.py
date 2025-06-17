@@ -5,6 +5,7 @@ from piwardrive.utils import *  # noqa: F401,F403
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
 import json
+import fastjson
 import asyncio
 from contextlib import asynccontextmanager
 import logging
@@ -142,20 +143,6 @@ def format_error(code: int | IntEnum, message: str) -> str:
     return f"[{ERROR_PREFIX}{int(code):03d}] {message}"
 
 
-try:
-    import orjson as _json  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    logging.debug("orjson not available, falling back to ujson")
-    try:
-        import ujson as _json  # type: ignore
-    except Exception:  # pragma: no cover - fallback
-        logging.debug("ujson not available, using json module")
-        _json = json  # type: ignore
-
-
-def _loads(data: bytes | str) -> Any:
-    """Parse JSON using the fastest available library."""
-    return _json.loads(data)
 
 
 def report_error(message: str) -> None:
@@ -727,7 +714,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                     if resp.status == 200:
                         text = await resp.text()
                         try:
-                            return _loads(text)
+                            return fastjson.loads(text)
                         except Exception as exc:  # pragma: no cover - JSON error
                             report_error(
                                 format_error(
