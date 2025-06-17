@@ -6,7 +6,14 @@ from dataclasses import asdict
 import os
 import inspect
 
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    Body,
+)
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 import asyncio
@@ -25,6 +32,7 @@ from utils import (
     service_status_async,
     async_tail_file,
 )
+import config
 from sync import upload_data
 
 security = HTTPBasic(auto_error=False)
@@ -87,6 +95,34 @@ async def get_logs(
     else:
         lines_out = data
     return {"path": safe, "lines": lines_out}
+
+
+@app.get("/config")
+async def get_config_endpoint(_auth: None = Depends(_check_auth)) -> dict:
+    """Return the current configuration from ``config.json``."""
+    return asdict(config.load_config())
+
+
+@app.post("/config")
+async def update_config_endpoint(
+    updates: dict = Body(...),
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Update configuration values and persist them."""
+    cfg = config.load_config()
+    data = asdict(cfg)
+    for key, value in updates.items():
+        if key not in data:
+            raise HTTPException(status_code=400, detail=f"Unknown field: {key}")
+        data[key] = value
+    if data.get("remote_sync_url", "") == "":
+        data["remote_sync_url"] = None
+    try:
+        config.validate_config_data(data)
+    except Exception as exc:  # pragma: no cover - validation tested separately
+        raise HTTPException(status_code=400, detail=str(exc))
+    config.save_config(config.Config(**data))
+    return data
 
 
 @app.post("/sync")
