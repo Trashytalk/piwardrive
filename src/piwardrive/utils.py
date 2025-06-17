@@ -13,6 +13,7 @@ from gpsd_client import client as gps_client
 import time
 import threading
 import mmap
+import glob
 
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
@@ -59,6 +60,10 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
 # Cache for HTTP requests issued via :func:`safe_request`
 SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
 _SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
+
+# Cache for BetterCAP handshake counts
+HANDSHAKE_CACHE_SECONDS = 10.0  # default TTL in seconds
+_HANDSHAKE_CACHE: dict[str, tuple[float, int]] = {}
 
 
 class ErrorCode(IntEnum):
@@ -794,22 +799,25 @@ async def fetch_metrics_async(
     return aps, clients, count
 
 
-def count_bettercap_handshakes(log_folder: str = '/mnt/ssd/kismet_logs') -> int:
-    """Count ``.pcap`` handshake files in BetterCAP log directories."""
-    count = 0
+def count_bettercap_handshakes(
+    log_folder: str = '/mnt/ssd/kismet_logs',
+    *,
+    cache_seconds: float = HANDSHAKE_CACHE_SECONDS,
+) -> int:
+    """Return handshake count using caching and glob lookup."""
+    now = time.time()
+    cached = _HANDSHAKE_CACHE.get(log_folder)
+    if cache_seconds and cached:
+        ts, count = cached
+        if now - ts <= cache_seconds:
+            return count
     try:
-        with os.scandir(log_folder) as entries:
-            for entry in entries:
-                if entry.is_dir() and entry.name.endswith('_bettercap'):
-                    try:
-                        with os.scandir(entry.path) as files:
-                            for file in files:
-                                if file.is_file() and file.name.endswith('.pcap'):
-                                    count += 1
-                    except OSError:
-                        continue
+        pattern = os.path.join(log_folder, '*_bettercap', '**', '*.pcap')
+        files = glob.glob(pattern, recursive=True)
+        count = len(files)
     except OSError:
-        return 0
+        count = 0
+    _HANDSHAKE_CACHE[log_folder] = (now, count)
     return count
 
 
