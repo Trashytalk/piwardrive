@@ -95,3 +95,45 @@ def save_png(hist: Sequence[Sequence[int]], path: str) -> None:
     plt.tight_layout()
     plt.savefig(path, dpi=100, bbox_inches="tight", pad_inches=0)
     plt.close()
+
+
+def density_map(
+    coords: Iterable[Coord],
+    *,
+    bins: int | Tuple[int, int] = 100,
+    bounds: Sequence[float] | None = None,
+    radius: int = 1,
+) -> Tuple[List[List[int]], Tuple[float, float], Tuple[float, float]]:
+    """Return a density map expanding counts to neighbouring cells."""
+    hist, lat_range, lon_range = histogram(coords, bins=bins, bounds=bounds)
+    bins_lat = len(hist)
+    bins_lon = len(hist[0]) if hist else 0
+    if bins_lat == 0 or bins_lon == 0:
+        return hist, lat_range, lon_range
+    density = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
+    for i, row in enumerate(hist):
+        for j, count in enumerate(row):
+            if count <= 0:
+                continue
+            for di in range(-radius, radius + 1):
+                for dj in range(-radius, radius + 1):
+                    ii = i + di
+                    jj = j + dj
+                    if 0 <= ii < bins_lat and 0 <= jj < bins_lon:
+                        density[ii][jj] += count
+    return density, lat_range, lon_range
+
+
+def coverage_map(
+    coords: Iterable[Coord],
+    *,
+    bins: int | Tuple[int, int] = 100,
+    bounds: Sequence[float] | None = None,
+    radius: int = 1,
+) -> Tuple[List[List[int]], Tuple[float, float], Tuple[float, float]]:
+    """Return a binary coverage map from ``coords`` using ``radius`` cells."""
+    dens, lat_range, lon_range = density_map(
+        coords, bins=bins, bounds=bounds, radius=radius
+    )
+    coverage = [[1 if c > 0 else 0 for c in row] for row in dens]
+    return coverage, lat_range, lon_range
