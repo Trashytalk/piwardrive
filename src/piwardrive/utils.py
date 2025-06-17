@@ -38,6 +38,7 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
+import requests_cache
 import aiohttp
 import persistence
 
@@ -58,7 +59,7 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
 
 # Cache for HTTP requests issued via :func:`safe_request`
 SAFE_REQUEST_CACHE_SECONDS = 10.0  # default TTL in seconds
-_SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
+HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
 
 
 class ErrorCode(IntEnum):
@@ -241,30 +242,28 @@ def safe_request(
 
     """Return ``requests.get(url)`` with retries and optional fallback.
 
-    Results are cached for ``cache_seconds`` to avoid repeated network calls.
+    ``requests_cache`` handles caching using :data:`HTTP_SESSION`.
+    The ``cache_seconds`` argument controls the per-request expiration.
     Passing ``cache_seconds`` as ``0`` disables caching.
     """
-    now = time.time()
-    if cache_seconds and url in _SAFE_REQUEST_CACHE:
-        ts, cached = _SAFE_REQUEST_CACHE[url]
-        if now - ts <= cache_seconds:
-            return cached
 
     def _get() -> Any:
-        return requests.get(url, timeout=timeout, **kwargs)
+        return HTTP_SESSION.get(
+            url,
+            timeout=timeout,
+            expire_after=cache_seconds or None,
+            **kwargs,
+        )
 
     try:
         resp = retry_call(_get, attempts=attempts, delay=1)
         resp.raise_for_status()
-        _SAFE_REQUEST_CACHE[url] = (now, resp)
         return resp
     except Exception as exc:  # pragma: no cover - network errors
         report_error(f"Request error for {url}: {exc}")
         if fallback is not None:
             try:
-                result = fallback()
-                _SAFE_REQUEST_CACHE[url] = (time.time(), result)
-                return result
+                return fallback()
             except Exception as exc2:  # pragma: no cover - fallback failed
                 report_error(f"Fallback for {url} failed: {exc2}")
         return None
