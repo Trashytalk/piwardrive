@@ -97,7 +97,9 @@ the system. Running
 `./sigint_suite/scripts/setup_all.sh` will install these packages and the
 required Python dependencies. Vendor lookups use the IEEE OUI registry which is
 automatically downloaded to `~/.config/piwardrive/oui.csv` when first needed and
-refreshed weekly. The setup script can also fetch the file manually.
+refreshed weekly. The setup script can also fetch the file manually. Results are
+cached in memory using a least recently used (LRU) cache that holds up to 1024
+entries; the oldest prefix is evicted once the limit is reached.
 
 ## Plugins
 

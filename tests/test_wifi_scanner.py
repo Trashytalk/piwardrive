@@ -29,7 +29,9 @@ Cell 02 - Address: 11:22:33:44:55:66
           Quality=20/70  Signal level=-90 dBm
 """
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
-    monkeypatch.setattr("sigint_suite.wifi.scanner.lookup_vendor", _mock_lookup_vendor)
+    monkeypatch.setattr(
+        "sigint_suite.wifi.scanner.cached_lookup_vendor", _mock_lookup_vendor
+    )
 
     nets = scan_wifi("wlan0")
     assert nets[0].vendor == "VendorA"
@@ -49,7 +51,9 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
           Quality=70/70  Signal level=-40 dBm
 """
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
-    monkeypatch.setattr("sigint_suite.wifi.scanner.lookup_vendor", lambda b: None)
+    monkeypatch.setattr(
+        "sigint_suite.wifi.scanner.cached_lookup_vendor", lambda b: None
+    )
 
     nets = scan_wifi("wlan0")
     assert nets[0].vendor is None
