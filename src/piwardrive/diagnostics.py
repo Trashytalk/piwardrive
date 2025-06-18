@@ -16,20 +16,20 @@ import psutil
 import logging
 import asyncio
 
-import utils
-from scheduler import PollScheduler
-from interfaces import DataCollector, SelfTestCollector
-from persistence import (
+from piwardrive import utils
+from piwardrive.scheduler import PollScheduler
+from piwardrive.interfaces import DataCollector, SelfTestCollector
+from piwardrive.persistence import (
     HealthRecord,
     save_health_record,
     load_recent_health,
     purge_old_health,
     vacuum,
 )
-from utils import run_async_task
-import config
-import r_integration
-import cloud_export
+from piwardrive.utils import run_async_task
+from piwardrive import config
+from piwardrive import r_integration
+from piwardrive import cloud_export
 
 _PROFILER: cProfile.Profile | None = None
 _LAST_NETWORK_OK: float | None = None

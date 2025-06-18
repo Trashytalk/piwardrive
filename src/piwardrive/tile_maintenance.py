@@ -5,8 +5,8 @@ import os
 import sqlite3
 import time
 import heapq
-from scheduler import PollScheduler
-import utils
+from piwardrive.scheduler import PollScheduler
+from piwardrive import utils
 from typing import Optional
 
 try:

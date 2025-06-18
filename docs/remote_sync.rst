@@ -52,7 +52,7 @@ Client Configuration
 Uploading Data
 --------------
 
-Use the ``/sync`` endpoint exposed by ``service.py`` or call
+Use the ``/sync`` endpoint exposed by ``piwardrive.service`` or call
 ``remote_sync.sync_database_to_server`` directly::
 
     curl -X POST http://localhost:8000/sync

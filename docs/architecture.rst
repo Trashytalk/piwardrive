@@ -13,15 +13,15 @@ interact.
        rankdir=LR;
        node [shape=box, style=rounded];
 
-       App [label="PiWardriveApp\n(main.py)"];
-       Scheduler [label="PollScheduler\n(scheduler.py)"];
-       Diagnostics [label="Diagnostics\n(diagnostics.py)"];
-       Persistence [label="Persistence\n(persistence.py)"];
-       Config [label="Config\n(config.py)"];
+       App [label="PiWardriveApp\n(piwardrive.main)"];
+       Scheduler [label="PollScheduler\n(piwardrive.scheduler)"];
+       Diagnostics [label="Diagnostics\n(piwardrive.diagnostics)"];
+       Persistence [label="Persistence\n(piwardrive.persistence)"];
+       Config [label="Config\n(piwardrive.config)"];
        Widgets [label="Widgets\n(widgets/)"];
        Screens [label="Screens\nscreens/"];
-       Utils [label="Utils\n(utils.py)"];
-       Logging [label="Logging\n(logconfig.py)"];
+       Utils [label="Utils\n(piwardrive.utils)"];
+       Logging [label="Logging\n(piwardrive.logconfig)"];
        External [label="External Services\n(Kismet, BetterCAP,\nGPSd, systemd)"];
 
        App -> Scheduler;
@@ -59,7 +59,7 @@ default. The logger can also emit to ``stdout`` or extra handlers passed into
 Startup Sequence
 ~~~~~~~~~~~~~~~~
 
-At startup ``main.py`` loads the configuration, initializes the scheduler and
+At startup ``piwardrive.main`` loads the configuration, initializes the scheduler and
 restores any persisted ``AppState``. The GUI is then built from ``kv/main.kv``
 and the initial screen is displayed. Widgets register themselves with the
 scheduler to begin polling. On shutdown the current state is saved so the next

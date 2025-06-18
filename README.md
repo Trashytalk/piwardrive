@@ -143,7 +143,7 @@ Activate the virtual environment and run `pip install <package>` for any that ap
 
 ```bash
 source gui-env/bin/activate
-python main.py
+python -m piwardrive.main
 ```
 
 The UI renders directly on the framebuffer so no X server is required.
@@ -182,7 +182,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 #### Manual Steps
 
 * **Installation** – run `src/piwardrive/scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
-* **Launching the App** – activate the environment and start PiWardrive with `python main.py`.
+* **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
@@ -190,7 +190,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
   and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
 * **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
-* **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
+* **Configuration Wizard** – run `python -m piwardrive.setup_wizard` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
 
 
 ### Example systemd unit
@@ -204,7 +204,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/piwardrive
-ExecStart=/home/pi/piwardrive/gui-env/bin/python /home/pi/piwardrive/main.py
+ExecStart=/home/pi/piwardrive/gui-env/bin/python -m piwardrive.main
 Restart=on-failure
 
 [Install]
