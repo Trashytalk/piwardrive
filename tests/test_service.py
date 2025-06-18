@@ -1,7 +1,7 @@
 import sys
 from dataclasses import asdict
 from unittest import mock
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 import asyncio
 import pytest
 from fastapi import WebSocketDisconnect
@@ -47,6 +47,15 @@ def test_widget_metrics_endpoint() -> None:
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
+        mock.patch(
+            "service.psutil.sensors_battery",
+            return_value=SimpleNamespace(percent=75.0, power_plugged=True),
+        ),
+        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=30.0),
+        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=1500.0),
+        mock.patch(
+            "service.vehicle_sensors.read_engine_load_obd", return_value=50.0
+        ),
     ):
         client = TestClient(service.app)
         resp = client.get("/widget-metrics")
@@ -56,6 +65,11 @@ def test_widget_metrics_endpoint() -> None:
         assert data["handshake_count"] == 5
         assert data["rx_kbps"] == 1.0
         assert data["tx_kbps"] == 2.0
+        assert data["battery_percent"] == 75.0
+        assert data["battery_plugged"] is True
+        assert data["vehicle_speed"] == 30.0
+        assert data["vehicle_rpm"] == 1500.0
+        assert data["engine_load"] == 50.0
 
 
 def test_logs_endpoint_returns_lines_async() -> None:
@@ -102,6 +116,15 @@ def test_websocket_status_stream() -> None:
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
+        mock.patch(
+            "service.psutil.sensors_battery",
+            return_value=SimpleNamespace(percent=50.0, power_plugged=False),
+        ),
+        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=70.0),
+        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=2000.0),
+        mock.patch(
+            "service.vehicle_sensors.read_engine_load_obd", return_value=60.0
+        ),
     ):
         client = TestClient(service.app)
         with client.websocket_connect("/ws/status") as ws:
@@ -109,6 +132,11 @@ def test_websocket_status_stream() -> None:
             assert data["status"][0]["cpu_percent"] == 2.0
             assert data["metrics"]["bssid_count"] == 1
             assert data["metrics"]["rx_kbps"] == 1.0
+            assert data["metrics"]["battery_percent"] == 50.0
+            assert data["metrics"]["battery_plugged"] is False
+            assert data["metrics"]["vehicle_speed"] == 70.0
+            assert data["metrics"]["vehicle_rpm"] == 2000.0
+            assert data["metrics"]["engine_load"] == 60.0
             assert data["seq"] == 0
             assert isinstance(data["timestamp"], float)
             assert data["errors"] == 0
@@ -132,6 +160,15 @@ def test_websocket_timeout_closes_connection() -> None:
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
+        mock.patch(
+            "service.psutil.sensors_battery",
+            return_value=SimpleNamespace(percent=80.0, power_plugged=True),
+        ),
+        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=20.0),
+        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=1000.0),
+        mock.patch(
+            "service.vehicle_sensors.read_engine_load_obd", return_value=30.0
+        ),
     ):
         client = TestClient(service.app)
         with pytest.raises(WebSocketDisconnect):

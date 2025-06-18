@@ -31,6 +31,8 @@ from utils import (
     service_status_async,
     async_tail_file,
 )
+import psutil
+import vehicle_sensors
 import config
 from sync import upload_data
 
@@ -61,6 +63,15 @@ async def _collect_widget_metrics() -> dict:
     """Return basic metrics used by dashboard widgets."""
     aps, _clients, handshakes = await fetch_metrics_async()
     rx, tx = get_network_throughput()
+    batt_percent = batt_plugged = None
+    try:
+        batt = psutil.sensors_battery()
+        if batt is not None:
+            batt_percent = batt.percent
+            batt_plugged = batt.power_plugged
+    except Exception:  # pragma: no cover - optional dependency
+        pass
+
     return {
         "cpu_temp": get_cpu_temp(),
         "bssid_count": len(aps),
@@ -71,6 +82,11 @@ async def _collect_widget_metrics() -> dict:
         "gps_fix": get_gps_fix_quality(),
         "rx_kbps": rx,
         "tx_kbps": tx,
+        "battery_percent": batt_percent,
+        "battery_plugged": batt_plugged,
+        "vehicle_speed": vehicle_sensors.read_speed_obd(),
+        "vehicle_rpm": vehicle_sensors.read_rpm_obd(),
+        "engine_load": vehicle_sensors.read_engine_load_obd(),
     }
 
 
