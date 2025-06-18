@@ -30,6 +30,7 @@ piwardrive-migrate = "piwardrive.scripts.migrate_db:main"
 uav-record = "piwardrive.scripts.uav_record:main"
 uav-track-playback = "piwardrive.scripts.uav_track_playback:main"
 piwardrive-mbtiles = "piwardrive.scripts.vector_tile_customizer_cli:main"
+obd-check = "piwardrive.scripts.obd_check:main"
 
 
 

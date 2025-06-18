@@ -24,4 +24,11 @@ Several helper scripts are installed alongside the GUI. They can be invoked dire
 
         piwardrive-service
 
+``obd-check``
+    Attempt a connection to an OBD-II adapter and print sample readings::
+
+        obd-check
+
+    Reports the connection status along with speed, RPM and engine load values.
+
 See ``--help`` on each command for additional options.
