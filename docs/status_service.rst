@@ -21,6 +21,14 @@ the last few records::
 Use the ``limit`` query parameter to control how many entries are returned.
 
 
+Autostart
+---------
+
+Copy ``examples/service_api.service`` into ``/etc/systemd/system/`` and enable it
+with ``sudo systemctl enable --now service_api.service`` to run ``python -m
+service`` on boot.
+
+
 Additional Routes
 -----------------
 
