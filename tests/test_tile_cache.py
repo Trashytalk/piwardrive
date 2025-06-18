@@ -65,10 +65,10 @@ for name, mod in modules.items():
     sys.modules[name] = mod
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-if "screens.map_screen" in sys.modules:
-    del sys.modules["screens.map_screen"]
-from screens.map_screen import MapScreen  # noqa: E402
-from screens.map_utils import tile_cache
+if "piwardrive.screens.map_screen" in sys.modules:
+    del sys.modules["piwardrive.screens.map_screen"]
+from piwardrive.screens.map_screen import MapScreen  # noqa: E402
+from piwardrive.screens.map_utils import tile_cache
 
 
 def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
@@ -79,7 +79,7 @@ def test_prefetch_tiles_downloads(monkeypatch, tmp_path):
         with open(local, "wb") as fh:
             fh.write(b"data")
 
-    from screens.map_utils import tile_cache
+    from piwardrive.screens.map_utils import tile_cache
     monkeypatch.setattr(tile_cache, "download_tile_async", fake_dl)
     import asyncio
     def fake_prefetch(bounds, zoom=16, folder="/mnt/ssd/tiles", *, concurrency=None, progress_cb=None):

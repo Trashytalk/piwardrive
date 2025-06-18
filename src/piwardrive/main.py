@@ -34,12 +34,16 @@ from kivymd.app import MDApp
 
 # Trim down HTTP debug logging
 
-from screens.console_screen import ConsoleScreen  # type: ignore[import]
-from screens.dashboard_screen import DashboardScreen  # type: ignore[import]
-from screens.map_screen import MapScreen  # type: ignore[import]
-from screens.settings_screen import SettingsScreen  # type: ignore[import]
-from screens.split_screen import SplitScreen  # type: ignore[import]
-from screens.stats_screen import StatsScreen  # type: ignore[import]
+from piwardrive.screens.console_screen import ConsoleScreen  # type: ignore[import]
+from piwardrive.screens.dashboard_screen import (
+    DashboardScreen,  # type: ignore[import]
+)
+from piwardrive.screens.map_screen import MapScreen  # type: ignore[import]
+from piwardrive.screens.settings_screen import (
+    SettingsScreen,  # type: ignore[import]
+)
+from piwardrive.screens.split_screen import SplitScreen  # type: ignore[import]
+from piwardrive.screens.stats_screen import StatsScreen  # type: ignore[import]
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 

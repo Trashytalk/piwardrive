@@ -332,7 +332,7 @@ class HealthMonitor:
             json.dump(result, fh)
 
     async def _run_export(self) -> None:
-        import scripts.health_export as health_export
+        import piwardrive.scripts.health_export as health_export
 
         try:
             os.makedirs(config.HEALTH_EXPORT_DIR, exist_ok=True)

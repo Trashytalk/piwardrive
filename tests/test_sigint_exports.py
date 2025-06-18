@@ -5,7 +5,7 @@ import json
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.exports import export_csv, export_yaml, export_json
+from piwardrive.sigint_suite.exports import export_csv, export_yaml, export_json
 
 
 
@@ -28,7 +28,7 @@ def test_export_yaml(tmp_path):
 
 
 def test_all_contains_export_yaml():
-    import sigint_suite.exports as ex
+    import piwardrive.sigint_suite.exports as ex
 
     assert "export_yaml" in ex.__all__
 

@@ -1043,7 +1043,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Offline Map Tile Management
 
-    # tile management helpers moved to :mod:`screens.map_utils.tile_cache`
+    # tile management helpers moved to :mod:`piwardrive.screens.map_utils.tile_cache`
 
     async def _download_tile_async(
         self, session: aiohttp.ClientSession, url: str, local: str
@@ -1368,8 +1368,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         )
 
     def load_saved_geofences(self) -> None:
-        """Load polygons saved by :class:`~screens.geofence_editor.GeofenceEditor`."""
-        from screens.geofence_editor import GeofenceEditor
+        """Load polygons saved by :class:`~piwardrive.screens.geofence_editor.GeofenceEditor`."""
+        from piwardrive.screens.geofence_editor import GeofenceEditor
 
         try:
             with open(GeofenceEditor.GEOFENCE_FILE, "r", encoding="utf-8") as fh:

@@ -55,7 +55,7 @@ for n, m in modules.items():
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from screens.geofence_editor import GeofenceEditor  # noqa: E402
+from piwardrive.screens.geofence_editor import GeofenceEditor  # noqa: E402
 
 
 def test_editor_editing(tmp_path: Any) -> None:
