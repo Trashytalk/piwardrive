@@ -133,6 +133,54 @@ sudo apt install -y r-base r-base-dev
 
 You can run `src/piwardrive/scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
 
+#### Step-by-Step Setup
+
+1. Flash Raspberry Pi OS (Lite recommended) to an SD card and boot the Pi.
+2. Install required system packages:
+
+   ```bash
+   sudo apt update && sudo apt install -y \
+       git build-essential cmake kismet bettercap gpsd evtest python3-venv
+   ```
+3. Clone the repository and switch into the project directory:
+
+   ```bash
+   git clone https://github.com/TRASHYTALK/piwardrive.git
+   cd piwardrive
+   ```
+4. Create and activate the virtual environment:
+
+   ```bash
+   python3 -m venv gui-env
+   source gui-env/bin/activate
+   ```
+5. Install Python dependencies and the project itself:
+
+   ```bash
+   pip install -r requirements.txt
+   pip install .
+   ```
+6. (Optional) mount an external SSD by editing `/etc/fstab`::
+
+   /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
+
+7. Enable `kismet`, `bettercap` and `gpsd` to start on boot:
+
+   ```bash
+   sudo systemctl enable kismet bettercap gpsd
+   ```
+8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it:
+
+   ```bash
+   sudo cp examples/piwardrive.service /etc/systemd/system/
+   sudo systemctl enable --now piwardrive.service
+   ```
+9. Start the application manually if the service is not enabled:
+
+   ```bash
+   python -m piwardrive.main
+   ```
+
 #### Optional Dependencies
 
 Some components rely on additional Python packages. Install them only if you need the corresponding feature:
