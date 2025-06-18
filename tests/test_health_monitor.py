@@ -13,8 +13,8 @@ aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules['aiohttp'] = aiohttp_mod
-import diagnostics  # noqa: E402
-from scheduler import PollScheduler
+from piwardrive import diagnostics  # noqa: E402
+from piwardrive.scheduler import PollScheduler
 
 
 class DummyScheduler:

@@ -19,13 +19,13 @@ import asyncio
 import time
 
 
-from logconfig import DEFAULT_LOG_PATH
+from piwardrive.logconfig import DEFAULT_LOG_PATH
 try:  # allow tests to stub out ``persistence``
     from persistence import load_recent_health  # type: ignore
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import load_recent_health
-from security import sanitize_path, verify_password
-from utils import (
+from piwardrive.security import sanitize_path, verify_password
+from piwardrive.utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
@@ -34,8 +34,8 @@ from utils import (
     service_status_async,
     async_tail_file,
 )
-import config
-from sync import upload_data
+from piwardrive import config
+from piwardrive.sync import upload_data
 
 security = HTTPBasic(auto_error=False)
 app = FastAPI()

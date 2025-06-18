@@ -20,7 +20,7 @@ def _haversine(a, b):
 sys.modules["scheduler"] = SimpleNamespace(PollScheduler=object)
 sys.modules["utils"] = SimpleNamespace(haversine_distance=_haversine)
 
-import route_prefetch  # noqa: E402
+from piwardrive import route_prefetch  # noqa: E402
 import pytest
 
 

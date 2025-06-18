@@ -9,18 +9,18 @@ from dataclasses import asdict, fields
 from typing import Any, Callable
 
 
-from scheduler import PollScheduler
-from config import load_config, save_config, Config, config_mtime, CONFIG_PATH
+from piwardrive.scheduler import PollScheduler
+from piwardrive.config import load_config, save_config, Config, config_mtime, CONFIG_PATH
 from config_watcher import watch_config
 
-from security import hash_password
-from persistence import save_app_state, load_app_state, AppState
+from piwardrive.security import hash_password
+from piwardrive.persistence import save_app_state, load_app_state, AppState
 
-import diagnostics
-import utils
-from di import Container
-from logconfig import setup_logging
-import exception_handler
+from piwardrive import diagnostics
+from piwardrive import utils
+from piwardrive.di import Container
+from piwardrive.logconfig import setup_logging
+from piwardrive import exception_handler
 
 from kivy.factory import Factory
 from kivy.lang import Builder

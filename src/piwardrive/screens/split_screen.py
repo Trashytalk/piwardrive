@@ -6,7 +6,7 @@ from kivy.clock import Clock, mainthread
 from kivy.uix.screenmanager import Screen
 
 
-from utils import (
+from piwardrive.utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
@@ -14,7 +14,7 @@ from utils import (
     run_async_task,
     service_status,
 )
-from localization import _
+from piwardrive.localization import _
 
 
 

@@ -8,7 +8,7 @@ from typing import Sequence, Any
 
 import aiohttp
 
-import config
+from piwardrive import config
 
 
 async def upload_data(records: Sequence[dict[str, Any]]) -> bool:

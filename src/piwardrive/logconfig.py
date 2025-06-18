@@ -5,7 +5,7 @@ import os
 import sys
 from logging import Logger
 from typing import Iterable, Optional
-from config import CONFIG_DIR
+from piwardrive.config import CONFIG_DIR
 
 DEFAULT_LOG_PATH = os.path.join(CONFIG_DIR, "app.log")
 

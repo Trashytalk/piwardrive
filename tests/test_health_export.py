@@ -6,7 +6,7 @@ from dataclasses import asdict
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import scripts.health_export as he
-from persistence import HealthRecord
+from piwardrive.persistence import HealthRecord
 
 
 def test_export_json(tmp_path, monkeypatch):

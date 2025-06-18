@@ -9,7 +9,7 @@ import aiohttp
 import heapq
 
 
-from gpsd_client import client as gps_client
+from piwardrive.gpsd_client import client as gps_client
 
 
 import threading
@@ -28,8 +28,8 @@ import math
 import asyncio
 
 from kivy.app import App
-import utils
-from heatmap import histogram, histogram_points
+from piwardrive import utils
+from piwardrive.heatmap import histogram, histogram_points
 
 from kivy.clock import Clock, mainthread
 try:
@@ -38,7 +38,7 @@ except Exception:  # pragma: no cover - optional for tests
     Animation = None  # type: ignore
 
 from kivy.metrics import dp
-from orientation_sensors import orientation_to_angle
+from piwardrive.orientation_sensors import orientation_to_angle
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -66,7 +66,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 
 from kivymd.uix.snackbar import Snackbar
-from persistence import save_app_state
+from piwardrive.persistence import save_app_state
 from kivymd.uix.textfield import MDTextField
 try:
     from kivymd.uix.progressbar import MDProgressBar
@@ -74,7 +74,7 @@ try:
     from kivymd.uix.label import MDLabel
 except Exception:  # pragma: no cover - optional for tests
     MDProgressBar = MDBoxLayout = MDLabel = object  # type: ignore
-import export
+from piwardrive import export
 try:
     from utils import (
         haversine_distance,

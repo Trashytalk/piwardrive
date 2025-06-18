@@ -13,7 +13,7 @@ import asyncio
 import requests_cache
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import persistence
+from piwardrive import persistence
 
 from unittest import mock
 import types
@@ -29,7 +29,7 @@ if 'requests' not in sys.modules:
     dummy_requests = mock.Mock()
     dummy_requests.RequestException = Exception
     sys.modules['requests'] = dummy_requests
-import utils
+from piwardrive import utils
 from collections import namedtuple
 
 

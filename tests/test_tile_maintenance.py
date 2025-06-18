@@ -20,8 +20,8 @@ sys.modules.setdefault(
 )
 sys.modules.setdefault("pydantic", SimpleNamespace(BaseModel=object, Field=lambda *a, **k: None, ValidationError=Exception, field_validator=lambda *a, **k: lambda x: x))
 
-import tile_maintenance  # noqa: E402
-from scheduler import PollScheduler  # noqa: E402
+from piwardrive import tile_maintenance  # noqa: E402
+from piwardrive.scheduler import PollScheduler  # noqa: E402
 
 
 class DummyScheduler:

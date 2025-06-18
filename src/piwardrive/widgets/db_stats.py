@@ -7,11 +7,11 @@ from typing import Any
 from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-from persistence import get_table_counts, _db_path
-from utils import run_async_task
+from piwardrive.persistence import get_table_counts, _db_path
+from piwardrive.utils import run_async_task
 
 
 class DBStatsWidget(DashboardWidget):

@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import config
+from piwardrive import config
 
 
 def setup_tmp(tmp_path: Path) -> Path:

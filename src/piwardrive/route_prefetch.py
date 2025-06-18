@@ -9,8 +9,8 @@ from typing import Any
 
 from kivy.app import App
 
-from scheduler import PollScheduler
-from utils import haversine_distance
+from piwardrive.scheduler import PollScheduler
+from piwardrive.utils import haversine_distance
 
 
 logger = logging.getLogger(__name__)

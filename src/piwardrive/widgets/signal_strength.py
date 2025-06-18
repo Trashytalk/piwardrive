@@ -6,10 +6,10 @@ from kivy.clock import Clock
 from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-from utils import fetch_kismet_devices_async, get_avg_rssi, run_async_task
+from piwardrive.utils import fetch_kismet_devices_async, get_avg_rssi, run_async_task
 
 
 class SignalStrengthWidget(DashboardWidget):

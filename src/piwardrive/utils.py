@@ -9,7 +9,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from gpsd_client import client as gps_client
+from piwardrive.gpsd_client import client as gps_client
 import time
 import threading
 import mmap
@@ -41,7 +41,7 @@ import psutil
 import requests  # type: ignore
 import requests_cache
 import aiohttp
-import persistence
+from piwardrive import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
 _GPSD_CACHE: dict[str, Any] = {

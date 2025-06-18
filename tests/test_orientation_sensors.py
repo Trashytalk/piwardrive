@@ -4,7 +4,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import orientation_sensors as osens  # noqa: E402
+import piwardrive.orientation_sensors as osens  # noqa: E402
 
 
 def test_orientation_to_angle() -> None:

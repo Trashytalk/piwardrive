@@ -26,9 +26,9 @@ utils_mod.async_tail_file = _dummy_async
 sys.modules["utils"] = utils_mod
 
 import service
-import persistence
+from piwardrive import persistence
 from fastapi.testclient import TestClient
-import security
+from piwardrive import security
 
 
 def test_status_endpoint_returns_recent_records() -> None:

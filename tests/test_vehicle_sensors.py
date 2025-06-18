@@ -3,7 +3,7 @@ import sys
 import types
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import vehicle_sensors as vs  # noqa: E402
+import piwardrive.vehicle_sensors as vs  # noqa: E402
 
 
 def test_read_rpm_obd_missing(monkeypatch):
