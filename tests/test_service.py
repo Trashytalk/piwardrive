@@ -111,6 +111,39 @@ def test_logs_endpoint_handles_sync_function() -> None:
         assert resp.json()["lines"] == ["x", "y"]
 
 
+def test_logs_endpoint_allows_whitelisted_path() -> None:
+    async def fake_tail(path: str, _lines: int) -> list[str]:
+        return [path]
+
+    allowed = service.ALLOWED_LOG_PATHS[0]
+    with (
+        mock.patch("service.async_tail_file", fake_tail),
+        mock.patch("piwardrive.service.async_tail_file", fake_tail),
+    ):
+        client = TestClient(service.app)
+        resp = client.get(f"/logs?path={allowed}")
+        assert resp.status_code == 200
+        assert resp.json()["lines"] == [allowed]
+
+
+def test_logs_endpoint_rejects_unknown_path() -> None:
+    called = False
+
+    async def fake_tail(_p: str, _l: int) -> list[str]:
+        nonlocal called
+        called = True
+        return []
+
+    with (
+        mock.patch("service.async_tail_file", fake_tail),
+        mock.patch("piwardrive.service.async_tail_file", fake_tail),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/logs?path=/not/allowed.log")
+        assert resp.status_code == 400
+        assert not called
+
+
 def test_websocket_status_stream() -> None:
     rec = persistence.HealthRecord(
         timestamp="t",

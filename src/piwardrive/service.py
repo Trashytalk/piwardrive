@@ -37,6 +37,11 @@ from sync import upload_data
 security = HTTPBasic(auto_error=False)
 app = FastAPI()
 
+# Allowed log file paths for the /logs endpoint
+ALLOWED_LOG_PATHS = [
+    sanitize_path(p) for p in config.DEFAULT_CONFIG.log_paths + [DEFAULT_LOG_PATH]
+]
+
 
 def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
     """Validate optional HTTP basic authentication."""
@@ -88,6 +93,8 @@ async def get_logs(
 ) -> dict:
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
+    if safe not in ALLOWED_LOG_PATHS:
+        raise HTTPException(status_code=400, detail="Invalid log path")
     data = async_tail_file(safe, lines)
     if inspect.isawaitable(data):
         lines_out = await data
