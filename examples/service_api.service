@@ -1,0 +1,13 @@
+[Unit]
+Description=PiWardrive Status API
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piwardrive
+ExecStart=/home/pi/piwardrive/gui-env/bin/python -m service
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
