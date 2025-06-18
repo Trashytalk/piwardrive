@@ -5,8 +5,8 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )  # noqa: E402
 
-from sigint_suite.hooks import register_post_processor  # noqa: E402
-from sigint_suite.wifi.scanner import scan_wifi  # noqa: E402
+from piwardrive.sigint_suite.hooks import register_post_processor  # noqa: E402
+from piwardrive.sigint_suite.wifi.scanner import scan_wifi  # noqa: E402
 
 
 def test_custom_post_processor(monkeypatch):
@@ -19,7 +19,7 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
 
     # isolate hooks for this test
-    import sigint_suite.hooks as hooks
+    import piwardrive.sigint_suite.hooks as hooks
     hooks._POST_PROCESSORS["wifi"] = []
 
     def add_custom(records):
@@ -34,5 +34,5 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
 
     # restore default hooks
     hooks._POST_PROCESSORS["wifi"] = []
-    from sigint_suite.wifi.scanner import _vendor_hook
+    from piwardrive.sigint_suite.wifi.scanner import _vendor_hook
     register_post_processor("wifi", _vendor_hook)

@@ -24,3 +24,14 @@ def add_dummy_module(monkeypatch):
 
     for name in created:
         monkeypatch.delitem(sys.modules, name, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _restore_modules(monkeypatch):
+    """Ensure core modules are reloaded after each test."""
+    yield
+    import importlib
+    for mod_name in ("persistence", "utils"):
+        if mod_name in sys.modules:
+            monkeypatch.delitem(sys.modules, mod_name, raising=False)
+        importlib.import_module(mod_name)

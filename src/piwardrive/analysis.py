@@ -5,7 +5,7 @@ from typing import List, Dict
 from statistics import fmean
 import math
 
-from persistence import HealthRecord
+from piwardrive.persistence import HealthRecord
 
 try:  # optional dependency
     import pandas as pd  # type: ignore

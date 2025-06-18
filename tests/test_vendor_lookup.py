@@ -6,14 +6,14 @@ import logging
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite import paths
+from piwardrive.sigint_suite import paths
 
 
 def _reload_module(monkeypatch, tmp_path):
     monkeypatch.setenv("SIGINT_CONFIG_DIR", str(tmp_path))
-    if "sigint_suite.enrichment.oui" in sys.modules:
-        monkeypatch.delitem(sys.modules, "sigint_suite.enrichment.oui", raising=False)
-    return importlib.import_module("sigint_suite.enrichment.oui")
+    if "piwardrive.sigint_suite.enrichment.oui" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.sigint_suite.enrichment.oui", raising=False)
+    return importlib.import_module("piwardrive.sigint_suite.enrichment.oui")
 
 
 def test_update_oui_file_downloads(monkeypatch, tmp_path):

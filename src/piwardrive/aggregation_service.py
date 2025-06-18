@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import shutil
+import tempfile
 from typing import Iterable, Tuple
 
 import aiosqlite
@@ -93,9 +94,14 @@ async def _process_upload(path: str) -> None:
 async def upload(file: UploadFile) -> dict:
     """Save ``file`` and merge its contents into the aggregation database."""
     dest = os.path.join(UPLOAD_DIR, file.filename)
-    with open(dest, "wb") as fh:
+    fd, tmp_path = tempfile.mkstemp(dir=UPLOAD_DIR)
+    os.close(fd)
+    with open(tmp_path, "wb") as fh:
         shutil.copyfileobj(file.file, fh)
-    await _process_upload(dest)
+    await _process_upload(tmp_path)
+    with open(tmp_path, "rb") as src, open(dest, "ab") as out:
+        shutil.copyfileobj(src, out)
+    os.remove(tmp_path)
     return {"saved": dest}
 
 

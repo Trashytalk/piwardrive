@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 from sigint_suite.enrichment import cached_lookup_vendor
 from sigint_suite.models import WifiNetwork
 from sigint_suite.hooks import apply_post_processors, register_post_processor
-import orientation_sensors
+from piwardrive import orientation_sensors
 
 logger = logging.getLogger(__name__)
 

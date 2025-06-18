@@ -5,7 +5,10 @@ import asyncio
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.cellular.band_scanner.scanner import scan_bands, async_scan_bands
+from piwardrive.sigint_suite.cellular.band_scanner.scanner import (
+    scan_bands,
+    async_scan_bands,
+)
 
 
 def test_scan_bands_parses_output(monkeypatch):

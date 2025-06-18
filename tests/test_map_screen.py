@@ -69,9 +69,9 @@ sys.modules["kivy_garden.mapview"] = dummy_mapview
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-if "screens.map_screen" in sys.modules:
-    del sys.modules["screens.map_screen"]
-from screens.map_screen import MapScreen  # noqa: E402
+if "piwardrive.screens.map_screen" in sys.modules:
+    del sys.modules["piwardrive.screens.map_screen"]
+from piwardrive.screens.map_screen import MapScreen  # noqa: E402
 from kivy.app import App
 
 

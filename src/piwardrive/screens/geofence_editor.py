@@ -12,7 +12,7 @@ from kivy.metrics import dp
 from kivy_garden.mapview import MapView, LineMapLayer
 from kivymd.uix.button import MDFlatButton
 
-from config import CONFIG_DIR
+from piwardrive.config import CONFIG_DIR
 
 
 class GeofenceEditor(Screen):

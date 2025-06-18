@@ -6,10 +6,10 @@ from typing import Any
 from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-import orientation_sensors
+from piwardrive import orientation_sensors
 
 
 class OrientationWidget(DashboardWidget):
