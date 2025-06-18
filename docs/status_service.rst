@@ -43,7 +43,8 @@ available for use in external dashboards.
 
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to
-``stdout`` using ``setup_logging``::
+``stdout`` using ``setup_logging``. The endpoint validates that ``path`` is in
+the ``log_paths`` whitelist defined in ``config.json``::
 
    curl "http://localhost:8000/logs?lines=50"
 

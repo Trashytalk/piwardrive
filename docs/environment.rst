@@ -42,6 +42,21 @@ General
 ``PW_GPS_MOVEMENT_THRESHOLD``
     Minimum speed in m/s before fast GPS polling is used.
 
+``PW_REMOTE_SYNC_URL``
+    Upload endpoint for automatic database sync.
+
+``PW_REMOTE_SYNC_TOKEN``
+    Bearer token sent to ``PW_REMOTE_SYNC_URL`` if required.
+
+``PW_REMOTE_SYNC_TIMEOUT``
+    Timeout in seconds when uploading the database (default ``5``).
+
+``PW_REMOTE_SYNC_RETRIES``
+    Number of attempts made when uploads fail (default ``3``).
+
+``PW_REMOTE_SYNC_INTERVAL``
+    How often to upload the database in minutes. ``0`` disables scheduling.
+
 Configuration Overrides
 -----------------------
 
