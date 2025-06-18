@@ -69,10 +69,12 @@ class Config:
     map_poll_gps_max: int = 30
     map_poll_aps: int = 60
     map_poll_bt: int = 60
+    map_poll_wigle: int = 0
     map_show_gps: bool = True
     map_follow_gps: bool = True
     map_show_aps: bool = True
     map_show_bt: bool = False
+    map_show_wigle: bool = False
     map_show_heatmap: bool = False
     map_cluster_aps: bool = False
     map_cluster_capacity: int = 8
@@ -113,6 +115,8 @@ class Config:
     remote_sync_timeout: int = 5
     remote_sync_retries: int = 3
     remote_sync_interval: int = REMOTE_SYNC_INTERVAL
+    wigle_api_name: str = ""
+    wigle_api_key: str = ""
     gps_movement_threshold: float = 1.0
     cloud_bucket: str = CLOUD_BUCKET
     cloud_prefix: str = CLOUD_PREFIX
@@ -140,11 +144,13 @@ class FileConfigModel(BaseModel):
     map_poll_gps: Optional[int] = None
     map_poll_gps_max: Optional[int] = None
     map_poll_aps: Optional[int] = None
+    map_poll_wigle: Optional[int] = None
     map_show_gps: Optional[bool] = None
     map_follow_gps: Optional[bool] = None
     map_show_aps: Optional[bool] = None
     map_cluster_aps: Optional[bool] = None
     map_show_heatmap: Optional[bool] = None
+    map_show_wigle: Optional[bool] = None
     map_cluster_capacity: Optional[int] = Field(default=None, ge=1)
     map_use_offline: Optional[bool] = None
     map_auto_prefetch: Optional[bool] = None
@@ -177,6 +183,8 @@ class FileConfigModel(BaseModel):
     remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
     remote_sync_retries: Optional[int] = Field(default=None, ge=1)
     remote_sync_interval: Optional[int] = Field(default=None, ge=1)
+    wigle_api_name: Optional[str] = None
+    wigle_api_key: Optional[str] = None
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
     cloud_bucket: Optional[str] = None
     cloud_prefix: Optional[str] = None
@@ -187,6 +195,7 @@ class ConfigModel(FileConfigModel):
     """Extended validation used by :func:`validate_config_data`."""
 
     map_poll_gps: int = Field(..., gt=0)
+    map_poll_wigle: int = Field(default=0, ge=0)
     map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
@@ -196,6 +205,7 @@ class ConfigModel(FileConfigModel):
     health_export_retention: int = Field(default=7, ge=1)
     map_auto_prefetch: bool = DEFAULTS["map_auto_prefetch"]
     map_follow_gps: bool = DEFAULTS["map_follow_gps"]
+    map_show_wigle: bool = DEFAULTS["map_show_wigle"]
 
     theme: Theme
 
@@ -406,6 +416,8 @@ class AppConfig:
     remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
     remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
     remote_sync_interval: int = DEFAULTS["remote_sync_interval"]
+    wigle_api_name: str = DEFAULTS["wigle_api_name"]
+    wigle_api_key: str = DEFAULTS["wigle_api_key"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
     cloud_bucket: str = DEFAULTS["cloud_bucket"]
     cloud_prefix: str = DEFAULTS["cloud_prefix"]
