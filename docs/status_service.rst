@@ -11,7 +11,7 @@ concurrently and improves throughput on multi-core devices.
 
 Run the server after activating your virtual environment::
 
-    python -m service
+   piwardrive-service
 
 The API listens on ``0.0.0.0:8000`` by default. Request ``/status`` to retrieve
 the last few records::
@@ -25,8 +25,7 @@ Autostart
 ---------
 
 Copy ``examples/service_api.service`` into ``/etc/systemd/system/`` and enable it
-with ``sudo systemctl enable --now service_api.service`` to run ``python -m
-service`` on boot.
+with ``sudo systemctl enable --now service_api.service`` to run ``piwardrive-service`` on boot.
 
 
 Additional Routes
