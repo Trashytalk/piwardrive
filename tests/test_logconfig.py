@@ -6,7 +6,7 @@ import io
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from logconfig import setup_logging
+from piwardrive.logconfig import setup_logging
 from typing import Any
 
 

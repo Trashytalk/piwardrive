@@ -27,8 +27,8 @@ modules["kivy.animation"].Animation = object
 # Provide lightweight stubs for external dependencies
 modules["persistence"] = ModuleType("persistence")
 modules["persistence"].save_app_state = lambda *a, **k: None
-modules["sigint_suite.models"] = ModuleType("sigint_suite.models")
-modules["sigint_suite.models"].BluetoothDevice = object
+modules["piwardrive.sigint_suite.models"] = ModuleType("piwardrive.sigint_suite.models")
+modules["piwardrive.sigint_suite.models"].BluetoothDevice = object
 modules["psutil"] = ModuleType("psutil")
 modules["psutil"].net_io_counters = lambda *a, **k: SimpleNamespace()
 
@@ -71,9 +71,9 @@ sys.modules["kivy_garden.mapview"] = _dummy_mapview
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-if "screens.map_screen" in sys.modules:
-    del sys.modules["screens.map_screen"]
-from screens.map_screen import MapScreen  # noqa: E402
+if "piwardrive.screens.map_screen" in sys.modules:
+    del sys.modules["piwardrive.screens.map_screen"]
+from piwardrive.screens.map_screen import MapScreen  # noqa: E402
 
 
 def make_screen() -> MapScreen:

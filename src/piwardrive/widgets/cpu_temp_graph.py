@@ -5,10 +5,10 @@ from typing import Any
 from kivy.app import App
 from kivy.animation import Animation
 from kivy_garden.graph import Graph, LinePlot
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-from utils import get_cpu_temp
+from piwardrive.utils import get_cpu_temp
 
 
 class CPUTempGraphWidget(DashboardWidget):

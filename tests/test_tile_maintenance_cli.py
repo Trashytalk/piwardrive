@@ -5,7 +5,7 @@ from types import SimpleNamespace
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 modules = {
-    "sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+    "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
     "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
     "aiohttp": SimpleNamespace(),
 }
@@ -25,9 +25,9 @@ def test_tile_maintenance_cli(monkeypatch):
     def fake_vacuum(path):
         called["vacuum"] = path
 
-    if "scripts.tile_maintenance_cli" in sys.modules:
-        del sys.modules["scripts.tile_maintenance_cli"]
-    import scripts.tile_maintenance_cli as cli
+    if "piwardrive.scripts.tile_maintenance_cli" in sys.modules:
+        del sys.modules["piwardrive.scripts.tile_maintenance_cli"]
+    import piwardrive.scripts.tile_maintenance_cli as cli
 
     monkeypatch.setattr(cli.tile_maintenance, "purge_old_tiles", fake_purge)
     monkeypatch.setattr(cli.tile_maintenance, "enforce_cache_limit", fake_limit)

@@ -22,7 +22,7 @@ for example usage.
 Geofence Editor
 ~~~~~~~~~~~~~~~
 
-The :class:`~screens.geofence_editor.GeofenceEditor` screen provides a simple
+The :class:`~piwardrive.screens.geofence_editor.GeofenceEditor` screen provides a simple
 map interface for drawing polygons directly. Points are added by tapping on the
 map and a "Finish" button stores the completed polygon. All polygons are saved
 to ``~/.config/piwardrive/geofences.json`` and reloaded whenever the editor is

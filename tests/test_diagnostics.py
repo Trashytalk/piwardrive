@@ -12,7 +12,7 @@ aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules['aiohttp'] = aiohttp_mod
-import diagnostics
+from piwardrive import diagnostics
 from typing import Any
 
 

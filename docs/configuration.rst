@@ -9,20 +9,20 @@ be overridden using environment variables prefixed with ``PW_``. A filesystem
 watcher monitors the file so changes are detected and applied automatically.
 For example::
 
-   PW_MAP_POLL_GPS=5 python main.py
+   PW_MAP_POLL_GPS=5 python -m piwardrive.main
 
 To enable the optional battery widget set ``widget_battery_status`` to ``true``::
 
-   PW_WIDGET_BATTERY_STATUS=1 python main.py
+   PW_WIDGET_BATTERY_STATUS=1 python -m piwardrive.main
 
 Disable all network scanning when operating offline with::
 
-   PW_DISABLE_SCANNING=1 python main.py
+   PW_DISABLE_SCANNING=1 python -m piwardrive.main
 
 Set ``PW_ADMIN_PASSWORD`` to allow privileged service actions without being
 prompted for a password::
 
-  PW_ADMIN_PASSWORD=secret python main.py
+  PW_ADMIN_PASSWORD=secret python -m piwardrive.main
 
 Log paths shown in the console screen can be customised via the ``log_paths``
 list.  Provide a JSON array in ``config.json`` or set ``PW_LOG_PATHS`` to a

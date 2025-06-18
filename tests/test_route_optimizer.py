@@ -4,7 +4,7 @@ import math
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import route_optimizer  # noqa: E402  # type: ignore
+from piwardrive import route_optimizer  # noqa: E402  # type: ignore
 
 
 def test_suggest_route_empty_returns_empty() -> None:

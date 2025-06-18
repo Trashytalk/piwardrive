@@ -2,7 +2,7 @@ import importlib
 import types
 import sys
 
-import gpsd_client
+from piwardrive import gpsd_client
 
 
 def _reload_with_dummy(monkeypatch, connect_ok=True, packet=None, raise_on_get=False):

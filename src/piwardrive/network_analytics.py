@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Iterable, Mapping, Any, List
 
-from sigint_suite.enrichment import cached_lookup_vendor
+from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 
 
 def find_suspicious_aps(

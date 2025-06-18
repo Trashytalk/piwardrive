@@ -3,7 +3,7 @@ import os
 import sys
 from types import ModuleType, SimpleNamespace
 import pytest
-import export as exp
+import piwardrive.export as exp
 
 
 def load_map_screen(monkeypatch):

@@ -19,6 +19,7 @@ class _DBHandler(http.server.BaseHTTPRequestHandler):
             t: conn.execute(f"SELECT * FROM {t} LIMIT 100").fetchall()
             for t in tables
         }
+
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
