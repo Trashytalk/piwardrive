@@ -120,6 +120,9 @@ python3 -m venv gui-env
 source gui-env/bin/activate
 pip install -r requirements.txt
 pip install .
+sudo apt update
+sudo apt install -y r-base r-base-dev
+
 ```
 
 You can run `src/piwardrive/scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
