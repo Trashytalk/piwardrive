@@ -38,3 +38,4 @@ pandas==2.3.0
 pyprof2calltree==1.4.5
 rpy2==3.6.1
 scikit-learn==1.5.0
+mpu6050
