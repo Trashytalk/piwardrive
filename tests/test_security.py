@@ -1,6 +1,6 @@
 import os
 import pytest
-import security
+from piwardrive import security
 
 
 def test_hash_and_verify_password() -> None:

@@ -2,7 +2,7 @@
 
 from typing import Optional, Tuple
 
-from gpsd_client import client as gps_client
+from piwardrive.gpsd_client import client as gps_client
 
 
 def get_position() -> Optional[Tuple[float, float]]:

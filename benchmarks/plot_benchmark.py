@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from analysis import plot_cpu_temp
-from persistence import HealthRecord
+from piwardrive.analysis import plot_cpu_temp
+from piwardrive.persistence import HealthRecord
 
 
 def generate_records(n: int = 1000):

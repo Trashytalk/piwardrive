@@ -5,7 +5,10 @@ import csv
 import json
 from typing import Iterable, cast
 
-from persistence import HealthRecord, save_health_record, flush_health_records
+try:
+    from persistence import HealthRecord, save_health_record, flush_health_records  # type: ignore
+except Exception:  # pragma: no cover - fall back if tests replaced module
+    from piwardrive.persistence import HealthRecord, save_health_record, flush_health_records
 
 IMPORT_FORMATS = ("csv", "json")
 

@@ -5,10 +5,10 @@ from typing import Any
 from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-from utils import service_status
+from piwardrive.utils import service_status
 
 
 class ServiceStatusWidget(DashboardWidget):

@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import config  # noqa: E402
+from piwardrive import config  # noqa: E402
 
 
 def setup_temp_config(tmp_path: Path) -> Path:

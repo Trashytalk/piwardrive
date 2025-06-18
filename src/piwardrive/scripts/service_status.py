@@ -2,7 +2,7 @@
 import argparse
 import json
 
-import diagnostics
+from piwardrive import diagnostics
 
 
 def main(argv: list[str] | None = None) -> None:

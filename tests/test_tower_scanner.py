@@ -4,13 +4,19 @@ import asyncio
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.cellular.tower_scanner.scanner import scan_towers, async_scan_towers
+from piwardrive.sigint_suite.cellular.tower_scanner.scanner import (
+    scan_towers,
+    async_scan_towers,
+)
 
 
 def test_scan_towers(monkeypatch):
     output = "123,-70\n456,-80"
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
-    monkeypatch.setattr("sigint_suite.cellular.tower_scanner.scanner.get_position", lambda: None)
+    monkeypatch.setattr(
+        "piwardrive.sigint_suite.cellular.tower_scanner.scanner.get_position",
+        lambda: None,
+    )
 
     records = scan_towers("dummy")
     assert [r.model_dump() for r in records] == [
@@ -31,7 +37,10 @@ def test_async_scan_towers(monkeypatch):
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_create)
     monkeypatch.setattr(asyncio, "wait_for", lambda coro, timeout: coro)
-    monkeypatch.setattr("sigint_suite.cellular.tower_scanner.scanner.get_position", lambda: None)
+    monkeypatch.setattr(
+        "piwardrive.sigint_suite.cellular.tower_scanner.scanner.get_position",
+        lambda: None,
+    )
 
     async def run():
         return await async_scan_towers("dummy")

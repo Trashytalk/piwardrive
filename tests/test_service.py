@@ -12,10 +12,23 @@ aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
+utils_mod = ModuleType("utils")
+async def _dummy_async(*_a, **_k):
+    return None
+
+utils_mod.fetch_metrics_async = _dummy_async
+utils_mod.get_avg_rssi = lambda *a, **k: None
+utils_mod.get_cpu_temp = lambda *a, **k: None
+utils_mod.get_network_throughput = lambda *a, **k: None
+utils_mod.get_gps_fix_quality = lambda *a, **k: None
+utils_mod.service_status_async = _dummy_async
+utils_mod.async_tail_file = _dummy_async
+sys.modules["utils"] = utils_mod
 
 import service
-import persistence
+from piwardrive import persistence
 from fastapi.testclient import TestClient
+from piwardrive import security
 
 
 def test_status_endpoint_returns_recent_records() -> None:
@@ -30,7 +43,10 @@ def test_status_endpoint_returns_recent_records() -> None:
     async def _mock(_: int) -> list:
         return [rec]
 
-    with mock.patch('service.load_recent_health', _mock):
+    with (
+        mock.patch('service.load_recent_health', _mock),
+        mock.patch('piwardrive.service.load_recent_health', _mock),
+    ):
         client = TestClient(service.app)
         resp = client.get('/status')
         assert resp.status_code == 200
@@ -43,9 +59,15 @@ def test_widget_metrics_endpoint() -> None:
 
     with (
         mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
         mock.patch(
             "service.psutil.sensors_battery",
@@ -76,7 +98,10 @@ def test_logs_endpoint_returns_lines_async() -> None:
     async def fake_tail(_path: str, _lines: int) -> list[str]:
         return ["a", "b"]
 
-    with mock.patch("service.async_tail_file", fake_tail):
+    with (
+        mock.patch("service.async_tail_file", fake_tail),
+        mock.patch("piwardrive.service.async_tail_file", fake_tail),
+    ):
         client = TestClient(service.app)
         resp = client.get("/logs?lines=2")
         assert resp.status_code == 200
@@ -87,7 +112,10 @@ def test_logs_endpoint_handles_sync_function() -> None:
     def fake_tail(_path: str, _lines: int) -> list[str]:
         return ["x", "y"]
 
-    with mock.patch("service.async_tail_file", fake_tail):
+    with (
+        mock.patch("service.async_tail_file", fake_tail),
+        mock.patch("piwardrive.service.async_tail_file", fake_tail),
+    ):
         client = TestClient(service.app)
         resp = client.get("/logs?lines=2")
         assert resp.status_code == 200
@@ -111,10 +139,15 @@ def test_websocket_status_stream() -> None:
 
     with (
         mock.patch("service.load_recent_health", fake_load),
+        mock.patch("piwardrive.service.load_recent_health", fake_load),
         mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
         mock.patch(
             "service.psutil.sensors_battery",
@@ -154,11 +187,16 @@ def test_websocket_timeout_closes_connection() -> None:
 
     with (
         mock.patch("service.load_recent_health", fake_load),
+        mock.patch("piwardrive.service.load_recent_health", fake_load),
         mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
         mock.patch("service.WebSocket.send_json", side_effect=send_timeout),
         mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
         mock.patch(
             "service.psutil.sensors_battery",
@@ -205,3 +243,59 @@ def test_update_config_endpoint_invalid_key() -> None:
         client = TestClient(service.app)
         resp = client.post("/config", json={"bad": 1})
         assert resp.status_code == 400
+
+
+def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:
+    async def fake_fetch() -> tuple[list, list, int]:
+        return ([{"signal_dbm": -10}], [], 5)
+
+    pw_hash = security.hash_password("pw")
+    monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)
+
+    with (
+        mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
+        mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
+        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("service.service_status_async", side_effect=[True, False]),
+        mock.patch(
+            "piwardrive.service.service_status_async", side_effect=[True, False]
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/widget-metrics")
+        assert resp.status_code == 401
+
+
+def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
+    async def fake_fetch() -> tuple[list, list, int]:
+        return ([{"signal_dbm": -10}], [], 5)
+
+    pw_hash = security.hash_password("pw")
+    monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)
+
+    with (
+        mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
+        mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
+        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("service.service_status_async", side_effect=[True, False]),
+        mock.patch(
+            "piwardrive.service.service_status_async", side_effect=[True, False]
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/widget-metrics", auth=("u", "wrong"))
+        assert resp.status_code == 401

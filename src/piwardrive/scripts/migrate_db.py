@@ -1,6 +1,6 @@
 """Module migrate_db."""
 import asyncio
-import persistence
+from piwardrive import persistence
 
 
 def main(argv: list[str] | None = None) -> None:

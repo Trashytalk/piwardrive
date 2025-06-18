@@ -1,6 +1,6 @@
 """Module tile_maintenance_cli."""
 import argparse
-import tile_maintenance
+from piwardrive import tile_maintenance
 
 
 def main(argv: list[str] | None = None) -> None:

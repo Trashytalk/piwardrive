@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import scripts.service_status as ss
+import piwardrive.scripts.service_status as ss
 
 
 def test_service_status_script_output(monkeypatch, capsys):

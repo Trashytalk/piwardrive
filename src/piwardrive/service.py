@@ -19,10 +19,13 @@ import asyncio
 import time
 
 
-from logconfig import DEFAULT_LOG_PATH
-from persistence import load_recent_health
-from security import sanitize_path, verify_password
-from utils import (
+from piwardrive.logconfig import DEFAULT_LOG_PATH
+try:  # allow tests to stub out ``persistence``
+    from persistence import load_recent_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.persistence import load_recent_health
+from piwardrive.security import sanitize_path, verify_password
+from piwardrive.utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
@@ -36,6 +39,7 @@ import vehicle_sensors
 import config
 from sync import upload_data
 
+
 security = HTTPBasic(auto_error=False)
 app = FastAPI()
 
@@ -45,7 +49,7 @@ def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
     pw_hash = os.getenv("PW_API_PASSWORD_HASH")
     if not pw_hash:
         return
-    if not verify_password(credentials.password, pw_hash):
+    if not credentials or not verify_password(credentials.password, pw_hash):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 

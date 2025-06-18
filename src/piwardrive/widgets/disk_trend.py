@@ -4,10 +4,10 @@ from typing import Any
 
 from kivy.app import App
 from kivy_garden.graph import Graph, LinePlot
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-from utils import get_disk_usage
+from piwardrive.utils import get_disk_usage
 
 
 class DiskUsageTrendWidget(DashboardWidget):

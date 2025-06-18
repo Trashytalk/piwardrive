@@ -6,10 +6,10 @@ from typing import Any
 from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-import lora_scanner
+from piwardrive import lora_scanner
 
 
 class LoRaScanWidget(DashboardWidget):
