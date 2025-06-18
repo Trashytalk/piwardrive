@@ -56,11 +56,11 @@ from kivy_garden.mapview import (
 
     MapMarkerPopup,
 
-    MBTilesMapSource,
-
     LineMapLayer,
 
 )
+
+from kivy_garden.mapview.mbtsource import MBTilesMapSource
 
 from kivymd.uix.dialog import MDDialog
 
