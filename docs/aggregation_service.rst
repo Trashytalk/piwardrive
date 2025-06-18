@@ -15,6 +15,16 @@ Run the server with::
 By default data is stored under ``~/piwardrive-aggregation``.  Set the
 ``PW_AGG_DIR`` environment variable to change the location.
 
+Installation
+------------
+
+Run ``scripts/install_aggregation_service.sh`` on the target server.  The
+script creates an ``agg-env`` virtual environment, installs the required Python
+packages and writes ``/etc/systemd/system/piwardrive-aggregation.service``.
+Enable the unit with::
+
+    sudo systemctl enable --now piwardrive-aggregation.service
+
 Endpoints
 ---------
 
