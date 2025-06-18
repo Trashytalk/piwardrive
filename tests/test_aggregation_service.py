@@ -56,3 +56,21 @@ def test_upload_and_stats(tmp_path):
     resp = client.get("/overlay?bins=1")
     pts = resp.json()["points"]
     assert pts and pts[0][2] == 2
+
+
+def test_upload_appends(tmp_path):
+    os.environ["PW_AGG_DIR"] = str(tmp_path)
+    module = importlib.import_module("piwardrive.aggregation_service")
+    importlib.reload(module)
+    db_path = tmp_path / "upload.db"
+    _create_src_db(str(db_path))
+
+    dest = tmp_path / "uploads" / "db"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text("x")
+
+    client = TestClient(module.app)
+    with open(db_path, "rb") as fh:
+        resp = client.post("/upload", files={"file": ("db", fh)})
+    assert resp.status_code == 200
+    assert dest.stat().st_size > 1
