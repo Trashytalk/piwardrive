@@ -10,15 +10,23 @@ from typing import Any, Callable
 
 
 from piwardrive.scheduler import PollScheduler
-from piwardrive.config import load_config, save_config, Config, config_mtime, CONFIG_PATH
-from config_watcher import watch_config
+from piwardrive.config import (
+    load_config,
+    save_config,
+    Config,
+    config_mtime,
+    CONFIG_PATH,
+)
+from piwardrive.config_watcher import watch_config
 
-from security import hash_password
-from persistence import save_app_state, load_app_state, AppState
-from persistence import _db_path
-import remote_sync
 from piwardrive.security import hash_password
-from piwardrive.persistence import save_app_state, load_app_state, AppState
+from piwardrive.persistence import (
+    save_app_state,
+    load_app_state,
+    AppState,
+    _db_path,
+)
+from piwardrive import remote_sync
 
 from piwardrive import diagnostics
 from piwardrive import utils
@@ -238,8 +246,10 @@ class PiWardriveApp(MDApp):
         """Run a systemctl command for a given service with retries."""
         import os as _os
         import getpass as _getpass
-        from security import verify_password as _verify
-        from security import validate_service_name as _validate
+        from piwardrive.security import (
+            verify_password as _verify,
+            validate_service_name as _validate,
+        )
 
         cfg_hash = getattr(
             getattr(self, "config_data", None),
