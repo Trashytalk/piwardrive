@@ -20,7 +20,10 @@ import time
 
 
 from logconfig import DEFAULT_LOG_PATH
-from persistence import load_recent_health
+try:  # allow tests to stub out ``persistence``
+    from persistence import load_recent_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.persistence import load_recent_health
 from security import sanitize_path, verify_password
 from utils import (
     fetch_metrics_async,
