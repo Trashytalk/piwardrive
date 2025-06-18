@@ -30,6 +30,7 @@ import asyncio
 from kivy.app import App
 from piwardrive import utils
 from piwardrive.heatmap import histogram, histogram_points
+from piwardrive import wigle_integration
 
 from kivy.clock import Clock, mainthread
 try:
@@ -114,11 +115,13 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
         self.ap_markers = []
         self.bt_markers = []
+        self.wigle_markers = []
 
         self._gps_event = None
 
         self._aps_event = None
         self._bt_event = None
+        self._wigle_event = None
 
         self._lp_touch = None
         self._long_press_trigger = Clock.create_trigger(
@@ -197,6 +200,14 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             app.scheduler.schedule(
                 self._bt_event, lambda dt: self.plot_bt_devices(), app.map_poll_bt
             )
+        wigle_interval = getattr(app, "map_poll_wigle", 0)
+        if wigle_interval and getattr(app, "wigle_api_name", "") and getattr(app, "wigle_api_key", ""):
+            self._wigle_event = "map_wigle"
+            app.scheduler.schedule(
+                self._wigle_event,
+                lambda dt: self.plot_wigle_aps(),
+                wigle_interval,
+            )
         # React to zoom level changes by updating clusters
         self.ids.mapview.bind(zoom=self.update_clusters_on_zoom)
 
@@ -220,11 +231,17 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         if self._bt_event:
             app.scheduler.cancel(self._bt_event)
             self._bt_event = None
+        if self._wigle_event:
+            app.scheduler.cancel(self._wigle_event)
+            self._wigle_event = None
         mv = self.ids.get("mapview")
         if mv:
             for m in self._heatmap_markers:
                 mv.remove_widget(m)
+            for m in self.wigle_markers:
+                mv.remove_widget(m)
         self._heatmap_markers.clear()
+        self.wigle_markers.clear()
 
 # ------------------------------------------------------------------
 
@@ -813,6 +830,58 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         utils.run_async_task(_load(), _apply)
 
 
+    def plot_wigle_aps(self):
+        """Display WiGLE access points on the map."""
+        app = App.get_running_app()
+        if not getattr(app, "map_show_wigle", False):
+            return
+        mv = self.ids.mapview
+        pos = self._last_gps
+        if not pos:
+            return
+        lat, lon = pos
+
+        async def _load() -> list[dict]:
+            try:
+                return await wigle_integration.fetch_wigle_networks(
+                    getattr(app, "wigle_api_name", ""),
+                    getattr(app, "wigle_api_key", ""),
+                    lat,
+                    lon,
+                )
+            except Exception as exc:  # pragma: no cover - unexpected
+                report_error(f"WiGLE fetch failed: {exc}")
+                return []
+
+        def _apply(records: list[dict]) -> None:
+            def _do(_dt: float) -> None:
+                for m in self.wigle_markers:
+                    mv.remove_widget(m)
+                self.wigle_markers.clear()
+                for d in records:
+                    if d.get("lat") is None or d.get("lon") is None:
+                        continue
+                    m = MapMarkerPopup(
+                        lat=d["lat"],
+                        lon=d["lon"],
+                        source="widgets/center-icon.png",
+                        anchor_x="center",
+                        anchor_y="center",
+                    )
+                    m.add_widget(
+                        Label(
+                            text=d.get("bssid", "WiGLE"),
+                            size_hint=(None, None),
+                            size=(dp(80), dp(20)),
+                        )
+                    )
+                    mv.add_widget(m)
+                    self.wigle_markers.append(m)
+
+            Clock.schedule_once(_do, 0)
+
+        utils.run_async_task(_load(), _apply)
+
 
 
 
@@ -854,6 +923,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
             },
             {
+                "text": "WiGLE APs",
+                "viewclass": "OneLineListItem",
+                "on_release": lambda *a, k="map_show_wigle": self._toggle(k),
+            },
+            {
                 "text": "Heatmap",
                 "viewclass": "OneLineListItem",
                 "on_release": lambda *a, k="map_show_heatmap": self._toggle(k),
@@ -890,6 +964,13 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         Snackbar(text=f"{key} = {getattr(app, key)}", duration=1.5).open()
         if key == "map_show_heatmap":
             self.update_heatmap()
+        if key == "map_show_wigle":
+            if getattr(app, key):
+                self.plot_wigle_aps()
+            else:
+                for m in self.wigle_markers:
+                    self.ids.mapview.remove_widget(m)
+                self.wigle_markers.clear()
 
     def toggle_follow(self) -> None:
         """Toggle GPS follow mode and (un)schedule centering."""
