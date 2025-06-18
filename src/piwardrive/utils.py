@@ -318,7 +318,7 @@ def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:
     """Ensure ``service`` is active, attempting a restart if not."""
-    from security import validate_service_name
+    from piwardrive.security import validate_service_name
 
     validate_service_name(service)
 
@@ -532,7 +532,7 @@ def _run_service_cmd_sync(
     except Exception:  # pragma: no cover - fallback when DBus missing
         return _run_systemctl(service, action)
 
-    from security import validate_service_name
+    from piwardrive.security import validate_service_name
 
     validate_service_name(service)
     if action not in {"start", "stop", "restart", "is-active"}:
@@ -590,7 +590,7 @@ async def _run_service_cmd_async(
 ) -> tuple[bool, str, str]:
     """Async DBus implementation using ``dbus-fast``."""
 
-    from security import validate_service_name
+    from piwardrive.security import validate_service_name
 
     validate_service_name(service)
     if action not in {"start", "stop", "restart", "is-active"}:
@@ -691,7 +691,7 @@ async def service_status_async(
     service: str, attempts: int = 1, delay: float = 0
 ) -> bool:
     """Return ``True`` if the ``systemd`` service is active."""
-    from security import validate_service_name
+    from piwardrive.security import validate_service_name
 
     validate_service_name(service)
     try:
