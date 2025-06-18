@@ -1,9 +1,7 @@
 import os
 import sys
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)  # noqa: E402
+
 
 from piwardrive.sigint_suite.hooks import register_post_processor  # noqa: E402
 from piwardrive.sigint_suite.wifi.scanner import scan_wifi  # noqa: E402

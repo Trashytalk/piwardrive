@@ -3,7 +3,6 @@ import sys
 import sqlite3
 from pathlib import Path
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 import piwardrive.vector_tile_customizer as vtc  # noqa: E402
 

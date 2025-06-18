@@ -9,7 +9,6 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from piwardrive import config  # noqa: E402
 
 

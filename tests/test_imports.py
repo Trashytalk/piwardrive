@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 MODULES = [
     p.stem
@@ -84,7 +83,7 @@ def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     aiohttp_mod.ClientError = Exception
     monkeypatch.setitem(sys.modules, "aiohttp", aiohttp_mod)
 
-    screens_pkg = ModuleType("screens")
+    screens_pkg = ModuleType("piwardrive.screens")
     screen_mods = {
         "console_screen": "ConsoleScreen",
         "dashboard_screen": "DashboardScreen",
@@ -94,11 +93,11 @@ def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         "stats_screen": "StatsScreen",
     }
     for mod_name, cls_name in screen_mods.items():
-        mod = ModuleType(f"screens.{mod_name}")
+        mod = ModuleType(f"piwardrive.screens.{mod_name}")
         setattr(mod, cls_name, type(cls_name, (), {}))
-        monkeypatch.setitem(sys.modules, f"screens.{mod_name}", mod)
+        monkeypatch.setitem(sys.modules, f"piwardrive.screens.{mod_name}", mod)
         setattr(screens_pkg, mod_name, mod)
-    monkeypatch.setitem(sys.modules, "screens", screens_pkg)
+    monkeypatch.setitem(sys.modules, "piwardrive.screens", screens_pkg)
 
 
 @pytest.mark.parametrize("module", MODULES)

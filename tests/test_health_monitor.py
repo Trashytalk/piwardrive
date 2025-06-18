@@ -7,7 +7,6 @@ import time
 import asyncio
 from types import ModuleType
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))  # noqa: E402
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None

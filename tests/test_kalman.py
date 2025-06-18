@@ -2,7 +2,6 @@ import os
 import sys
 import numpy as np
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from piwardrive.advanced_localization import _kalman_1d
 

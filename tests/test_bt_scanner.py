@@ -3,7 +3,6 @@ import sys
 from types import SimpleNamespace
 import builtins
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from piwardrive.sigint_suite.bluetooth import scanner as bt_scanner
 from piwardrive.sigint_suite.bluetooth import scan_bluetooth

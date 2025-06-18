@@ -2,7 +2,6 @@ import os
 import sys
 from types import SimpleNamespace
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 modules = {
     "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),

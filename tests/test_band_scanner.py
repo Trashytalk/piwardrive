@@ -3,7 +3,6 @@ import sys
 import types
 import asyncio
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from piwardrive.sigint_suite.cellular.band_scanner.scanner import (
     scan_bands,

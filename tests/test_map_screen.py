@@ -67,7 +67,6 @@ dummy_mapview.MBTilesMapSource = object  # type: ignore[attr-defined]
 dummy_mapview.LineMapLayer = object  # type: ignore[attr-defined]
 sys.modules["kivy_garden.mapview"] = dummy_mapview
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 if "piwardrive.screens.map_screen" in sys.modules:
     del sys.modules["piwardrive.screens.map_screen"]

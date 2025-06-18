@@ -6,7 +6,6 @@ import asyncio
 import pytest
 from fastapi import WebSocketDisconnect
 
-sys.path.insert(0, ".")
 aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
@@ -25,7 +24,7 @@ utils_mod.service_status_async = _dummy_async
 utils_mod.async_tail_file = _dummy_async
 sys.modules["utils"] = utils_mod
 
-import service
+from piwardrive import service
 from piwardrive import persistence
 from fastapi.testclient import TestClient
 from piwardrive import security

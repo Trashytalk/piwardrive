@@ -2,7 +2,6 @@ import sys
 import asyncio
 from types import ModuleType, SimpleNamespace
 
-sys.path.insert(0, '.')
 
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object

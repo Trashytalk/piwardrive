@@ -3,7 +3,6 @@ import sys
 import json
 from dataclasses import asdict
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import piwardrive.scripts.health_export as he
 from piwardrive.persistence import HealthRecord

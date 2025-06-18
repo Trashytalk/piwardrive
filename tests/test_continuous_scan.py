@@ -2,7 +2,6 @@ import os
 import sys
 import json
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import piwardrive.sigint_suite.scripts.continuous_scan as cs
 

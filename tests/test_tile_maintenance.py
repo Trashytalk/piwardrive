@@ -4,7 +4,6 @@ import time
 from types import SimpleNamespace
 from pathlib import Path
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 modules = {
     "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
