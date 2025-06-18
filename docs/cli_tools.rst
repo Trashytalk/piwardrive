@@ -24,4 +24,9 @@ Several helper scripts are installed alongside the GUI. They can be invoked dire
 
         piwardrive-service
 
+``log-follow``
+    Tail a log file and print new entries to the console::
+
+        log-follow /var/log/syslog
+
 See ``--help`` on each command for additional options.
