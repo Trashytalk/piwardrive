@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/piwardrive
-ExecStart=/home/pi/piwardrive/gui-env/bin/python /home/pi/piwardrive/main.py
+ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive
 Restart=on-failure
 
 [Install]

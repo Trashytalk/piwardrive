@@ -190,7 +190,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Installation** – run `src/piwardrive/scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
 * **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
-* **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
+* **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call

@@ -50,7 +50,7 @@ Important options include GPS polling (`map_poll_gps` and `map_poll_gps_max`), B
 ```bash
 cd ~/piwardrive
 source gui-env/bin/activate
-python main.py
+piwardrive
 ```
 The UI renders directly to the framebuffer without X. Use the top tabs to switch between Map, Stats, Split, Console, Settings and Dashboard screens. Widgets can be dragged on the Dashboard and their layout is persisted.
 
@@ -64,7 +64,7 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 ## Status Service and Web UI
 
-Running `python -m service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails the configured log file (`app.log` by default). Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
+Running `piwardrive-service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails the configured log file (`app.log` by default). Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
 
 
 ## GPS and Bluetooth Polling
@@ -100,7 +100,7 @@ pip install pandas orjson pyprof2calltree
 
 ## Deployment Options
 
-The software can run from an SD card image or inside a Docker container. For Docker, start from `python:3.11-bullseye`, install the system packages, copy the project to `/app`, run `pip install -r requirements.txt` and set `CMD ["python", "main.py"]`. Map USB devices and persist `~/.config/piwardrive` with a volume.
+The software can run from an SD card image or inside a Docker container. For Docker, start from `python:3.11-bullseye`, install the system packages, copy the project to `/app`, run `pip install -r requirements.txt` and set `CMD ["piwardrive"]`. Map USB devices and persist `~/.config/piwardrive` with a volume.
 
 ## Workflows and Function Flows
 
@@ -198,7 +198,7 @@ Several entry points are installed with the package:
 - ``piwardrive-prefetch-batch`` – Prefetch tiles for multiple bounding boxes from a file.
 
 - ``service-status`` – Print the systemd state of ``gpsd``, ``kismet`` and ``bettercap``.
-- ``piwardrive-service`` – Launch the FastAPI status server (equivalent to ``python -m service``).
+- ``piwardrive-service`` – Launch the FastAPI status server (equivalent to ``python -m piwardrive.service``).
 
 Use ``--help`` on each command for additional options.
 
