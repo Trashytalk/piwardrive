@@ -13,6 +13,10 @@ from piwardrive.scheduler import PollScheduler
 from piwardrive.config import load_config, save_config, Config, config_mtime, CONFIG_PATH
 from config_watcher import watch_config
 
+from security import hash_password
+from persistence import save_app_state, load_app_state, AppState
+from persistence import _db_path
+import remote_sync
 from piwardrive.security import hash_password
 from piwardrive.persistence import save_app_state, load_app_state, AppState
 
@@ -140,6 +144,22 @@ class PiWardriveApp(MDApp):
             limit_mb=self.tile_cache_limit_mb,
             vacuum=self.compress_offline_tiles,
         )
+        if (
+            self.config_data.remote_sync_url
+            and self.config_data.remote_sync_interval > 0
+        ):
+            self.scheduler.schedule(
+                "remote_sync",
+                lambda _dt: utils.run_async_task(
+                    remote_sync.sync_database_to_server(
+                        _db_path(),
+                        self.config_data.remote_sync_url,
+                        timeout=self.config_data.remote_sync_timeout,
+                        retries=self.config_data.remote_sync_retries,
+                    )
+                ),
+                self.config_data.remote_sync_interval * 60,
+            )
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self.theme_cls.theme_style = self.theme

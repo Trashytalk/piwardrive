@@ -217,7 +217,7 @@ New modules extend PiWardrive with optional capabilities:
 
 - `remote_sync` – upload the SQLite database to a remote server using
   ``remote_sync.sync_database_to_server``.  Configure ``remote_sync_url``,
-  ``remote_sync_timeout`` and ``remote_sync_retries`` in ``config.json``.
+  ``remote_sync_timeout``, ``remote_sync_retries`` and ``remote_sync_interval`` in ``config.json``.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
 - `vector_tile_customizer` – build and style MBTiles for offline use.
 - `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such

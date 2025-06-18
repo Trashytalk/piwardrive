@@ -46,7 +46,8 @@ Client Configuration
    receiver's URL, for example ``"http://10.0.0.2:9000/"``.  Optionally define
    ``remote_sync_token`` if your server expects a bearer token.
 2. ``remote_sync_timeout`` and ``remote_sync_retries`` control how long PiWardrive
-   waits for a response and how many times it retries on failure.
+   waits for a response and how many times it retries on failure. ``remote_sync_interval``
+   specifies the upload frequency in minutes.
 3. Restart PiWardrive or reload the configuration to apply the changes.
 
 Uploading Data
