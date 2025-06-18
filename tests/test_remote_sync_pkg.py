@@ -2,6 +2,7 @@ import asyncio
 import io
 import sys
 from types import ModuleType
+import json
 import pytest
 
 # provide a minimal aiohttp stub before importing the module
@@ -92,3 +93,51 @@ def test_sync_database_failure(monkeypatch):
 
     with pytest.raises(rs.aiohttp.ClientError):
         asyncio.run(rs.sync_database_to_server("db", "http://remote", retries=1))
+
+
+def _create_db(path: str) -> None:
+    import sqlite3
+
+    with sqlite3.connect(path) as db:
+        db.execute(
+            """CREATE TABLE health_records (
+                timestamp TEXT PRIMARY KEY,
+                cpu_temp REAL,
+                cpu_percent REAL,
+                memory_percent REAL,
+                disk_percent REAL
+            )"""
+        )
+        db.execute("INSERT INTO health_records VALUES ('t1', 1, 2, 3, 4)")
+        db.execute("INSERT INTO health_records VALUES ('t2', 2, 3, 4, 5)")
+        db.commit()
+
+
+def test_sync_new_records(monkeypatch, tmp_path):
+    db_path = tmp_path / "db.sqlite"
+    _create_db(db_path)
+    state_file = tmp_path / "state.json"
+
+    calls = []
+
+    async def fake_sync(path, url, *, timeout=30, retries=3, row_range=None):
+        calls.append(row_range)
+
+    monkeypatch.setattr(rs, "sync_database_to_server", fake_sync)
+
+    count = asyncio.run(rs.sync_new_records(str(db_path), "http://x", state_file=str(state_file)))
+    assert count == 2
+    assert calls[-1] == (1, 2)
+    with open(state_file) as fh:
+        assert int(json.load(fh)) == 2
+
+    import sqlite3
+    with sqlite3.connect(db_path) as db:
+        db.execute("INSERT INTO health_records VALUES ('t3', 3, 4, 5, 6)")
+        db.commit()
+
+    count = asyncio.run(rs.sync_new_records(str(db_path), "http://x", state_file=str(state_file)))
+    assert count == 1
+    assert calls[-1] == (3, 3)
+    with open(state_file) as fh:
+        assert int(json.load(fh)) == 3
