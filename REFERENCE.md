@@ -195,6 +195,8 @@ Several entry points are installed with the package:
 
     piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
 
+- ``piwardrive-prefetch-batch`` – Prefetch tiles for multiple bounding boxes from a file.
+
 - ``service-status`` – Print the systemd state of ``gpsd``, ``kismet`` and ``bettercap``.
 - ``piwardrive-service`` – Launch the FastAPI status server (equivalent to ``python -m service``).
 
