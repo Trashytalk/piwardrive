@@ -6,7 +6,10 @@ import json
 from dataclasses import asdict
 from typing import Iterable
 
-from persistence import load_recent_health, HealthRecord
+try:
+    from persistence import load_recent_health, HealthRecord  # type: ignore
+except Exception:  # pragma: no cover - fall back if tests replaced module
+    from piwardrive.persistence import load_recent_health, HealthRecord
 
 
 EXPORT_FORMATS = ("csv", "json")

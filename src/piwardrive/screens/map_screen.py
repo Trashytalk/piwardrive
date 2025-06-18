@@ -75,13 +75,25 @@ try:
 except Exception:  # pragma: no cover - optional for tests
     MDProgressBar = MDBoxLayout = MDLabel = object  # type: ignore
 import export
-from utils import (
-    haversine_distance,
-    polygon_area,
-    load_kml,
-    point_in_polygon,
-    report_error,
-)
+try:
+    from utils import (
+        haversine_distance,
+        polygon_area,
+        load_kml,
+        point_in_polygon,
+        report_error,
+    )
+    _HAS_UTILS = True
+except Exception:  # pragma: no cover - fallback when tests replace utils
+    from importlib import import_module
+
+    _u = import_module("piwardrive.utils")
+    haversine_distance = _u.haversine_distance
+    polygon_area = _u.polygon_area
+    load_kml = _u.load_kml
+    point_in_polygon = _u.point_in_polygon
+    report_error = _u.report_error
+    _HAS_UTILS = False
 
 
 
