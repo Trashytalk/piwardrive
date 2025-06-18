@@ -36,6 +36,7 @@ TILE_CACHE_LIMIT_MB = 512
 COMPRESS_OFFLINE_TILES = True
 ROUTE_PREFETCH_INTERVAL = 3600  # seconds
 ROUTE_PREFETCH_LOOKAHEAD = 5
+REMOTE_SYNC_INTERVAL = 60  # minutes
 
 # Cloud upload defaults
 CLOUD_BUCKET = ""
@@ -111,6 +112,7 @@ class Config:
     remote_sync_token: str = ""
     remote_sync_timeout: int = 5
     remote_sync_retries: int = 3
+    remote_sync_interval: int = REMOTE_SYNC_INTERVAL
     gps_movement_threshold: float = 1.0
     cloud_bucket: str = CLOUD_BUCKET
     cloud_prefix: str = CLOUD_PREFIX
@@ -174,6 +176,7 @@ class FileConfigModel(BaseModel):
     remote_sync_token: Optional[str] = None
     remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
     remote_sync_retries: Optional[int] = Field(default=None, ge=1)
+    remote_sync_interval: Optional[int] = Field(default=None, ge=1)
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
     cloud_bucket: Optional[str] = None
     cloud_prefix: Optional[str] = None
@@ -402,6 +405,7 @@ class AppConfig:
     remote_sync_token: str = DEFAULTS["remote_sync_token"]
     remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
     remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
+    remote_sync_interval: int = DEFAULTS["remote_sync_interval"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
     cloud_bucket: str = DEFAULTS["cloud_bucket"]
     cloud_prefix: str = DEFAULTS["cloud_prefix"]

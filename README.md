@@ -183,8 +183,8 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
-* **Syncing Data** – set `remote_sync_url` in `~/.config/piwardrive/config.json`
-  and trigger uploads via `/sync` or call
+* **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
+  in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
 * **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
 * **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
