@@ -56,3 +56,24 @@ raise ``ValueError`` with details about the offending fields.
 You can modify these options from the application's **Settings** screen.
 Each field is exposed via a text input or toggle and saved back to
 ``config.json`` for the next launch.
+
+Remote Sync
+-----------
+
+Automatic uploads to a remote server are controlled by several options:
+
+``remote_sync_url``
+    HTTP endpoint receiving the uploaded SQLite database.
+
+``remote_sync_token``
+    Bearer token added to the request when provided.
+
+``remote_sync_timeout``
+    Timeout in seconds before the upload is aborted.
+
+``remote_sync_retries``
+    Number of attempts made when a transfer fails.
+
+``remote_sync_interval``
+    How often to sync the database in minutes. Set to ``0`` to disable
+    the scheduler.
