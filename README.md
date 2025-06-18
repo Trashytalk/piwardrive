@@ -18,6 +18,12 @@ graph LR
     C --> G[External Services]
 ```
 
+## Project Layout
+
+- All source code resides under `src/piwardrive/`.
+- Top-level scripts and modules are legacy wrappers slated for removal.
+- Import from `piwardrive` directly when running tools or tests.
+
 ## Data Inputs
 - Kismet
 - Bettercap
