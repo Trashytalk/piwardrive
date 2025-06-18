@@ -24,4 +24,12 @@ Several helper scripts are installed alongside the GUI. They can be invoked dire
 
         piwardrive-service
 
+``config-cli``
+    View or modify configuration values. Operates on the local
+    ``config.json`` by default or against the API when ``--url`` is
+    provided::
+
+        config-cli get theme
+        config-cli set map_use_offline true
+
 See ``--help`` on each command for additional options.
