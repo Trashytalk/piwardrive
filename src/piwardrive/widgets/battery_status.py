@@ -7,7 +7,7 @@ from kivy.metrics import dp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.card import MDCard
 from .base import DashboardWidget
-from localization import _
+from piwardrive.localization import _
 import psutil
 
 

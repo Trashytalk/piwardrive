@@ -21,6 +21,14 @@ the last few records::
 Use the ``limit`` query parameter to control how many entries are returned.
 
 
+Autostart
+---------
+
+Copy ``examples/service_api.service`` into ``/etc/systemd/system/`` and enable it
+with ``sudo systemctl enable --now service_api.service`` to run ``python -m
+service`` on boot.
+
+
 Additional Routes
 -----------------
 
@@ -29,8 +37,9 @@ Additional Routes
    curl http://localhost:8000/widget-metrics
 
 The JSON response includes CPU temperature, service status, handshake count,
-average RSSI and network throughput (``rx_kbps``/``tx_kbps``) for external
-dashboards.
+average RSSI and network throughput (``rx_kbps``/``tx_kbps``). Battery level
+and vehicle statistics (speed, RPM and engine load) are also returned when
+available for use in external dashboards.
 
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to

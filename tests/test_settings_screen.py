@@ -6,7 +6,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import config
+from piwardrive import config
 
 
 def load_screen(monkeypatch: Any) -> ModuleType:

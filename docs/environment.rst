@@ -67,25 +67,25 @@ SIGINT Suite
 ------------
 
 ``IWLIST_CMD``
-    Wi-Fi scanning executable used by :mod:`sigint_suite.wifi.scanner`.
+    Wi-Fi scanning executable used by :mod:`piwardrive.sigint_suite.wifi.scanner`.
 
 ``IW_PRIV_CMD``
     Privilege helper for Wi-Fi scans (default ``sudo``).
 
 ``IMSI_CATCH_CMD``
-    Command executed by :mod:`sigint_suite.cellular.imsi_catcher.scanner`.
+    Command executed by :mod:`piwardrive.sigint_suite.cellular.imsi_catcher.scanner`.
 
 ``BAND_SCAN_CMD``
-    Command used by :mod:`sigint_suite.cellular.band_scanner.scanner`.
+    Command used by :mod:`piwardrive.sigint_suite.cellular.band_scanner.scanner`.
 
 ``TOWER_SCAN_CMD``
-    Executable for :mod:`sigint_suite.cellular.tower_scanner.scanner`.
+    Executable for :mod:`piwardrive.sigint_suite.cellular.tower_scanner.scanner`.
 
 ``TOWER_SCAN_TIMEOUT``
     Timeout in seconds for ``TOWER_SCAN_CMD`` (default ``10``).
 
 ``EXPORT_DIR``
-    Output directory for scripts under ``sigint_suite/scripts``.
+    Output directory for scripts under ``piwardrive/sigint_suite/scripts``.
 
 ``SIGINT_EXPORT_DIR``
     Directory searched by :func:`sigint_integration.load_sigint_data`.

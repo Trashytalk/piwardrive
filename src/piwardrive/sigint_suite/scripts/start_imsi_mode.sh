@@ -10,9 +10,9 @@ mkdir -p "$EXPORT_DIR"
 
 PYTHONPATH="$ROOT_DIR/.." EXPORT_DIR="$EXPORT_DIR" python3 - <<'PY'
 import os
-from sigint_suite.wifi import scan_wifi
-from sigint_suite.bluetooth import scan_bluetooth
-from sigint_suite.exports import export_json
+from piwardrive.sigint_suite.wifi import scan_wifi
+from piwardrive.sigint_suite.bluetooth import scan_bluetooth
+from piwardrive.sigint_suite.exports import export_json
 
 export_dir = os.environ["EXPORT_DIR"]
 export_json(scan_wifi(), os.path.join(export_dir, "wifi.json"))

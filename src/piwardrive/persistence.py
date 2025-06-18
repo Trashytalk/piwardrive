@@ -10,7 +10,7 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 
-import config
+from piwardrive import config
 
 
 def _db_path() -> str:

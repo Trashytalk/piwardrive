@@ -1,10 +1,10 @@
 # PiWardrive Reference
 
-This document consolidates the key information from `README.md`, the `sigint_suite` guide and the various RST files under `docs/`.
+This document consolidates the key information from `README.md`, the `piwardrive.sigint_suite` guide and the various RST files under `docs/`.
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface built with Kivy/KivyMD. It manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -73,7 +73,7 @@ The application polls `gpsd` at a configurable interval, increasing the delay wh
 
 ## Mobile Builds
 
-Helper scripts `scripts/build_android.sh` and `scripts/build_ios.sh` package PiWardrive for Android or iOS. Android builds rely on Buildozer while iOS builds require `kivy-ios`. Some diagnostics and service management features are disabled on mobile platforms.
+Helper scripts `src/piwardrive/scripts/build_android.sh` and `src/piwardrive/scripts/build_ios.sh` package PiWardrive for Android or iOS. Android builds rely on Buildozer while iOS builds require `kivy-ios`. Some diagnostics and service management features are disabled on mobile platforms.
 
 ## Building the CKML Extension
 
@@ -87,10 +87,10 @@ See `docs/ckml_build.rst` for troubleshooting compiler issues.
 
 ## R Integration
 
-`scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
-`scripts/health_export.py` dumps recent metrics to JSON or CSV while
-`scripts/health_import.py` loads such files back into the tracking database.
-`scripts/service_status.py` prints the active state of common services.
+`src/piwardrive/scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
+`src/piwardrive/scripts/health_export.py` dumps recent metrics to JSON or CSV while
+`src/piwardrive/scripts/health_import.py` loads such files back into the tracking database.
+`src/piwardrive/scripts/service_status.py` prints the active state of common services.
 
 Additional optional features use `pandas`, `orjson` and `pyprof2calltree` which can be installed via:
 
@@ -108,7 +108,7 @@ The `docs/` directory contains mermaid diagrams showing scanning, logging and di
 
 ## SIGINT Suite
 
-Under `sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python ``bleak`` library are installed (`./sigint_suite/scripts/setup_all.sh` can install them).
+Under `src/piwardrive/sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `src/piwardrive/sigint_suite/scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `src/piwardrive/sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python ``bleak`` library are installed (`./src/piwardrive/sigint_suite/scripts/setup_all.sh` can install them).
 
 
 ## Environment Variables

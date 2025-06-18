@@ -18,6 +18,12 @@ graph LR
     C --> G[External Services]
 ```
 
+## Project Layout
+
+- All source code resides under `src/piwardrive/`.
+- Top-level scripts and modules are legacy wrappers slated for removal.
+- Import from `piwardrive` directly when running tools or tests.
+
 ## Data Inputs
 - Kismet
 - Bettercap
@@ -49,7 +55,7 @@ graph LR
 - Remote database sync (`remote_sync.py`) with a central aggregation service
   for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
-- CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
+- CLI SIGINT tools under `src/piwardrive/sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
@@ -120,6 +126,9 @@ python3 -m venv gui-env
 source gui-env/bin/activate
 pip install -r requirements.txt
 pip install .
+sudo apt update
+sudo apt install -y r-base r-base-dev
+
 ```
 
 You can run `src/piwardrive/scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
@@ -130,7 +139,7 @@ Some components rely on additional Python packages. Install them only if you nee
 
 - `dbus-fast` – asynchronous service control via D-Bus; otherwise `systemctl` is used.
 - `dbus-python` or `mpu6050` – provides orientation data from `iio-sensor-proxy` or an external MPU‑6050 sensor.
-- `bleak` – enables Bluetooth scanning on the map and in the `sigint_suite` tools.
+- `bleak` – enables Bluetooth scanning on the map and in the `piwardrive.sigint_suite` tools.
 - `rpy2` – required for generating daily health summaries with R.
 - `pandas`, `orjson`, `pyprof2calltree` – used by advanced analytics and profiling helpers.
 
@@ -140,7 +149,7 @@ Activate the virtual environment and run `pip install <package>` for any that ap
 
 ```bash
 source gui-env/bin/activate
-python main.py
+python -m piwardrive.main
 ```
 
 The UI renders directly on the framebuffer so no X server is required.
@@ -179,7 +188,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 #### Manual Steps
 
 * **Installation** – run `src/piwardrive/scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
-* **Launching the App** – activate the environment and start PiWardrive with `python main.py`.
+* **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `python -m service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
@@ -187,7 +196,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
   and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
 * **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
-* **Configuration Wizard** – run `setup_wizard.py` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
+* **Configuration Wizard** – run `python -m piwardrive.setup_wizard` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
 
 
 ### Example systemd unit
@@ -201,7 +210,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/piwardrive
-ExecStart=/home/pi/piwardrive/gui-env/bin/python /home/pi/piwardrive/main.py
+ExecStart=/home/pi/piwardrive/gui-env/bin/python -m piwardrive.main
 Restart=on-failure
 
 [Install]
@@ -211,11 +220,11 @@ WantedBy=multi-user.target
 
 ## Mobile Builds
 
-Scripts under `scripts/` create Android or iOS builds:
+Scripts under `src/piwardrive/scripts/` create Android or iOS builds:
 
 ```bash
-./scripts/build_android.sh  # Android APK
-./scripts/build_ios.sh      # iOS project
+./src/piwardrive/scripts/build_android.sh  # Android APK
+./src/piwardrive/scripts/build_ios.sh      # iOS project
 ```
 
 ## Configuration

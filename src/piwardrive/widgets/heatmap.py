@@ -13,10 +13,10 @@ from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
 
 from .base import DashboardWidget
-from heatmap import histogram, save_png
-from persistence import load_ap_cache
-from utils import run_async_task
-from localization import _
+from piwardrive.heatmap import histogram, save_png
+from piwardrive.persistence import load_ap_cache
+from piwardrive.utils import run_async_task
+from piwardrive.localization import _
 
 
 class HeatmapWidget(DashboardWidget):

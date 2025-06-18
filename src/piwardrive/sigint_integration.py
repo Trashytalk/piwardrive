@@ -3,7 +3,7 @@ import json
 import os
 from typing import Any, List, Mapping
 
-from sigint_suite import paths
+from piwardrive.sigint_suite import paths
 
 
 def load_sigint_data(name: str) -> List[Mapping[str, Any]]:

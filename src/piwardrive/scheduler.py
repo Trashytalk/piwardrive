@@ -31,7 +31,7 @@ except Exception:  # pragma: no cover - fallback stubs for tests
     ClockEvent = _DummyEvent
 
 
-import utils
+from piwardrive import utils
 
 
 class PollScheduler:

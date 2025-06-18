@@ -7,7 +7,14 @@ import importlib.util
 import pytest
 
 tracker_path = os.path.join(
-    os.path.dirname(__file__), "..", "sigint_suite", "cellular", "tower_tracker", "tracker.py"
+    os.path.dirname(__file__),
+    "..",
+    "src",
+    "piwardrive",
+    "sigint_suite",
+    "cellular",
+    "tower_tracker",
+    "tracker.py",
 )
 spec = importlib.util.spec_from_file_location("tower_tracker", tracker_path)
 tracker_mod = importlib.util.module_from_spec(spec)

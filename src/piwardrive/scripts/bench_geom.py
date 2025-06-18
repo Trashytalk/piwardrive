@@ -2,7 +2,7 @@
 import logging
 import timeit
 
-import utils
+from piwardrive import utils
 
 try:
     import cgeom

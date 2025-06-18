@@ -3,11 +3,11 @@ import argparse
 import os
 import time
 
-from sigint_suite import paths
+from piwardrive.sigint_suite import paths
 
-from sigint_suite.bluetooth import scan_bluetooth
-from sigint_suite.exports import export_json
-from sigint_suite.wifi import scan_wifi
+from piwardrive.sigint_suite.bluetooth import scan_bluetooth
+from piwardrive.sigint_suite.exports import export_json
+from piwardrive.sigint_suite.wifi import scan_wifi
 
 
 def run_once(export_dir: str) -> None:

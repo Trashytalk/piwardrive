@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from advanced_localization import load_config, load_kismet_data, localize_aps
+from piwardrive.advanced_localization import load_config, load_kismet_data, localize_aps
 
 try:
     import folium
