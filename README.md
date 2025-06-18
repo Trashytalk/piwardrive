@@ -120,7 +120,7 @@ aid troubleshooting periodic jobs during development.
 ### Installation
 
 ```bash
-git clone https://github.com/TRASHYTALK/piwardrive.git
+git clone git@github.com:Trashytalk/piwardrive.git
 cd piwardrive
 python3 -m venv gui-env
 source gui-env/bin/activate
@@ -145,7 +145,7 @@ You can run `src/piwardrive/scripts/quickstart.sh` to install system packages an
 3. Clone the repository and switch into the project directory:
 
    ```bash
-   git clone https://github.com/TRASHYTALK/piwardrive.git
+   git clone git@github.com:Trashytalk/piwardrive.git
    cd piwardrive
    ```
 4. Create and activate the virtual environment:
