@@ -3,7 +3,7 @@ from dataclasses import asdict
 from httpx import AsyncClient, ASGITransport
 import importlib
 
-from persistence import HealthRecord
+from piwardrive.persistence import HealthRecord
 
 
 def test_get_status_async(monkeypatch, add_dummy_module):

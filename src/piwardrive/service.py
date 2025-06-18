@@ -19,10 +19,13 @@ import asyncio
 import time
 
 
-from logconfig import DEFAULT_LOG_PATH
-from persistence import load_recent_health
-from security import sanitize_path, verify_password
-from utils import (
+from piwardrive.logconfig import DEFAULT_LOG_PATH
+try:  # allow tests to stub out ``persistence``
+    from persistence import load_recent_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.persistence import load_recent_health
+from piwardrive.security import sanitize_path, verify_password
+from piwardrive.utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
@@ -31,8 +34,11 @@ from utils import (
     service_status_async,
     async_tail_file,
 )
+import psutil
+import vehicle_sensors
 import config
 from sync import upload_data
+
 
 security = HTTPBasic(auto_error=False)
 app = FastAPI()
@@ -43,7 +49,7 @@ def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
     pw_hash = os.getenv("PW_API_PASSWORD_HASH")
     if not pw_hash:
         return
-    if not verify_password(credentials.password, pw_hash):
+    if not credentials or not verify_password(credentials.password, pw_hash):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
@@ -61,6 +67,15 @@ async def _collect_widget_metrics() -> dict:
     """Return basic metrics used by dashboard widgets."""
     aps, _clients, handshakes = await fetch_metrics_async()
     rx, tx = get_network_throughput()
+    batt_percent = batt_plugged = None
+    try:
+        batt = psutil.sensors_battery()
+        if batt is not None:
+            batt_percent = batt.percent
+            batt_plugged = batt.power_plugged
+    except Exception:  # pragma: no cover - optional dependency
+        pass
+
     return {
         "cpu_temp": get_cpu_temp(),
         "bssid_count": len(aps),
@@ -71,6 +86,11 @@ async def _collect_widget_metrics() -> dict:
         "gps_fix": get_gps_fix_quality(),
         "rx_kbps": rx,
         "tx_kbps": tx,
+        "battery_percent": batt_percent,
+        "battery_plugged": batt_plugged,
+        "vehicle_speed": vehicle_sensors.read_speed_obd(),
+        "vehicle_rpm": vehicle_sensors.read_rpm_obd(),
+        "engine_load": vehicle_sensors.read_engine_load_obd(),
     }
 
 

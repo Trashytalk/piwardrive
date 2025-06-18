@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_integration import load_sigint_data
+from piwardrive.sigint_integration import load_sigint_data
 
 
 def test_load_sigint_data(tmp_path):

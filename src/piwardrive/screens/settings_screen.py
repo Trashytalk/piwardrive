@@ -10,8 +10,8 @@ import asyncio
 from kivy.app import App
 from kivymd.uix.snackbar import Snackbar
 
-from config import Config, save_config
-from utils import report_error, format_error, ErrorCode
+from piwardrive.config import Config, save_config
+from piwardrive.utils import report_error, format_error, ErrorCode
 
 
 class SettingsScreen:

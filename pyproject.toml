@@ -31,6 +31,7 @@ uav-record = "piwardrive.scripts.uav_record:main"
 uav-track-playback = "piwardrive.scripts.uav_track_playback:main"
 piwardrive-mbtiles = "piwardrive.scripts.vector_tile_customizer_cli:main"
 config-cli = "piwardrive.scripts.config_cli:main"
+calibrate-orientation = "piwardrive.scripts.calibrate_orientation:main"
 
 
 

@@ -4,7 +4,7 @@ import json
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import sigint_suite.scripts.continuous_scan as cs
+import piwardrive.sigint_suite.scripts.continuous_scan as cs
 
 
 def test_run_once_writes_json(tmp_path, monkeypatch):

@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-import config
+from piwardrive import config
 
 
 def setup(tmp_path: Path) -> None:

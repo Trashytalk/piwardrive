@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 modules = {
-    "sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+    "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
     "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
     "aiohttp": SimpleNamespace(),
 }
@@ -20,8 +20,8 @@ sys.modules.setdefault(
 )
 sys.modules.setdefault("pydantic", SimpleNamespace(BaseModel=object, Field=lambda *a, **k: None, ValidationError=Exception, field_validator=lambda *a, **k: lambda x: x))
 
-import tile_maintenance  # noqa: E402
-from scheduler import PollScheduler  # noqa: E402
+from piwardrive import tile_maintenance  # noqa: E402
+from piwardrive.scheduler import PollScheduler  # noqa: E402
 
 
 class DummyScheduler:

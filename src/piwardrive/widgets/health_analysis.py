@@ -8,12 +8,12 @@ from kivy.metrics import dp
 from kivy.uix.image import Image
 from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
-from localization import _
+from piwardrive.localization import _
 
 from .base import DashboardWidget
-from persistence import load_recent_health
-from utils import run_async_task
-from analysis import compute_health_stats, plot_cpu_temp
+from piwardrive.persistence import load_recent_health
+from piwardrive.utils import run_async_task
+from piwardrive.analysis import compute_health_stats, plot_cpu_temp
 
 
 class HealthAnalysisWidget(DashboardWidget):

@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import network_analytics
+from piwardrive import network_analytics
 
 
 def test_empty_records_returns_empty() -> None:

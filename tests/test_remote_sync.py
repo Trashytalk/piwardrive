@@ -14,7 +14,7 @@ aiohttp_mod.ClientError = Exception
 aiohttp_mod.FormData = lambda: type('FormData', (), {'add_field': lambda *a, **k: None})()
 sys.modules['aiohttp'] = aiohttp_mod
 
-import remote_sync
+from piwardrive import remote_sync
 
 
 def test_sync_database_retries(monkeypatch):

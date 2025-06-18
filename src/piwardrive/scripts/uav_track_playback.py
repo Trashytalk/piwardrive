@@ -6,7 +6,7 @@ import argparse
 import asyncio
 import json
 
-from gps_track_playback import playback_track
+from piwardrive.gps_track_playback import playback_track
 
 
 async def _print_point(lat: float, lon: float) -> None:

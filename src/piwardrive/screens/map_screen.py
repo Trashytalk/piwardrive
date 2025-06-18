@@ -9,7 +9,7 @@ import aiohttp
 import heapq
 
 
-from gpsd_client import client as gps_client
+from piwardrive.gpsd_client import client as gps_client
 
 
 import threading
@@ -28,8 +28,8 @@ import math
 import asyncio
 
 from kivy.app import App
-import utils
-from heatmap import histogram, histogram_points
+from piwardrive import utils
+from piwardrive.heatmap import histogram, histogram_points
 
 from kivy.clock import Clock, mainthread
 try:
@@ -38,7 +38,7 @@ except Exception:  # pragma: no cover - optional for tests
     Animation = None  # type: ignore
 
 from kivy.metrics import dp
-from orientation_sensors import orientation_to_angle
+from piwardrive.orientation_sensors import orientation_to_angle
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -66,7 +66,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.menu import MDDropdownMenu
 
 from kivymd.uix.snackbar import Snackbar
-from persistence import save_app_state
+from piwardrive.persistence import save_app_state
 from kivymd.uix.textfield import MDTextField
 try:
     from kivymd.uix.progressbar import MDProgressBar
@@ -74,14 +74,26 @@ try:
     from kivymd.uix.label import MDLabel
 except Exception:  # pragma: no cover - optional for tests
     MDProgressBar = MDBoxLayout = MDLabel = object  # type: ignore
-import export
-from utils import (
-    haversine_distance,
-    polygon_area,
-    load_kml,
-    point_in_polygon,
-    report_error,
-)
+from piwardrive import export
+try:
+    from utils import (
+        haversine_distance,
+        polygon_area,
+        load_kml,
+        point_in_polygon,
+        report_error,
+    )
+    _HAS_UTILS = True
+except Exception:  # pragma: no cover - fallback when tests replace utils
+    from importlib import import_module
+
+    _u = import_module("piwardrive.utils")
+    haversine_distance = _u.haversine_distance
+    polygon_area = _u.polygon_area
+    load_kml = _u.load_kml
+    point_in_polygon = _u.point_in_polygon
+    report_error = _u.report_error
+    _HAS_UTILS = False
 
 
 
@@ -1031,7 +1043,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Offline Map Tile Management
 
-    # tile management helpers moved to :mod:`screens.map_utils.tile_cache`
+    # tile management helpers moved to :mod:`piwardrive.screens.map_utils.tile_cache`
 
     async def _download_tile_async(
         self, session: aiohttp.ClientSession, url: str, local: str
@@ -1356,8 +1368,8 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         )
 
     def load_saved_geofences(self) -> None:
-        """Load polygons saved by :class:`~screens.geofence_editor.GeofenceEditor`."""
-        from screens.geofence_editor import GeofenceEditor
+        """Load polygons saved by :class:`~piwardrive.screens.geofence_editor.GeofenceEditor`."""
+        from piwardrive.screens.geofence_editor import GeofenceEditor
 
         try:
             with open(GeofenceEditor.GEOFENCE_FILE, "r", encoding="utf-8") as fh:

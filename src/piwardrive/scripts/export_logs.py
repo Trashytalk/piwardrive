@@ -1,7 +1,7 @@
 """Module export_logs."""
 import argparse
 import asyncio
-from main import PiWardriveApp
+from piwardrive.main import PiWardriveApp
 
 
 def main(argv: list[str] | None = None) -> None:

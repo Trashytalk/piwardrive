@@ -10,7 +10,7 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules['aiohttp'] = aiohttp_mod
 
-import sync
+from piwardrive import sync
 
 class DummyConfig(SimpleNamespace):
     remote_sync_url: str = 'http://remote'
