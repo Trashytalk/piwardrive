@@ -29,6 +29,13 @@ Tiles can also be prefetched without launching the GUI using the
 The four positional arguments represent ``min_lat min_lon max_lat max_lon``.
 Specify ``--folder`` to override the cache directory.
 
+``piwardrive-prefetch-batch`` reads bounding boxes from a file and prefetches
+them sequentially::
+
+   piwardrive-prefetch-batch boxes.txt --zoom 15
+
+Each line of ``boxes.txt`` should contain ``min_lat min_lon max_lat max_lon``.
+
 Cache Maintenance
 -----------------
 

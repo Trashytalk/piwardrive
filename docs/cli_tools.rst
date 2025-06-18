@@ -12,6 +12,13 @@ Several helper scripts are installed alongside the GUI. They can be invoked dire
 
     The arguments define the bounding box (``lat1 lon1 lat2 lon2``) and optional zoom level.
 
+``piwardrive-prefetch-batch``
+    Prefetch multiple areas from a file::
+
+        piwardrive-prefetch-batch boxes.txt --zoom 15
+
+    Each line in ``boxes.txt`` should contain ``lat1 lon1 lat2 lon2``.
+
 ``service-status``
     Show the active systemd services used by PiWardrive::
 
