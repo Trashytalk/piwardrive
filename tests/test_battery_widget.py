@@ -3,7 +3,6 @@ import sys
 from typing import Any
 import importlib
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 class DummyBattery:
@@ -34,7 +33,7 @@ def _load_widget(add_dummy_module):
         "kivymd.uix.card",
         MDCard=type("MDCard", (), {}),
     )
-    return importlib.import_module("widgets.battery_status")
+    return importlib.import_module("piwardrive.widgets.battery_status")
 
 def test_widget_updates(monkeypatch: Any) -> None:
     bs = _load_widget(add_dummy_module)

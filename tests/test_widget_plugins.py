@@ -4,7 +4,6 @@ import importlib
 import subprocess
 from pathlib import Path
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 def _setup_kivy(add_dummy_module):
@@ -32,7 +31,7 @@ def _build_c_plugin(plugin_dir: Path) -> None:
         "    PyObject *mod = PyModule_Create(&moduledef);\n"
         "    if (!mod) return NULL;\n"
         "    const char code[] =\n"
-        "        \"from widgets.base import DashboardWidget\\n\"\n"
+        "        \"from piwardrive.widgets.base import DashboardWidget\\n\"\n"
         "        \"class CWidget(DashboardWidget):\\n\"\n"
         "        \"    pass\\n\";\n"
         "    PyObject *dict = PyModule_GetDict(mod);\n"
@@ -72,14 +71,14 @@ def test_plugin_discovery(tmp_path, monkeypatch, add_dummy_module):
     plugin_dir.mkdir(parents=True)
     plugin_file = plugin_dir / "my_widget.py"
     plugin_file.write_text(
-        "from widgets.base import DashboardWidget\n"
+        "from piwardrive.widgets.base import DashboardWidget\n"
         "class ExtraWidget(DashboardWidget):\n"
         "    pass\n"
     )
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    sys.modules.pop("widgets", None)
-    widgets = importlib.import_module("widgets")
+    sys.modules.pop("piwardrive.widgets", None)
+    widgets = importlib.import_module("piwardrive.widgets")
     assert hasattr(widgets, "ExtraWidget")
     assert "ExtraWidget" in widgets.__all__
 
@@ -91,8 +90,8 @@ def test_cython_pyo3_plugin(tmp_path, monkeypatch, add_dummy_module):
     _build_c_plugin(plugin_dir)
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    sys.modules.pop("widgets", None)
-    widgets = importlib.import_module("widgets")
+    sys.modules.pop("piwardrive.widgets", None)
+    widgets = importlib.import_module("piwardrive.widgets")
     assert hasattr(widgets, "CWidget")
     assert "CWidget" in widgets.__all__
 
@@ -107,7 +106,7 @@ def test_load_error(tmp_path, monkeypatch, add_dummy_module):
     messages: list[str] = []
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr("utils.report_error", lambda m: messages.append(m))
-    sys.modules.pop("widgets", None)
-    importlib.import_module("widgets")
+    sys.modules.pop("piwardrive.widgets", None)
+    importlib.import_module("piwardrive.widgets")
     assert messages
 

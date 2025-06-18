@@ -53,7 +53,6 @@ modules["pydantic"].field_validator = lambda *a, **k: (lambda f: f)
 for n, m in modules.items():
     sys.modules[n] = m
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from piwardrive.screens.geofence_editor import GeofenceEditor  # noqa: E402
 

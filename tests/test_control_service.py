@@ -7,7 +7,6 @@ from unittest import mock
 import sys
 import importlib
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from piwardrive import utils
 from piwardrive import security
 from typing import Any, Callable, cast

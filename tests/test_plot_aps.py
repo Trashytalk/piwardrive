@@ -59,11 +59,12 @@ def load_map_screen(monkeypatch):
     for name, mod in modules.items():
         monkeypatch.setitem(sys.modules, name, mod)
 
-    if "screens.map_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "screens.map_screen", raising=False)
+    if "piwardrive.screens.map_screen" in sys.modules:
+        monkeypatch.delitem(
+            sys.modules, "piwardrive.screens.map_screen", raising=False
+        )
 
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-    return importlib.import_module("screens.map_screen")
+    return importlib.import_module("piwardrive.screens.map_screen")
 
 
 def test_plot_aps_estimates_location(monkeypatch):

@@ -4,7 +4,6 @@ import io
 from types import ModuleType
 import pytest
 
-sys.path.insert(0, '.')
 
 # stub aiohttp before importing module
 aiohttp_mod = ModuleType('aiohttp')

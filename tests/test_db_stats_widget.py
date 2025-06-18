@@ -4,7 +4,6 @@ import asyncio
 from typing import Any
 import importlib
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 def _load_widget(add_dummy_module):
@@ -22,7 +21,7 @@ def _load_widget(add_dummy_module):
     add_dummy_module(
         "kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {})
     )
-    return importlib.import_module("widgets.db_stats")
+    return importlib.import_module("piwardrive.widgets.db_stats")
 
 
 def test_widget_update(monkeypatch: Any, add_dummy_module) -> None:

@@ -5,7 +5,6 @@ from types import ModuleType
 from typing import Any
 
 os.environ.setdefault("KIVY_NO_ARGS", "1")
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 def load_screen(monkeypatch: Any):
@@ -57,9 +56,9 @@ def load_screen(monkeypatch: Any):
     mods["persistence"].save_app_state = lambda *a, **k: None
     for n, m in mods.items():
         monkeypatch.setitem(sys.modules, n, m)
-    if "screens.map_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "screens.map_screen")
-    return importlib.import_module("screens.map_screen").MapScreen
+    if "piwardrive.screens.map_screen" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.screens.map_screen")
+    return importlib.import_module("piwardrive.screens.map_screen").MapScreen
 
 
 def make_screen(MapScreen: Any) -> Any:
@@ -77,7 +76,9 @@ def test_geofence_enter_exit(monkeypatch: Any) -> None:
             pass
 
     MapScreen = load_screen(monkeypatch)
-    monkeypatch.setattr(sys.modules["screens.map_screen"], "Snackbar", DummySnackbar, raising=False)
+    monkeypatch.setattr(
+        sys.modules["piwardrive.screens.map_screen"], "Snackbar", DummySnackbar, raising=False
+    )
     screen = make_screen(MapScreen)
     polygon = [(0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)]
     events: list[str] = []
@@ -107,7 +108,9 @@ def test_add_geofence_string_callbacks(monkeypatch: Any) -> None:
             calls.append("open")
 
     MapScreen = load_screen(monkeypatch)
-    monkeypatch.setattr(sys.modules["screens.map_screen"], "Snackbar", DummySnackbar, raising=False)
+    monkeypatch.setattr(
+        sys.modules["piwardrive.screens.map_screen"], "Snackbar", DummySnackbar, raising=False
+    )
     screen = make_screen(MapScreen)
 
     polygon = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]

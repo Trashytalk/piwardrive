@@ -2,7 +2,6 @@ import os
 import sys
 from types import SimpleNamespace
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # minimal Kivy stub for testing without the real dependency
 sys.modules["kivy.app"] = SimpleNamespace(App=type("App", (), {"get_running_app": staticmethod(lambda: None)}))

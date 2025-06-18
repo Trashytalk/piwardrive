@@ -12,7 +12,6 @@ from types import ModuleType
 import asyncio
 import requests_cache
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from piwardrive import persistence
 
 from unittest import mock

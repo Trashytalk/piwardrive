@@ -3,7 +3,6 @@ import sys
 import csv
 import json
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from piwardrive.sigint_suite.exports import export_csv, export_yaml, export_json
 

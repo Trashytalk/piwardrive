@@ -3,7 +3,6 @@ import sys
 from typing import Any
 import importlib
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 def _load_widgets(add_dummy_module):
@@ -21,9 +20,9 @@ def _load_widgets(add_dummy_module):
     add_dummy_module(
         "kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {})
     )
-    ow = importlib.import_module("widgets.orientation_widget")
-    vs = importlib.import_module("widgets.vehicle_speed")
-    lw = importlib.import_module("widgets.lora_scan_widget")
+    ow = importlib.import_module("piwardrive.widgets.orientation_widget")
+    vs = importlib.import_module("piwardrive.widgets.vehicle_speed")
+    lw = importlib.import_module("piwardrive.widgets.lora_scan_widget")
     return ow, vs, lw
 
 

@@ -7,7 +7,6 @@ from types import ModuleType, SimpleNamespace
 import pytest
 import time
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import piwardrive.export as exp
 
 
@@ -115,10 +114,10 @@ def load_map_screen(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     for name, mod in modules.items():
         monkeypatch.setitem(sys.modules, name, mod)
 
-    if "screens.map_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "screens.map_screen", raising=False)
+    if "piwardrive.screens.map_screen" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.screens.map_screen", raising=False)
 
-    return importlib.import_module("screens.map_screen")
+    return importlib.import_module("piwardrive.screens.map_screen")
 
 
 def test_screen_export_ap_data(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:

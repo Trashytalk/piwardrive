@@ -64,7 +64,6 @@ modules["kivy_garden.mapview"] = SimpleNamespace(
 for name, mod in modules.items():
     sys.modules[name] = mod
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 if "piwardrive.screens.map_screen" in sys.modules:
     del sys.modules["piwardrive.screens.map_screen"]
 from piwardrive.screens.map_screen import MapScreen  # noqa: E402
