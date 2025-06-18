@@ -1,6 +1,6 @@
 """Module prefetch_cli."""
 import argparse
-from screens.map_utils import tile_cache
+from piwardrive.screens.map_utils import tile_cache
 
 
 def main(argv: list[str] | None = None) -> None:

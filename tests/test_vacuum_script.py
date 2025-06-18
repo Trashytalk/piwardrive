@@ -11,9 +11,9 @@ def test_vacuum_script(monkeypatch):
     async def fake_vacuum():
         called['ok'] = True
 
-    if 'scripts.vacuum_db' in sys.modules:
-        del sys.modules['scripts.vacuum_db']
-    import scripts.vacuum_db as vac
+    if 'piwardrive.scripts.vacuum_db' in sys.modules:
+        del sys.modules['piwardrive.scripts.vacuum_db']
+    import piwardrive.scripts.vacuum_db as vac
     monkeypatch.setattr(vac.persistence, 'vacuum', fake_vacuum)
     vac.main([])
     assert called.get('ok')

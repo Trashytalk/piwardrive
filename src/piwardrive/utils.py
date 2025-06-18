@@ -18,7 +18,7 @@ import glob
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 
-from sigint_suite.models import BluetoothDevice
+from piwardrive.sigint_suite.models import BluetoothDevice
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy

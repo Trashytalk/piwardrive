@@ -19,7 +19,7 @@ interact.
        Persistence [label="Persistence\n(piwardrive.persistence)"];
        Config [label="Config\n(piwardrive.config)"];
        Widgets [label="Widgets\n(widgets/)"];
-       Screens [label="Screens\nscreens/"];
+       Screens [label="Screens\npiwardrive.screens"];
        Utils [label="Utils\n(piwardrive.utils)"];
        Logging [label="Logging\n(piwardrive.logconfig)"];
        External [label="External Services\n(Kismet, BetterCAP,\nGPSd, systemd)"];

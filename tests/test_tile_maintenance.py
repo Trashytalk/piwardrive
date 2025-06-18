@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 modules = {
-    "sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+    "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
     "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
     "aiohttp": SimpleNamespace(),
 }

@@ -4,15 +4,15 @@ import sys
 BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BASE)  # noqa: E402
 
-from sigint_suite.cellular.imsi_catcher.scanner import scan_imsis  # noqa: E402
-from sigint_suite.hooks import register_post_processor  # noqa: E402
+from piwardrive.sigint_suite.cellular.imsi_catcher.scanner import scan_imsis  # noqa: E402
+from piwardrive.sigint_suite.hooks import register_post_processor  # noqa: E402
 
 
 def test_scan_imsis_parses_output_and_tags_location(monkeypatch):
     output = "12345,310,260,-50\n67890,311,480,-60"
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
     monkeypatch.setattr(
-        "sigint_suite.cellular.imsi_catcher.scanner.get_position",
+        "piwardrive.sigint_suite.cellular.imsi_catcher.scanner.get_position",
         lambda: (1.0, 2.0),
     )
     records = scan_imsis("dummy")
@@ -40,10 +40,10 @@ def test_scan_imsis_custom_hook(monkeypatch):
     output = "12345,310,260,-50"
     monkeypatch.setattr("subprocess.check_output", lambda *a, **k: output)
     monkeypatch.setattr(
-        "sigint_suite.cellular.imsi_catcher.scanner.get_position",
+        "piwardrive.sigint_suite.cellular.imsi_catcher.scanner.get_position",
         lambda: None,
     )
-    import sigint_suite.hooks as hooks
+    import piwardrive.sigint_suite.hooks as hooks
     hooks._POST_PROCESSORS["imsi"] = []
 
     def add_op(records):

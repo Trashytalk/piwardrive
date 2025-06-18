@@ -7,7 +7,7 @@ import asyncio
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-import scripts.health_import as hi
+import piwardrive.scripts.health_import as hi
 from piwardrive import persistence
 from piwardrive import config
 

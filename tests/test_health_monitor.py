@@ -70,7 +70,7 @@ def test_health_monitor_exports(tmp_path, monkeypatch) -> None:
     with mock.patch(
         'diagnostics.self_test',
         return_value={'system': {}, 'network_ok': True, 'services': {}},
-    ), mock.patch('scripts.health_export.main', side_effect=fake_export):
+    ), mock.patch('piwardrive.scripts.health_export.main', side_effect=fake_export):
         diagnostics.HealthMonitor(cast(PollScheduler, sched), interval=1)
         assert any(n == 'health_export' for n, _ in sched.scheduled)
         assert Path(created["path"]).exists()
@@ -92,7 +92,7 @@ def test_health_monitor_export_cleanup(tmp_path, monkeypatch) -> None:
     with mock.patch(
         'diagnostics.self_test',
         return_value={'system': {}, 'network_ok': True, 'services': {}},
-    ), mock.patch('scripts.health_export.main', side_effect=fake_export):
+    ), mock.patch('piwardrive.scripts.health_export.main', side_effect=fake_export):
         diagnostics.HealthMonitor(cast(PollScheduler, sched), interval=1)
         exported = list(tmp_path.glob('health_*.json.gz'))
         assert exported and exported[0].suffix == '.gz'
@@ -127,7 +127,7 @@ def test_health_monitor_upload_to_cloud(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(diagnostics, "purge_old_health", lambda *_a, **_k: None)
     monkeypatch.setattr(diagnostics, "vacuum", lambda *_a, **_k: None)
 
-    with mock.patch("scripts.health_export.main", side_effect=fake_export), mock.patch(
+    with mock.patch("piwardrive.scripts.health_export.main", side_effect=fake_export), mock.patch(
         "piwardrive.diagnostics._upload_to_cloud", lambda p: uploaded.update({"path": p})
     ):
         mon = diagnostics.HealthMonitor(cast(PollScheduler, sched), interval=1, collector=DummyCollector())

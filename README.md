@@ -49,7 +49,7 @@ graph LR
 - Remote database sync (`remote_sync.py`) with a central aggregation service
   for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
-- CLI SIGINT tools under `sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
+- CLI SIGINT tools under `src/piwardrive/sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
   
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
@@ -133,7 +133,7 @@ Some components rely on additional Python packages. Install them only if you nee
 
 - `dbus-fast` – asynchronous service control via D-Bus; otherwise `systemctl` is used.
 - `dbus-python` or `mpu6050` – provides orientation data from `iio-sensor-proxy` or an external MPU‑6050 sensor.
-- `bleak` – enables Bluetooth scanning on the map and in the `sigint_suite` tools.
+- `bleak` – enables Bluetooth scanning on the map and in the `piwardrive.sigint_suite` tools.
 - `rpy2` – required for generating daily health summaries with R.
 - `pandas`, `orjson`, `pyprof2calltree` – used by advanced analytics and profiling helpers.
 
@@ -214,11 +214,11 @@ WantedBy=multi-user.target
 
 ## Mobile Builds
 
-Scripts under `scripts/` create Android or iOS builds:
+Scripts under `src/piwardrive/scripts/` create Android or iOS builds:
 
 ```bash
-./scripts/build_android.sh  # Android APK
-./scripts/build_ios.sh      # iOS project
+./src/piwardrive/scripts/build_android.sh  # Android APK
+./src/piwardrive/scripts/build_ios.sh      # iOS project
 ```
 
 ## Configuration

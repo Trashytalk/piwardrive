@@ -6,9 +6,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import pytest
 
-from sigint_suite.rf.spectrum import spectrum_scan
-from sigint_suite.rf.demod import demodulate_fm
-from sigint_suite.rf import demod as demod_module
+from piwardrive.sigint_suite.rf.spectrum import spectrum_scan
+from piwardrive.sigint_suite.rf.demod import demodulate_fm
+from piwardrive.sigint_suite.rf import demod as demod_module
 
 
 class DummySdr:
@@ -26,7 +26,7 @@ class DummySdr:
 
 
 def test_spectrum_scan_returns_power(monkeypatch):
-    monkeypatch.setattr("sigint_suite.rf.spectrum.RtlSdr", DummySdr)
+    monkeypatch.setattr("piwardrive.sigint_suite.rf.spectrum.RtlSdr", DummySdr)
     freqs, power = spectrum_scan(100.0, sample_rate=4.0, num_samples=4)
     assert len(freqs) == 4
     assert len(power) == 4
@@ -44,7 +44,7 @@ class SignalSdr(DummySdr):
 
 
 def test_demodulate_fm(monkeypatch):
-    monkeypatch.setattr("sigint_suite.rf.demod.RtlSdr", SignalSdr)
+    monkeypatch.setattr("piwardrive.sigint_suite.rf.demod.RtlSdr", SignalSdr)
     audio = demodulate_fm(100.0, sample_rate=8.0, audio_rate=2.0, duration=1.0)
     assert len(audio) == 2
     for val in audio:
@@ -56,10 +56,10 @@ def test_demodulate_fm(monkeypatch):
 
 
 def test_missing_rtlsdr(monkeypatch):
-    monkeypatch.setattr("sigint_suite.rf.spectrum.RtlSdr", None)
+    monkeypatch.setattr("piwardrive.sigint_suite.rf.spectrum.RtlSdr", None)
     with pytest.raises(RuntimeError):
         spectrum_scan(100.0)
-    monkeypatch.setattr("sigint_suite.rf.demod.RtlSdr", None)
+    monkeypatch.setattr("piwardrive.sigint_suite.rf.demod.RtlSdr", None)
     with pytest.raises(RuntimeError):
         demodulate_fm(100.0)
 

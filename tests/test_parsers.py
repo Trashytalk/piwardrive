@@ -3,7 +3,10 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sigint_suite.cellular.parsers import parse_imsi_output, parse_band_output
+from piwardrive.sigint_suite.cellular.parsers import (
+    parse_imsi_output,
+    parse_band_output,
+)
 
 
 def test_parse_imsi_output():
