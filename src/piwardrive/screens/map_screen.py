@@ -63,7 +63,7 @@ from kivy_garden.mapview import (
 try:
     # Newer versions expose MBTilesMapSource directly in the package
     from kivy_garden.mapview import MBTilesMapSource  # type: ignore[attr-defined]
-except Exception:  # pragma: no cover - fallback for old mapview
+except (ImportError, AttributeError):  # pragma: no cover - fallback for old mapview
     from kivy_garden.mapview.mbtsource import MBTilesMapSource
 
 from kivymd.uix.dialog import MDDialog
@@ -1456,7 +1456,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         """Load polygons saved by :class:`~piwardrive.screens.geofence_editor.GeofenceEditor`."""
         try:
             from piwardrive.screens.geofence_editor import GeofenceEditor
-        except Exception:  # pragma: no cover - missing dependencies in tests
+        except ImportError:  # pragma: no cover - missing dependencies in tests
             return
 
         try:
