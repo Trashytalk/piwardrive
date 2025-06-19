@@ -1,10 +1,10 @@
 #!/bin/bash
-# Start the FastAPI service and open Chromium in kiosk mode.
+# Start the web UI and API server then open Chromium in kiosk mode.
 set -euo pipefail
 
 URL="http://localhost:8000"
 
-piwardrive-service &
+piwardrive-webui &
 PID=$!
 
 # Give the server a moment to start

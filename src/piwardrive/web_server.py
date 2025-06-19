@@ -21,7 +21,9 @@ def create_app() -> FastAPI:
     app = FastAPI()
     app.mount("/api", api_app)
 
-    dist_dir = os.path.join(os.path.dirname(__file__), os.pardir, "webui", "dist")
+    dist_dir = os.path.join(
+        os.path.dirname(__file__), os.pardir, os.pardir, "webui", "dist"
+    )
     if os.path.isdir(dist_dir):
         app.mount("/", StaticFiles(directory=dist_dir, html=True), name="static")
     else:
