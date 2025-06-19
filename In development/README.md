@@ -31,7 +31,7 @@ This uses a small React application built with Vite.
    python 'In development/browser_server.py'
    ```
 
-   The server listens on `http://0.0.0.0:8000` and serves the API under `/api` as well as the built React interface.
+    The server listens on `http://0.0.0.0:8000` and serves both the API and the built React interface from the same root URL.
 
 ## MapLibre Prototype
 
