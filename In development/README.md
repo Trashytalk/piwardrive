@@ -21,6 +21,9 @@ This uses a small React application built with Vite.
 
    The compiled assets will be placed in `webui/dist`.
 
+   During development you can run `npm run dev` which starts a Vite server
+   that proxies API calls to `http://localhost:8000`.
+
 2. Launch the API with the static build:
 
    ```bash
