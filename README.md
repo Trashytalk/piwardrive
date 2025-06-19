@@ -298,6 +298,9 @@ pre-commit run --all-files
 pytest
 ```
 
+`pre-commit` automatically installs packages listed in `requirements.txt`
+and `requirements-dev.txt`, so hooks and tests run consistently.
+
 Docker helpers are provided:
 
 ```bash

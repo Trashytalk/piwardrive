@@ -12,3 +12,8 @@ repos:
     hooks:
       - id: pytest
         args: ["-q"]
+        additional_dependencies:
+          - "-r"
+          - requirements.txt
+          - "-r"
+          - requirements-dev.txt
