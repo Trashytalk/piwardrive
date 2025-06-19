@@ -4,10 +4,14 @@ Installation
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
 
-This guide covers installing PiWardrive on Raspberry Pi OS and general Linux distributions.
-You can also run ``src/piwardrive/scripts/quickstart.sh`` from the repository root to
-automatically install the required packages, create ``gui-env/`` and install
-the Python dependencies.
+This guide covers installing PiWardrive on Raspberry Pi OS and general Linux
+distributions. The recommended interface is the browser-based dashboard built
+with React. It requires Node.js 18 or newer to compile. A Kivy-based touch UI
+remains available as an alternative.
+
+You can also run ``src/piwardrive/scripts/quickstart.sh`` from the repository
+root to automatically install the required packages, create ``gui-env/`` and
+install the Python dependencies.
 
 Raspberry Pi OS
 ---------------
@@ -54,11 +58,13 @@ Raspberry Pi OS
    The ``fastjson`` helper tries ``orjson`` first, then ``ujson`` and finally
    falls back to the builtin ``json`` module when the accelerators are absent.
 
-9. (Optional) build the browser interface and start the combined API/frontend::
+9. Build the web interface (requires **Node.js 18+**) and start the combined
+   API/frontend::
 
       cd webui
       npm install
       npm run build
+      cd ..
       python 'In development/browser_server.py'
 
 
