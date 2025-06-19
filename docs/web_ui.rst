@@ -31,3 +31,15 @@ variable ``PW_API_PASSWORD_HASH`` to a password hash created with::
    python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypass
 
 to require a password. When the variable is not set, the endpoints are public.
+
+Launching in Kiosk Mode
+-----------------------
+
+After building the frontend you can start the API server and open Chromium in
+kiosk mode with ``src/piwardrive/scripts/start_kiosk.sh``::
+
+   src/piwardrive/scripts/start_kiosk.sh
+
+The script runs ``piwardrive-service`` in the background and then executes
+``chromium-browser --kiosk http://localhost:8000`` (falling back to
+``chromium`` when ``chromium-browser`` is unavailable).
