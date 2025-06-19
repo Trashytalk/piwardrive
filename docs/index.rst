@@ -5,8 +5,9 @@ PiWardrive Documentation
    proper authorization before conducting any wireless or Bluetooth scans. The
    authors are not responsible for any misuse of this software.
 
-PiWardrive provides both a Kivy-based touch interface and an optional React
-browser GUI served by :doc:`status_service`.
+PiWardrive's primary interface is a React-based web dashboard served by
+:doc:`status_service`. A Kivy touch interface is also available if you prefer a
+native application.
 
 
 .. toctree::

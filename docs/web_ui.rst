@@ -1,11 +1,12 @@
-React Web UI
-============
+Web Interface
+=============
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
 
-A small React application lives under ``webui/``. It consumes the HTTP API
-provided by :mod:`service` to display recent status information and logs.  When
+PiWardrive's main user experience is delivered through a React application under
+``webui/``. It consumes the HTTP API provided by :mod:`service` to display
+recent status information and logs.  When
 available the frontend connects to ``/ws/status`` to receive live updates
 without polling.
 
@@ -25,7 +26,7 @@ The ``/config`` endpoint now allows the web UI to modify settings on the
 device.  Each option is rendered as a simple form field and saved back to
 ``config.json`` via a POST request.  Changes take effect on the next reload.
 
-Build the frontend with npm::
+Build the frontend with **Node.js 18+** and npm::
 
    cd webui
    npm install
