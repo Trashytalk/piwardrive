@@ -169,7 +169,7 @@ You can run `src/piwardrive/scripts/quickstart.sh` to install system packages an
    ```bash
    sudo systemctl enable kismet bettercap gpsd
    ```
-8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it:
+8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
    ```bash
    sudo cp examples/piwardrive.service /etc/systemd/system/
@@ -178,7 +178,7 @@ You can run `src/piwardrive/scripts/quickstart.sh` to install system packages an
 9. Start the application manually if the service is not enabled:
 
    ```bash
-   python -m piwardrive.main
+   piwardrive-service
    ```
 
 #### Optional Dependencies
@@ -237,7 +237,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 
 * **Installation** – run `src/piwardrive/scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
 * **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
-* **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
+* **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
 * **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
@@ -251,14 +251,14 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 
 ```ini
 [Unit]
-Description=PiWardrive Service
+Description=PiWardrive Backend Service
 After=network.target
 
 [Service]
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/piwardrive
-ExecStart=/home/pi/piwardrive/gui-env/bin/python -m piwardrive.main
+ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-service
 Restart=on-failure
 
 [Install]
