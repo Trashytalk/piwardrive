@@ -64,7 +64,7 @@ Raspberry Pi OS
       cd webui
       npm install
       npm run build
-      python -m piwardrive.web_server
+      python -m piwardrive.webui_server
 
 
 Generic Linux
