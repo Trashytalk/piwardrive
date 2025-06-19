@@ -40,6 +40,12 @@ average RSSI and network throughput (``rx_kbps``/``tx_kbps``). Battery level
 and vehicle statistics (speed, RPM and engine load) are also returned when
 available for use in external dashboards.
 
+``/api/widgets`` lists all widget class names discovered by :mod:`piwardrive.widgets`::
+
+   curl http://localhost:8000/api/widgets
+
+This allows external dashboards to load widgets dynamically.
+
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to
 ``stdout`` using ``setup_logging``. The endpoint validates that ``path`` is in
