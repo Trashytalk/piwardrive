@@ -40,6 +40,11 @@ average RSSI and network throughput (``rx_kbps``/``tx_kbps``). Battery level
 and vehicle statistics (speed, RPM and engine load) are also returned when
 available for use in external dashboards.
 
+``/plugins`` lists any plugin widgets discovered under
+``~/.config/piwardrive/plugins``::
+
+   curl http://localhost:8000/plugins
+
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to
 ``stdout`` using ``setup_logging``. The endpoint validates that ``path`` is in

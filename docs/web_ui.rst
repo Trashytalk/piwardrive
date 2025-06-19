@@ -9,6 +9,10 @@ provided by :mod:`service` to display recent status information and logs.  When
 available the frontend connects to ``/ws/status`` to receive live updates
 without polling.
 
+Plugin widgets stored under ``~/.config/piwardrive/plugins`` are also
+detected.  The new ``/plugins`` route lists the discovered classes so the web UI
+can show them.
+
 The ``/config`` endpoint now allows the web UI to modify settings on the
 device.  Each option is rendered as a simple form field and saved back to
 ``config.json`` via a POST request.  Changes take effect on the next reload.
