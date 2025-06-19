@@ -22,6 +22,14 @@ Build the frontend with npm::
 During development you can run ``npm run dev`` which starts a Vite server
 and proxies API requests to ``http://localhost:8000``.
 
+Offline Caching
+---------------
+
+The frontend is configured as a progressive web app. When built it registers
+a service worker that caches the compiled assets and ``index.html`` for offline
+use. After visiting the site once, the UI will continue to load even without
+network connectivity. New versions are picked up automatically on reload.
+
 Authentication
 --------------
 
