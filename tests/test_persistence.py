@@ -37,6 +37,18 @@ def test_save_and_load_app_state(tmp_path: Path) -> None:
     assert loaded.first_run is False
 
 
+def test_save_and_load_dashboard_settings(tmp_path: Path) -> None:
+    setup_tmp(tmp_path)
+    settings = persistence.DashboardSettings(
+        layout=[{"cls": "TestWidget", "pos": [1, 2]}],
+        widgets=["TestWidget"],
+    )
+    asyncio.run(persistence.save_dashboard_settings(settings))
+    loaded = asyncio.run(persistence.load_dashboard_settings())
+    assert loaded.layout == settings.layout
+    assert loaded.widgets == settings.widgets
+
+
 def test_custom_db_path(tmp_path: Path, monkeypatch: Any) -> None:
     setup_tmp(tmp_path)
     custom = tmp_path / "db" / "custom.db"

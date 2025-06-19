@@ -12,6 +12,8 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
 utils_mod = ModuleType("utils")
+
+
 async def _dummy_async(*_a, **_k):
     return None
 
@@ -24,10 +26,10 @@ utils_mod.service_status_async = _dummy_async
 utils_mod.async_tail_file = _dummy_async
 sys.modules["utils"] = utils_mod
 
-from piwardrive import service
-from piwardrive import persistence
-from fastapi.testclient import TestClient
-from piwardrive import security
+from piwardrive import service  # noqa: E402
+from piwardrive import persistence  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from piwardrive import security  # noqa: E402
 
 
 def test_status_endpoint_returns_recent_records() -> None:
@@ -176,8 +178,14 @@ def test_websocket_status_stream() -> None:
         mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
-        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
-        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
+        mock.patch(
+            "piwardrive.service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
@@ -225,8 +233,14 @@ def test_websocket_timeout_closes_connection() -> None:
         mock.patch("service.WebSocket.send_json", side_effect=send_timeout),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
-        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
-        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
+        mock.patch(
+            "piwardrive.service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
@@ -275,6 +289,34 @@ def test_update_config_endpoint_invalid_key() -> None:
         client = TestClient(service.app)
         resp = client.post("/config", json={"bad": 1})
         assert resp.status_code == 400
+
+
+def test_dashboard_settings_endpoints() -> None:
+    settings = service.DashboardSettings(
+        layout=[{"cls": "W"}],
+        widgets=["W"],
+    )
+
+    async def fake_load() -> service.DashboardSettings:
+        return settings
+
+    async def fake_save(s: service.DashboardSettings) -> None:
+        assert s.layout == settings.layout
+        assert s.widgets == settings.widgets
+
+    with (
+        mock.patch("service.load_dashboard_settings", fake_load),
+        mock.patch("service.save_dashboard_settings", fake_save),
+        mock.patch("piwardrive.service.load_dashboard_settings", fake_load),
+        mock.patch("piwardrive.service.save_dashboard_settings", fake_save),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/dashboard-settings")
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
+        resp = client.post("/dashboard-settings", json={"layout": settings.layout, "widgets": settings.widgets})
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
 
 
 def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:

@@ -3,8 +3,8 @@ async function updateWidgets() {
     if (!widgets) return;
     const gps = await fetch('/api/gps').then(r => r.json());
     widgets.innerHTML = `
-        <div class="card">Lat: ${gps.lat ?? 'N/A'}</div>
-        <div class="card">Lon: ${gps.lon ?? 'N/A'}</div>
+        <div class="p-2 bg-gray-100 rounded">Lat: ${gps.lat ?? 'N/A'}</div>
+        <div class="p-2 bg-gray-100 rounded">Lon: ${gps.lon ?? 'N/A'}</div>
     `;
 }
 
@@ -13,17 +13,7 @@ async function initMap() {
     if (!mapEl) return;
     const map = new maplibregl.Map({
         container: 'map',
-        style: {
-            version: 8,
-            sources: {
-                offline: {
-                    type: 'raster',
-                    tiles: ['http://localhost:8080/services/offline/{z}/{x}/{y}.png'],
-                    tileSize: 256
-                }
-            },
-            layers: [{ id: 'offline', type: 'raster', source: 'offline' }]
-        },
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [0, 0],
         zoom: 1,
     });
