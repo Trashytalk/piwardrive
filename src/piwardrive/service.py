@@ -22,9 +22,19 @@ import time
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 try:  # allow tests to stub out ``persistence``
-    from persistence import load_recent_health  # type: ignore
+    from persistence import (
+        load_recent_health,  # type: ignore
+        load_dashboard_settings,  # type: ignore
+        save_dashboard_settings,  # type: ignore
+        DashboardSettings,  # type: ignore
+    )
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.persistence import load_recent_health
+    from piwardrive.persistence import (
+        load_recent_health,
+        load_dashboard_settings,
+        save_dashboard_settings,
+        DashboardSettings,
+    )
 from piwardrive.security import sanitize_path, verify_password
 from piwardrive.utils import (
     fetch_metrics_async,
@@ -157,6 +167,27 @@ async def update_config_endpoint(
         raise HTTPException(status_code=400, detail=str(exc))
     config.save_config(config.Config(**data))
     return data
+
+
+@app.get("/dashboard-settings")
+async def get_dashboard_settings_endpoint(
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return persisted dashboard layout and widget list."""
+    settings = await load_dashboard_settings()
+    return {"layout": settings.layout, "widgets": settings.widgets}
+
+
+@app.post("/dashboard-settings")
+async def update_dashboard_settings_endpoint(
+    data: dict = Body(...),
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Persist dashboard layout and widget list."""
+    layout = data.get("layout", [])
+    widgets = data.get("widgets", [])
+    await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
+    return {"layout": layout, "widgets": widgets}
 
 
 @app.post("/sync")

@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import os
 import time
+import json
 import aiosqlite
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Any, List, Optional, Callable, Awaitable
 import asyncio
 from datetime import datetime, timedelta
@@ -34,7 +35,7 @@ _BUFFER_LIMIT = 50
 _FLUSH_INTERVAL = 30.0
 
 # Schema versioning
-LATEST_VERSION = 1
+LATEST_VERSION = 2
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
 
@@ -85,6 +86,22 @@ async def _migration_1(conn: aiosqlite.Connection) -> None:
 _MIGRATIONS.append(_migration_1)
 
 
+async def _migration_2(conn: aiosqlite.Connection) -> None:
+    """Add dashboard settings table."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS dashboard_settings (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            layout TEXT,
+            widgets TEXT
+        )
+        """
+    )
+
+
+_MIGRATIONS.append(_migration_2)
+
+
 async def _get_conn() -> aiosqlite.Connection:
     """Return a cached SQLite connection initialized with the proper schema."""
     global _DB_CONN, _DB_LOOP, _DB_DIR
@@ -125,6 +142,14 @@ class AppState:
     last_screen: str = "Map"
     last_start: str = ""
     first_run: bool = True
+
+
+@dataclass
+class DashboardSettings:
+    """Persisted dashboard layout and widgets."""
+
+    layout: list[Any] = field(default_factory=list)
+    widgets: list[str] = field(default_factory=list)
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -233,6 +258,35 @@ async def load_app_state() -> AppState:
         last_screen=row["last_screen"],
         last_start=row["last_start"],
         first_run=bool(row["first_run"]),
+    )
+
+
+async def save_dashboard_settings(settings: DashboardSettings) -> None:
+    """Persist dashboard layout and widgets."""
+    conn = await _get_conn()
+    await conn.execute("DELETE FROM dashboard_settings WHERE id = 1")
+    await conn.execute(
+        (
+            "INSERT INTO dashboard_settings (id, layout, widgets) "
+            "VALUES (1, ?, ?)"
+        ),
+        (json.dumps(settings.layout), json.dumps(settings.widgets)),
+    )
+    await conn.commit()
+
+
+async def load_dashboard_settings() -> DashboardSettings:
+    """Load persisted :class:`DashboardSettings` or defaults."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT layout, widgets FROM dashboard_settings WHERE id = 1"
+    )
+    row = await cur.fetchone()
+    if row is None:
+        return DashboardSettings()
+    return DashboardSettings(
+        layout=json.loads(row["layout"]) if row["layout"] else [],
+        widgets=json.loads(row["widgets"]) if row["widgets"] else [],
     )
 
 
