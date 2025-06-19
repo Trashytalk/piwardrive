@@ -202,6 +202,25 @@ python -m piwardrive.main
 
 The UI renders directly on the framebuffer so no X server is required.
 
+### Browser Workflow
+
+An optional React interface runs in any modern browser. Build and serve it
+alongside the API then open it full screen:
+
+```bash
+cd webui
+npm install
+npm run build
+python 'In development/browser_server.py'
+```
+
+This starts a FastAPI server on `http://0.0.0.0:8000` with the API under `/api`.
+Launch Chromium in kiosk mode to display the dashboard:
+
+```bash
+chromium-browser --kiosk http://localhost:8000
+```
+
 ### Optional C Extensions
 
 Two small C modules, `ckml` and `cgeom`, speed up geometry and KML parsing. They
@@ -239,6 +258,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to start on boot.
 * **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
+* **Browser Kiosk Mode** – build the React frontend, run `python 'In development/browser_server.py'` and open Chromium with `--kiosk http://localhost:8000`.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
