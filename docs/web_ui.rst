@@ -64,3 +64,4 @@ kiosk mode with ``src/piwardrive/scripts/start_kiosk.sh``::
 The script runs ``piwardrive-service`` in the background and then executes
 ``chromium-browser --kiosk http://localhost:8000`` (falling back to
 ``chromium`` when ``chromium-browser`` is unavailable).
+An active X server is required; headless systems may use ``Xvfb``.

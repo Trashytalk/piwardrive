@@ -64,8 +64,7 @@ Raspberry Pi OS
       cd webui
       npm install
       npm run build
-      cd ..
-      python 'In development/browser_server.py'
+      python -m piwardrive.web_server
 
 
 Generic Linux
