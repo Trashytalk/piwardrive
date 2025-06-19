@@ -1,12 +1,17 @@
 # Browser-based Setup (Experimental)
 
-This directory contains an experimental setup for running PiWardrive in a self-hosted browser environment instead of the Kivy GUI.
+This directory contains prototypes for running PiWardrive in a self-hosted browser environment in place of the Kivy GUI.
 
-The browser UI uses the existing React project under `webui/` and the FastAPI service found in `piwardrive.service`.
+Two approaches are provided:
 
-## Quick start
+1. **React Prototype** (`webui/`)
+2. **MapLibre Prototype** (`web_gui/`)
 
-1. Build the frontend using Node and Vite:
+## React Prototype
+
+This uses a small React application built with Vite.
+
+1. Build the frontend:
 
    ```bash
    cd webui
@@ -16,12 +21,22 @@ The browser UI uses the existing React project under `webui/` and the FastAPI se
 
    The compiled assets will be placed in `webui/dist`.
 
-2. Start the API server with static file hosting:
+2. Launch the API with the static build:
 
    ```bash
    python 'In development/browser_server.py'
    ```
 
-   The server listens on `http://0.0.0.0:8000` and serves the API under `/api` as well as the built web interface at the root path.
+   The server listens on `http://0.0.0.0:8000` and serves the API under `/api` as well as the built React interface.
 
-This mode is optional and not integrated with the main Kivy application.  It is a work in progress and may change frequently.
+## MapLibre Prototype
+
+This lightweight framework mirrors the Kivy dashboard using plain HTML, Tailwind and MapLibre. Static files live in `web_gui/` and the FastAPI backend is defined in `web_api.py`.
+
+Start it with:
+
+```bash
+uvicorn web_api:app --host 0.0.0.0 --port 5000
+```
+
+Open `http://localhost:5000` in Chromium (kiosk mode is supported). The API provides endpoints for GPS, AP and BT data as well as starting or stopping Kismet.
