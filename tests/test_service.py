@@ -12,6 +12,8 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
 utils_mod = ModuleType("utils")
+
+
 async def _dummy_async(*_a, **_k):
     return None
 
@@ -24,10 +26,10 @@ utils_mod.service_status_async = _dummy_async
 utils_mod.async_tail_file = _dummy_async
 sys.modules["utils"] = utils_mod
 
-from piwardrive import service
-from piwardrive import persistence
-from fastapi.testclient import TestClient
-from piwardrive import security
+from piwardrive import service  # noqa: E402
+from piwardrive import persistence  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from piwardrive import security  # noqa: E402
 
 
 def test_status_endpoint_returns_recent_records() -> None:
@@ -176,8 +178,14 @@ def test_websocket_status_stream() -> None:
         mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
-        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
-        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
+        mock.patch(
+            "piwardrive.service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
@@ -225,8 +233,14 @@ def test_websocket_timeout_closes_connection() -> None:
         mock.patch("service.WebSocket.send_json", side_effect=send_timeout),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
-        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
-        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
+        mock.patch(
+            "piwardrive.service.get_network_throughput",
+            return_value=(1.0, 2.0),
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
@@ -361,13 +375,28 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         assert resp.status_code == 401
 
 
-def test_widget_list_endpoint(add_dummy_module) -> None:
-    add_dummy_module("kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {}))
-    add_dummy_module("kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {}))
-    import importlib, sys
-    sys.modules.pop("piwardrive.widgets", None)
-    widgets_mod = importlib.import_module("piwardrive.widgets")
+def test_export_aps_geojson(monkeypatch) -> None:
+    async def load_ap() -> list:
+        return [{"bssid": "AA", "lat": 1.0, "lon": 2.0}]
+
+    mod = ModuleType("sigint_integration")
+    mod.load_sigint_data = lambda _n: []
+    monkeypatch.setattr(service, "load_ap_cache", load_ap)
+    monkeypatch.setitem(sys.modules, "sigint_integration", mod)
     client = TestClient(service.app)
-    resp = client.get("/api/widgets")
+    resp = client.get("/export/aps?fmt=geojson")
     assert resp.status_code == 200
-    assert resp.json()["widgets"] == list(widgets_mod.__all__)
+    data = resp.json()
+    assert data["features"][0]["geometry"]["coordinates"] == [2.0, 1.0]
+
+
+def test_export_bt_csv(monkeypatch) -> None:
+    mod = ModuleType("sigint_integration")
+    mod.load_sigint_data = lambda _n: [
+        {"address": "00:11", "name": "bt", "lat": 3.0, "lon": 4.0}
+    ]
+    monkeypatch.setitem(sys.modules, "sigint_integration", mod)
+    client = TestClient(service.app)
+    resp = client.get("/export/bt?fmt=csv")
+    assert resp.status_code == 200
+    assert "address" in resp.text.splitlines()[0]
