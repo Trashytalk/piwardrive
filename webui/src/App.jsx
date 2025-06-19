@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react';
+import BatteryStatus from './components/BatteryStatus.jsx';
+import ServiceStatus from './components/ServiceStatus.jsx';
+import HandshakeCount from './components/HandshakeCount.jsx';
+import SignalStrength from './components/SignalStrength.jsx';
+import NetworkThroughput from './components/NetworkThroughput.jsx';
+import CPUTempGraph from './components/CPUTempGraph.jsx';
+import VehicleStats from './components/VehicleStats.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -30,6 +37,9 @@ export default function App() {
     fetch('/plugins')
       .then(r => r.json())
       .then(setPlugins);
+    fetch('/api/widgets')
+      .then(r => r.json())
+      .then(d => setWidgets(d.widgets));
     fetch('/logs?lines=20')
       .then(r => r.json())
       .then(d => setLogs(d.lines.join('\n')));
@@ -62,10 +72,19 @@ export default function App() {
       <pre>{JSON.stringify(metrics, null, 2)}</pre>
       <h2>Plugin Widgets</h2>
       <pre>{JSON.stringify(plugins, null, 2)}</pre>
+      <h2>Dashboard</h2>
+      <BatteryStatus metrics={metrics} />
+      <ServiceStatus metrics={metrics} />
+      <HandshakeCount metrics={metrics} />
+      <SignalStrength metrics={metrics} />
+      <VehicleStats metrics={metrics} />
+      <NetworkThroughput metrics={metrics} />
+      <CPUTempGraph metrics={metrics} />
+
       <h2>Logs</h2>
       <pre>{logs}</pre>
       {configData && (
-        <div>
+        <section>
           <h2>Settings</h2>
           {Object.keys(configData).map(k => (
             <div key={k}>
@@ -77,8 +96,9 @@ export default function App() {
             </div>
           ))}
           <button onClick={saveConfig}>Save</button>
-        </div>
+        </section>
       )}
     </div>
   );
 }
+

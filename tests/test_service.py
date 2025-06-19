@@ -2,6 +2,7 @@ import sys
 from dataclasses import asdict
 from unittest import mock
 from types import ModuleType, SimpleNamespace
+import json
 import asyncio
 import pytest
 from fastapi import WebSocketDisconnect
@@ -12,6 +13,8 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
 utils_mod = ModuleType("utils")
+
+
 async def _dummy_async(*_a, **_k):
     return None
 
@@ -24,10 +27,10 @@ utils_mod.service_status_async = _dummy_async
 utils_mod.async_tail_file = _dummy_async
 sys.modules["utils"] = utils_mod
 
-from piwardrive import service
-from piwardrive import persistence
-from fastapi.testclient import TestClient
-from piwardrive import security
+from piwardrive import service  # noqa: E402
+from piwardrive import persistence  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from piwardrive import security  # noqa: E402
 
 
 def test_status_endpoint_returns_recent_records() -> None:
@@ -61,7 +64,9 @@ def test_widget_metrics_endpoint() -> None:
         mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
-        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
         mock.patch(
             "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
         ),
@@ -177,7 +182,9 @@ def test_websocket_status_stream() -> None:
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
         mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
-        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
@@ -207,6 +214,64 @@ def test_websocket_status_stream() -> None:
             assert data["errors"] == 0
 
 
+def test_sse_status_stream() -> None:
+    rec = persistence.HealthRecord(
+        timestamp="t",
+        cpu_temp=1.0,
+        cpu_percent=2.0,
+        memory_percent=3.0,
+        disk_percent=4.0,
+    )
+
+    async def fake_load(_: int = 5) -> list:
+        return [rec]
+
+    async def fake_fetch() -> tuple[list, list, int]:
+        return ([{"signal_dbm": -10}], [], 5)
+
+    with (
+        mock.patch("service.load_recent_health", fake_load),
+        mock.patch("piwardrive.service.load_recent_health", fake_load),
+        mock.patch("service.fetch_metrics_async", fake_fetch),
+        mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
+        mock.patch("service.get_cpu_temp", return_value=40.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
+        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
+        mock.patch("service.service_status_async", side_effect=[True, False]),
+        mock.patch(
+            "service.psutil.sensors_battery",
+            return_value=SimpleNamespace(percent=50.0, power_plugged=False),
+        ),
+        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=70.0),
+        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=2000.0),
+        mock.patch(
+            "service.vehicle_sensors.read_engine_load_obd", return_value=60.0
+        ),
+    ):
+        client = TestClient(service.app)
+        with client.stream("GET", "/sse/status") as resp:
+            line = next(resp.iter_lines())
+            if not line:
+                line = next(resp.iter_lines())
+            payload = json.loads(line.split("data: ", 1)[1])
+            assert payload["status"][0]["cpu_percent"] == 2.0
+            assert payload["metrics"]["bssid_count"] == 1
+            assert payload["metrics"]["rx_kbps"] == 1.0
+            assert payload["metrics"]["battery_percent"] == 50.0
+            assert payload["metrics"]["battery_plugged"] is False
+            assert payload["metrics"]["vehicle_speed"] == 70.0
+            assert payload["metrics"]["vehicle_rpm"] == 2000.0
+            assert payload["metrics"]["engine_load"] == 60.0
+            assert payload["seq"] == 0
+            assert isinstance(payload["timestamp"], float)
+            assert payload["errors"] == 0
+
+
 def test_websocket_timeout_closes_connection() -> None:
     async def fake_load(_: int = 5) -> list:
         return []
@@ -225,8 +290,12 @@ def test_websocket_timeout_closes_connection() -> None:
         mock.patch("service.WebSocket.send_json", side_effect=send_timeout),
         mock.patch("service.get_cpu_temp", return_value=40.0),
         mock.patch("piwardrive.service.get_cpu_temp", return_value=40.0),
-        mock.patch("service.get_network_throughput", return_value=(1.0, 2.0)),
-        mock.patch("piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)),
+        mock.patch(
+            "service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
+        mock.patch(
+            "piwardrive.service.get_network_throughput", return_value=(1.0, 2.0)
+        ),
         mock.patch("service.get_gps_fix_quality", return_value="3D"),
         mock.patch("piwardrive.service.get_gps_fix_quality", return_value="3D"),
         mock.patch("service.service_status_async", side_effect=[True, False]),
@@ -275,6 +344,34 @@ def test_update_config_endpoint_invalid_key() -> None:
         client = TestClient(service.app)
         resp = client.post("/config", json={"bad": 1})
         assert resp.status_code == 400
+
+
+def test_dashboard_settings_endpoints() -> None:
+    settings = service.DashboardSettings(
+        layout=[{"cls": "W"}],
+        widgets=["W"],
+    )
+
+    async def fake_load() -> service.DashboardSettings:
+        return settings
+
+    async def fake_save(s: service.DashboardSettings) -> None:
+        assert s.layout == settings.layout
+        assert s.widgets == settings.widgets
+
+    with (
+        mock.patch("service.load_dashboard_settings", fake_load),
+        mock.patch("service.save_dashboard_settings", fake_save),
+        mock.patch("piwardrive.service.load_dashboard_settings", fake_load),
+        mock.patch("piwardrive.service.save_dashboard_settings", fake_save),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/dashboard-settings")
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
+        resp = client.post("/dashboard-settings", json={"layout": settings.layout, "widgets": settings.widgets})
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
 
 
 def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:
@@ -331,3 +428,125 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         client = TestClient(service.app)
         resp = client.get("/widget-metrics", auth=("u", "wrong"))
         assert resp.status_code == 401
+
+
+def test_cpu_endpoint() -> None:
+    with (
+        mock.patch("service.get_cpu_temp", return_value=50.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=50.0),
+        mock.patch("service.psutil.cpu_percent", return_value=25.0),
+        mock.patch("piwardrive.service.psutil.cpu_percent", return_value=25.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/cpu")
+        assert resp.status_code == 200
+        assert resp.json() == {"temp": 50.0, "percent": 25.0}
+
+
+def test_ram_endpoint() -> None:
+    with (
+        mock.patch("service.get_mem_usage", return_value=60.0),
+        mock.patch("piwardrive.service.get_mem_usage", return_value=60.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/ram")
+        assert resp.status_code == 200
+        assert resp.json() == {"percent": 60.0}
+
+
+def test_storage_endpoint() -> None:
+    with (
+        mock.patch("service.get_disk_usage", return_value=70.0),
+        mock.patch("piwardrive.service.get_disk_usage", return_value=70.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/storage")
+        assert resp.status_code == 200
+        assert resp.json() == {"percent": 70.0}
+
+def test_orientation_endpoint_dbus(monkeypatch) -> None:
+    with (
+        mock.patch(
+            "service.orientation_sensors.get_orientation_dbus",
+            return_value="right-up",
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.get_orientation_dbus",
+            return_value="right-up",
+        ),
+        mock.patch(
+            "service.orientation_sensors.orientation_to_angle",
+            return_value=90.0,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.orientation_to_angle",
+            return_value=90.0,
+        ),
+        mock.patch(
+            "service.orientation_sensors.read_mpu6050",
+            return_value=None,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.read_mpu6050",
+            return_value=None,
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/orientation")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["orientation"] == "right-up"
+        assert data["angle"] == 90.0
+        assert data["accelerometer"] is None
+
+
+def test_orientation_endpoint_mpu(monkeypatch) -> None:
+    with (
+        mock.patch(
+            "service.orientation_sensors.get_orientation_dbus",
+            return_value=None,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.get_orientation_dbus",
+            return_value=None,
+        ),
+        mock.patch(
+            "service.orientation_sensors.read_mpu6050",
+            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.read_mpu6050",
+            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/orientation")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["orientation"] is None
+        assert data["accelerometer"] == {"x": 1}
+        assert data["gyroscope"] == {"y": 2}
+
+
+def test_gps_endpoint(monkeypatch) -> None:
+    with (
+        mock.patch("service.gps_client.get_position", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.gps_client.get_position", return_value=(1.0, 2.0)
+        ),
+        mock.patch("service.get_gps_accuracy", return_value=5.0),
+        mock.patch("piwardrive.service.get_gps_accuracy", return_value=5.0),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch(
+            "piwardrive.service.get_gps_fix_quality", return_value="3D"
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/gps")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["lat"] == 1.0
+        assert data["lon"] == 2.0
+        assert data["accuracy"] == 5.0
+        assert data["fix"] == "3D"
+

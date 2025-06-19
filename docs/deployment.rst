@@ -27,7 +27,7 @@ SD Card Image
 5. Grant your user permission to manage systemd units over DBus by creating a ``polkit`` rule allowing ``org.freedesktop.systemd1.manage-units``.
 6. (Optional) copy ``examples/piwardrive.service`` into ``/etc/systemd/system/``
    and enable it with ``sudo systemctl enable --now piwardrive.service`` to
-   autostart ``python -m piwardrive.main``.
+   autostart ``piwardrive-service``.
 7. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
 
 Docker Container
@@ -35,7 +35,7 @@ Docker Container
 
 1. Start from ``python:3.10-bullseye`` and install the same system packages with ``apt``.
 2. Copy the project into ``/app`` and run ``pip install -r requirements.txt``.
-3. Set ``WORKDIR /app`` and define ``CMD ["python", "-m", "piwardrive.main"]``.
+3. Set ``WORKDIR /app`` and define ``CMD ["piwardrive-service"]``.
 4. Map the host's USB devices (Wi‑Fi adapter, GPS dongle) into the container when running ``docker run``.
 5. Persist ``~/.config/piwardrive`` with a volume so logs and configuration survive container restarts.
 
