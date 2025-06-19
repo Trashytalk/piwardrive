@@ -13,7 +13,17 @@ async function initMap() {
     if (!mapEl) return;
     const map = new maplibregl.Map({
         container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
+        style: {
+            version: 8,
+            sources: {
+                offline: {
+                    type: 'raster',
+                    tiles: ['http://localhost:8080/services/offline/{z}/{x}/{y}.png'],
+                    tileSize: 256
+                }
+            },
+            layers: [{ id: 'offline', type: 'raster', source: 'offline' }]
+        },
         center: [0, 0],
         zoom: 1,
     });
