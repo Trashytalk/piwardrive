@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import './App.css';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -51,15 +52,21 @@ export default function App() {
   };
 
   return (
-    <div>
-      <h2>Status</h2>
-      <pre>{JSON.stringify(status, null, 2)}</pre>
-      <h2>Widget Metrics</h2>
-      <pre>{JSON.stringify(metrics, null, 2)}</pre>
-      <h2>Logs</h2>
-      <pre>{logs}</pre>
+    <div className="container">
+      <section>
+        <h2>Status</h2>
+        <pre>{JSON.stringify(status, null, 2)}</pre>
+      </section>
+      <section>
+        <h2>Widget Metrics</h2>
+        <pre>{JSON.stringify(metrics, null, 2)}</pre>
+      </section>
+      <section>
+        <h2>Logs</h2>
+        <pre>{logs}</pre>
+      </section>
       {configData && (
-        <div>
+        <section>
           <h2>Settings</h2>
           {Object.keys(configData).map(k => (
             <div key={k}>
@@ -71,8 +78,9 @@ export default function App() {
             </div>
           ))}
           <button onClick={saveConfig}>Save</button>
-        </div>
+        </section>
       )}
     </div>
   );
 }
+
