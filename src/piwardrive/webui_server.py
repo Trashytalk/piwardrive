@@ -8,7 +8,9 @@ from fastapi.staticfiles import StaticFiles
 from piwardrive.service import app as api_app
 
 
-DEF_BUILD_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "webui", "dist")
+DEF_BUILD_DIR = os.path.join(
+    os.path.dirname(__file__), os.pardir, os.pardir, "webui", "dist"
+)
 
 
 def create_app() -> FastAPI:

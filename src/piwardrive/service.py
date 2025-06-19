@@ -15,20 +15,36 @@ from fastapi import (
     Body,
     Request,
 )
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import importlib
 
 import asyncio
 import time
 import json
+import tempfile
+from pathlib import Path
+from collections.abc import Sequence, Mapping
+from typing import Any
 
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 try:  # allow tests to stub out ``persistence``
-    from persistence import load_recent_health, load_ap_cache  # type: ignore
+    from persistence import (
+        load_recent_health,
+        load_ap_cache,
+        load_dashboard_settings,
+        save_dashboard_settings,
+        DashboardSettings,
+    )  # type: ignore
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.persistence import load_recent_health, load_ap_cache
+    from piwardrive.persistence import (
+        load_recent_health,
+        load_ap_cache,
+        load_dashboard_settings,
+        save_dashboard_settings,
+        DashboardSettings,
+    )
 from piwardrive.security import sanitize_path, verify_password
 from piwardrive.utils import (
     fetch_metrics_async,
@@ -48,6 +64,7 @@ import config
 from sync import upload_data
 from piwardrive.gpsd_client import client as gps_client
 from piwardrive import orientation_sensors
+from piwardrive import export
 
 
 security = HTTPBasic(auto_error=False)
@@ -129,6 +146,7 @@ async def get_plugins(_auth: None = Depends(_check_auth)) -> list[str]:
 
     return widgets.list_plugins()
 
+
 @app.get("/cpu")
 async def get_cpu(_auth: None = Depends(_check_auth)) -> dict:
     """Return CPU temperature and usage percentage."""
@@ -151,6 +169,7 @@ async def get_storage(
 ) -> dict:
     """Return disk usage percentage for ``path``."""
     return {"percent": get_disk_usage(path)}
+
 
 @app.get("/orientation")
 async def get_orientation_endpoint(
@@ -188,6 +207,7 @@ async def get_gps_endpoint(_auth: None = Depends(_check_auth)) -> dict:
         "accuracy": get_gps_accuracy(),
         "fix": get_gps_fix_quality(),
     }
+
 
 @app.get("/logs")
 async def get_logs(
