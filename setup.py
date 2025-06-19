@@ -35,7 +35,7 @@ setup(
     packages=find_packages(where="src", exclude=(
         "tests*", "docs*", "benchmarks*", "examples*")),
     package_dir={"": "src"},
-    package_data={"piwardrive": ["py.typed"]},
+    package_data={"piwardrive": ["py.typed", "web_gui/*"]},
     ext_modules=[
         Extension("piwardrive.ckml", ["src/piwardrive/ckml.c"]),
         Extension("piwardrive.cgeom", ["src/piwardrive/cgeom.c"]),
