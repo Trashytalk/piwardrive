@@ -216,6 +216,9 @@ npm run build
 python 'In development/browser_server.py'
 ```
 
+During development you can run `npm run dev` which starts a Vite server
+and proxies API requests to `http://localhost:8000`.
+
 This starts a FastAPI server on `http://0.0.0.0:8000` with the API under `/api`.
 Launch Chromium in kiosk mode to display the dashboard:
 
