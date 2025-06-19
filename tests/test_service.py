@@ -375,28 +375,89 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         assert resp.status_code == 401
 
 
-def test_export_aps_geojson(monkeypatch) -> None:
-    async def load_ap() -> list:
-        return [{"bssid": "AA", "lat": 1.0, "lon": 2.0}]
+def test_orientation_endpoint_dbus(monkeypatch) -> None:
+    with (
+        mock.patch(
+            "service.orientation_sensors.get_orientation_dbus",
+            return_value="right-up",
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.get_orientation_dbus",
+            return_value="right-up",
+        ),
+        mock.patch(
+            "service.orientation_sensors.orientation_to_angle",
+            return_value=90.0,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.orientation_to_angle",
+            return_value=90.0,
+        ),
+        mock.patch(
+            "service.orientation_sensors.read_mpu6050",
+            return_value=None,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.read_mpu6050",
+            return_value=None,
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/orientation")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["orientation"] == "right-up"
+        assert data["angle"] == 90.0
+        assert data["accelerometer"] is None
 
-    mod = ModuleType("sigint_integration")
-    mod.load_sigint_data = lambda _n: []
-    monkeypatch.setattr(service, "load_ap_cache", load_ap)
-    monkeypatch.setitem(sys.modules, "sigint_integration", mod)
-    client = TestClient(service.app)
-    resp = client.get("/export/aps?fmt=geojson")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["features"][0]["geometry"]["coordinates"] == [2.0, 1.0]
+
+def test_orientation_endpoint_mpu(monkeypatch) -> None:
+    with (
+        mock.patch(
+            "service.orientation_sensors.get_orientation_dbus",
+            return_value=None,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.get_orientation_dbus",
+            return_value=None,
+        ),
+        mock.patch(
+            "service.orientation_sensors.read_mpu6050",
+            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.read_mpu6050",
+            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/orientation")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["orientation"] is None
+        assert data["accelerometer"] == {"x": 1}
+        assert data["gyroscope"] == {"y": 2}
 
 
-def test_export_bt_csv(monkeypatch) -> None:
-    mod = ModuleType("sigint_integration")
-    mod.load_sigint_data = lambda _n: [
-        {"address": "00:11", "name": "bt", "lat": 3.0, "lon": 4.0}
-    ]
-    monkeypatch.setitem(sys.modules, "sigint_integration", mod)
-    client = TestClient(service.app)
-    resp = client.get("/export/bt?fmt=csv")
-    assert resp.status_code == 200
-    assert "address" in resp.text.splitlines()[0]
+def test_gps_endpoint(monkeypatch) -> None:
+    with (
+        mock.patch("service.gps_client.get_position", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.gps_client.get_position", return_value=(1.0, 2.0)
+        ),
+        mock.patch("service.get_gps_accuracy", return_value=5.0),
+        mock.patch("piwardrive.service.get_gps_accuracy", return_value=5.0),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch(
+            "piwardrive.service.get_gps_fix_quality", return_value="3D"
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/gps")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["lat"] == 1.0
+        assert data["lon"] == 2.0
+        assert data["accuracy"] == 5.0
+        assert data["fix"] == "3D"
+

@@ -40,11 +40,20 @@ average RSSI and network throughput (``rx_kbps``/``tx_kbps``). Battery level
 and vehicle statistics (speed, RPM and engine load) are also returned when
 available for use in external dashboards.
 
+``/orientation`` reads sensors via ``orientation_sensors`` and returns the
+current orientation string, rotation angle and raw accelerometer/gyroscope data::
+
+   curl http://localhost:8000/orientation
+
+``/gps`` exposes latitude, longitude, accuracy and fix quality from ``gpsd``::
+
+   curl http://localhost:8000/gps
 ``/api/widgets`` lists all widget class names discovered by :mod:`piwardrive.widgets`::
 
    curl http://localhost:8000/api/widgets
 
 This allows external dashboards to load widgets dynamically.
+
 
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to
