@@ -4,6 +4,9 @@ from __future__ import annotations
 from dataclasses import asdict
 import os
 import inspect
+from typing import Sequence, Mapping, Any
+from pathlib import Path
+import tempfile
 
 from fastapi import (
     FastAPI,
@@ -12,18 +15,20 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Body,
+    Response,
 )
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 import asyncio
 import time
+import piwardrive.export as export
 
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 try:  # allow tests to stub out ``persistence``
-    from persistence import load_recent_health  # type: ignore
+    from persistence import load_recent_health, load_ap_cache  # type: ignore
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.persistence import load_recent_health
+    from piwardrive.persistence import load_recent_health, load_ap_cache
 from piwardrive.security import sanitize_path, verify_password
 from piwardrive.utils import (
     fetch_metrics_async,
@@ -161,6 +166,71 @@ async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> 
     if not success:
         raise HTTPException(status_code=502, detail="Upload failed")
     return {"uploaded": len(records)}
+
+
+EXPORT_CONTENT_TYPES = {
+    "csv": "text/csv",
+    "json": "application/json",
+    "gpx": "application/gpx+xml",
+    "kml": "application/vnd.google-earth.kml+xml",
+    "geojson": "application/geo+json",
+    "shp": "application/octet-stream",
+}
+
+
+def _make_export_response(data: bytes, fmt: str, name: str) -> Response:
+    """Return ``Response`` serving ``data`` as ``name.fmt``."""
+    return Response(
+        content=data,
+        media_type=EXPORT_CONTENT_TYPES.get(fmt, "application/octet-stream"),
+        headers={
+            "Content-Disposition": f"attachment; filename={name}.{fmt}"
+        },
+    )
+
+
+async def _export_layer(
+    records: Sequence[Mapping[str, Any]], fmt: str, name: str
+) -> Response:
+    """Convert ``records`` to ``fmt`` and return as HTTP response."""
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        export.export_records(records, tmp.name, fmt)
+        tmp.flush()
+        path = tmp.name
+    data = Path(path).read_bytes()
+    os.remove(path)
+    return _make_export_response(data, fmt, name)
+
+
+@app.get("/export/aps")
+async def export_access_points(
+    fmt: str = "geojson", _auth: None = Depends(_check_auth)
+) -> Response:
+    """Return saved Wi-Fi access points in the specified format."""
+    records = load_ap_cache()
+    if inspect.isawaitable(records):
+        records = await records
+    try:
+        from sigint_integration import load_sigint_data
+
+        records.extend(load_sigint_data("wifi"))
+    except Exception:
+        pass
+    return await _export_layer(records, fmt.lower(), "aps")
+
+
+@app.get("/export/bt")
+async def export_bluetooth(
+    fmt: str = "geojson", _auth: None = Depends(_check_auth)
+) -> Response:
+    """Return saved Bluetooth device data in the specified format."""
+    try:
+        from sigint_integration import load_sigint_data
+
+        records = load_sigint_data("bluetooth")
+    except Exception:
+        records = []
+    return await _export_layer(records, fmt.lower(), "bt")
 
 
 @app.websocket("/ws/status")

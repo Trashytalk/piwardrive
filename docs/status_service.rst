@@ -47,6 +47,13 @@ the ``log_paths`` whitelist defined in ``config.json``::
 
    curl "http://localhost:8000/logs?lines=50"
 
+``/export/aps``
+    Download saved Wi-Fi access points. Use the ``fmt`` query parameter to
+    choose ``csv``, ``json``, ``geojson``, ``kml`` or ``gpx``.
+
+``/export/bt``
+    Return Bluetooth scan results in the requested format.
+
 ``/ws/status`` streams the same information over a WebSocket connection. Each
 message combines the ``/status`` and ``/widget-metrics`` responses so clients can
 stay up to date without polling::
