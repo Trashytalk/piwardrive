@@ -1,7 +1,7 @@
 version: "3.9"
 services:
-  tests:
+  piwardrive:
     build: .
-    volumes:
-      - .:/app
-    command: pytest
+    ports:
+      - "8000:8000"
+    command: piwardrive-webui
