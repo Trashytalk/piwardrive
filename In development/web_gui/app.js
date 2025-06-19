@@ -3,8 +3,8 @@ async function updateWidgets() {
     if (!widgets) return;
     const gps = await fetch('/api/gps').then(r => r.json());
     widgets.innerHTML = `
-        <div class="p-2 bg-gray-100 rounded">Lat: ${gps.lat ?? 'N/A'}</div>
-        <div class="p-2 bg-gray-100 rounded">Lon: ${gps.lon ?? 'N/A'}</div>
+        <div class="card">Lat: ${gps.lat ?? 'N/A'}</div>
+        <div class="card">Lon: ${gps.lon ?? 'N/A'}</div>
     `;
 }
 
