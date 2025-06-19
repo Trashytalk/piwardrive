@@ -31,12 +31,13 @@ This uses a small React application built with Vite.
 
 ## MapLibre Prototype
 
-This lightweight framework mirrors the Kivy dashboard using plain HTML, Tailwind and MapLibre. Static files live in `web_gui/` and the FastAPI backend is defined in `web_api.py`.
+This lightweight framework mirrors the Kivy dashboard using plain HTML, Tailwind and MapLibre. Static files live in `web_gui/` and the FastAPI backend is defined in `piwardrive.web_api`.
+The `/api/widgets` endpoint exposes the available dashboard widgets from `piwardrive.widgets` so the frontend can render them dynamically.
 
 Start it with:
 
 ```bash
-uvicorn web_api:app --host 0.0.0.0 --port 5000
+uvicorn piwardrive.web_api:app --host 0.0.0.0 --port 5000
 ```
 
 Open `http://localhost:5000` in Chromium (kiosk mode is supported). The API provides endpoints for GPS, AP and BT data as well as starting or stopping Kismet.

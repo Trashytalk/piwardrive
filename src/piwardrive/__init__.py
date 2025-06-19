@@ -16,8 +16,9 @@ for _mod in (
     "orientation_sensors",
     "config",
     "sync",
+    "web_api",
 ):
     module = import_module(f"piwardrive.{_mod}")
     sys.modules.setdefault(_mod, module)
 
-__all__ = ["sigint_suite"]
+__all__ = ["sigint_suite", "web_api"]
