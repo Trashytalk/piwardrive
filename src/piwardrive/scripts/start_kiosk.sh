@@ -4,7 +4,7 @@ set -euo pipefail
 
 URL="http://localhost:8000"
 
-piwardrive-service &
+piwardrive-webui &
 PID=$!
 
 # Give the server a moment to start
