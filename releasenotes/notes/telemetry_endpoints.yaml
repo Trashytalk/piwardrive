@@ -1,0 +1,3 @@
+---
+features:
+  - Added ``/cpu``, ``/ram`` and ``/storage`` endpoints to the FastAPI service so telemetry widgets can query system metrics.

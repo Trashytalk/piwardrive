@@ -375,6 +375,40 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         assert resp.status_code == 401
 
 
+def test_cpu_endpoint() -> None:
+    with (
+        mock.patch("service.get_cpu_temp", return_value=50.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=50.0),
+        mock.patch("service.psutil.cpu_percent", return_value=25.0),
+        mock.patch("piwardrive.service.psutil.cpu_percent", return_value=25.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/cpu")
+        assert resp.status_code == 200
+        assert resp.json() == {"temp": 50.0, "percent": 25.0}
+
+
+def test_ram_endpoint() -> None:
+    with (
+        mock.patch("service.get_mem_usage", return_value=60.0),
+        mock.patch("piwardrive.service.get_mem_usage", return_value=60.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/ram")
+        assert resp.status_code == 200
+        assert resp.json() == {"percent": 60.0}
+
+
+def test_storage_endpoint() -> None:
+    with (
+        mock.patch("service.get_disk_usage", return_value=70.0),
+        mock.patch("piwardrive.service.get_disk_usage", return_value=70.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/storage")
+        assert resp.status_code == 200
+        assert resp.json() == {"percent": 70.0}
+
 def test_orientation_endpoint_dbus(monkeypatch) -> None:
     with (
         mock.patch(
