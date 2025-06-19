@@ -8,7 +8,7 @@ PiWardrive exposes recent health metrics over HTTP using a small FastAPI
 application. The ``/status`` endpoint is now asynchronous so heavy database
 access occurs in a background thread. This allows multiple requests to run
 concurrently and improves throughput on multi-core devices. When the React
-frontend is built, ``piwardrive.web_server`` mounts the compiled assets so the same
+frontend is built, ``piwardrive.webui_server`` mounts the compiled assets so the same
 metrics are visible from a browser.
 
 Run the server after activating your virtual environment::

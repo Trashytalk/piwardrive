@@ -28,12 +28,12 @@ SD Card Image
 6. (Optional) copy ``examples/piwardrive.service`` into ``/etc/systemd/system/``
    and enable it with ``sudo systemctl enable --now piwardrive.service`` to
    autostart ``piwardrive-service``.
-7. (Optional) compile the React web UI and serve it with ``piwardrive.web_server``::
+7. (Optional) compile the React web UI and serve it with ``piwardrive.webui_server``::
 
        cd webui
        npm install
        npm run build
-       python -m piwardrive.web_server
+       python -m piwardrive.webui_server
 8. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
 
 Docker Container

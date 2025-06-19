@@ -28,7 +28,7 @@ This uses a small React application built with Vite.
 2. Launch the API with the static build from the repository root:
 
    ```bash
-   python -m piwardrive.web_server
+   python -m piwardrive.webui_server
    ```
 
    The server listens on `http://0.0.0.0:8000` and serves the API under `/api` as well as the built React interface.

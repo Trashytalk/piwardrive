@@ -62,7 +62,7 @@ Startup Sequence
 At startup ``piwardrive.main`` loads the configuration, initializes the scheduler and
 restores any persisted ``AppState``. The on-device GUI is then built from
 ``kv/main.kv`` and the initial screen is displayed. When the React frontend has
-been compiled, ``piwardrive.web_server`` can serve it alongside the API so the same
+been compiled, ``piwardrive.webui_server`` can serve it alongside the API so the same
 widgets appear in a browser. Widgets register themselves with the scheduler to
 begin polling. On shutdown the current state is saved so the next run resumes
 exactly where the user left off.

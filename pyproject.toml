@@ -22,7 +22,7 @@ authors = [{name = "PiWardrive contributors"}]
 [project.scripts]
 piwardrive = "piwardrive.main:main"
 piwardrive-service = "piwardrive.service:main"
-piwardrive-webui = "piwardrive.web_server:main"
+piwardrive-webui = "piwardrive.webui_server:main"
 health-export = "piwardrive.scripts.health_export:main"
 health-import = "piwardrive.scripts.health_import:main"
 piwardrive-prefetch = "piwardrive.scripts.prefetch_cli:main"
@@ -36,7 +36,6 @@ piwardrive-prefetch-batch = "piwardrive.scripts.prefetch_batch:main"
 log-follow = "piwardrive.scripts.log_follow:main"
 config-cli = "piwardrive.scripts.config_cli:main"
 calibrate-orientation = "piwardrive.scripts.calibrate_orientation:main"
-piwardrive-webui = "piwardrive.webui_server:main"
 
 
 
