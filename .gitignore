@@ -23,3 +23,6 @@ logs/
 build/
 ckml*.so
 webui/node_modules/
+webui/dist/
+webui/package-lock.json
+
