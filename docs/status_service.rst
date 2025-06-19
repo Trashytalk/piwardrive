@@ -40,6 +40,11 @@ average RSSI and network throughput (``rx_kbps``/``tx_kbps``). Battery level
 and vehicle statistics (speed, RPM and engine load) are also returned when
 available for use in external dashboards.
 
+``/plugins`` lists any plugin widgets discovered under
+``~/.config/piwardrive/plugins``::
+
+   curl http://localhost:8000/plugins
+
 ``/cpu`` reports the current CPU temperature and load percentage::
 
    curl http://localhost:8000/cpu

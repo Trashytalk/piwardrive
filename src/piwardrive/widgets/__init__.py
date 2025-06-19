@@ -118,9 +118,13 @@ def clear_plugin_cache() -> None:
     __all__[:] = [n for n in __all__ if n in _MODULE_MAP]
 
 
+def list_plugins() -> list[str]:
+    """Return names of discovered plugin widget classes."""
+    _load_plugins()
+    return list(_PLUGIN_CLASSES.keys())
+
+
 _load_plugins()
-
-
 
 
 def __getattr__(name: str) -> Any:

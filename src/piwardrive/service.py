@@ -122,6 +122,13 @@ async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
     return await _collect_widget_metrics()
 
 
+@app.get("/plugins")
+async def get_plugins(_auth: None = Depends(_check_auth)) -> list[str]:
+    """Return discovered plugin widget class names."""
+    from piwardrive import widgets
+
+    return widgets.list_plugins()
+
 @app.get("/cpu")
 async def get_cpu(_auth: None = Depends(_check_auth)) -> dict:
     """Return CPU temperature and usage percentage."""

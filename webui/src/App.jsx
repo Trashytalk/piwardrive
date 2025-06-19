@@ -12,7 +12,7 @@ export default function App() {
   const [metrics, setMetrics] = useState(null);
   const [logs, setLogs] = useState('');
   const [configData, setConfigData] = useState(null);
-  const [widgets, setWidgets] = useState([]);
+  const [plugins, setPlugins] = useState([]);
 
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -34,6 +34,9 @@ export default function App() {
     fetch('/widget-metrics')
       .then(r => r.json())
       .then(setMetrics);
+    fetch('/plugins')
+      .then(r => r.json())
+      .then(setPlugins);
     fetch('/api/widgets')
       .then(r => r.json())
       .then(d => setWidgets(d.widgets));
@@ -65,7 +68,10 @@ export default function App() {
     <div>
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
-
+      <h2>Widget Metrics</h2>
+      <pre>{JSON.stringify(metrics, null, 2)}</pre>
+      <h2>Plugin Widgets</h2>
+      <pre>{JSON.stringify(plugins, null, 2)}</pre>
       <h2>Dashboard</h2>
       <BatteryStatus metrics={metrics} />
       <ServiceStatus metrics={metrics} />
