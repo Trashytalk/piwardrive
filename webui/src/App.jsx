@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react';
+import BatteryStatus from './components/BatteryStatus.jsx';
+import ServiceStatus from './components/ServiceStatus.jsx';
+import HandshakeCount from './components/HandshakeCount.jsx';
+import SignalStrength from './components/SignalStrength.jsx';
+import NetworkThroughput from './components/NetworkThroughput.jsx';
+import CPUTempGraph from './components/CPUTempGraph.jsx';
+import VehicleStats from './components/VehicleStats.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -54,8 +61,16 @@ export default function App() {
     <div>
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
-      <h2>Widget Metrics</h2>
-      <pre>{JSON.stringify(metrics, null, 2)}</pre>
+
+      <h2>Dashboard</h2>
+      <BatteryStatus metrics={metrics} />
+      <ServiceStatus metrics={metrics} />
+      <HandshakeCount metrics={metrics} />
+      <SignalStrength metrics={metrics} />
+      <VehicleStats metrics={metrics} />
+      <NetworkThroughput metrics={metrics} />
+      <CPUTempGraph metrics={metrics} />
+
       <h2>Logs</h2>
       <pre>{logs}</pre>
       {configData && (
