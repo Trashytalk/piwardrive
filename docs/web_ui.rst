@@ -9,6 +9,9 @@ provided by :mod:`service` to display recent status information and logs.  When
 available the frontend connects to ``/ws/status`` to receive live updates
 without polling.
 
+The UI can also poll ``/orientation`` and ``/gps`` for sensor data when running
+on hardware equipped with accelerometers or a GPS module.
+
 The ``/config`` endpoint now allows the web UI to modify settings on the
 device.  Each option is rendered as a simple form field and saved back to
 ``config.json`` via a POST request.  Changes take effect on the next reload.

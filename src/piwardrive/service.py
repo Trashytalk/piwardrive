@@ -31,6 +31,7 @@ from piwardrive.utils import (
     get_cpu_temp,
     get_network_throughput,
     get_gps_fix_quality,
+    get_gps_accuracy,
     service_status_async,
     async_tail_file,
 )
@@ -38,6 +39,8 @@ import psutil
 import vehicle_sensors
 import config
 from sync import upload_data
+from piwardrive.gpsd_client import client as gps_client
+from piwardrive import orientation_sensors
 
 
 security = HTTPBasic(auto_error=False)
@@ -104,6 +107,43 @@ async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
     """Return basic metrics used by dashboard widgets."""
     return await _collect_widget_metrics()
 
+
+@app.get("/orientation")
+async def get_orientation_endpoint(
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return device orientation and raw sensor data."""
+    orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
+    angle = None
+    accel = gyro = None
+    if orient:
+        angle = orientation_sensors.orientation_to_angle(orient)
+    else:
+        data = await asyncio.to_thread(orientation_sensors.read_mpu6050)
+        if data:
+            accel = data.get("accelerometer")
+            gyro = data.get("gyroscope")
+    return {
+        "orientation": orient,
+        "angle": angle,
+        "accelerometer": accel,
+        "gyroscope": gyro,
+    }
+
+
+@app.get("/gps")
+async def get_gps_endpoint(_auth: None = Depends(_check_auth)) -> dict:
+    """Return current GPS position."""
+    pos = await asyncio.to_thread(gps_client.get_position)
+    lat = lon = None
+    if pos:
+        lat, lon = pos
+    return {
+        "lat": lat,
+        "lon": lon,
+        "accuracy": get_gps_accuracy(),
+        "fix": get_gps_fix_quality(),
+    }
 
 @app.get("/logs")
 async def get_logs(

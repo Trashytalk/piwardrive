@@ -15,6 +15,7 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
 from piwardrive import service as _p
+from piwardrive import orientation_sensors
 
 # Re-export everything from the real module
 from piwardrive.service import *  # noqa: F401,F403
