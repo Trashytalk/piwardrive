@@ -331,3 +331,15 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         client = TestClient(service.app)
         resp = client.get("/widget-metrics", auth=("u", "wrong"))
         assert resp.status_code == 401
+
+
+def test_widget_list_endpoint(add_dummy_module) -> None:
+    add_dummy_module("kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {}))
+    add_dummy_module("kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {}))
+    import importlib, sys
+    sys.modules.pop("piwardrive.widgets", None)
+    widgets_mod = importlib.import_module("piwardrive.widgets")
+    client = TestClient(service.app)
+    resp = client.get("/api/widgets")
+    assert resp.status_code == 200
+    assert resp.json()["widgets"] == list(widgets_mod.__all__)

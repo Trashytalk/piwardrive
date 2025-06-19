@@ -12,6 +12,7 @@ export default function App() {
   const [metrics, setMetrics] = useState(null);
   const [logs, setLogs] = useState('');
   const [configData, setConfigData] = useState(null);
+  const [widgets, setWidgets] = useState([]);
 
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -33,6 +34,9 @@ export default function App() {
     fetch('/widget-metrics')
       .then(r => r.json())
       .then(setMetrics);
+    fetch('/api/widgets')
+      .then(r => r.json())
+      .then(d => setWidgets(d.widgets));
     fetch('/logs?lines=20')
       .then(r => r.json())
       .then(d => setLogs(d.lines.join('\n')));
@@ -74,7 +78,7 @@ export default function App() {
       <h2>Logs</h2>
       <pre>{logs}</pre>
       {configData && (
-        <div>
+        <section>
           <h2>Settings</h2>
           {Object.keys(configData).map(k => (
             <div key={k}>
@@ -86,8 +90,9 @@ export default function App() {
             </div>
           ))}
           <button onClick={saveConfig}>Save</button>
-        </div>
+        </section>
       )}
     </div>
   );
 }
+
