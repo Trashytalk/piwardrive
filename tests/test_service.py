@@ -27,10 +27,10 @@ utils_mod.service_status_async = _dummy_async
 utils_mod.async_tail_file = _dummy_async
 sys.modules["utils"] = utils_mod
 
-from piwardrive import service
-from piwardrive import persistence
-from fastapi.testclient import TestClient
-from piwardrive import security
+from piwardrive import service  # noqa: E402
+from piwardrive import persistence  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from piwardrive import security  # noqa: E402
 
 
 def test_status_endpoint_returns_recent_records() -> None:
@@ -346,6 +346,34 @@ def test_update_config_endpoint_invalid_key() -> None:
         assert resp.status_code == 400
 
 
+def test_dashboard_settings_endpoints() -> None:
+    settings = service.DashboardSettings(
+        layout=[{"cls": "W"}],
+        widgets=["W"],
+    )
+
+    async def fake_load() -> service.DashboardSettings:
+        return settings
+
+    async def fake_save(s: service.DashboardSettings) -> None:
+        assert s.layout == settings.layout
+        assert s.widgets == settings.widgets
+
+    with (
+        mock.patch("service.load_dashboard_settings", fake_load),
+        mock.patch("service.save_dashboard_settings", fake_save),
+        mock.patch("piwardrive.service.load_dashboard_settings", fake_load),
+        mock.patch("piwardrive.service.save_dashboard_settings", fake_save),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/dashboard-settings")
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
+        resp = client.post("/dashboard-settings", json={"layout": settings.layout, "widgets": settings.widgets})
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
+
+
 def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:
     async def fake_fetch() -> tuple[list, list, int]:
         return ([{"signal_dbm": -10}], [], 5)
@@ -400,3 +428,125 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         client = TestClient(service.app)
         resp = client.get("/widget-metrics", auth=("u", "wrong"))
         assert resp.status_code == 401
+
+
+def test_cpu_endpoint() -> None:
+    with (
+        mock.patch("service.get_cpu_temp", return_value=50.0),
+        mock.patch("piwardrive.service.get_cpu_temp", return_value=50.0),
+        mock.patch("service.psutil.cpu_percent", return_value=25.0),
+        mock.patch("piwardrive.service.psutil.cpu_percent", return_value=25.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/cpu")
+        assert resp.status_code == 200
+        assert resp.json() == {"temp": 50.0, "percent": 25.0}
+
+
+def test_ram_endpoint() -> None:
+    with (
+        mock.patch("service.get_mem_usage", return_value=60.0),
+        mock.patch("piwardrive.service.get_mem_usage", return_value=60.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/ram")
+        assert resp.status_code == 200
+        assert resp.json() == {"percent": 60.0}
+
+
+def test_storage_endpoint() -> None:
+    with (
+        mock.patch("service.get_disk_usage", return_value=70.0),
+        mock.patch("piwardrive.service.get_disk_usage", return_value=70.0),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/storage")
+        assert resp.status_code == 200
+        assert resp.json() == {"percent": 70.0}
+
+def test_orientation_endpoint_dbus(monkeypatch) -> None:
+    with (
+        mock.patch(
+            "service.orientation_sensors.get_orientation_dbus",
+            return_value="right-up",
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.get_orientation_dbus",
+            return_value="right-up",
+        ),
+        mock.patch(
+            "service.orientation_sensors.orientation_to_angle",
+            return_value=90.0,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.orientation_to_angle",
+            return_value=90.0,
+        ),
+        mock.patch(
+            "service.orientation_sensors.read_mpu6050",
+            return_value=None,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.read_mpu6050",
+            return_value=None,
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/orientation")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["orientation"] == "right-up"
+        assert data["angle"] == 90.0
+        assert data["accelerometer"] is None
+
+
+def test_orientation_endpoint_mpu(monkeypatch) -> None:
+    with (
+        mock.patch(
+            "service.orientation_sensors.get_orientation_dbus",
+            return_value=None,
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.get_orientation_dbus",
+            return_value=None,
+        ),
+        mock.patch(
+            "service.orientation_sensors.read_mpu6050",
+            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
+        ),
+        mock.patch(
+            "piwardrive.service.orientation_sensors.read_mpu6050",
+            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/orientation")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["orientation"] is None
+        assert data["accelerometer"] == {"x": 1}
+        assert data["gyroscope"] == {"y": 2}
+
+
+def test_gps_endpoint(monkeypatch) -> None:
+    with (
+        mock.patch("service.gps_client.get_position", return_value=(1.0, 2.0)),
+        mock.patch(
+            "piwardrive.service.gps_client.get_position", return_value=(1.0, 2.0)
+        ),
+        mock.patch("service.get_gps_accuracy", return_value=5.0),
+        mock.patch("piwardrive.service.get_gps_accuracy", return_value=5.0),
+        mock.patch("service.get_gps_fix_quality", return_value="3D"),
+        mock.patch(
+            "piwardrive.service.get_gps_fix_quality", return_value="3D"
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/gps")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["lat"] == 1.0
+        assert data["lon"] == 2.0
+        assert data["accuracy"] == 5.0
+        assert data["fix"] == "3D"
+

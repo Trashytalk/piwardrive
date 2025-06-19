@@ -17,6 +17,7 @@ from fastapi import (
 )
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import importlib
 
 import asyncio
 import time
@@ -25,16 +26,19 @@ import json
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 try:  # allow tests to stub out ``persistence``
-    from persistence import load_recent_health  # type: ignore
+    from persistence import load_recent_health, load_ap_cache  # type: ignore
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.persistence import load_recent_health
+    from piwardrive.persistence import load_recent_health, load_ap_cache
 from piwardrive.security import sanitize_path, verify_password
 from piwardrive.utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
+    get_mem_usage,
+    get_disk_usage,
     get_network_throughput,
     get_gps_fix_quality,
+    get_gps_accuracy,
     service_status_async,
     async_tail_file,
 )
@@ -42,6 +46,8 @@ import psutil
 import vehicle_sensors
 import config
 from sync import upload_data
+from piwardrive.gpsd_client import client as gps_client
+from piwardrive import orientation_sensors
 
 
 security = HTTPBasic(auto_error=False)
@@ -103,11 +109,78 @@ async def _collect_widget_metrics() -> dict:
     }
 
 
+@app.get("/api/widgets")
+async def list_widgets(_auth: None = Depends(_check_auth)) -> dict:
+    """Return available dashboard widget class names."""
+    widgets_mod = importlib.import_module("piwardrive.widgets")
+    return {"widgets": list(getattr(widgets_mod, "__all__", []))}
+
+
 @app.get("/widget-metrics")
 async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
     """Return basic metrics used by dashboard widgets."""
     return await _collect_widget_metrics()
 
+
+@app.get("/cpu")
+async def get_cpu(_auth: None = Depends(_check_auth)) -> dict:
+    """Return CPU temperature and usage percentage."""
+    return {
+        "temp": get_cpu_temp(),
+        "percent": psutil.cpu_percent(interval=None),
+    }
+
+
+@app.get("/ram")
+async def get_ram(_auth: None = Depends(_check_auth)) -> dict:
+    """Return system memory usage percentage."""
+    return {"percent": get_mem_usage()}
+
+
+@app.get("/storage")
+async def get_storage(
+    path: str = "/mnt/ssd",
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return disk usage percentage for ``path``."""
+    return {"percent": get_disk_usage(path)}
+
+@app.get("/orientation")
+async def get_orientation_endpoint(
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return device orientation and raw sensor data."""
+    orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
+    angle = None
+    accel = gyro = None
+    if orient:
+        angle = orientation_sensors.orientation_to_angle(orient)
+    else:
+        data = await asyncio.to_thread(orientation_sensors.read_mpu6050)
+        if data:
+            accel = data.get("accelerometer")
+            gyro = data.get("gyroscope")
+    return {
+        "orientation": orient,
+        "angle": angle,
+        "accelerometer": accel,
+        "gyroscope": gyro,
+    }
+
+
+@app.get("/gps")
+async def get_gps_endpoint(_auth: None = Depends(_check_auth)) -> dict:
+    """Return current GPS position."""
+    pos = await asyncio.to_thread(gps_client.get_position)
+    lat = lon = None
+    if pos:
+        lat, lon = pos
+    return {
+        "lat": lat,
+        "lon": lon,
+        "accuracy": get_gps_accuracy(),
+        "fix": get_gps_fix_quality(),
+    }
 
 @app.get("/logs")
 async def get_logs(
@@ -155,6 +228,27 @@ async def update_config_endpoint(
     return data
 
 
+@app.get("/dashboard-settings")
+async def get_dashboard_settings_endpoint(
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return persisted dashboard layout and widget list."""
+    settings = await load_dashboard_settings()
+    return {"layout": settings.layout, "widgets": settings.widgets}
+
+
+@app.post("/dashboard-settings")
+async def update_dashboard_settings_endpoint(
+    data: dict = Body(...),
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Persist dashboard layout and widget list."""
+    layout = data.get("layout", [])
+    widgets = data.get("widgets", [])
+    await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
+    return {"layout": layout, "widgets": widgets}
+
+
 @app.post("/sync")
 async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> dict:
     """Upload recent health records to the configured sync endpoint."""
@@ -165,6 +259,71 @@ async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> 
     if not success:
         raise HTTPException(status_code=502, detail="Upload failed")
     return {"uploaded": len(records)}
+
+
+EXPORT_CONTENT_TYPES = {
+    "csv": "text/csv",
+    "json": "application/json",
+    "gpx": "application/gpx+xml",
+    "kml": "application/vnd.google-earth.kml+xml",
+    "geojson": "application/geo+json",
+    "shp": "application/octet-stream",
+}
+
+
+def _make_export_response(data: bytes, fmt: str, name: str) -> Response:
+    """Return ``Response`` serving ``data`` as ``name.fmt``."""
+    return Response(
+        content=data,
+        media_type=EXPORT_CONTENT_TYPES.get(fmt, "application/octet-stream"),
+        headers={
+            "Content-Disposition": f"attachment; filename={name}.{fmt}"
+        },
+    )
+
+
+async def _export_layer(
+    records: Sequence[Mapping[str, Any]], fmt: str, name: str
+) -> Response:
+    """Convert ``records`` to ``fmt`` and return as HTTP response."""
+    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+        export.export_records(records, tmp.name, fmt)
+        tmp.flush()
+        path = tmp.name
+    data = Path(path).read_bytes()
+    os.remove(path)
+    return _make_export_response(data, fmt, name)
+
+
+@app.get("/export/aps")
+async def export_access_points(
+    fmt: str = "geojson", _auth: None = Depends(_check_auth)
+) -> Response:
+    """Return saved Wi-Fi access points in the specified format."""
+    records = load_ap_cache()
+    if inspect.isawaitable(records):
+        records = await records
+    try:
+        from sigint_integration import load_sigint_data
+
+        records.extend(load_sigint_data("wifi"))
+    except Exception:
+        pass
+    return await _export_layer(records, fmt.lower(), "aps")
+
+
+@app.get("/export/bt")
+async def export_bluetooth(
+    fmt: str = "geojson", _auth: None = Depends(_check_auth)
+) -> Response:
+    """Return saved Bluetooth device data in the specified format."""
+    try:
+        from sigint_integration import load_sigint_data
+
+        records = load_sigint_data("bluetooth")
+    except Exception:
+        records = []
+    return await _export_layer(records, fmt.lower(), "bt")
 
 
 @app.websocket("/ws/status")
