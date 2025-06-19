@@ -40,6 +40,18 @@ average RSSI and network throughput (``rx_kbps``/``tx_kbps``). Battery level
 and vehicle statistics (speed, RPM and engine load) are also returned when
 available for use in external dashboards.
 
+``/cpu`` reports the current CPU temperature and load percentage::
+
+   curl http://localhost:8000/cpu
+
+``/ram`` returns system memory usage::
+
+   curl http://localhost:8000/ram
+
+``/storage`` shows disk usage for ``/mnt/ssd`` by default (override with ``path``)::
+
+   curl http://localhost:8000/storage
+
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to
 ``stdout`` using ``setup_logging``. The endpoint validates that ``path`` is in

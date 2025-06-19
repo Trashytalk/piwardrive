@@ -29,6 +29,8 @@ from piwardrive.utils import (
     fetch_metrics_async,
     get_avg_rssi,
     get_cpu_temp,
+    get_mem_usage,
+    get_disk_usage,
     get_network_throughput,
     get_gps_fix_quality,
     service_status_async,
@@ -103,6 +105,30 @@ async def _collect_widget_metrics() -> dict:
 async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
     """Return basic metrics used by dashboard widgets."""
     return await _collect_widget_metrics()
+
+
+@app.get("/cpu")
+async def get_cpu(_auth: None = Depends(_check_auth)) -> dict:
+    """Return CPU temperature and usage percentage."""
+    return {
+        "temp": get_cpu_temp(),
+        "percent": psutil.cpu_percent(interval=None),
+    }
+
+
+@app.get("/ram")
+async def get_ram(_auth: None = Depends(_check_auth)) -> dict:
+    """Return system memory usage percentage."""
+    return {"percent": get_mem_usage()}
+
+
+@app.get("/storage")
+async def get_storage(
+    path: str = "/mnt/ssd",
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return disk usage percentage for ``path``."""
+    return {"percent": get_disk_usage(path)}
 
 
 @app.get("/logs")
