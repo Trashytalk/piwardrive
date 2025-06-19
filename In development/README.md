@@ -40,3 +40,15 @@ uvicorn web_api:app --host 0.0.0.0 --port 5000
 ```
 
 Open `http://localhost:5000` in Chromium (kiosk mode is supported). The API provides endpoints for GPS, AP and BT data as well as starting or stopping Kismet.
+
+### Serving Offline Tiles
+
+MapLibre can display vector or raster tiles from a local `mbtiles` database. One easy way to host the file is with [`mbtileserver`](https://github.com/consbio/mbtileserver).
+
+Run the container and mount your tiles directory:
+
+```bash
+docker run --rm -p 8080:8000 -v /mnt/ssd/tiles:/tilesets ghcr.io/consbio/mbtileserver:latest
+```
+
+The MBTiles file `offline.mbtiles` will then be available at `http://localhost:8080/services/offline`. `web_gui/app.js` is configured to point the map at this endpoint.

@@ -18,6 +18,7 @@ from fastapi import (
     Response,
 )
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import importlib
 
 import asyncio
 import time
@@ -104,6 +105,13 @@ async def _collect_widget_metrics() -> dict:
     }
 
 
+@app.get("/api/widgets")
+async def list_widgets(_auth: None = Depends(_check_auth)) -> dict:
+    """Return available dashboard widget class names."""
+    widgets_mod = importlib.import_module("piwardrive.widgets")
+    return {"widgets": list(getattr(widgets_mod, "__all__", []))}
+
+
 @app.get("/widget-metrics")
 async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
     """Return basic metrics used by dashboard widgets."""
@@ -154,6 +162,27 @@ async def update_config_endpoint(
         raise HTTPException(status_code=400, detail=str(exc))
     config.save_config(config.Config(**data))
     return data
+
+
+@app.get("/dashboard-settings")
+async def get_dashboard_settings_endpoint(
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Return persisted dashboard layout and widget list."""
+    settings = await load_dashboard_settings()
+    return {"layout": settings.layout, "widgets": settings.widgets}
+
+
+@app.post("/dashboard-settings")
+async def update_dashboard_settings_endpoint(
+    data: dict = Body(...),
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Persist dashboard layout and widget list."""
+    layout = data.get("layout", [])
+    widgets = data.get("widgets", [])
+    await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
+    return {"layout": layout, "widgets": widgets}
 
 
 @app.post("/sync")

@@ -291,6 +291,34 @@ def test_update_config_endpoint_invalid_key() -> None:
         assert resp.status_code == 400
 
 
+def test_dashboard_settings_endpoints() -> None:
+    settings = service.DashboardSettings(
+        layout=[{"cls": "W"}],
+        widgets=["W"],
+    )
+
+    async def fake_load() -> service.DashboardSettings:
+        return settings
+
+    async def fake_save(s: service.DashboardSettings) -> None:
+        assert s.layout == settings.layout
+        assert s.widgets == settings.widgets
+
+    with (
+        mock.patch("service.load_dashboard_settings", fake_load),
+        mock.patch("service.save_dashboard_settings", fake_save),
+        mock.patch("piwardrive.service.load_dashboard_settings", fake_load),
+        mock.patch("piwardrive.service.save_dashboard_settings", fake_save),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/dashboard-settings")
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
+        resp = client.post("/dashboard-settings", json={"layout": settings.layout, "widgets": settings.widgets})
+        assert resp.status_code == 200
+        assert resp.json() == {"layout": settings.layout, "widgets": settings.widgets}
+
+
 def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:
     async def fake_fetch() -> tuple[list, list, int]:
         return ([{"signal_dbm": -10}], [], 5)
