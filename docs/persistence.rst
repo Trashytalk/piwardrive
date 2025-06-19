@@ -10,7 +10,8 @@ this location. Health monitor metrics are stored as
 :class:`HealthRecord` rows and can be queried with ``load_recent_health``.
 The same file stores ``AppState`` which remembers the last active screen and
 the start time of the previous session. When PiWardrive launches these values
-are restored so the GUI picks up where it left off. Database connections are
+are restored so the GUI (or browser interface) picks up where it left off.
+Database connections are
 cached so repeated calls do not reinitialise the schema, reducing disk I/O.
 The connection is placed into write-ahead logging mode using
 ``PRAGMA journal_mode=WAL`` to improve read/write concurrency.

@@ -10,7 +10,8 @@ temperature, handshake counts and service status. Every widget subclasses
 hook.
 
 Widgets can be arranged on the Dashboard screen via drag and drop. Their layout
-is saved in ``config.json`` so the next launch restores the same ordering.
+is saved in ``config.json`` so the next launch restores the same ordering. The
+browser UI reads the same configuration, allowing widgets to be viewed remotely.
 Polling intervals are configurable globally or per widget and can be adjusted
 from the Settings screen. A built-in ``BatteryStatusWidget`` shows charge level
 when the hardware exposes it.

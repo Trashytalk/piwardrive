@@ -1,6 +1,6 @@
 # PiWardrive
 
-PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a touch-friendly interface built on Kivy/KivyMD. The project runs without an X server and includes a command line SIGINT suite for scanning.
+PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a touch-friendly interface built on Kivy/KivyMD. The project runs without an X server and includes a command line SIGINT suite for scanning. A browser-based dashboard is also available when the optional React frontend is built.
 
 For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory.
 
@@ -215,6 +215,9 @@ npm install
 npm run build
 python 'In development/browser_server.py'
 ```
+
+Alternatively serve `webui/dist` with any webserver while running
+`piwardrive-service` for the API.
 
 During development you can run `npm run dev` which starts a Vite server
 and proxies API requests to `http://localhost:8000`.

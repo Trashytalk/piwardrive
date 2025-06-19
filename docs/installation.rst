@@ -54,6 +54,13 @@ Raspberry Pi OS
    The ``fastjson`` helper tries ``orjson`` first, then ``ujson`` and finally
    falls back to the builtin ``json`` module when the accelerators are absent.
 
+9. (Optional) build the browser interface and start the combined API/frontend::
+
+      cd webui
+      npm install
+      npm run build
+      python 'In development/browser_server.py'
+
 
 Generic Linux
 -------------

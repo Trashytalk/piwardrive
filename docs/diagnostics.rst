@@ -29,7 +29,8 @@ environment variables ``PW_HEALTH_EXPORT_INTERVAL``, ``PW_HEALTH_EXPORT_DIR``,
 options.
 
 ``src/piwardrive/scripts/service_status.py`` provides a small command-line interface to
-``diagnostics.get_service_statuses`` for quick checks outside the GUI.
+``diagnostics.get_service_statuses`` for quick checks outside the GUI. The same
+information is exposed in the browser interface via the status service.
 
 Use :func:`utils.report_error` to surface exceptions consistently. It logs the
 message and displays a dialog via the running application if available.
