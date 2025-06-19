@@ -22,6 +22,7 @@ authors = [{name = "PiWardrive contributors"}]
 [project.scripts]
 piwardrive = "piwardrive.main:main"
 piwardrive-service = "piwardrive.service:main"
+piwardrive-webui = "piwardrive.web_server:main"
 health-export = "piwardrive.scripts.health_export:main"
 health-import = "piwardrive.scripts.health_import:main"
 piwardrive-prefetch = "piwardrive.scripts.prefetch_cli:main"
