@@ -14,6 +14,7 @@ from fastapi import (
     Body,
 )
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import importlib
 
 import asyncio
 import time
@@ -97,6 +98,13 @@ async def _collect_widget_metrics() -> dict:
         "vehicle_rpm": vehicle_sensors.read_rpm_obd(),
         "engine_load": vehicle_sensors.read_engine_load_obd(),
     }
+
+
+@app.get("/api/widgets")
+async def list_widgets(_auth: None = Depends(_check_auth)) -> dict:
+    """Return available dashboard widget class names."""
+    widgets_mod = importlib.import_module("piwardrive.widgets")
+    return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
 
 @app.get("/widget-metrics")
