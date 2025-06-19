@@ -8,7 +8,7 @@ exclude = ["tests*", "docs*", "benchmarks*", "examples*"]
 
 
 [tool.setuptools.package-data]
-"piwardrive" = ["py.typed"]
+"piwardrive" = ["py.typed", "web_gui/*"]
 
 [project]
 name = "piwardrive"

@@ -1,0 +1,27 @@
+.container {
+  display: grid;
+  grid-gap: 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+section {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+pre {
+  overflow-x: auto;
+}
