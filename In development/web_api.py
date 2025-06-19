@@ -5,6 +5,8 @@ import sqlite3
 import json
 import subprocess
 
+from piwardrive.security import validate_service_name
+
 app = FastAPI()
 
 
@@ -17,9 +19,7 @@ def get_gps():
         return {"lat": None, "lon": None, "time": None}
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT lat, lon, time FROM gps_tracks ORDER BY time DESC LIMIT 1"
-    )
+    cursor.execute("SELECT lat, lon, time FROM gps_tracks ORDER BY time DESC LIMIT 1")
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -47,14 +47,32 @@ def get_bt():
     return {"type": "FeatureCollection", "features": []}
 
 
+def _toggle_service(service: str, state: str) -> dict:
+    """Start or stop a systemd service."""
+    validate_service_name(service)
+    if state == "start":
+        subprocess.run(["sudo", "systemctl", "start", service], check=False)
+    elif state == "stop":
+        subprocess.run(["sudo", "systemctl", "stop", service], check=False)
+    return {"status": "ok"}
+
+
+@app.post("/api/service/{service}/toggle")
+def toggle_service(service: str, state: str):
+    """Toggle an arbitrary service."""
+    return _toggle_service(service, state)
+
+
 @app.post("/api/kismet/toggle")
 def toggle_kismet(state: str):
     """Start or stop the kismet service."""
-    if state == "start":
-        subprocess.run(["sudo", "systemctl", "start", "kismet"], check=False)
-    elif state == "stop":
-        subprocess.run(["sudo", "systemctl", "stop", "kismet"], check=False)
-    return {"status": "ok"}
+    return _toggle_service("kismet", state)
+
+
+@app.post("/api/bettercap/toggle")
+def toggle_bettercap(state: str):
+    """Start or stop the BetterCAP service."""
+    return _toggle_service("bettercap", state)
 
 
 # Serve static dashboard if available
