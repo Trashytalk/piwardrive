@@ -3,7 +3,7 @@ CLI Tools
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
-Several helper scripts are installed alongside the GUI. They can be invoked directly from the command line after installing the project:
+Several helper scripts are installed alongside the GUI and web interface. They can be invoked directly from the command line after installing the project:
 
 ``piwardrive-prefetch``
     Prefetch map tiles for an area without launching the interface::
