@@ -90,6 +90,14 @@ stay up to date without polling::
 Each message includes ``seq`` and ``timestamp`` fields plus an ``errors`` counter
 to help detect missed updates.
 
+``/sse/status`` provides the same updates using `Server-Sent Events`_ for
+environments where WebSockets are unavailable::
+
+   curl http://localhost:8000/sse/status
+
+The stream sends events formatted as JSON with the same ``seq`` and
+``timestamp`` metadata.
+
 Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
 
 Benchmark
@@ -104,4 +112,6 @@ concurrent requests against the ASGI application::
 On a Raspberry Pi 5 the asynchronous implementation processes hundreds of
 requests per second, roughly doubling the throughput compared to the original
 synchronous handler.
+
+.. _Server-Sent Events: https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events
 

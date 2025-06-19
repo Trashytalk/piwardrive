@@ -4,9 +4,7 @@ from __future__ import annotations
 from dataclasses import asdict
 import os
 import inspect
-from typing import Sequence, Mapping, Any
-from pathlib import Path
-import tempfile
+import typing
 
 from fastapi import (
     FastAPI,
@@ -15,14 +13,15 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
     Body,
-    Response,
+    Request,
 )
+from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import importlib
 
 import asyncio
 import time
-import piwardrive.export as export
+import json
 
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
@@ -352,6 +351,36 @@ async def ws_status(websocket: WebSocket) -> None:
             await asyncio.sleep(2)
     except WebSocketDisconnect:
         pass
+
+
+@app.get("/sse/status")
+async def sse_status(request: Request) -> StreamingResponse:
+    """Stream status and widget metrics via Server-Sent Events."""
+
+    async def _event_gen() -> typing.AsyncGenerator[str, None]:
+        seq = 0
+        error_count = 0
+        while True:
+            if await request.is_disconnected():
+                break
+            data = {
+                "seq": seq,
+                "timestamp": time.time(),
+                "status": await get_status(),
+                "metrics": await _collect_widget_metrics(),
+                "errors": error_count,
+            }
+            yield f"data: {json.dumps(data)}\n\n"
+            seq += 1
+            await asyncio.sleep(2)
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        _event_gen(), media_type="text/event-stream", headers=headers
+    )
 
 
 async def main() -> None:
