@@ -28,11 +28,22 @@ def _parse_bboxes(path: str) -> list[tuple[float, float, float, float]]:
 
 def main(argv: list[str] | None = None) -> None:
     """Prefetch tiles for bounding boxes listed in a file."""
-    parser = argparse.ArgumentParser(description="Download tiles for multiple bounding boxes")
-    parser.add_argument("input", help="path to file with bounding boxes")
+    parser = argparse.ArgumentParser(
+        description="Download tiles for multiple bounding boxes"
+    )
+    parser.add_argument(
+        "input",
+        help="path to file with bounding boxes",
+    )
     parser.add_argument("--zoom", type=int, default=16, help="tile zoom level")
-    parser.add_argument("--folder", default="/mnt/ssd/tiles", help="destination folder")
-    parser.add_argument("--concurrency", type=int, help="number of concurrent requests")
+    parser.add_argument(
+        "--folder",
+        default="/mnt/ssd/tiles",
+        help="destination folder",
+    )
+    parser.add_argument(
+        "--concurrency", type=int, help="number of concurrent requests"
+    )
     args = parser.parse_args(argv)
 
     bboxes = _parse_bboxes(args.input)

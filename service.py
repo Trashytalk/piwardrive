@@ -14,17 +14,19 @@ SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from piwardrive import service as _p
-from piwardrive import orientation_sensors
+from piwardrive import service as _p  # noqa: E402
+from piwardrive import orientation_sensors  # noqa: F401,E402
 
 # Re-export everything from the real module
-from piwardrive.service import *  # noqa: F401,F403
+from piwardrive.service import *  # noqa: F401,F403,E402
+
 
 def _proxy(name: str):
     def wrapper(*args: any, **kwargs: any):
         return globals()[name](*args, **kwargs)
 
     return wrapper
+
 
 # Replace selected callables in the real module with proxies that defer to this
 # module's attributes.  This allows tests to patch ``service.load_recent_health``
