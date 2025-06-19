@@ -197,18 +197,11 @@ Activate the virtual environment and run `pip install <package>` for any that ap
 
 ### Running
 
-```bash
-source gui-env/bin/activate
-python -m piwardrive.main
-```
+#### Web Interface
 
-The UI renders directly on the framebuffer so no X server is required.
+The primary GUI is a React dashboard served alongside the API. Node.js 18 or
+newer is required for the build tools. From the repository root run:
 
-### Browser Workflow
-
-An optional React interface runs in any modern browser. Build and serve it
-alongside the API then open it full screen. Run the following commands from
-the repository root:
 ```bash
 cd webui
 npm install
@@ -218,10 +211,9 @@ python -m piwardrive.web_server
 ```
 
 Alternatively serve `webui/dist` with any webserver while running
-`piwardrive-service` for the API.
-
-During development you can run `npm run dev` which starts a Vite server
-and proxies API requests to `http://localhost:8000`.
+`piwardrive-service` for the API. During development you can run
+`npm run dev` which starts a Vite server and proxies API requests to
+`http://localhost:8000`.
 
 This starts a FastAPI server on `http://0.0.0.0:8000` with the API under `/api`.
 Launch Chromium in kiosk mode to display the dashboard:
@@ -231,6 +223,16 @@ chromium-browser --kiosk http://localhost:8000
 ```
 Chromium must run inside a graphical environment. Ensure an X server is
 available and ``$DISPLAY`` is set. Headless setups can use ``Xvfb``.
+
+#### Touch Interface (optional)
+
+```bash
+source gui-env/bin/activate
+python -m piwardrive.main
+```
+
+The Kivy interface renders directly on the framebuffer so no X server is
+required.
 
 ### Optional C Extensions
 
