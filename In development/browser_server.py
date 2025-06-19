@@ -1,8 +1,8 @@
 """Run the FastAPI service with a bundled web frontend.
 
 This script mounts the compiled React app from ``webui/dist`` and exposes the
-API under ``/api``.  It is meant for development and is not part of the main
-application entry point.
+API at the same root URL.  It is meant for development and is not part of the
+main application entry point.
 """
 
 from __future__ import annotations
@@ -18,8 +18,7 @@ from piwardrive.service import app as api_app
 
 def create_app() -> FastAPI:
     """Return a FastAPI instance serving both API and static files."""
-    app = FastAPI()
-    app.mount("/api", api_app)
+    app = api_app
 
     dist_dir = os.path.join(os.path.dirname(__file__), os.pardir, "webui", "dist")
     if os.path.isdir(dist_dir):

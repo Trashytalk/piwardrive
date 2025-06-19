@@ -223,8 +223,9 @@ Alternatively serve `webui/dist` with any webserver while running
 During development you can run `npm run dev` which starts a Vite server
 and proxies API requests to `http://localhost:8000`.
 
-This starts a FastAPI server on `http://0.0.0.0:8000` with the API under `/api`.
-Launch Chromium in kiosk mode to display the dashboard:
+This starts a FastAPI server on `http://0.0.0.0:8000` serving both the API and
+React build from the same root URL. Launch Chromium in kiosk mode to display the
+dashboard:
 
 ```bash
 chromium-browser --kiosk http://localhost:8000
