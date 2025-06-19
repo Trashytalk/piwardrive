@@ -17,6 +17,7 @@ This uses a small React application built with Vite.
    cd webui
    npm install
    npm run build
+    cd ..
    ```
 
    The compiled assets will be placed in `webui/dist`.
@@ -24,7 +25,7 @@ This uses a small React application built with Vite.
    During development you can run `npm run dev` which starts a Vite server
    that proxies API calls to `http://localhost:8000`.
 
-2. Launch the API with the static build:
+2. Launch the API with the static build from the repository root:
 
    ```bash
    python 'In development/browser_server.py'
