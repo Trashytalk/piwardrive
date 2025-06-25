@@ -5,6 +5,7 @@ import HandshakeCount from './components/HandshakeCount.jsx';
 import SignalStrength from './components/SignalStrength.jsx';
 import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
+import StatsDashboard from './components/StatsDashboard.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
 import MapScreen from './components/MapScreen.jsx';
 import Orientation from './components/Orientation.jsx';
@@ -97,6 +98,7 @@ export default function App() {
       <VehicleInfo data={vehicleData} />
       <NetworkThroughput metrics={metrics} />
       <CPUTempGraph metrics={metrics} />
+      <StatsDashboard />
 
       <h2>Logs</h2>
       <pre>{logs}</pre>
