@@ -25,10 +25,9 @@ screens the sections stack vertically, while wider monitors display two or three
 columns.
 
 
-The ``/config`` endpoint now allows the web UI to modify settings on the
-device.  The React dashboard exposes a dedicated **Settings** page mirroring the
-former Kivy interface. Configuration options are fetched from ``/config`` and
-saved back via a POST request so changes persist to ``config.json``.
+The ``/config`` endpoint allows the web UI to modify settings on the device.
+Configuration options are fetched from ``/config`` and saved back via a POST
+request so changes persist to ``config.json``.
 
 Heatmap overlays derived from the aggregation service can be toggled on the map
 screen. The layer uses ``leaflet.heat`` and displays points returned by the
