@@ -1,4 +1,5 @@
 """Simple persistence helpers using SQLite."""
+
 from __future__ import annotations
 
 import os
@@ -154,9 +155,7 @@ class DashboardSettings:
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
     """Create or migrate the SQLite schema to the latest version."""
-    await conn.execute(
-        "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER)"
-    )
+            await conn.execute("UPDATE schema_version SET version = ?", (current,))
     cur = await conn.execute("SELECT version FROM schema_version")
     row = await cur.fetchone()
     current = row["version"] if row else 0
@@ -262,32 +261,18 @@ async def load_app_state() -> AppState:
 
 
 async def save_dashboard_settings(settings: DashboardSettings) -> None:
-    """Persist dashboard layout and widgets."""
-    conn = await _get_conn()
-    await conn.execute("DELETE FROM dashboard_settings WHERE id = 1")
-    await conn.execute(
-        (
-            "INSERT INTO dashboard_settings (id, layout, widgets) "
-            "VALUES (1, ?, ?)"
-        ),
-        (json.dumps(settings.layout), json.dumps(settings.widgets)),
-    )
-    await conn.commit()
+   """Persist dashboard layout to ``config.json``."""
+    cfg = config.load_config()
+    cfg.dashboard_layout = settings.layout
+    config.save_config(cfg)
 
 
 async def load_dashboard_settings() -> DashboardSettings:
-    """Load persisted :class:`DashboardSettings` or defaults."""
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT layout, widgets FROM dashboard_settings WHERE id = 1"
-    )
-    row = await cur.fetchone()
-    if row is None:
-        return DashboardSettings()
-    return DashboardSettings(
-        layout=json.loads(row["layout"]) if row["layout"] else [],
-        widgets=json.loads(row["widgets"]) if row["widgets"] else [],
-    )
+    """Load persisted :class:`DashboardSettings` from ``config.json``."""
+    cfg = config.load_config()
+    layout = cfg.dashboard_layout
+    widgets = [item.get("cls") for item in layout if isinstance(item, dict)]
+    return DashboardSettings(layout=layout, widgets=widgets)
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
