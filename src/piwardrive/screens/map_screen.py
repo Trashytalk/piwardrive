@@ -694,7 +694,12 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._last_gps = (lat, lon)
         self._last_time = now
         threshold = getattr(app, "gps_movement_threshold", 1.0)
-        interval = app.map_poll_gps if speed > threshold else app.map_poll_gps_max
+        current = self._gps_interval or app.map_poll_gps
+        if speed > threshold:
+            interval = app.map_poll_gps
+        else:
+            interval = min(app.map_poll_gps_max, max(app.map_poll_gps, current * 2))
+
         if interval != self._gps_interval:
             self._gps_interval = interval
             Clock.schedule_once(
