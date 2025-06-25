@@ -34,6 +34,10 @@ screen. The layer uses ``leaflet.heat`` and displays points returned by the
 MapLibre style metadata to an MBTiles database via the
 ``/api/vector-tiles/style`` endpoint.
 
+The **Console** page embeds a real-time log viewer. It tails a selectable file
+from the ``log_paths`` list in ``config.json`` and supports client-side regular
+expression filtering.
+
 Build the frontend with **Node.js 18+** and npm::
 
    cd webui

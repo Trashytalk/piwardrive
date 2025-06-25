@@ -1,20 +1,17 @@
 import { useEffect, useState } from 'react';
+import LogViewer from './LogViewer.jsx';
 
 export default function ConsoleView() {
-  const [logs, setLogs] = useState('');
   const [cmd, setCmd] = useState('');
   const [output, setOutput] = useState('');
 
+  const [logPaths, setLogPaths] = useState([]);
+
   useEffect(() => {
-    const load = () => {
-      fetch('/logs?lines=200')
-        .then(r => r.json())
-        .then(d => setLogs(d.lines.join('\n')))
-        .catch(() => {});
-    };
-    load();
-    const id = setInterval(load, 2000);
-    return () => clearInterval(id);
+    fetch('/config')
+      .then(r => r.json())
+      .then(cfg => setLogPaths(cfg.log_paths || []))
+      .catch(() => {});
   }, []);
 
   const runCommand = () => {
@@ -31,7 +28,7 @@ export default function ConsoleView() {
   return (
     <div>
       <h2>Console</h2>
-      <pre>{logs}</pre>
+      <LogViewer logPaths={logPaths} />
       <div>
         <input value={cmd} onChange={e => setCmd(e.target.value)} />
         <button onClick={runCommand}>Run</button>
