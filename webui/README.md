@@ -106,7 +106,7 @@ Any static web server can host the contents of `webui/dist` as long as the API i
 
 ## 9. Plugin Widgets
 
-Custom widgets placed under `~/.config/piwardrive/plugins` are detected at runtime. The `/plugins` API route lists the discovered classes so you can confirm your plugin was loaded. Rebuild the frontend if you add React components that correspond to new widgets.
+Custom widgets placed under `~/.config/piwardrive/plugins` are detected at runtime. The `/plugins` API route lists the discovered classes so you can confirm your plugin was loaded. When a matching React component exists under `webui/src/components/`, it will be loaded dynamically without further code changes.
 
 ## 10. Offline Usage
 

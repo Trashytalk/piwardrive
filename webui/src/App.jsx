@@ -1,3 +1,6 @@
+// Vite will bundle any components that match this glob so plugin widgets can be
+// loaded dynamically by name. Plugin authors should place React components under
+// `webui/src/components` with file names matching the Python class names.
 import { useEffect, useState } from "react";
 import BatteryStatus from "./components/BatteryStatus.jsx";
 import ServiceStatus from "./components/ServiceStatus.jsx";
@@ -14,6 +17,7 @@ import Orientation from "./components/Orientation.jsx";
 import VehicleInfo from "./components/VehicleInfo.jsx";
 import VectorTileCustomizer from "./components/VectorTileCustomizer.jsx";
 
+
 export default function App() {
   const [status, setStatus] = useState([]);
   const [metrics, setMetrics] = useState(null);
@@ -22,11 +26,28 @@ export default function App() {
   const [widgets, setWidgets] = useState([]);
   const [orientationData, setOrientationData] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
+  const [configData, setConfigData] = useState(null);
+
+  const handleChange = (key, value) => {
+    setConfigData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const saveConfig = () => {
+    fetch('/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(configData),
+    })
+      .then(r => r.json())
+      .then(setConfigData)
+      .catch(() => {});
+  };
 
   useEffect(() => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     let ws;
     let es;
+    let ping;
 
     const handleData = (raw) => {
       try {
@@ -41,20 +62,46 @@ export default function App() {
     const startSse = () => {
       es = new EventSource("/sse/status");
       es.onmessage = (ev) => handleData(ev.data);
-      es.onerror = () => es.close();
+      es.onerror = () => {
+        es.close();
+        setTimeout(startSse, 3000);
+      };
     };
 
-    if (window.WebSocket) {
+    const startWs = () => {
+      if (ws) ws.close();
       try {
         ws = new WebSocket(`${proto}//${window.location.host}/ws/status`);
+        ws.onopen = () => {
+          if (ping) clearInterval(ping);
+          ping = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send("ping");
+            }
+          }, 15000);
+        };
         ws.onmessage = (ev) => handleData(ev.data);
-        ws.onerror = () => {
-          ws.close();
-          startSse();
+        ws.onerror = () => ws.close();
+        ws.onclose = () => {
+          if (ping) {
+            clearInterval(ping);
+            ping = null;
+          }
+          setTimeout(() => {
+            if (window.WebSocket) {
+              startWs();
+            } else {
+              startSse();
+            }
+          }, 3000);
         };
       } catch (e) {
         startSse();
       }
+    };
+
+    if (window.WebSocket) {
+      startWs();
     } else {
       startSse();
     }
@@ -72,15 +119,38 @@ export default function App() {
       .then((r) => r.json())
       .then((d) => setLogs(d.lines.join("\n")));
     return () => {
+      if (ping) clearInterval(ping);
       if (ws) ws.close();
       if (es) es.close();
     };
   }, []);
 
+  useEffect(() => {
+    const loadWidgets = async () => {
+      const loaded = [];
+      for (const name of plugins) {
+        const path = `./components/${name}.jsx`;
+        const importer = pluginModules[path];
+        if (importer) {
+          try {
+            const mod = await importer();
+            loaded.push({ name, Component: mod.default });
+          } catch (err) {
+            console.error('Failed loading plugin component', name, err);
+          }
+        }
+      }
+      setWidgets(loaded);
+    };
+    loadWidgets();
+  }, [plugins]);
+
   return (
     <div>
       <h2>Map</h2>
       <MapScreen />
+      <SystemStats />
+      <TrackMap />
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
       <h2>Widget Metrics</h2>
@@ -91,6 +161,9 @@ export default function App() {
           <li key={p}>{p}</li>
         ))}
       </ul>
+      {widgets.map(({ name, Component }) => (
+        <Component key={name} metrics={metrics} />
+      ))}
       <h2>Dashboard</h2>
       <BatteryStatus metrics={metrics} />
       <ServiceStatus metrics={metrics} />
