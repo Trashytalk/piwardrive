@@ -49,7 +49,7 @@ graph LR
 - Drone-based mapping mode
 - Geofencing and cached map tiles
 - Status service with React web UI
-- Plugin widgets shown in the web UI
+- Plugin widgets dynamically loaded in the web UI
 - Offline-capable PWA frontend
 
 
