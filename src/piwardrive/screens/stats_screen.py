@@ -4,7 +4,12 @@ import psutil
 
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
-from piwardrive.utils import get_cpu_temp, get_smart_status, require_id
+from piwardrive.utils import (
+    get_cpu_temp,
+    get_smart_status,
+    require_id,
+    service_status,
+)
 from piwardrive.localization import _
 
 
@@ -22,10 +27,26 @@ class StatsScreen(Screen):
     def update_stats(self, _dt):
         """Refresh temperature, memory and disk usage labels."""
         # compute metrics
-        cpu_temp = get_cpu_temp()
-        mem_pct  = psutil.virtual_memory().percent if psutil else None
-        disk_pct = psutil.disk_usage('/mnt/ssd').percent if psutil else None
-        smart = get_smart_status('/mnt/ssd')
+        app = App.get_running_app()
+        monitor = getattr(app, "health_monitor", None)
+        data = monitor.data if monitor else None
+
+        if data:
+            system = data.get("system", {})
+            cpu_temp = system.get("cpu_temp")
+            mem_pct = system.get("memory_percent")
+            disk_pct = system.get("disk_percent")
+            smart = system.get("ssd_smart")
+            services = data.get("services", {})
+        else:
+            cpu_temp = get_cpu_temp()
+            mem_pct = psutil.virtual_memory().percent if psutil else None
+            disk_pct = psutil.disk_usage('/mnt/ssd').percent if psutil else None
+            smart = get_smart_status('/mnt/ssd')
+            services = {
+                "kismet": service_status("kismet"),
+                "bettercap": service_status("bettercap"),
+            }
 
 
         # fetch root diagnostics bar labels
@@ -53,4 +74,19 @@ class StatsScreen(Screen):
         if health_lbl is not None:
             health_lbl.text = (
                 f"{_('ssd_health')}: {smart}" if smart else f"{_('ssd_health')}: {_('not_available')}"
+            )
+
+        if 'kismet_status_label' in self.ids:
+            status = services.get('kismet')
+            self.ids.kismet_status_label.text = (
+                f"{_('kismet')}: {(_('ok') if status else _('down'))}"
+                if status is not None
+                else f"{_('kismet')}: {_('not_available')}"
+            )
+        if 'bettercap_status_label' in self.ids:
+            status = services.get('bettercap')
+            self.ids.bettercap_status_label.text = (
+                f"{_('bettercap')}: {(_('ok') if status else _('down'))}"
+                if status is not None
+                else f"{_('bettercap')}: {_('not_available')}"
             )
