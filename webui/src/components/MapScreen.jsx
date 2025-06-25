@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
 import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
@@ -20,6 +20,8 @@ export default function MapScreen() {
   const [aps, setAps] = useState([]);
   const [filter, setFilter] = useState({ ssid: '', encryption: '' });
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [geofences, setGeofences] = useState([]);
+  const geofencesRef = useRef([]);
   const [prefetchProgress, setPrefetchProgress] = useState(null);
   const track = useRef([]);
   const [config, setConfig] = useState(null);
@@ -32,6 +34,23 @@ export default function MapScreen() {
       .catch(e => console.error('config fetch failed', e));
   }, []);
 
+  useEffect(() => {
+    geofencesRef.current = geofences;
+  }, [geofences]);
+
+  const pointInPoly = (pt, poly) => {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [lat1, lon1] = poly[i];
+      const [lat2, lon2] = poly[j];
+      if ((lon1 > pt[1]) !== (lon2 > pt[1])) {
+        const intersect = (lat2 - lat1) * (pt[1] - lon1) / (lon2 - lon1) + lat1;
+        if (pt[0] < intersect) inside = !inside;
+      }
+    }
+    return inside;
+  };
+
   // fetch GPS periodically
   useEffect(() => {
     const id = setInterval(async () => {
@@ -39,8 +58,22 @@ export default function MapScreen() {
         const resp = await fetch('/gps');
         const data = await resp.json();
         if (data && data.lat != null && data.lon != null) {
-          if (follow) setCenter([data.lat, data.lon]);
-          track.current.push([data.lat, data.lon]);
+          const pos = [data.lat, data.lon];
+          if (follow) setCenter(pos);
+          track.current.push(pos);
+          if (geofencesRef.current.length) {
+            setGeofences(gfs =>
+              gfs.map(g => {
+                const inside = pointInPoly(pos, g.points);
+                if (inside && !g.inside && g.enter_message) {
+                  alert(g.enter_message.replace('{name}', g.name));
+                } else if (!inside && g.inside && g.exit_message) {
+                  alert(g.exit_message.replace('{name}', g.name));
+                }
+                return { ...g, inside };
+              })
+            );
+          }
         }
       } catch (e) {
         console.error('gps fetch failed', e);
@@ -66,6 +99,13 @@ export default function MapScreen() {
       }
     };
     load();
+  }, []);
+
+  useEffect(() => {
+    fetch('/geofences')
+      .then(r => r.json())
+      .then(data => setGeofences(data.map(g => ({ ...g, inside: false }))))
+      .catch(() => {});
   }, []);
 
   // subscribe to new APs
@@ -204,6 +244,9 @@ export default function MapScreen() {
       <MapContainer center={center} zoom={zoom} style={{ height: '80vh' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <HeatmapLayer show={showHeatmap} />
+        {geofences.map((g, idx) => (
+          <Polygon key={idx} positions={g.points} pathOptions={{ color: 'red' }} />
+        ))}
         {filtered.map(ap => (
           <Marker key={ap.bssid} position={[ap.lat, ap.lon]}>
             <Popup>{ap.ssid || ap.bssid}</Popup>

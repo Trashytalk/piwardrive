@@ -15,6 +15,15 @@ strings containing ``{name}`` which is replaced with the geofence name.
 See the tests ``test_geofence_clustering.py`` and ``test_geofence_handling.py``
 for example usage.
 
+Geofence Overlays
+~~~~~~~~~~~~~~~~~
+
+Saved polygons are drawn on the map when the browser dashboard loads.
+The client fetches them from the ``/geofences`` API and renders
+``<Polygon>`` overlays so boundaries are visible. Entry and exit messages
+configured in the editor trigger ``alert`` pop-ups whenever the user crosses a
+geofence.
+
 Geofence Editor
 ~~~~~~~~~~~~~~~
 
