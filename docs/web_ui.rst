@@ -9,7 +9,9 @@ PiWardrive's main user experience is delivered through a React application under
 recent status information and logs.  When
 available the frontend connects to ``/ws/status`` to receive live updates
 without polling. If WebSockets are unavailable it falls back to the
-``/sse/status`` endpoint using Server-Sent Events.
+``/sse/status`` endpoint using Server-Sent Events. The connection
+automatically reconnects when dropped and sends a heartbeat ping every
+15&nbsp;seconds to keep the stream alive.
 
 Plugin widgets stored under ``~/.config/piwardrive/plugins`` are also
 detected.  The new ``/plugins`` route lists the discovered classes so the web UI

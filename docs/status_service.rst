@@ -117,6 +117,9 @@ stay up to date without polling::
 
 Each message includes ``seq`` and ``timestamp`` fields plus an ``errors`` counter
 to help detect missed updates.
+Clients are encouraged to send periodic ``ping`` messages to keep the
+connection alive. The bundled web UI implements this automatically and
+reconnects if the stream is interrupted.
 
 ``/sse/status`` provides the same updates using `Server-Sent Events`_ for
 environments where WebSockets are unavailable::
