@@ -30,3 +30,12 @@ opened. The editor exposes ``rename_polygon``, ``remove_polygon``,
 ``update_polygon`` and ``configure_alerts`` helpers for modifying existing
 geofences and defining entry/exit alert messages which are loaded by the map
 screen on startup.
+
+Web UI
+------
+
+The browser dashboard includes a matching geofence editor. Click on the map to
+draw polygons and press "Finish" to save them. Existing geofences can be
+renamed or removed and optional entry/exit messages configured. All operations
+are performed through the ``/geofences`` REST API and saved to the same
+``geofences.json`` file used by the on-device editor.

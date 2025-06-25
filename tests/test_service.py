@@ -2,6 +2,7 @@ import sys
 from dataclasses import asdict
 from unittest import mock
 from types import ModuleType, SimpleNamespace
+from typing import Any
 import json
 import asyncio
 import pytest
@@ -157,6 +158,33 @@ def test_logs_endpoint_rejects_unknown_path() -> None:
         resp = client.get("/logs?path=/not/allowed.log")
         assert resp.status_code == 400
         assert not called
+
+
+def test_command_endpoint_runs_command() -> None:
+    class DummyProc:
+        async def communicate(self) -> tuple[bytes, bytes]:
+            return b'out', b''
+        def kill(self) -> None:
+            pass
+
+    async def fake_create(cmd: str, **_k: Any) -> DummyProc:
+        assert cmd == 'echo hi'
+        return DummyProc()
+
+    with (
+        mock.patch('service.asyncio.create_subprocess_shell', fake_create),
+        mock.patch('piwardrive.service.asyncio.create_subprocess_shell', fake_create),
+    ):
+        client = TestClient(service.app)
+        resp = client.post('/command', json={'cmd': 'echo hi'})
+        assert resp.status_code == 200
+        assert resp.json()['output'] == 'out'
+
+
+def test_command_endpoint_requires_cmd() -> None:
+    client = TestClient(service.app)
+    resp = client.post('/command', json={})
+    assert resp.status_code == 400
 
 
 def test_websocket_status_stream() -> None:
@@ -526,6 +554,34 @@ def test_orientation_endpoint_mpu(monkeypatch) -> None:
         assert data["orientation"] is None
         assert data["accelerometer"] == {"x": 1}
         assert data["gyroscope"] == {"y": 2}
+
+
+def test_vehicle_endpoint(monkeypatch) -> None:
+    with (
+        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=55.0),
+        mock.patch(
+            "piwardrive.service.vehicle_sensors.read_speed_obd", return_value=55.0
+        ),
+        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=1800.0),
+        mock.patch(
+            "piwardrive.service.vehicle_sensors.read_rpm_obd", return_value=1800.0
+        ),
+        mock.patch(
+            "service.vehicle_sensors.read_engine_load_obd", return_value=40.0
+        ),
+        mock.patch(
+            "piwardrive.service.vehicle_sensors.read_engine_load_obd",
+            return_value=40.0,
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/vehicle")
+        assert resp.status_code == 200
+        assert resp.json() == {
+            "speed": 55.0,
+            "rpm": 1800.0,
+            "engine_load": 40.0,
+        }
 
 
 def test_gps_endpoint(monkeypatch) -> None:

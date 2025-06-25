@@ -36,6 +36,7 @@ piwardrive-prefetch-batch = "piwardrive.scripts.prefetch_batch:main"
 log-follow = "piwardrive.scripts.log_follow:main"
 config-cli = "piwardrive.scripts.config_cli:main"
 calibrate-orientation = "piwardrive.scripts.calibrate_orientation:main"
+piwardrive-kiosk = "piwardrive.scripts.kiosk:main"
 
 
 
