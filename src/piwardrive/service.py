@@ -237,6 +237,27 @@ async def get_logs(
     return {"path": safe, "lines": lines_out}
 
 
+@app.post("/command")
+async def run_command(
+    data: dict = Body(...), _auth: None = Depends(_check_auth)
+) -> dict:
+    """Execute a shell command and return its output."""
+    cmd = str(data.get("cmd", "")).strip()
+    if not cmd:
+        raise HTTPException(status_code=400, detail="cmd required")
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    try:
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+    except asyncio.TimeoutError:
+        proc.kill()
+        return {"output": "", "error": "timeout"}
+    return {"output": out.decode()}
+
+
 @app.get("/config")
 async def get_config_endpoint(_auth: None = Depends(_check_auth)) -> dict:
     """Return the current configuration from ``config.json``."""
