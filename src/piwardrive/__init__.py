@@ -5,7 +5,7 @@ from importlib import import_module
 import sys
 
 # Expose ``sigint_suite`` as a top-level module for backwards compatibility
-sigint_suite = import_module("piwardrive.sigint_suite")
+sigint_suite = import_module("piwardrive.integrations.sigint_suite")
 sys.modules.setdefault("sigint_suite", sigint_suite)
 
 # Provide top-level access to frequently imported modules
