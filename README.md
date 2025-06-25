@@ -289,6 +289,11 @@ The command runs `piwardrive-webui` in the background and opens Chromium with
 environment. Ensure an X server is available and ``$DISPLAY`` is set.
 Headless setups can use ``Xvfb``.
 
+Combine the web UI service with the example ``kiosk.service`` unit to
+launch the browser automatically on boot. This setup fully replaces the
+on-device Kivy GUI so the Pi's touch screen displays the React dashboard
+in full‑screen mode.
+
 ### Optional C Extensions
 
 Two small C modules, `ckml` and `cgeom`, speed up geometry and KML parsing. They
@@ -375,21 +380,10 @@ WantedBy=multi-user.target
    exec sh /home/pi/kiosk.sh
    ```
 
-4. **Define `kiosk.service`**
-   ```ini
-   [Unit]
-   Description=Chromium Kiosk
-   After=graphical.target
-
-   [Service]
-   Type=simple
-   User=pi
-   Environment=DISPLAY=:0
-   ExecStart=/usr/bin/startx
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
+4. **Install `kiosk.service`**
+   Copy `examples/kiosk.service` into `/etc/systemd/system/` and adjust the
+   paths if PiWardrive lives elsewhere. The unit starts `startx` which runs
+   `~/.xsession` and in turn launches Chromium in kiosk mode.
 
 5. **(Optional) `piwardrive.service`**
    ```ini
