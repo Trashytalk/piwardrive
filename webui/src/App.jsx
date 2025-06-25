@@ -1,24 +1,22 @@
-import { useEffect, useState } from 'react';
-
 // Vite will bundle any components that match this glob so plugin widgets can be
 // loaded dynamically by name. Plugin authors should place React components under
 // `webui/src/components` with file names matching the Python class names.
-const pluginModules = import.meta.glob('./components/*.jsx');
-import BatteryStatus from './components/BatteryStatus.jsx';
-import ServiceStatus from './components/ServiceStatus.jsx';
-import HandshakeCount from './components/HandshakeCount.jsx';
-import SignalStrength from './components/SignalStrength.jsx';
-import NetworkThroughput from './components/NetworkThroughput.jsx';
-import CPUTempGraph from './components/CPUTempGraph.jsx';
-import StatsDashboard from './components/StatsDashboard.jsx';
-import SystemStats from './components/SystemStats.jsx';
-import VehicleStats from './components/VehicleStats.jsx';
-import GeofenceEditor from './components/GeofenceEditor.jsx';
-import SettingsForm from './components/SettingsForm.jsx';
-import TrackMap from './components/TrackMap.jsx';
-import Orientation from './components/Orientation.jsx';
-import VehicleInfo from './components/VehicleInfo.jsx';
-import VectorTileCustomizer from './components/VectorTileCustomizer.jsx';
+import { useEffect, useState } from "react";
+import BatteryStatus from "./components/BatteryStatus.jsx";
+import ServiceStatus from "./components/ServiceStatus.jsx";
+import HandshakeCount from "./components/HandshakeCount.jsx";
+import SignalStrength from "./components/SignalStrength.jsx";
+import NetworkThroughput from "./components/NetworkThroughput.jsx";
+import CPUTempGraph from "./components/CPUTempGraph.jsx";
+import StatsDashboard from "./components/StatsDashboard.jsx";
+import VehicleStats from "./components/VehicleStats.jsx";
+import GeofenceEditor from "./components/GeofenceEditor.jsx";
+import SettingsScreen from "./components/SettingsScreen.jsx";
+import MapScreen from "./components/MapScreen.jsx";
+import Orientation from "./components/Orientation.jsx";
+import VehicleInfo from "./components/VehicleInfo.jsx";
+import VectorTileCustomizer from "./components/VectorTileCustomizer.jsx";
+
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -62,7 +60,6 @@ export default function App() {
     };
 
     const startSse = () => {
-      if (es) es.close();
       es = new EventSource("/sse/status");
       es.onmessage = (ev) => handleData(ev.data);
       es.onerror = () => {
@@ -121,9 +118,6 @@ export default function App() {
     fetch("/logs?lines=20")
       .then((r) => r.json())
       .then((d) => setLogs(d.lines.join("\n")));
-    fetch("/config")
-      .then((r) => r.json())
-      .then(setConfigData);
     return () => {
       if (ping) clearInterval(ping);
       if (ws) ws.close();
@@ -187,21 +181,7 @@ export default function App() {
       <h2>Geofences</h2>
       <GeofenceEditor />
       <VectorTileCustomizer />
-      {configData && (
-        <section>
-          <h2>Settings</h2>
-          {Object.keys(configData).map((k) => (
-            <div key={k}>
-              <label>{k}</label>
-              <input
-                value={configData[k] ?? ""}
-                onChange={(e) => handleChange(k, e.target.value)}
-              />
-            </div>
-          ))}
-          <button onClick={saveConfig}>Save</button>
-        </section>
-      )}
+      <SettingsScreen />
     </div>
   );
 }
