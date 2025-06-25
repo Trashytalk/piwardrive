@@ -93,6 +93,14 @@ the ``log_paths`` whitelist defined in ``config.json``::
 ``/export/bt``
     Return Bluetooth scan results in the requested format.
 
+``/service/{name}``
+    Return ``{"service": name, "active": true/false}`` indicating whether a
+    ``systemd`` unit is active.
+
+``/service/{name}/{action}``
+    Start, stop or restart the given service. ``action`` must be ``start``,
+    ``stop`` or ``restart``.
+
 ``/ws/aps`` streams newly discovered Wi-Fi access points over WebSocket::
 
    websocat ws://localhost:8000/ws/aps
@@ -109,6 +117,9 @@ stay up to date without polling::
 
 Each message includes ``seq`` and ``timestamp`` fields plus an ``errors`` counter
 to help detect missed updates.
+Clients are encouraged to send periodic ``ping`` messages to keep the
+connection alive. The bundled web UI implements this automatically and
+reconnects if the stream is interrupted.
 
 ``/sse/status`` provides the same updates using `Server-Sent Events`_ for
 environments where WebSockets are unavailable::

@@ -6,8 +6,7 @@ PiWardrive Documentation
    authors are not responsible for any misuse of this software.
 
 PiWardrive's primary interface is a React-based web dashboard served by
-:doc:`status_service`. A Kivy touch interface is also available if you prefer a
-native application.
+:doc:`status_service`.
 
 
 .. toctree::

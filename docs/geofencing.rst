@@ -7,14 +7,10 @@ Geofencing
 The map supports registering polygonal geofences that trigger callbacks when
 the user's location crosses the boundary.
 
-``MapScreen.add_geofence(name, polygon, on_enter=None, on_exit=None)`` simply
-appends a dictionary with the polygon and callback functions to
-``MapScreen.geofences``. When GPS updates occur, ``_check_geofences`` evaluates
-whether the current position is inside each polygon. ``on_enter`` is invoked the
-first time the point is found inside; ``on_exit`` fires when leaving the area.
-``on_enter`` and ``on_exit`` may also be message strings which are displayed via
-``Snackbar`` when the boundary is crossed. Use ``{name}`` in the string to
-insert the geofence name.
+Geofences are registered by name along with a polygon and optional callbacks.
+When GPS updates occur the current position is checked against each polygon and
+the appropriate callback fired. ``on_enter`` and ``on_exit`` may also be message
+strings containing ``{name}`` which is replaced with the geofence name.
 
 See the tests ``test_geofence_clustering.py`` and ``test_geofence_handling.py``
 for example usage.
@@ -22,20 +18,15 @@ for example usage.
 Geofence Editor
 ~~~~~~~~~~~~~~~
 
-The :class:`~piwardrive.screens.geofence_editor.GeofenceEditor` screen provides a simple
-map interface for drawing polygons directly. Points are added by tapping on the
-map and a "Finish" button stores the completed polygon. All polygons are saved
-to ``~/.config/piwardrive/geofences.json`` and reloaded whenever the editor is
-opened. The editor exposes ``rename_polygon``, ``remove_polygon``,
-``update_polygon`` and ``configure_alerts`` helpers for modifying existing
-geofences and defining entry/exit alert messages which are loaded by the map
-screen on startup.
+Polygons can be drawn directly from the web dashboard. They are stored in
+``~/.config/piwardrive/geofences.json`` and loaded on startup.
 
 Web UI
 ------
 
 The browser dashboard includes a matching geofence editor. Click on the map to
 draw polygons and press "Finish" to save them. Existing geofences can be
-renamed or removed and optional entry/exit messages configured. All operations
-are performed through the ``/geofences`` REST API and saved to the same
-``geofences.json`` file used by the on-device editor.
+renamed or removed, entry/exit messages edited and the current status
+(inside/outside) is shown next to each polygon. All operations are performed
+through the ``/geofences`` REST API and saved to the same ``geofences.json``
+file used by the on-device editor.

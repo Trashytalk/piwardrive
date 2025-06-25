@@ -4,12 +4,21 @@ export default function VehicleInfo({ data }) {
   const [info, setInfo] = useState(data);
 
   useEffect(() => {
-    if (!data) {
+    if (data) {
+      setInfo(data);
+      return;
+    }
+
+    const load = () => {
       fetch('/vehicle')
         .then(r => r.json())
         .then(setInfo)
         .catch(() => setInfo(null));
-    }
+    };
+
+    load();
+    const id = setInterval(load, 5000);
+    return () => clearInterval(id);
   }, [data]);
 
   if (!info) return <div>Vehicle: N/A</div>;

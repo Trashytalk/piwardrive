@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
 import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
@@ -13,24 +13,17 @@ function GPSMarker({ position }) {
   );
 }
 
-export default function MapScreen() {
+export default function TrackMap() {
   const [center, setCenter] = useState([0, 0]);
   const [zoom] = useState(16);
   const [follow, setFollow] = useState(true);
   const [aps, setAps] = useState([]);
-  const [filter, setFilter] = useState({ ssid: '', encryption: '' });
+  const [bts, setBts] = useState([]);
+  const [filter, setFilter] = useState({ ssid: '', encryption: '', btName: '' });
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [prefetchProgress, setPrefetchProgress] = useState(null);
-  const track = useRef([]);
-  const [config, setConfig] = useState(null);
-
-  // load configuration
-  useEffect(() => {
-    fetch('/config')
-      .then(r => r.json())
-      .then(setConfig)
-      .catch(e => console.error('config fetch failed', e));
-  }, []);
+  const [showTrack, setShowTrack] = useState(true);
+  const trackRef = useRef([]);
+  const [, forceUpdate] = useState(0);
 
   // fetch GPS periodically
   useEffect(() => {
@@ -40,7 +33,8 @@ export default function MapScreen() {
         const data = await resp.json();
         if (data && data.lat != null && data.lon != null) {
           if (follow) setCenter([data.lat, data.lon]);
-          track.current.push([data.lat, data.lon]);
+          trackRef.current.push([data.lat, data.lon]);
+          forceUpdate(n => n + 1);
         }
       } catch (e) {
         console.error('gps fetch failed', e);
@@ -63,6 +57,25 @@ export default function MapScreen() {
         setAps(markers);
       } catch (e) {
         console.error('ap fetch error', e);
+      }
+    };
+    load();
+  }, []);
+
+  // fetch Bluetooth devices once
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const resp = await fetch('/export/bt?fmt=geojson');
+        const j = await resp.json();
+        const markers = j.features.map(f => ({
+          ...f.properties,
+          lat: f.geometry.coordinates[1],
+          lon: f.geometry.coordinates[0]
+        }));
+        setBts(markers);
+      } catch (e) {
+        console.error('bt fetch error', e);
       }
     };
     load();
@@ -127,20 +140,22 @@ export default function MapScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // route prefetch on interval from config
+  // route prefetch hourly
   useEffect(() => {
-    if (!config) return;
-    const intervalMs = (config.route_prefetch_interval || 3600) * 1000;
-    const lookahead = config.route_prefetch_lookahead || 5;
     const id = setInterval(() => {
-      routePrefetch(track.current, lookahead, 0.01, zoom);
-    }, intervalMs);
+      routePrefetch(trackRef.current, 5, 0.01, zoom);
+    }, 3600000);
     return () => clearInterval(id);
-  }, [zoom, config]);
+  }, [zoom]);
 
-  const filtered = aps.filter(ap => {
+  const filteredAps = aps.filter(ap => {
     if (filter.ssid && !(ap.ssid || '').includes(filter.ssid)) return false;
     if (filter.encryption && filter.encryption !== ap.encryption) return false;
+    return true;
+  });
+
+  const filteredBts = bts.filter(bt => {
+    if (filter.btName && !(bt.name || '').includes(filter.btName)) return false;
     return true;
   });
 
@@ -151,12 +166,7 @@ export default function MapScreen() {
       center[0] + 0.01,
       center[1] + 0.01
     ];
-    setPrefetchProgress({ done: 0, total: 0 });
-    prefetchTiles(bounds, zoom, (d, t) => {
-      setPrefetchProgress({ done: d, total: t });
-    }).finally(() => {
-      setTimeout(() => setPrefetchProgress(null), 2000);
-    });
+    prefetchTiles(bounds, zoom);
   };
 
   return (
@@ -178,16 +188,17 @@ export default function MapScreen() {
           />
           Show Heatmap
         </label>
+        <label style={{ marginLeft: '1em' }}>
+          <input
+            type="checkbox"
+            checked={showTrack}
+            onChange={() => setShowTrack(!showTrack)}
+          />
+          Show Track
+        </label>
         <button onClick={prefetchView} style={{ marginLeft: '1em' }}>
           Prefetch View
         </button>
-        {prefetchProgress && (
-          <progress
-            value={prefetchProgress.done}
-            max={prefetchProgress.total}
-            style={{ marginLeft: '1em' }}
-          />
-        )}
         <input
           placeholder="SSID filter"
           value={filter.ssid}
@@ -200,13 +211,27 @@ export default function MapScreen() {
           onChange={e => setFilter({ ...filter, encryption: e.target.value })}
           style={{ marginLeft: '1em' }}
         />
+        <input
+          placeholder="BT name"
+          value={filter.btName}
+          onChange={e => setFilter({ ...filter, btName: e.target.value })}
+          style={{ marginLeft: '1em' }}
+        />
       </div>
       <MapContainer center={center} zoom={zoom} style={{ height: '80vh' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <HeatmapLayer show={showHeatmap} />
-        {filtered.map(ap => (
+        {showTrack && trackRef.current.length > 1 && (
+          <Polyline positions={trackRef.current} color="red" />
+        )}
+        {filteredAps.map(ap => (
           <Marker key={ap.bssid} position={[ap.lat, ap.lon]}>
             <Popup>{ap.ssid || ap.bssid}</Popup>
+          </Marker>
+        ))}
+        {filteredBts.map(bt => (
+          <Marker key={bt.address} position={[bt.lat, bt.lon]}>
+            <Popup>{bt.name || bt.address}</Popup>
           </Marker>
         ))}
         <GPSMarker position={center} />

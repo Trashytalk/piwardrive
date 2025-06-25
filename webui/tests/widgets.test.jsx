@@ -19,7 +19,8 @@ describe('dashboard widgets', () => {
 
   it('shows service status', () => {
     render(<ServiceStatus metrics={{ kismet_running: true, bettercap_running: false }} />);
-    expect(screen.getByText(/Kismet: ok \| BetterCAP: down/)).toBeInTheDocument();
+    expect(screen.getByText('Kismet: ok')).toBeInTheDocument();
+    expect(screen.getByText('BetterCAP: down')).toBeInTheDocument();
   });
 
   it('displays handshake count', () => {
