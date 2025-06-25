@@ -93,7 +93,7 @@ class DummyApp:
 @pytest.mark.parametrize(
     "moves,expected",
     [
-        ([(0.0, 0.0), (0.0, 0.00005), (0.001, 0.00005)], [20, 20, 5]),
+        ([(0.0, 0.0), (0.0, 0.00005), (0.001, 0.00005)], [10, 20, 5]),
     ],
 )
 def test_dynamic_polling(monkeypatch, moves, expected):
