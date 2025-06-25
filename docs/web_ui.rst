@@ -24,8 +24,9 @@ columns.
 
 
 The ``/config`` endpoint now allows the web UI to modify settings on the
-device.  Each option is rendered as a simple form field and saved back to
-``config.json`` via a POST request.  Changes take effect on the next reload.
+device.  The React dashboard exposes a dedicated **Settings** page mirroring the
+former Kivy interface. Configuration options are fetched from ``/config`` and
+saved back via a POST request so changes persist to ``config.json``.
 
 Build the frontend with **Node.js 18+** and npm::
 
@@ -58,11 +59,11 @@ Launching in Kiosk Mode
 -----------------------
 
 After building the frontend you can start the API server and open Chromium in
-kiosk mode with ``scripts/start_kiosk.sh``::
+kiosk mode with ``piwardrive-kiosk``::
 
-   scripts/start_kiosk.sh
+   piwardrive-kiosk
 
-The script runs ``piwardrive-service`` in the background and then executes
+The command launches ``piwardrive-webui`` in the background and then executes
 ``chromium-browser --kiosk http://localhost:8000`` (falling back to
 ``chromium`` when ``chromium-browser`` is unavailable).
 An active X server is required; headless systems may use ``Xvfb``.

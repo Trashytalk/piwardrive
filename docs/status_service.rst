@@ -64,6 +64,11 @@ current orientation string, rotation angle and raw accelerometer/gyroscope data:
 
    curl http://localhost:8000/orientation
 
+``/vehicle`` reports vehicle speed, RPM and engine load obtained via
+``vehicle_sensors``::
+
+   curl http://localhost:8000/vehicle
+
 ``/gps`` exposes latitude, longitude, accuracy and fix quality from ``gpsd``::
 
    curl http://localhost:8000/gps
