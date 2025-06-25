@@ -45,9 +45,9 @@ Overview
 PiWardrive is composed of loosely coupled modules tied together by
 ``PiWardriveApp``. The **Scheduler** orchestrates polling of system metrics and
 GPS data. **Diagnostics** gathers information about running services and writes
-results to **Persistence** for later review. **Screens** expose a touch-friendly
-interface built with Kivy/KivyMD. Widgets run inside these screens and fetch
-data on a configurable interval using the scheduler.
+results to **Persistence** for later review. A browser-based dashboard provides
+interactive maps and widgets that fetch data on a configurable interval using
+the scheduler.
 
 External services such as Kismet, BetterCAP and ``gpsd`` are controlled via
 shell commands. They run outside the Python process but are monitored by the
@@ -60,10 +60,9 @@ Startup Sequence
 ~~~~~~~~~~~~~~~~
 
 At startup ``piwardrive.main`` loads the configuration, initializes the scheduler and
-restores any persisted ``AppState``. The on-device GUI is then built from
-``kv/main.kv`` and the initial screen is displayed. When the React frontend has
-been compiled, ``piwardrive.webui_server`` can serve it alongside the API so the same
-widgets appear in a browser. Widgets register themselves with the scheduler to
-begin polling. On shutdown the current state is saved so the next run resumes
+restores any persisted ``AppState``. When the React frontend has been compiled,
+``piwardrive.webui_server`` can serve it alongside the API so the same widgets
+appear in a browser. Widgets register themselves with the scheduler to begin
+polling. On shutdown the current state is saved so the next run resumes
 exactly where the user left off.
 
