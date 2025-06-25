@@ -9,7 +9,7 @@ import StatsDashboard from './components/StatsDashboard.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
 import GeofenceEditor from './components/GeofenceEditor.jsx';
 import SettingsForm from './components/SettingsForm.jsx';
-import MapScreen from './components/MapScreen.jsx';
+import TrackMap from './components/TrackMap.jsx';
 import Orientation from './components/Orientation.jsx';
 import VehicleInfo from './components/VehicleInfo.jsx';
 import VectorTileCustomizer from './components/VectorTileCustomizer.jsx';
@@ -83,7 +83,7 @@ export default function App() {
   return (
     <div>
       <h2>Map</h2>
-      <MapScreen />
+      <TrackMap />
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
       <h2>Widget Metrics</h2>
