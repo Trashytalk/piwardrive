@@ -274,36 +274,11 @@ BoxLayout:
 
 # Console Screen layout
 <ConsoleScreen>:
-    BoxLayout:
-        orientation: 'vertical'
-        LogViewer:
-            id: console_log
-            size_hint_y: 1
-            size_hint_x: 1
-            log_path: '/var/log/syslog'
-        MDBoxLayout:
-            size_hint_y: None
-            height: dp(48)
-            spacing: dp(4)
-            padding: dp(4)
-            MDTextField:
-                id: cmd_input
-                hint_text: 'Command'
-                multiline: False
-                on_text_validate: root.run_command(cmd_input.text)
-            MDRaisedButton:
-                text: 'Run'
-                size_hint_x: None
-                width: dp(80)
-                on_release: root.run_command(cmd_input.text)
-        ScrollView:
-            size_hint_y: 0.3
-            MDLabel:
-                id: cmd_output
-                text: root.command_output
-                size_hint_y: None
-                height: self.texture_size[1]
-                text_size: (self.width, None)
+    LogViewer:
+        id: console_log
+        size_hint_y: 1
+        size_hint_x: 1
+        log_path: '/var/log/syslog'
 # Map Screen layout
 <MapScreen>:
     BoxLayout:
