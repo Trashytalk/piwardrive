@@ -66,6 +66,8 @@ Raspberry Pi OS
       npm run build
       python -m piwardrive.webui_server
 
+Copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service` to start the dashboard automatically on boot.
+
 
 Generic Linux
 -------------

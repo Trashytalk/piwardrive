@@ -34,6 +34,8 @@ Build the frontend with **Node.js 18+** and npm::
    npm install
    npm run build
 
+Use `examples/piwardrive-webui.service` to run `piwardrive-webui` automatically on boot after building.
+
 During development you can run ``npm run dev`` which starts a Vite server
 and proxies API requests to ``http://localhost:8000``.
 
