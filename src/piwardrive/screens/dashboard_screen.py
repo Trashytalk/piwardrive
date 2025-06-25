@@ -3,6 +3,12 @@ import logging
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.screenmanager import Screen
+import asyncio
+from piwardrive.core.persistence import (
+    save_dashboard_settings,
+    load_dashboard_settings,
+    DashboardSettings,
+)
 
 
 from widgets import (
@@ -51,9 +57,19 @@ class DashboardScreen(Screen):
         """Persist current widget positions to the application object."""
         app = App.get_running_app()
         layout = []
+        widgets = []
         for child in self.layout.children:
             layout.append({'cls': child.__class__.__name__, 'pos': child.pos})
+            widgets.append(child.__class__.__name__)
         app.dashboard_layout = layout
+        try:
+            asyncio.run(
+                save_dashboard_settings(
+                    DashboardSettings(layout=layout, widgets=widgets)
+                )
+            )
+        except Exception as exc:  # pragma: no cover - persistence failures
+            logging.exception("Failed to save dashboard settings: %s", exc)
 
     def load_widgets(self):
         """Instantiate dashboard widgets from config or defaults."""
@@ -72,7 +88,14 @@ class DashboardScreen(Screen):
         }
 
         widgets: list[object] = []
-        if app.dashboard_layout:
+        settings = None
+        try:
+            settings = asyncio.run(load_dashboard_settings())
+        except Exception as exc:  # pragma: no cover - load failure
+            logging.exception("Failed to load dashboard settings: %s", exc)
+
+        layout_data = settings.layout if settings and settings.layout else app.dashboard_layout
+        if layout_data:
 
             cls_map = {
                 'SignalStrengthWidget': SignalStrengthWidget,
@@ -88,7 +111,7 @@ class DashboardScreen(Screen):
                 'HealthAnalysisWidget': HealthAnalysisWidget,
             }
 
-            for info in app.dashboard_layout:
+            for info in layout_data:
                 cls = cls_map.get(info.get('cls'))
                 if not cls:
                     continue
@@ -96,6 +119,7 @@ class DashboardScreen(Screen):
                 if pos := info.get('pos'):
                     widget.pos = pos
                 widgets.append(widget)
+            app.dashboard_layout = layout_data
         else:
             widgets = [
                 SignalStrengthWidget(),
