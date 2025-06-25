@@ -1,4 +1,5 @@
 """Simple FastAPI service for health records."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -29,6 +30,7 @@ from typing import Any
 
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
+
 try:  # allow tests to stub out ``persistence``
     from persistence import (
         load_recent_health,
@@ -343,8 +345,8 @@ async def update_dashboard_settings_endpoint(
 ) -> dict:
     """Persist dashboard layout and widget list."""
     layout = data.get("layout", [])
-    widgets = data.get("widgets", [])
-    await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
+    await save_dashboard_settings(DashboardSettings(layout=layout, widgets=[]))
+    widgets = [item.get("cls") for item in layout if isinstance(item, dict)]
     return {"layout": layout, "widgets": widgets}
 
 
@@ -355,7 +357,9 @@ async def list_geofences_endpoint(_auth: None = Depends(_check_auth)) -> list:
 
 
 @app.post("/geofences")
-async def add_geofence_endpoint(data: dict = Body(...), _auth: None = Depends(_check_auth)) -> list:
+async def add_geofence_endpoint(
+    data: dict = Body(...), _auth: None = Depends(_check_auth)
+) -> list:
     """Add a new polygon to ``geofences.json``."""
     polys = _load_geofences()
     polys.append(
@@ -394,7 +398,9 @@ async def update_geofence_endpoint(
 
 
 @app.delete("/geofences/{name}")
-async def remove_geofence_endpoint(name: str, _auth: None = Depends(_check_auth)) -> dict:
+async def remove_geofence_endpoint(
+    name: str, _auth: None = Depends(_check_auth)
+) -> dict:
     """Delete ``name`` from ``geofences.json``."""
     polys = _load_geofences()
     for idx, poly in enumerate(polys):
@@ -432,9 +438,7 @@ def _make_export_response(data: bytes, fmt: str, name: str) -> Response:
     return Response(
         content=data,
         media_type=EXPORT_CONTENT_TYPES.get(fmt, "application/octet-stream"),
-        headers={
-            "Content-Disposition": f"attachment; filename={name}.{fmt}"
-        },
+        headers={"Content-Disposition": f"attachment; filename={name}.{fmt}"},
     )
 
 
@@ -622,4 +626,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     finally:
         from utils import shutdown_async_loop
+
         shutdown_async_loop()

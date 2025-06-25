@@ -78,6 +78,15 @@ current orientation string, rotation angle and raw accelerometer/gyroscope data:
 
 This allows external dashboards to load widgets dynamically.
 
+``/dashboard-settings`` loads and saves the drag-and-drop widget layout used by
+the on-device GUI and browser dashboard. The POST body accepts ``layout`` which
+is persisted to ``config.json``::
+
+   curl http://localhost:8000/dashboard-settings
+   curl -X POST -H 'Content-Type: application/json' \
+        -d '{"layout": [{"cls": "SignalStrengthWidget"}]}' \
+        http://localhost:8000/dashboard-settings
+
 
 ``/logs`` tails ``app.log`` (``lines`` query parameter controls length). The
 file path is set by ``logconfig.DEFAULT_LOG_PATH`` and may be mirrored to

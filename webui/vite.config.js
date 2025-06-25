@@ -30,7 +30,7 @@ export default defineConfig({
       '/widget-metrics': 'http://localhost:8000',
       '/logs': 'http://localhost:8000',
       '/config': 'http://localhost:8000',
-      '/api/plugins': 'http://localhost:8000',
+      '/plugins': 'http://localhost:8000',
       '/api/widgets': 'http://localhost:8000',
       '/dashboard-settings': 'http://localhost:8000',
       '/service': 'http://localhost:8000',

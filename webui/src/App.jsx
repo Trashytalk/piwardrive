@@ -54,7 +54,7 @@ export default function App() {
     fetch('/widget-metrics')
       .then(r => r.json())
       .then(setMetrics);
-    fetch('/api/plugins')
+    fetch('/plugins')
       .then(r => r.json())
       .then(setPlugins);
     fetch('/logs?lines=20')

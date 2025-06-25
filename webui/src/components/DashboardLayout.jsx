@@ -22,8 +22,11 @@ export default function DashboardLayout({ metrics }) {
     fetch('/dashboard-settings')
       .then(r => r.json())
       .then(d => {
-        const names = d.layout.map(w => w.cls);
-        setOrder(names);
+        if (d.layout && d.layout.length > 0) {
+          setOrder(d.layout.map(w => w.cls));
+        } else if (d.widgets) {
+          setOrder(d.widgets);
+        }
       });
   }, []);
 
@@ -33,7 +36,7 @@ export default function DashboardLayout({ metrics }) {
     fetch('/dashboard-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ layout, widgets: items }),
+      body: JSON.stringify({ layout }),
     }).catch(() => {});
   };
 
