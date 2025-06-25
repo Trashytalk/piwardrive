@@ -56,6 +56,54 @@ export default function MapScreen() {
     load();
   }, []);
 
+  // subscribe to new APs
+  useEffect(() => {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    let ws;
+    let es;
+
+    const handle = (raw) => {
+      try {
+        const data = JSON.parse(raw);
+        if (data.aps && data.aps.length) {
+          setAps(prev => {
+            const map = new Map(prev.map(a => [a.bssid, a]));
+            data.aps.forEach(ap => map.set(ap.bssid, ap));
+            return Array.from(map.values());
+          });
+        }
+      } catch (e) {
+        console.error('ap stream parse error', e);
+      }
+    };
+
+    const startSse = () => {
+      es = new EventSource('/sse/aps');
+      es.onmessage = ev => handle(ev.data);
+      es.onerror = () => es.close();
+    };
+
+    if (window.WebSocket) {
+      try {
+        ws = new WebSocket(`${proto}//${window.location.host}/ws/aps`);
+        ws.onmessage = ev => handle(ev.data);
+        ws.onerror = () => {
+          ws.close();
+          startSse();
+        };
+      } catch (e) {
+        startSse();
+      }
+    } else {
+      startSse();
+    }
+
+    return () => {
+      if (ws) ws.close();
+      if (es) es.close();
+    };
+  }, []);
+
   // offline cache maintenance daily
   useEffect(() => {
     const run = async () => {
