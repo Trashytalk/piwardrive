@@ -54,6 +54,10 @@ a service worker that caches the compiled assets and ``index.html`` for offline
 use. After visiting the site once, the UI will continue to load even without
 network connectivity. New versions are picked up automatically on reload.
 
+When GPS data is available the web interface predicts future positions using the
+two most recent fixes. It then downloads tiles along the anticipated path based
+on the ``route_prefetch_interval`` and ``route_prefetch_lookahead`` settings.
+
 Authentication
 --------------
 

@@ -22,6 +22,15 @@ export default function MapScreen() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [prefetchProgress, setPrefetchProgress] = useState(null);
   const track = useRef([]);
+  const [config, setConfig] = useState(null);
+
+  // load configuration
+  useEffect(() => {
+    fetch('/config')
+      .then(r => r.json())
+      .then(setConfig)
+      .catch(e => console.error('config fetch failed', e));
+  }, []);
 
   // fetch GPS periodically
   useEffect(() => {
@@ -118,13 +127,16 @@ export default function MapScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // route prefetch hourly
+  // route prefetch on interval from config
   useEffect(() => {
+    if (!config) return;
+    const intervalMs = (config.route_prefetch_interval || 3600) * 1000;
+    const lookahead = config.route_prefetch_lookahead || 5;
     const id = setInterval(() => {
-      routePrefetch(track.current, 5, 0.01, zoom);
-    }, 3600000);
+      routePrefetch(track.current, lookahead, 0.01, zoom);
+    }, intervalMs);
     return () => clearInterval(id);
-  }, [zoom]);
+  }, [zoom, config]);
 
   const filtered = aps.filter(ap => {
     if (filter.ssid && !(ap.ssid || '').includes(filter.ssid)) return false;

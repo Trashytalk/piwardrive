@@ -63,6 +63,9 @@ from the two most recent points and extrapolates future positions using
 great‑circle math. ``route_prefetch_lookahead`` controls how far ahead of the
 current location tiles are fetched.
 
+The browser-based dashboard honors these options and prefetches route tiles
+with the same logic when installed as a progressive web app.
+
 
 Paths
 -----
