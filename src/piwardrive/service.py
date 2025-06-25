@@ -1,4 +1,5 @@
 """Simple FastAPI service for health records."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
@@ -29,6 +30,7 @@ from typing import Any
 
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
+
 try:  # allow tests to stub out ``persistence``
     from persistence import (
         load_recent_health,
@@ -319,6 +321,7 @@ async def update_config_endpoint(
     updates: dict = Body(...),
     _auth: None = Depends(_check_auth),
 ) -> dict:
+    
     """Update configuration values and persist them."""
     cfg = config.load_config()
     data = asdict(cfg)
@@ -441,9 +444,7 @@ def _make_export_response(data: bytes, fmt: str, name: str) -> Response:
     return Response(
         content=data,
         media_type=EXPORT_CONTENT_TYPES.get(fmt, "application/octet-stream"),
-        headers={
-            "Content-Disposition": f"attachment; filename={name}.{fmt}"
-        },
+        headers={"Content-Disposition": f"attachment; filename={name}.{fmt}"},
     )
 
 
@@ -631,4 +632,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     finally:
         from utils import shutdown_async_loop
+        
         shutdown_async_loop()
