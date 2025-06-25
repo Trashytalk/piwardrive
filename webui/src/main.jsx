@@ -1,16 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App.jsx';
 import ConsoleView from './components/ConsoleView.jsx';
+import SettingsForm from './components/SettingsForm.jsx';
 import SplitView from './components/SplitView.jsx';
-
-let Root = App;
-const path = window.location.pathname;
-if (path.startsWith('/console')) Root = ConsoleView;
-if (path.startsWith('/split')) Root = SplitView;
+import NavBar from './components/NavBar.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Root />
+    <BrowserRouter>
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/console" element={<ConsoleView />} />
+        <Route path="/settings" element={<SettingsForm />} />
+        <Route path="/split" element={<SplitView />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   </React.StrictMode>
 );
