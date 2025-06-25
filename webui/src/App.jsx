@@ -6,6 +6,7 @@ import SignalStrength from './components/SignalStrength.jsx';
 import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
+import GeofenceEditor from './components/GeofenceEditor.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -83,6 +84,8 @@ export default function App() {
 
       <h2>Logs</h2>
       <pre>{logs}</pre>
+      <h2>Geofences</h2>
+      <GeofenceEditor />
       {configData && (
         <section>
           <h2>Settings</h2>
