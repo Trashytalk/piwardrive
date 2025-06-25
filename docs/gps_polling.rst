@@ -14,7 +14,8 @@ power at the cost of stale position data. The client connects to
 PiWardrive adapts its polling rate automatically. When movement is
 detected the map polls at ``map_poll_gps`` seconds. If the location
 remains nearly constant the interval doubles each time until it
-reaches ``map_poll_gps_max``. These values can be tweaked in
+reaches ``map_poll_gps_max``. This behaviour applies to both the
+native GUI and the browser dashboard. The values can be tweaked in
 ``config.json`` or via ``PW_MAP_POLL_GPS`` and
 ``PW_MAP_POLL_GPS_MAX`` environment variables.
 
