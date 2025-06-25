@@ -69,74 +69,8 @@ def test_export_records_formats(tmp_path) -> None:
     assert r.shapes()[0].points[0] == [2.0, 1.0]
 
 
-def load_map_screen(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
-    modules = {
-        "kivy.app": ModuleType("kivy.app"),
-        "kivy.uix.screenmanager": ModuleType("kivy.uix.screenmanager"),
-        "kivy.metrics": ModuleType("kivy.metrics"),
-        "kivy.clock": ModuleType("kivy.clock"),
-        "kivy.uix.label": ModuleType("kivy.uix.label"),
-        "kivymd.uix.dialog": ModuleType("kivymd.uix.dialog"),
-        "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
-        "kivymd.uix.snackbar": ModuleType("kivymd.uix.snackbar"),
-        "kivymd.uix.textfield": ModuleType("kivymd.uix.textfield"),
-    }
-    modules["kivy.app"].App = type(
-        "App",
-        (),
-        {"get_running_app": staticmethod(lambda: None)},
-    )
-    modules["kivy.clock"].Clock = SimpleNamespace(create_trigger=lambda *a, **k: lambda *a2, **k2: None)
-    modules["kivy.clock"].mainthread = lambda f: f
-    modules["kivy.metrics"].dp = lambda x: x
-    modules["kivy.uix.label"].Label = object
-    modules["kivy.uix.screenmanager"].Screen = object
-    modules["kivymd.uix.dialog"].MDDialog = object
-    modules["kivymd.uix.menu"].MDDropdownMenu = object
-    modules["kivymd.uix.textfield"].MDTextField = object
-
-    class DummySnackbar:
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def open(self) -> None:
-            pass
-
-    modules["kivymd.uix.snackbar"].Snackbar = DummySnackbar
-
-    mapview = ModuleType("kivy_garden.mapview")
-    mapview.MapMarker = object
-    mapview.MapMarkerPopup = object
-    mapview.MBTilesMapSource = object
-    mapview.LineMapLayer = object
-    modules["kivy_garden.mapview"] = mapview
-
-    for name, mod in modules.items():
-        monkeypatch.setitem(sys.modules, name, mod)
-
-    if "piwardrive.screens.map_screen" in sys.modules:
-        monkeypatch.delitem(sys.modules, "piwardrive.screens.map_screen", raising=False)
-
-    return importlib.import_module("piwardrive.screens.map_screen")
 
 
-def test_screen_export_ap_data(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
-    mod = load_map_screen(monkeypatch)
-    screen = mod.MapScreen()
-    screen.ap_markers = [
-        SimpleNamespace(lat=1.0, lon=2.0, ap_data={"ssid": "A", "bssid": "AA", "encryption": "WPA2"}),
-        SimpleNamespace(lat=3.0, lon=4.0, ap_data={"ssid": "B", "bssid": "BB", "encryption": "OPEN"}),
-    ]
-    out = tmp_path / "out.json"
-    records = [
-        {**getattr(m, "ap_data", {}), "lat": m.lat, "lon": m.lon}
-        for m in screen.ap_markers
-    ]
-    filtered = exp.filter_records(records, encryption="OPEN")
-    exp.export_records(filtered, str(out), "json")
-    data = json.load(open(out))
-    assert len(data) == 1
-    assert data[0]["ssid"] == "B"
 
 
 def test_estimate_location_from_rssi() -> None:

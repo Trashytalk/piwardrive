@@ -83,21 +83,6 @@ def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     aiohttp_mod.ClientError = Exception
     monkeypatch.setitem(sys.modules, "aiohttp", aiohttp_mod)
 
-    screens_pkg = ModuleType("piwardrive.screens")
-    screen_mods = {
-        "console_screen": "ConsoleScreen",
-        "dashboard_screen": "DashboardScreen",
-        "map_screen": "MapScreen",
-        "settings_screen": "SettingsScreen",
-        "split_screen": "SplitScreen",
-        "stats_screen": "StatsScreen",
-    }
-    for mod_name, cls_name in screen_mods.items():
-        mod = ModuleType(f"piwardrive.screens.{mod_name}")
-        setattr(mod, cls_name, type(cls_name, (), {}))
-        monkeypatch.setitem(sys.modules, f"piwardrive.screens.{mod_name}", mod)
-        setattr(screens_pkg, mod_name, mod)
-    monkeypatch.setitem(sys.modules, "piwardrive.screens", screens_pkg)
 
 
 @pytest.mark.parametrize("module", MODULES)

@@ -1,6 +1,6 @@
 # PiWardrive
 
-PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a touch-friendly interface built on Kivy/KivyMD. The project runs without an X server and includes a command line SIGINT suite for scanning. A browser-based dashboard is also available when the optional React frontend is built.
+PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. A browser-based dashboard provides an optional GUI when the React frontend is built.
 
 For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory.
 
@@ -229,16 +229,6 @@ The command runs `piwardrive-webui` in the background and opens Chromium with
 `--kiosk` pointing to the dashboard. Chromium must run inside a graphical
 environment. Ensure an X server is available and ``$DISPLAY`` is set.
 Headless setups can use ``Xvfb``.
-
-#### Touch Interface (optional)
-
-```bash
-source gui-env/bin/activate
-python -m piwardrive.main
-```
-
-The Kivy interface renders directly on the framebuffer so no X server is
-required.
 
 ### Optional C Extensions
 
