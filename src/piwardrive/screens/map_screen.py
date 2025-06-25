@@ -20,7 +20,7 @@ import time
 
 import gps
 import requests
-from typing import Callable
+from typing import Callable, List, Any
 
 import csv
 
@@ -149,6 +149,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
         self._orientation = None
 
         self.kml_layers = []
+        self.geofence_layers: List[Any] = []
 
         self.geofences = []
         app = App.get_running_app()
@@ -244,8 +245,11 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
                 mv.remove_widget(m)
             for m in self.wigle_markers:
                 mv.remove_widget(m)
+            for layer in self.geofence_layers:
+                mv.remove_layer(layer)
         self._heatmap_markers.clear()
         self.wigle_markers.clear()
+        self.geofence_layers.clear()
 
 # ------------------------------------------------------------------
 
@@ -1410,7 +1414,7 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
 
     # Geofence Handling
 
-    def add_geofence(self, name, polygon, on_enter=None, on_exit=None):
+    def add_geofence(self, name, polygon, on_enter=None, on_exit=None, *, overlay: bool = True):
 
         """Register a geofence polygon with optional callbacks.
 
@@ -1451,6 +1455,16 @@ class MapScreen(Screen):  # pylint: disable=too-many-instance-attributes
             }
 
         )
+
+        if overlay:
+            mv = self.ids.get("mapview")
+            if mv:
+                try:
+                    layer = LineMapLayer(points=polygon + [polygon[0]])
+                    mv.add_layer(layer)
+                    self.geofence_layers.append(layer)
+                except Exception:  # pragma: no cover - mapview errors
+                    pass
 
     def load_saved_geofences(self) -> None:
         """Load polygons saved by :class:`~piwardrive.screens.geofence_editor.GeofenceEditor`."""

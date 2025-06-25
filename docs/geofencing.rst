@@ -19,6 +19,16 @@ insert the geofence name.
 See the tests ``test_geofence_clustering.py`` and ``test_geofence_handling.py``
 for example usage.
 
+Geofence Overlays
+~~~~~~~~~~~~~~~~~
+
+Saved polygons are drawn on the map when the application starts.
+:class:`~piwardrive.screens.map_screen.MapScreen` loads ``geofences.json`` and
+adds a ``LineMapLayer`` for each polygon so the boundaries are visible.
+The browser dashboard fetches the same file via the ``/geofences`` API and
+renders ``<Polygon>`` overlays. Entry and exit messages configured in the
+editor trigger ``alert`` pop-ups whenever the user crosses a geofence.
+
 Geofence Editor
 ~~~~~~~~~~~~~~~
 
