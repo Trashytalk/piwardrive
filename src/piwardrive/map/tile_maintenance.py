@@ -18,7 +18,13 @@ except Exception:  # pragma: no cover - watchdog optional for tests
 
 
 def purge_old_tiles(folder: str, max_age_days: int) -> None:
-    """Delete cached tiles older than ``max_age_days`` days."""
+    """
+    Delete files in the specified folder that are older than the given number of days.
+    
+    Parameters:
+        folder (str): Path to the folder containing cached tiles.
+        max_age_days (int): Maximum allowed file age in days; files older than this are deleted.
+    """
     cutoff = time.time() - max_age_days * 86400
     try:
         if not os.path.isdir(folder):
@@ -33,7 +39,11 @@ def purge_old_tiles(folder: str, max_age_days: int) -> None:
 
 
 def enforce_cache_limit(folder: str, limit_mb: int) -> None:
-    """Ensure tile cache does not exceed ``limit_mb`` megabytes."""
+    """
+    Removes the oldest files in the specified folder to ensure the total cache size does not exceed the given limit in megabytes.
+    
+    Files are deleted in order of oldest modification time first until the total size is within the specified limit. Subdirectories are processed recursively. Errors during file operations are ignored to ensure robustness.
+    """
 
     try:
         if not os.path.isdir(folder):
@@ -78,7 +88,15 @@ def enforce_cache_limit(folder: str, limit_mb: int) -> None:
 
 
 def _folder_stats(folder: str) -> tuple[int, int]:
-    """Return ``(file_count, total_bytes)`` for ``folder``."""
+    """
+    Return the number of files and total size in bytes for all files within the specified folder and its subdirectories.
+    
+    Parameters:
+        folder (str): Path to the directory to scan.
+    
+    Returns:
+        tuple[int, int]: A tuple containing the file count and the total size in bytes.
+    """
     count = 0
     size = 0
     if not os.path.isdir(folder):
@@ -101,7 +119,12 @@ def _folder_stats(folder: str) -> tuple[int, int]:
 
 
 def vacuum_mbtiles(path: str) -> None:
-    """Run VACUUM on an MBTiles file to compress it."""
+    """
+    Runs the SQLite VACUUM command on the specified MBTiles file to optimize and reduce its disk usage.
+    
+    Parameters:
+        path (str): Path to the MBTiles (SQLite) database file.
+    """
     try:
         if os.path.isfile(path):
             with sqlite3.connect(path) as db:
@@ -114,9 +137,15 @@ class _TileEventHandler(FileSystemEventHandler):
     """Handle file events for :class:`TileMaintainer`."""
 
     def __init__(self, maintainer: "TileMaintainer") -> None:
+        """
+        Initialize the event handler with a reference to the given TileMaintainer instance.
+        """
         self.maintainer = maintainer
 
     def on_any_event(self, _event) -> None:  # pragma: no cover - thin wrapper
+        """
+        Handles any file system event by triggering a threshold check on the associated TileMaintainer.
+        """
         self.maintainer.check_thresholds()
 
 
@@ -136,6 +165,22 @@ class TileMaintainer:
         trigger_file_count: int = 1000,
         start_observer: bool = True,
     ) -> None:
+        """
+        Initializes a TileMaintainer to manage tile cache maintenance tasks.
+        
+        Configures periodic and event-driven maintenance of a tile cache directory, including purging old tiles, enforcing cache size limits, and optionally vacuuming an MBTiles database. Schedules periodic tasks using the provided scheduler and, if enabled and available, starts a file system observer to trigger maintenance on file changes.
+        
+        Parameters:
+            scheduler (PollScheduler): Scheduler used to run periodic maintenance tasks.
+            folder (str, optional): Path to the tile cache directory. Defaults to "/mnt/ssd/tiles".
+            offline_path (str | None, optional): Path to an offline MBTiles file for vacuuming, if applicable.
+            interval (int, optional): Interval in seconds between scheduled maintenance runs. Defaults to 604800 (one week).
+            max_age_days (int, optional): Maximum age in days for cached tiles before purging. Defaults to 30.
+            limit_mb (int, optional): Maximum allowed cache size in megabytes. Defaults to 512.
+            vacuum (bool, optional): Whether to vacuum the MBTiles database during maintenance. Defaults to True.
+            trigger_file_count (int, optional): File count threshold to trigger maintenance on file system events. Defaults to 1000.
+            start_observer (bool, optional): Whether to start a file system observer for event-driven maintenance. Defaults to True.
+        """
         self._folder = folder
         self._offline_path = offline_path
         self._max_age = max_age_days
@@ -159,6 +204,9 @@ class TileMaintainer:
             self._observer.start()
 
     async def _run(self) -> None:
+        """
+        Performs tile cache maintenance tasks asynchronously, including purging old tiles, enforcing cache size limits, and optionally vacuuming the MBTiles database.
+        """
         try:
             await asyncio.to_thread(purge_old_tiles, self._folder, self._max_age)
             await asyncio.to_thread(enforce_cache_limit, self._folder, self._limit)
@@ -168,14 +216,20 @@ class TileMaintainer:
             logging.exception("Tile maintenance failed: %s", exc)
 
     def stop(self) -> None:
-        """Stop the ``watchdog`` observer if running."""
+        """
+        Stops the file system observer if it is running, ensuring the observer thread is properly terminated.
+        """
         if self._observer is not None:
             self._observer.stop()
             self._observer.join(1)
             self._observer = None
 
     def check_thresholds(self) -> None:
-        """Run maintenance if file count or size exceed limits."""
+        """
+        Triggers maintenance if the number of files or total size in the tile folder exceeds configured thresholds.
+        
+        If either the file count or total size surpasses their respective limits and no maintenance is currently running, this method schedules an asynchronous maintenance task and prevents concurrent executions.
+        """
         count, size = _folder_stats(self._folder)
         over_files = count >= self._trigger_files
         over_size = size >= self._limit * 1024 * 1024
@@ -183,6 +237,9 @@ class TileMaintainer:
             self._running = True
 
             async def _runner() -> None:
+                """
+                Runs the maintenance task asynchronously and resets the running flag upon completion.
+                """
                 try:
                     await self._run()
                 finally:

@@ -14,7 +14,14 @@ def apply_style(
     name: str | None = None,
     description: str | None = None,
 ) -> None:
-    """Update ``path`` metadata with the given style and fields."""
+    """
+    Updates the metadata of an MBTiles file with optional style, name, and description fields.
+    
+    If a style JSON file is provided, its contents are validated and stored in the metadata. The function creates the metadata table if it does not exist and inserts or replaces the specified fields.
+    
+    Raises:
+        FileNotFoundError: If the MBTiles file at the given path does not exist.
+    """
     if not os.path.exists(path):
         raise FileNotFoundError(path)
 
@@ -42,7 +49,18 @@ def apply_style(
 
 
 def build_mbtiles(folder: str, output: str) -> None:
-    """Create an MBTiles file from ``folder`` of XYZ PBF tiles."""
+    """
+    Create an MBTiles SQLite file at the specified output path by importing XYZ-format PBF tiles from a directory.
+    
+    Recursively scans the input folder for `.pbf` files organized in a three-level directory structure representing zoom, x, and y tile coordinates. Converts the y coordinate from XYZ to TMS format and inserts the tile data into the MBTiles database. Skips files that do not conform to the expected structure or have invalid coordinate values.
+    
+    Parameters:
+        folder (str): Path to the root directory containing XYZ PBF tiles.
+        output (str): Path where the resulting MBTiles file will be created.
+    
+    Raises:
+        FileNotFoundError: If the input folder does not exist or is not a directory.
+    """
     if not os.path.isdir(folder):
         raise FileNotFoundError(folder)
 

@@ -14,7 +14,19 @@ async def fetch_wigle_networks(
     *,
     radius: float = 0.01,
 ) -> List[Dict[str, Any]]:
-    """Return Wi-Fi networks around ``lat``/``lon`` via the WiGLE API."""
+    """
+    Retrieve nearby Wi-Fi networks from the WiGLE API based on geographic coordinates.
+    
+    Parameters:
+        api_name (str): WiGLE API username.
+        api_key (str): WiGLE API key.
+        lat (float): Latitude of the center point.
+        lon (float): Longitude of the center point.
+        radius (float, optional): Search radius in degrees for the bounding box (default is 0.01).
+    
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries, each containing the BSSID, SSID, encryption type, latitude, and longitude of a detected Wi-Fi network.
+    """
 
     auth = aiohttp.BasicAuth(api_name, api_key)
     params = {

@@ -14,7 +14,15 @@ DEF_BUILD_DIR = os.path.join(
 
 
 def create_app() -> FastAPI:
-    """Return a FastAPI instance serving API routes and static files."""
+    """
+    Create and configure a FastAPI application that serves API endpoints under '/api' and static web UI files from a build directory.
+    
+    Returns:
+        FastAPI: The configured FastAPI application instance.
+    
+    Raises:
+        RuntimeError: If the static web UI build directory does not exist.
+    """
     app = FastAPI()
     app.mount("/api", api_app)
 
@@ -29,6 +37,9 @@ def create_app() -> FastAPI:
 
 
 def main() -> None:
+    """
+    Start the FastAPI web server using Uvicorn on all network interfaces at port 8000.
+    """
     import uvicorn
 
     uvicorn.run(create_app(), host="0.0.0.0", port=8000)

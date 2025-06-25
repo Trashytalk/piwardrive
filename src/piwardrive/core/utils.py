@@ -32,6 +32,9 @@ else:
     class _AppStub:
         @staticmethod
         def get_running_app() -> None:
+            """
+            Returns None to indicate that no running application instance is available.
+            """
             return None
 
     App = _AppStub
@@ -84,7 +87,9 @@ HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECO
 
 
 def _prune_safe_request_cache(now: float) -> None:
-    """Remove expired or excess cached responses."""
+    """
+    Removes expired or excess entries from the safe request cache based on age and maximum cache size.
+    """
     expired: list[str] = []
     for url, (ts, _) in list(_SAFE_REQUEST_CACHE.items()):
         if now - ts > SAFE_REQUEST_CACHE_SECONDS:
@@ -122,7 +127,11 @@ ERROR_PREFIX = "E"
 
 
 def network_scanning_disabled() -> bool:
-    """Return ``True`` if scanning is globally disabled."""
+    """
+    Returns True if network scanning is globally disabled via the running app's attribute or an environment variable.
+    
+    Checks the application's `disable_scanning` attribute if available; otherwise, inspects the `PW_DISABLE_SCANNING` environment variable.
+    """
     app = App.get_running_app()
     if app is not None:
         disabled = bool(getattr(app, "disable_scanning", False))
@@ -143,7 +152,9 @@ _async_thread: threading.Thread | None = None
 
 
 def _ensure_async_loop_running() -> None:
-    """Create and start the background asyncio loop if needed."""
+    """
+    Initializes and starts a background asyncio event loop in a daemon thread if one is not already running.
+    """
     global _async_loop, _async_thread
 
     if _async_loop is None or _async_loop.is_closed():
@@ -157,7 +168,12 @@ def _ensure_async_loop_running() -> None:
 
 
 def shutdown_async_loop(timeout: float | None = 5.0) -> None:
-    """Stop the background asyncio loop and join its thread."""
+    """
+    Stops the background asyncio event loop and waits for its thread to finish.
+    
+    Parameters:
+        timeout (float | None): Maximum time in seconds to wait for the thread to join. If None, waits indefinitely.
+    """
     global _async_loop, _async_thread
 
     if _async_thread is not None and _async_thread.is_alive():
@@ -173,14 +189,20 @@ def shutdown_async_loop(timeout: float | None = 5.0) -> None:
 
 
 def format_error(code: int | IntEnum, message: str) -> str:
-    """Return standardized error string like ``[E001] message``."""
+    """
+    Format an error code and message into a standardized string.
+    
+    Returns:
+        str: The formatted error string in the form "[E###] message".
+    """
     return f"[{ERROR_PREFIX}{int(code):03d}] {message}"
 
 
 def report_error(message: str) -> None:
-    """Log the error and show an alert via the running app if possible.
-
-    ``message`` should include a numeric error code prefix like ``[E001]``.
+    """
+    Logs an error message and attempts to display an alert in the running application.
+    
+    The message should include a numeric error code prefix (e.g., "[E001]").
     """
     logging.error(message)
     try:
@@ -195,11 +217,10 @@ T = TypeVar("T")
 
 
 def require_id(widget: Any, name: str) -> Any:
-    """Return ``widget.ids[name]`` or raise with context.
-
-    The available IDs are logged before raising ``RuntimeError`` if the lookup
-    fails. The error message reminds the caller to ensure ``kv/main.kv`` is
-    consistent with the code.
+    """
+    Retrieve a widget child by ID or raise a RuntimeError with available IDs listed.
+    
+    If the specified ID is not found in the widget's `ids` dictionary, logs the available IDs and raises a RuntimeError with a message suggesting to check the `kv/main.kv` file for consistency.
     """
     try:
         return widget.ids[name]
@@ -215,7 +236,16 @@ def run_async_task(
     coro: Coroutine[Any, Any, T],
     callback: Callable[[T], None] | None = None,
 ) -> Future[T]:
-    """Schedule ``coro`` on the background loop and invoke ``callback``."""
+    """
+    Schedules a coroutine to run on the background asyncio event loop and optionally invokes a callback with its result upon completion.
+    
+    Parameters:
+        coro (Coroutine): The coroutine to execute asynchronously.
+        callback (Callable[[T], None], optional): A function to call with the result of the coroutine when it completes.
+    
+    Returns:
+        Future[T]: A Future representing the execution of the coroutine.
+    """
 
     _ensure_async_loop_running()
     assert _async_loop is not None  # for mypy
@@ -224,6 +254,9 @@ def run_async_task(
     if callback is not None:
 
         def _done(f: Future[T]) -> None:
+            """
+            Handles completion of a Future by invoking the callback with the result or logging exceptions if the task failed.
+            """
             try:
                 result = f.result()
             except Exception as exc:  # pragma: no cover - background errors
@@ -237,7 +270,20 @@ def run_async_task(
 
 
 def retry_call(func: Callable[[], T], attempts: int = 3, delay: float = 0) -> T:
-    """Call ``func`` repeatedly until it succeeds or attempts are exhausted."""
+    """
+    Calls the provided function repeatedly until it succeeds or the specified number of attempts is exhausted.
+    
+    Parameters:
+        func (Callable[[], T]): The function to call. It should take no arguments.
+        attempts (int): Maximum number of attempts to call the function. Defaults to 3.
+        delay (float): Seconds to wait between attempts. Defaults to 0.
+    
+    Returns:
+        T: The result returned by the function if successful.
+    
+    Raises:
+        Exception: The last exception raised by the function if all attempts fail.
+    """
     last_exc: Exception | None = None
     for _ in range(attempts):
         try:
@@ -260,11 +306,20 @@ def safe_request(
     fallback: Callable[[], T] | None = None,
     **kwargs: Any,
 ) -> T | Any | None:
-    """Return ``requests.get(url)`` with retries and optional fallback.
-
-    ``requests_cache`` handles caching using :data:`HTTP_SESSION`.
-    The ``cache_seconds`` argument controls the per-request expiration.
-    Passing ``cache_seconds`` as ``0`` disables caching.
+    """
+    Performs a cached HTTP GET request with retries and optional fallback.
+    
+    Attempts to retrieve the specified URL using a cached HTTP session, retrying on failure up to the specified number of attempts. Responses are cached for the given duration in seconds. If all attempts fail, an optional fallback function is called and its result is cached and returned. Returns None if both the request and fallback fail.
+    
+    Parameters:
+        url (str): The URL to request.
+        attempts (int): Number of retry attempts on failure.
+        timeout (float): Timeout in seconds for each request.
+        cache_seconds (float): Duration in seconds to cache the response; set to 0 to disable caching.
+        fallback (Callable[[], T] | None): Optional function to call if all attempts fail.
+    
+    Returns:
+        The HTTP response object, the result of the fallback function, or None if both fail.
     """
     now = time.time()
     _prune_safe_request_cache(now)
@@ -281,6 +336,12 @@ def safe_request(
                 return cached
 
     def _get() -> Any:
+        """
+        Performs an HTTP GET request using the cached session with the specified URL, timeout, cache expiration, and additional parameters.
+        
+        Returns:
+            The HTTP response object from the cached session.
+        """
         return HTTP_SESSION.get(
             url,
             timeout=timeout,
@@ -317,7 +378,15 @@ def safe_request(
 def ensure_service_running(
     service: str, *, attempts: int = 3, delay: float = 1.0
 ) -> bool:
-    """Ensure ``service`` is active, attempting a restart if not."""
+    """
+    Ensures that the specified systemd service is running, attempting to restart it if inactive.
+    
+    Parameters:
+        service (str): The name of the systemd service to check and manage.
+    
+    Returns:
+        bool: True if the service is active after any restart attempts, False otherwise.
+    """
     from piwardrive.security import validate_service_name
 
     validate_service_name(service)
@@ -335,8 +404,10 @@ def ensure_service_running(
 
 def get_cpu_temp() -> float | None:
     """
-    Read the Raspberry Pi CPU temperature from sysfs.
-    Returns temperature in °C as a float, or None on failure.
+    Returns the current Raspberry Pi CPU temperature in degrees Celsius.
+    
+    Returns:
+        float | None: The CPU temperature in °C, or None if the temperature cannot be read.
     """
     try:
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
@@ -348,7 +419,10 @@ def get_cpu_temp() -> float | None:
 
 def get_mem_usage() -> float | None:
     """
-    Return system memory usage percentage.
+    Returns the current system memory usage as a percentage, using a cached value if available and recent.
+    
+    Returns:
+        float | None: Memory usage percentage, or None if retrieval fails.
     """
     now = time.time()
     pct = _MEM_USAGE_CACHE.get("percent")
@@ -366,7 +440,13 @@ def get_mem_usage() -> float | None:
 
 def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
     """
-    Return disk usage percentage for given path.
+    Returns the disk usage percentage for the specified path, using a cached value if available and recent.
+    
+    Parameters:
+        path (str): Filesystem path to check disk usage for. Defaults to '/mnt/ssd'.
+    
+    Returns:
+        float | None: Disk usage percentage, or None if unavailable.
     """
     now = time.time()
     cache = _DISK_USAGE_CACHE.get(path)
@@ -384,10 +464,13 @@ def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
 
 
 def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
-    """Return ``(rx_kbps, tx_kbps)`` since the last call.
-
-    If ``iface`` is provided, only counters for that interface are used.
-    The first call for a given ``iface`` returns ``(0.0, 0.0)``.
+    """
+    Return the received and transmitted network throughput in kilobits per second since the last call.
+    
+    If an interface name is provided, throughput is measured for that interface only; otherwise, overall system throughput is returned. The first call for a given interface returns (0.0, 0.0).
+        
+    Returns:
+        tuple[float, float]: A tuple containing (rx_kbps, tx_kbps), representing received and transmitted kilobits per second.
     """
     try:
         if iface:
@@ -415,7 +498,15 @@ def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
 
 
 def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
-    """Return SMART health status for the device mounted at ``mount_point``."""
+    """
+    Returns the SMART health status of the storage device mounted at the specified path.
+    
+    Parameters:
+        mount_point (str): The mount point of the device to check. Defaults to '/mnt/ssd'.
+    
+    Returns:
+        str | None: A simplified SMART status string ("OK", "FAIL", "WARN"), or None if the device or status cannot be determined.
+    """
     try:
         dev = next(
             (p.device for p in psutil.disk_partitions(all=False)
@@ -440,7 +531,12 @@ def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
 
 
 def _parse_smartctl_output(output: str) -> str | None:
-    """Map smartctl output to a simple status string."""
+    """
+    Converts smartctl command output to a simplified status string ("OK", "FAIL", or "WARN").
+    
+    Returns:
+        str | None: "OK", "FAIL", or "WARN" if recognized keywords are found in the output; otherwise, returns the last line of the output or None if the output is empty.
+    """
     for key, val in {"PASSED": "OK", "FAILED": "FAIL", "WARNING": "WARN"}.items():
         if key in output:
             return val
@@ -448,7 +544,16 @@ def _parse_smartctl_output(output: str) -> str | None:
 
 
 def find_latest_file(directory: str, pattern: str = '*') -> str | None:
-    """Return the newest file matching ``pattern`` under ``directory``."""
+    """
+    Return the most recently modified file matching a pattern in the specified directory.
+    
+    Parameters:
+    	directory (str): Path to the directory to search.
+    	pattern (str): Glob pattern to match files. Defaults to '*' (all files).
+    
+    Returns:
+    	str | None: Path to the newest matching file, or None if no files match.
+    """
     dir_path = Path(directory)
     files = list(dir_path.glob(pattern))
     if not files:
@@ -457,7 +562,16 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
-    """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
+    """
+    Return the last N lines from a file efficiently using memory mapping.
+    
+    Parameters:
+        path (str): Path to the file to read.
+        lines (int): Number of lines to return from the end of the file.
+    
+    Returns:
+        list[str]: The last N lines of the file as a list of strings, or an empty list on error.
+    """
     try:
         with open(path, "rb") as f, mmap.mmap(
             f.fileno(), 0, access=mmap.ACCESS_READ
@@ -477,7 +591,16 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
 
 
 async def async_tail_file(path: str, lines: int = 50) -> list[str]:
-    """Asynchronously return the last ``lines`` from ``path``."""
+    """
+    Asynchronously retrieves the last specified number of lines from a file.
+    
+    Parameters:
+        path (str): Path to the file to read.
+        lines (int): Number of lines to return from the end of the file.
+    
+    Returns:
+        list[str]: The last `lines` lines from the file, or an empty list if the file cannot be read.
+    """
     try:
         import aiofiles  # type: ignore
     except Exception:
@@ -508,7 +631,16 @@ async def async_tail_file(path: str, lines: int = 50) -> list[str]:
 
 
 def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
-    """Fallback ``systemctl`` invocation capturing output."""
+    """
+    Run a systemctl command for a given service and action, returning success status and command output.
+    
+    Parameters:
+        service (str): The name of the systemd service (without ".service" suffix).
+        action (str): The systemctl action to perform (e.g., "start", "stop", "restart", "is-active").
+    
+    Returns:
+        tuple[bool, str, str]: A tuple containing a boolean indicating success, the command's stdout, and stderr output.
+    """
 
     cmd = ["systemctl", action, f"{service}.service"]
     try:
@@ -525,7 +657,18 @@ def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
 def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Execute DBus service commands synchronously as a fallback."""
+    """
+    Synchronously execute a systemd service command via DBus, with fallback to systemctl if DBus is unavailable.
+    
+    Parameters:
+        service (str): Name of the systemd service (without '.service' suffix).
+        action (str): Action to perform ('start', 'stop', 'restart', or 'is-active').
+        attempts (int): Number of retry attempts on failure.
+        delay (float): Delay in seconds between retry attempts.
+    
+    Returns:
+        tuple[bool, str, str]: A tuple containing a success flag, output string, and error string.
+    """
 
     try:
         import dbus
@@ -541,6 +684,12 @@ def _run_service_cmd_sync(
     svc_name = f"{service}.service"
 
     def _call() -> tuple[bool, str, str]:
+        """
+        Interact with systemd via DBus to start, stop, restart, or query the status of a service unit.
+        
+        Returns:
+            result (tuple[bool, str, str]): A tuple containing a success flag, the service state or an empty string, and an empty string for error output.
+        """
         bus = dbus.SystemBus()
         systemd = bus.get_object(
             "org.freedesktop.systemd1",
@@ -572,7 +721,12 @@ def _run_service_cmd_sync(
 
 @asynccontextmanager
 async def message_bus() -> Any:
-    """Yield a connected ``dbus-fast`` ``MessageBus`` instance."""
+    """
+    Asynchronous context manager that yields a connected dbus-fast MessageBus instance for system bus communication.
+    
+    Yields:
+        MessageBus: An active dbus-fast MessageBus connected to the system bus.
+    """
 
     from dbus_fast.aio import MessageBus
     from dbus_fast import BusType
@@ -588,7 +742,18 @@ async def message_bus() -> Any:
 async def _run_service_cmd_async(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Async DBus implementation using ``dbus-fast``."""
+    """
+    Asynchronously executes a systemd service command via DBus, with retries and fallback to synchronous execution if DBus is unavailable.
+    
+    Parameters:
+        service (str): The name of the systemd service (without '.service' suffix).
+        action (str): The action to perform ('start', 'stop', 'restart', or 'is-active').
+        attempts (int): Number of retry attempts on failure.
+        delay (float): Delay in seconds between retry attempts.
+    
+    Returns:
+        tuple[bool, str, str]: A tuple containing a success flag, output string (such as service state), and error message (if any).
+    """
 
     from piwardrive.security import validate_service_name
 
@@ -607,6 +772,12 @@ async def _run_service_cmd_async(
         )
 
     async def _call() -> tuple[bool, str, str]:
+        """
+        Execute a systemd service command asynchronously via DBus and return the result.
+        
+        Returns:
+            A tuple containing a boolean indicating success, the service state or an empty string, and an empty string for error output.
+        """
         async with message_bus() as bus:
             intro = await bus.introspect(
                 "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
@@ -638,6 +809,15 @@ async def _run_service_cmd_async(
             return True, str(state), ""
 
     async def _retry() -> tuple[bool, str, str]:
+        """
+        Attempts to execute the asynchronous function `_call` up to `attempts` times, retrying on exception and delaying between attempts if specified.
+        
+        Returns:
+            A tuple containing the result of `_call` if successful.
+        
+        Raises:
+            The last exception encountered if all attempts fail.
+        """
         last_exc: Exception | None = None
         for _ in range(attempts):
             try:
@@ -664,7 +844,14 @@ async def _run_service_cmd_async(
 def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
-    """Run ``_run_service_cmd_async`` in a synchronous context."""
+    """
+    Synchronously executes a systemd service command and returns the result.
+    
+    Runs the specified action (e.g., 'start', 'stop', 'restart', 'is-active') on the given service by invoking the asynchronous command runner in a blocking manner. Returns a tuple containing the success status, standard output, and standard error from the command execution.
+    
+    Returns:
+        tuple[bool, str, str]: A tuple of (success, stdout, stderr).
+    """
 
     fut = run_async_task(
         _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
@@ -690,7 +877,15 @@ def run_service_cmd(
 async def service_status_async(
     service: str, attempts: int = 1, delay: float = 0
 ) -> bool:
-    """Return ``True`` if the ``systemd`` service is active."""
+    """
+    Asynchronously checks if a systemd service is active.
+    
+    Parameters:
+        service (str): Name of the systemd service to check.
+    
+    Returns:
+        bool: True if the service is active, False otherwise.
+    """
     from piwardrive.security import validate_service_name
 
     validate_service_name(service)
@@ -704,7 +899,15 @@ async def service_status_async(
 
 
 def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
-    """Check a service's status using the asynchronous helper."""
+    """
+    Return True if the specified systemd service is active.
+    
+    Parameters:
+        service (str): The name of the systemd service to check.
+    
+    Returns:
+        bool: True if the service is active, False otherwise.
+    """
     fut = run_async_task(
         service_status_async(service, attempts=attempts, delay=delay)
     )
@@ -712,7 +915,12 @@ def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
 
 
 def scan_bt_devices() -> list[BluetoothDevice]:
-    """Return nearby Bluetooth devices via DBus."""
+    """
+    Scans for nearby Bluetooth devices using DBus and returns a list of discovered devices.
+    
+    Returns:
+        A list of BluetoothDevice objects representing detected Bluetooth devices, including address, name, and optional latitude and longitude if available. Returns an empty list if scanning is disabled or an error occurs.
+    """
     if network_scanning_disabled():
         return []
     try:
@@ -752,20 +960,33 @@ def scan_bt_devices() -> list[BluetoothDevice]:
 
 def now_timestamp() -> str:
     """
-    Return the current time as a formatted string.
+    Return the current local time as a string in 'YYYY-MM-DD HH:MM:SS' format.
     """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def fetch_kismet_devices() -> tuple[list, list]:
-    """Synchronize Kismet device data using the async helper."""
+    """
+    Fetches Kismet device data synchronously by running the asynchronous device fetcher.
+    
+    Returns:
+        A tuple containing two lists: the first with access point data and the second with client device data.
+    """
 
     fut = run_async_task(fetch_kismet_devices_async())
     return fut.result()
 
 
 async def fetch_kismet_devices_async() -> tuple[list, list]:
-    """Asynchronously fetch Kismet device data using ``aiohttp``."""
+    """
+    Asynchronously retrieves access point and client device data from the local Kismet API.
+    
+    Attempts to fetch device information from multiple Kismet API endpoints using HTTP requests. If successful, returns lists of access points and clients, and updates the local AP cache. If the API is unavailable or returns invalid data, falls back to returning cached access points if available; otherwise, returns empty lists.
+    
+    Returns:
+        aps (list): List of access point dictionaries from Kismet.
+        clients (list): List of client device dictionaries from Kismet.
+    """
 
     if network_scanning_disabled():
         return [], []
@@ -778,6 +999,11 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
         async def _fetch(url: str) -> dict | None:
+            """
+            Asynchronously fetches JSON data from the specified URL.
+            
+            Attempts to retrieve and parse JSON from the given URL using an async HTTP session. Returns the parsed dictionary on success, or None if the request fails or the response is not valid JSON. Errors are reported using the application's error reporting mechanism.
+            """
             try:
                 async with session.get(url) as resp:
                     if resp.status == 200:
@@ -845,7 +1071,15 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
 async def fetch_metrics_async(
     log_folder: str = '/mnt/ssd/kismet_logs',
 ) -> tuple[list, list, int]:
-    """Fetch Kismet devices and BetterCAP handshake count concurrently."""
+    """
+    Asynchronously fetches Kismet device data and BetterCAP handshake count in parallel.
+    
+    Parameters:
+        log_folder (str): Path to the directory containing Kismet and BetterCAP logs.
+    
+    Returns:
+        tuple: A tuple containing a list of access points, a list of clients, and the count of BetterCAP handshake files.
+    """
     if network_scanning_disabled():
         return [], [], 0
     aps_clients = fetch_kismet_devices_async()
@@ -860,7 +1094,16 @@ def count_bettercap_handshakes(
     *,
     cache_seconds: float = HANDSHAKE_CACHE_SECONDS,
 ) -> int:
-    """Return handshake count using caching and glob lookup."""
+    """
+    Return the number of BetterCAP handshake `.pcap` files found under the specified log folder, using caching to avoid redundant filesystem scans.
+    
+    Parameters:
+        log_folder (str): Path to the directory containing BetterCAP logs.
+        cache_seconds (float): Duration in seconds to cache the handshake count.
+    
+    Returns:
+        int: The number of handshake `.pcap` files found.
+    """
     now = time.time()
     cached = _HANDSHAKE_CACHE.get(log_folder)
     if cache_seconds and cached:
@@ -878,7 +1121,15 @@ def count_bettercap_handshakes(
 
 
 def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
-    """Return cached GPSD data or refresh if stale."""
+    """
+    Returns cached GPSD data containing accuracy and fix quality, refreshing from the GPS client if the cache is stale or forced.
+    
+    Parameters:
+    	force_refresh (bool): If True, forces a refresh from the GPS client even if cached data is still valid.
+    
+    Returns:
+    	dict[str, Any] | None: Dictionary with GPS accuracy, fix quality, and timestamp, or None if no valid data is available.
+    """
     if not force_refresh and _GPSD_CACHE["accuracy"] is not None:
         age = time.time() - _GPSD_CACHE["timestamp"]
         if age <= GPSD_CACHE_SECONDS:
@@ -900,7 +1151,15 @@ def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
 
 
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:
-    """Return GPS accuracy from cached GPSD data."""
+    """
+    Returns the current GPS accuracy value from cached GPSD data.
+    
+    Parameters:
+        force_refresh (bool): If True, refreshes the GPSD data cache before retrieving accuracy.
+    
+    Returns:
+        float | None: The GPS accuracy in meters, or None if unavailable.
+    """
     data = _get_cached_gps_data(force_refresh)
     if not data:
         return None
@@ -908,7 +1167,15 @@ def get_gps_accuracy(force_refresh: bool = False) -> float | None:
 
 
 def get_gps_fix_quality(force_refresh: bool = False) -> str:
-    """Return human readable GPS fix quality from cached data."""
+    """
+    Returns a human-readable description of the current GPS fix quality from cached GPSD data.
+    
+    Parameters:
+        force_refresh (bool): If True, refreshes the cached GPS data before retrieving the fix quality.
+    
+    Returns:
+        str: The GPS fix quality as a string, or "Unknown" if unavailable.
+    """
     data = _get_cached_gps_data(force_refresh)
     if not data:
         return "Unknown"
@@ -917,8 +1184,13 @@ def get_gps_fix_quality(force_refresh: bool = False) -> str:
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
     """
-    Compute average RSSI (signal_dbm) from a list of access_points.
-    Returns float average or None if no data.
+    Calculates the average RSSI (signal strength in dBm) from a collection of access point dictionaries.
+    
+    Parameters:
+        aps (Iterable[dict[str, Any]]): Iterable of access point dictionaries, each potentially containing a 'signal_dbm' key.
+    
+    Returns:
+        float | None: The average RSSI value if available, otherwise None if no valid data is found.
     """
     try:
         vals = []
@@ -932,19 +1204,44 @@ def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
 
 
 def parse_latest_gps_accuracy(force_refresh: bool = False) -> float | None:
-    """Alias for :func:`get_gps_accuracy`."""
+    """
+    Return the most recent GPS accuracy value, optionally forcing a refresh.
+    
+    Parameters:
+        force_refresh (bool): If True, bypasses the cache and retrieves fresh GPS data.
+    
+    Returns:
+        float | None: The current GPS accuracy in meters, or None if unavailable.
+    """
     return get_gps_accuracy(force_refresh=force_refresh)
 
 
 def tail_log_file(path: str, lines: int = 50) -> list[str]:
     """
-    Alias for tail_file.
+    Return the last N lines from a log file.
+    
+    This function is an alias for `tail_file` and retrieves the specified number of lines from the end of the given file.
+    
+    Parameters:
+        path (str): Path to the log file.
+        lines (int): Number of lines to return from the end of the file.
+    
+    Returns:
+        list[str]: List of lines from the end of the file.
     """
     return tail_file(path, lines)
 
 
 def get_recent_bssids(limit: int = 5) -> list[str]:
-    """Return the most recently observed BSSIDs from the Kismet API."""
+    """
+    Retrieve the most recently observed BSSIDs from Kismet device data.
+    
+    Parameters:
+    	limit (int): Maximum number of BSSIDs to return.
+    
+    Returns:
+    	list[str]: List of BSSIDs sorted by most recent observation, or an empty list on error.
+    """
     try:
         aps, _ = fetch_kismet_devices()
         # sort by last_time (epoch) descending
@@ -956,7 +1253,16 @@ def get_recent_bssids(limit: int = 5) -> list[str]:
 
 
 def _haversine_distance_py(p1: tuple[float, float], p2: tuple[float, float]) -> float:
-    """Return great-circle distance between two ``(lat, lon)`` points in meters."""
+    """
+    Calculate the great-circle distance in meters between two latitude/longitude points using the haversine formula.
+    
+    Parameters:
+        p1 (tuple[float, float]): The first point as (latitude, longitude).
+        p2 (tuple[float, float]): The second point as (latitude, longitude).
+    
+    Returns:
+        float: The distance between the two points in meters.
+    """
     import math
 
     lat1, lon1 = p1
@@ -976,7 +1282,15 @@ def _haversine_distance_py(p1: tuple[float, float], p2: tuple[float, float]) -> 
 
 
 def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
-    """Return planar area for a polygon of ``(lat, lon)`` points in square meters."""
+    """
+    Calculate the approximate planar area of a polygon defined by latitude and longitude points.
+    
+    Parameters:
+        points (Sequence[tuple[float, float]]): Sequence of (latitude, longitude) tuples representing the polygon vertices.
+    
+    Returns:
+        float: Area of the polygon in square meters. Returns 0.0 if fewer than three points are provided.
+    """
     if len(points) < 3:
         return 0.0
 
@@ -988,6 +1302,15 @@ def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
     cos_lat0 = math.cos(math.radians(lat0))
 
     def project(p: tuple[float, float]) -> tuple[float, float]:
+        """
+        Projects a geographic coordinate (latitude, longitude) to a planar (x, y) coordinate using a simple equirectangular projection centered at (lat0, lon0).
+        
+        Parameters:
+            p (tuple[float, float]): The (latitude, longitude) coordinate to project.
+        
+        Returns:
+            tuple[float, float]: The projected (x, y) coordinate relative to the projection center.
+        """
         return (p[1] - lon0) * cos_lat0, p[0] - lat0
 
     verts = [project(p) for p in points]
@@ -1005,7 +1328,16 @@ def _polygon_area_py(points: Sequence[tuple[float, float]]) -> float:
 def _point_in_polygon_py(
     point: tuple[float, float], polygon: Sequence[tuple[float, float]]
 ) -> bool:
-    """Return True if ``point`` is inside ``polygon`` using ray casting."""
+    """
+    Determine whether a geographic point is inside a polygon using the ray casting algorithm.
+    
+    Parameters:
+        point (tuple[float, float]): The (latitude, longitude) coordinates of the point to test.
+        polygon (Sequence[tuple[float, float]]): A sequence of (latitude, longitude) tuples defining the polygon vertices.
+    
+    Returns:
+        bool: True if the point is inside the polygon, False otherwise.
+    """
     lat, lon = point
     inside = False
     n = len(polygon)
@@ -1043,7 +1375,15 @@ except Exception:  # pragma: no cover - fallback to Python
 
 
 def _parse_coord_text(text: str) -> list[tuple[float, float]]:
-    """Parse a KML ``coordinates`` string into ``(lat, lon)`` tuples."""
+    """
+    Parses a KML coordinates string into a list of (latitude, longitude) tuples.
+    
+    Parameters:
+        text (str): A string containing KML coordinates, where each coordinate is a comma-separated longitude and latitude pair.
+    
+    Returns:
+        list[tuple[float, float]]: A list of (latitude, longitude) tuples extracted from the input string.
+    """
     if _parse_coords:
         return _parse_coords(text)
     coords = []
@@ -1056,11 +1396,26 @@ def _parse_coord_text(text: str) -> list[tuple[float, float]]:
 
 
 def load_kml(path: str) -> list[dict[str, Any]]:
-    """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
+    """
+    Parses a `.kml` or `.kmz` file and returns a list of geographic features.
+    
+    Each feature is represented as a dictionary containing its name, type (`Point`, `LineString`, or `Polygon`), and coordinates extracted from the file. For `.kmz` files, the first `.kml` file found within the archive is parsed.
+    
+    Parameters:
+        path (str): Path to the `.kml` or `.kmz` file.
+    
+    Returns:
+        list[dict[str, Any]]: List of features with their names, types, and coordinates.
+    """
     import zipfile
     import xml.etree.ElementTree as ET
 
     def _parse(root: ET.Element) -> list[dict[str, Any]]:
+        """
+        Parses a KML XML root element and extracts geographic features as a list of dictionaries.
+        
+        Each feature includes its name, type ("Point", "LineString", or "Polygon"), and coordinates parsed from the KML structure.
+        """
         ns = {"kml": root.tag.split("}")[0].strip("{")}
         feats = []
         for placemark in root.findall(".//kml:Placemark", ns):
