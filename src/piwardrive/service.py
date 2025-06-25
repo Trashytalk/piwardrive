@@ -56,6 +56,7 @@ from piwardrive.utils import (
     get_gps_fix_quality,
     get_gps_accuracy,
     service_status_async,
+    run_service_cmd,
     async_tail_file,
 )
 import psutil
@@ -280,6 +281,22 @@ async def run_command(
         proc.kill()
         return {"output": "", "error": "timeout"}
     return {"output": out.decode()}
+
+
+@app.post("/service/{name}/{action}")
+async def control_service_endpoint(
+    name: str,
+    action: str,
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Start or stop a systemd service."""
+    if action not in {"start", "stop", "restart"}:
+        raise HTTPException(status_code=400, detail="Invalid action")
+    success, _out, err = run_service_cmd(name, action)
+    if not success:
+        msg = err.strip() if isinstance(err, str) else str(err)
+        raise HTTPException(status_code=500, detail=msg or "command failed")
+    return {"service": name, "action": action, "success": True}
 
 
 @app.get("/config")

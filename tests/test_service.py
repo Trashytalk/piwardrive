@@ -606,3 +606,30 @@ def test_gps_endpoint(monkeypatch) -> None:
         assert data["accuracy"] == 5.0
         assert data["fix"] == "3D"
 
+
+def test_service_control_endpoint_success() -> None:
+    with (
+        mock.patch("service.run_service_cmd", return_value=(True, "", "")),
+        mock.patch("piwardrive.service.run_service_cmd", return_value=(True, "", "")),
+    ):
+        client = TestClient(service.app)
+        resp = client.post("/service/kismet/start")
+        assert resp.status_code == 200
+        assert resp.json()["success"] is True
+
+
+def test_service_control_endpoint_failure() -> None:
+    with (
+        mock.patch("service.run_service_cmd", return_value=(False, "", "boom")),
+        mock.patch("piwardrive.service.run_service_cmd", return_value=(False, "", "boom")),
+    ):
+        client = TestClient(service.app)
+        resp = client.post("/service/kismet/start")
+        assert resp.status_code == 500
+
+
+def test_service_control_endpoint_invalid_action() -> None:
+    client = TestClient(service.app)
+    resp = client.post("/service/kismet/invalid")
+    assert resp.status_code == 400
+

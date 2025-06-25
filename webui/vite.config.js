@@ -33,6 +33,7 @@ export default defineConfig({
       '/api/plugins': 'http://localhost:8000',
       '/api/widgets': 'http://localhost:8000',
       '/dashboard-settings': 'http://localhost:8000',
+      '/service': 'http://localhost:8000',
       '/ws': {
         target: 'ws://localhost:8000',
         ws: true
