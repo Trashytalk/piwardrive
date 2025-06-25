@@ -93,6 +93,14 @@ the ``log_paths`` whitelist defined in ``config.json``::
 ``/export/bt``
     Return Bluetooth scan results in the requested format.
 
+``/ws/aps`` streams newly discovered Wi-Fi access points over WebSocket::
+
+   websocat ws://localhost:8000/ws/aps
+
+``/sse/aps`` provides the same updates using Server-Sent Events::
+
+   curl http://localhost:8000/sse/aps
+
 ``/ws/status`` streams the same information over a WebSocket connection. Each
 message combines the ``/status`` and ``/widget-metrics`` responses so clients can
 stay up to date without polling::

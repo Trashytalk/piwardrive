@@ -465,6 +465,75 @@ async def export_bluetooth(
     return await _export_layer(records, fmt.lower(), "bt")
 
 
+@app.websocket("/ws/aps")
+async def ws_aps(websocket: WebSocket) -> None:
+    """Stream new access points over WebSocket."""
+    await websocket.accept()
+    seq = 0
+    last_time = 0.0
+    error_count = 0
+    try:
+        while True:
+            records = load_ap_cache()
+            if inspect.isawaitable(records):
+                records = await records
+            new = [r for r in records if r.get("last_time", 0) > last_time]
+            if new:
+                last_time = max(r["last_time"] for r in new)
+            data = {
+                "seq": seq,
+                "timestamp": time.time(),
+                "aps": new,
+                "errors": error_count,
+            }
+            try:
+                await asyncio.wait_for(websocket.send_json(data), timeout=1)
+            except (asyncio.TimeoutError, Exception):
+                error_count += 1
+                await websocket.close()
+                break
+            seq += 1
+            await asyncio.sleep(2)
+    except WebSocketDisconnect:
+        pass
+
+
+@app.get("/sse/aps")
+async def sse_aps(request: Request) -> StreamingResponse:
+    """Stream new access points via Server-Sent Events."""
+
+    async def _event_gen() -> typing.AsyncGenerator[str, None]:
+        seq = 0
+        last_time = 0.0
+        error_count = 0
+        while True:
+            if await request.is_disconnected():
+                break
+            records = load_ap_cache()
+            if inspect.isawaitable(records):
+                records = await records
+            new = [r for r in records if r.get("last_time", 0) > last_time]
+            if new:
+                last_time = max(r["last_time"] for r in new)
+            data = {
+                "seq": seq,
+                "timestamp": time.time(),
+                "aps": new,
+                "errors": error_count,
+            }
+            yield f"data: {json.dumps(data)}\n\n"
+            seq += 1
+            await asyncio.sleep(2)
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        _event_gen(), media_type="text/event-stream", headers=headers
+    )
+
+
 @app.websocket("/ws/status")
 async def ws_status(websocket: WebSocket) -> None:
     """Stream status and widget metrics periodically over WebSocket."""

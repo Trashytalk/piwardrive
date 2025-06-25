@@ -300,6 +300,53 @@ def test_sse_status_stream() -> None:
             assert payload["errors"] == 0
 
 
+def test_ws_aps_stream() -> None:
+    async def fake_load() -> list:
+        return [{
+            "bssid": "aa",
+            "ssid": "A",
+            "encryption": "WPA2",
+            "lat": 1.0,
+            "lon": 2.0,
+            "last_time": 1,
+        }]
+
+    with (
+        mock.patch("service.load_ap_cache", fake_load),
+        mock.patch("piwardrive.service.load_ap_cache", fake_load),
+    ):
+        client = TestClient(service.app)
+        with client.websocket_connect("/ws/aps") as ws:
+            data = ws.receive_json()
+            assert data["aps"][0]["ssid"] == "A"
+            assert data["seq"] == 0
+
+
+def test_sse_aps_stream() -> None:
+    async def fake_load() -> list:
+        return [{
+            "bssid": "bb",
+            "ssid": "B",
+            "encryption": "OPEN",
+            "lat": 3.0,
+            "lon": 4.0,
+            "last_time": 2,
+        }]
+
+    with (
+        mock.patch("service.load_ap_cache", fake_load),
+        mock.patch("piwardrive.service.load_ap_cache", fake_load),
+    ):
+        client = TestClient(service.app)
+        with client.stream("GET", "/sse/aps") as resp:
+            line = next(resp.iter_lines())
+            if not line:
+                line = next(resp.iter_lines())
+            payload = json.loads(line.split("data: ", 1)[1])
+            assert payload["aps"][0]["ssid"] == "B"
+            assert payload["seq"] == 0
+
+
 def test_websocket_timeout_closes_connection() -> None:
     async def fake_load(_: int = 5) -> list:
         return []
