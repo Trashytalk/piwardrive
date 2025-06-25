@@ -8,7 +8,8 @@ PiWardrive's main user experience is delivered through a React application under
 ``webui/``. It consumes the HTTP API provided by :mod:`service` to display
 recent status information and logs.  When
 available the frontend connects to ``/ws/status`` to receive live updates
-without polling.
+without polling. If WebSockets are unavailable it falls back to the
+``/sse/status`` endpoint using Server-Sent Events.
 
 Plugin widgets stored under ``~/.config/piwardrive/plugins`` are also
 detected.  The new ``/plugins`` route lists the discovered classes so the web UI

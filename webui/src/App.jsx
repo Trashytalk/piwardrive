@@ -16,17 +16,39 @@ export default function App() {
 
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${proto}//${window.location.host}/ws/status`);
-    ws.onmessage = (ev) => {
+    let ws;
+    let es;
+
+    const handleData = (raw) => {
       try {
-        const data = JSON.parse(ev.data);
+        const data = JSON.parse(raw);
         if (data.status) setStatus(data.status);
         if (data.metrics) setMetrics(data.metrics);
       } catch (e) {
-        console.error('ws parse error', e);
+        console.error('status parse error', e);
       }
     };
-    ws.onerror = () => ws.close();
+
+    const startSse = () => {
+      es = new EventSource('/sse/status');
+      es.onmessage = (ev) => handleData(ev.data);
+      es.onerror = () => es.close();
+    };
+
+    if (window.WebSocket) {
+      try {
+        ws = new WebSocket(`${proto}//${window.location.host}/ws/status`);
+        ws.onmessage = (ev) => handleData(ev.data);
+        ws.onerror = () => {
+          ws.close();
+          startSse();
+        };
+      } catch (e) {
+        startSse();
+      }
+    } else {
+      startSse();
+    }
 
     fetch('/status')
       .then(r => r.json())
@@ -46,7 +68,10 @@ export default function App() {
     fetch('/config')
       .then(r => r.json())
       .then(setConfigData);
-    return () => ws.close();
+    return () => {
+      if (ws) ws.close();
+      if (es) es.close();
+    };
   }, []);
 
   const handleChange = (k, v) => {
