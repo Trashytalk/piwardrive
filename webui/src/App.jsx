@@ -7,6 +7,8 @@ import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
 import MapScreen from './components/MapScreen.jsx';
+import Orientation from './components/Orientation.jsx';
+import VehicleInfo from './components/VehicleInfo.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -14,6 +16,8 @@ export default function App() {
   const [logs, setLogs] = useState('');
   const [configData, setConfigData] = useState(null);
   const [plugins, setPlugins] = useState([]);
+  const [orientationData, setOrientationData] = useState(null);
+  const [vehicleData, setVehicleData] = useState(null);
 
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -47,6 +51,14 @@ export default function App() {
     fetch('/config')
       .then(r => r.json())
       .then(setConfigData);
+    fetch('/orientation')
+      .then(r => r.json())
+      .then(setOrientationData)
+      .catch(() => setOrientationData(null));
+    fetch('/vehicle')
+      .then(r => r.json())
+      .then(setVehicleData)
+      .catch(() => setVehicleData(null));
     return () => ws.close();
   }, []);
 
@@ -81,6 +93,8 @@ export default function App() {
       <HandshakeCount metrics={metrics} />
       <SignalStrength metrics={metrics} />
       <VehicleStats metrics={metrics} />
+      <Orientation data={orientationData} />
+      <VehicleInfo data={vehicleData} />
       <NetworkThroughput metrics={metrics} />
       <CPUTempGraph metrics={metrics} />
 
