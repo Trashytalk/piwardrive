@@ -299,6 +299,15 @@ async def control_service_endpoint(
     return {"service": name, "action": action, "success": True}
 
 
+@app.get("/service/{name}")
+async def get_service_status_endpoint(
+    name: str, _auth: None = Depends(_check_auth)
+) -> dict:
+    """Return whether a ``systemd`` service is active."""
+    active = await service_status_async(name)
+    return {"service": name, "active": active}
+
+
 @app.get("/config")
 async def get_config_endpoint(_auth: None = Depends(_check_auth)) -> dict:
     """Return the current configuration from ``config.json``."""
