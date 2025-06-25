@@ -21,7 +21,12 @@ export default function MapScreen() {
   const [filter, setFilter] = useState({ ssid: '', encryption: '' });
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [geofences, setGeofences] = useState([]);
+  const geofencesRef = useRef([]);
   const track = useRef([]);
+
+  useEffect(() => {
+    geofencesRef.current = geofences;
+  }, [geofences]);
 
   const pointInPoly = (pt, poly) => {
     let inside = false;
@@ -46,7 +51,7 @@ export default function MapScreen() {
           const pos = [data.lat, data.lon];
           if (follow) setCenter(pos);
           track.current.push(pos);
-          if (geofences.length) {
+          if (geofencesRef.current.length) {
             setGeofences(gfs =>
               gfs.map(g => {
                 const inside = pointInPoly(pos, g.points);
@@ -65,7 +70,7 @@ export default function MapScreen() {
       }
     }, 5000);
     return () => clearInterval(id);
-  }, [follow, geofences]);
+  }, [follow]);
 
   // fetch APs once
   useEffect(() => {
