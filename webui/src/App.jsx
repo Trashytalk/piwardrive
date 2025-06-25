@@ -6,12 +6,12 @@ import SignalStrength from './components/SignalStrength.jsx';
 import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
+import SettingsForm from './components/SettingsForm.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [logs, setLogs] = useState('');
-  const [configData, setConfigData] = useState(null);
   const [plugins, setPlugins] = useState([]);
 
   useEffect(() => {
@@ -37,32 +37,11 @@ export default function App() {
     fetch('/plugins')
       .then(r => r.json())
       .then(setPlugins);
-    fetch('/api/widgets')
-      .then(r => r.json())
-      .then(d => setWidgets(d.widgets));
     fetch('/logs?lines=20')
       .then(r => r.json())
       .then(d => setLogs(d.lines.join('\n')));
-    fetch('/config')
-      .then(r => r.json())
-      .then(setConfigData);
     return () => ws.close();
   }, []);
-
-  const handleChange = (k, v) => {
-    setConfigData({ ...configData, [k]: v });
-  };
-
-  const saveConfig = () => {
-    fetch('/config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(configData),
-    })
-      .then(r => r.json())
-      .then(setConfigData)
-      .catch(e => console.error('save failed', e));
-  };
 
   return (
     <div>
@@ -83,21 +62,7 @@ export default function App() {
 
       <h2>Logs</h2>
       <pre>{logs}</pre>
-      {configData && (
-        <section>
-          <h2>Settings</h2>
-          {Object.keys(configData).map(k => (
-            <div key={k}>
-              <label>{k}</label>
-              <input
-                value={configData[k] ?? ''}
-                onChange={e => handleChange(k, e.target.value)}
-              />
-            </div>
-          ))}
-          <button onClick={saveConfig}>Save</button>
-        </section>
-      )}
+      <SettingsForm />
     </div>
   );
 }
