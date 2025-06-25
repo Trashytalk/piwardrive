@@ -3,6 +3,19 @@ import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
 import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
+import { adjustGpsInterval } from '../dynamicGps.js';
+
+function haversine(p1, p2) {
+  const R = 6371000;
+  const lat1 = (p1[0] * Math.PI) / 180;
+  const lat2 = (p2[0] * Math.PI) / 180;
+  const dLat = lat2 - lat1;
+  const dLon = ((p2[1] - p1[1]) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 function GPSMarker({ position }) {
   if (!position) return null;
@@ -25,7 +38,25 @@ export default function MapScreen() {
   const [prefetchProgress, setPrefetchProgress] = useState(null);
   const track = useRef([]);
   const [config, setConfig] = useState(null);
+  const conf = useRef({ poll: 5, max: 30, thresh: 1.0 });
+  const last = useRef(null);
+  const lastTime = useRef(0);
+  const timer = useRef(null);
 
+  useEffect(() => {
+    fetch('/config')
+      .then(r => r.json())
+      .then(c => {
+        conf.current = {
+          poll: c.map_poll_gps ?? 5,
+          max: c.map_poll_gps_max ?? 30,
+          thresh: c.gps_movement_threshold ?? 1.0,
+        };
+      })
+      .catch(() => {});
+  }, []);
+
+  
   // load configuration
   useEffect(() => {
     fetch('/config')
@@ -53,7 +84,10 @@ export default function MapScreen() {
 
   // fetch GPS periodically
   useEffect(() => {
-    const id = setInterval(async () => {
+    let active = true;
+    let interval = conf.current.poll * 1000;
+    const poll = async () => {
+      if (!active) return;
       try {
         const resp = await fetch('/gps');
         const data = await resp.json();
@@ -61,6 +95,22 @@ export default function MapScreen() {
           const pos = [data.lat, data.lon];
           if (follow) setCenter(pos);
           track.current.push(pos);
+            const now = Date.now();
+          if (last.current) {
+            const dist = haversine(last.current, [data.lat, data.lon]);
+            const dt = (now - lastTime.current) / 1000;
+            const speed = dt > 0 ? dist / dt : 0;
+            const next = adjustGpsInterval(
+              interval / 1000,
+              speed,
+              conf.current.poll,
+              conf.current.max,
+              conf.current.thresh
+            );
+            interval = next * 1000;
+          }
+          last.current = [data.lat, data.lon];
+          lastTime.current = now;
           if (geofencesRef.current.length) {
             setGeofences(gfs =>
               gfs.map(g => {
@@ -78,8 +128,13 @@ export default function MapScreen() {
       } catch (e) {
         console.error('gps fetch failed', e);
       }
-    }, 5000);
-    return () => clearInterval(id);
+      if (active) timer.current = setTimeout(poll, interval);
+    };
+    timer.current = setTimeout(poll, interval);
+    return () => {
+      active = false;
+      if (timer.current) clearTimeout(timer.current);
+    };
   }, [follow]);
 
   // fetch APs once
