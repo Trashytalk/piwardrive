@@ -218,6 +218,16 @@ async def get_orientation_endpoint(
     }
 
 
+@app.get("/vehicle")
+async def get_vehicle_endpoint(_auth: None = Depends(_check_auth)) -> dict:
+    """Return vehicle metrics from OBD-II sensors."""
+    return {
+        "speed": vehicle_sensors.read_speed_obd(),
+        "rpm": vehicle_sensors.read_rpm_obd(),
+        "engine_load": vehicle_sensors.read_engine_load_obd(),
+    }
+
+
 @app.get("/gps")
 async def get_gps_endpoint(_auth: None = Depends(_check_auth)) -> dict:
     """Return current GPS position."""
@@ -249,6 +259,27 @@ async def get_logs(
     else:
         lines_out = data
     return {"path": safe, "lines": lines_out}
+
+
+@app.post("/command")
+async def run_command(
+    data: dict = Body(...), _auth: None = Depends(_check_auth)
+) -> dict:
+    """Execute a shell command and return its output."""
+    cmd = str(data.get("cmd", "")).strip()
+    if not cmd:
+        raise HTTPException(status_code=400, detail="cmd required")
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    try:
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+    except asyncio.TimeoutError:
+        proc.kill()
+        return {"output": "", "error": "timeout"}
+    return {"output": out.decode()}
 
 
 @app.get("/config")
