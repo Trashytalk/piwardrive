@@ -1,22 +1,31 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ConsoleView from '../src/components/ConsoleView.jsx';
 
-vi.stubGlobal('fetch', vi.fn());
+describe('ConsoleView command runner', () => {
+  let origFetch;
 
-const cfgResp = { json: () => Promise.resolve({ log_paths: ['/a', '/b'] }) };
-const logResp = { json: () => Promise.resolve({ lines: ['hello'] }) };
-
-fetch.mockResolvedValueOnce(cfgResp).mockResolvedValueOnce(logResp);
-
-
-describe('console view', () => {
-  it('shows logs and path selector', async () => {
-    render(<ConsoleView />);
-    await waitFor(() => {
-      expect(screen.getByText('hello')).toBeInTheDocument();
+  beforeEach(() => {
+    origFetch = global.fetch;
+    global.fetch = vi.fn((url) => {
+      if (url.startsWith('/logs')) {
+        return Promise.resolve({ json: () => Promise.resolve({ lines: ['log'] }) });
+      }
+      return Promise.resolve({ json: () => Promise.resolve({ output: 'pong' }) });
     });
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+  });
+
+  afterEach(() => {
+    global.fetch = origFetch;
+  });
+
+  it('sends command and shows output', async () => {
+    render(<ConsoleView />);
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'ping' } });
+    fireEvent.click(screen.getByText('Run'));
+    expect(await screen.findByText('Command Output')).toBeInTheDocument();
+    expect(screen.getByText('pong')).toBeInTheDocument();
   });
 });

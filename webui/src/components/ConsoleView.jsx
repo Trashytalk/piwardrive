@@ -45,24 +45,21 @@ export default function ConsoleView() {
   return (
     <div>
       <h2>Console</h2>
-      {paths.length > 1 && (
-        <select value={path} onChange={e => setPath(e.target.value)}>
-          {paths.map(p => (
-            <option key={p} value={p}>
-              {p.split('/').slice(-1)[0]}
-            </option>
-          ))}
-        </select>
-      )}
-      <pre>{logs}</pre>
+      <pre style={{ maxHeight: '200px', overflowY: 'auto' }}>{logs}</pre>
       <div>
-        <input value={cmd} onChange={e => setCmd(e.target.value)} />
+        <input
+          value={cmd}
+          onChange={e => setCmd(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') runCommand();
+          }}
+        />
         <button onClick={runCommand}>Run</button>
       </div>
       {output && (
         <>
           <h3>Command Output</h3>
-          <pre>{output}</pre>
+          <pre data-testid="command-output">{output}</pre>
         </>
       )}
     </div>
