@@ -10,7 +10,13 @@ def test_start_kiosk_launches_browser(tmp_path):
 
     server_script = bin_dir / "piwardrive-webui"
     server_script.write_text(
-        "#!/bin/sh\necho server_started >> \"%s\"\ntrap 'exit 0' TERM\nwhile true; do sleep 0.1; done\n" % log
+        (
+            "#!/bin/sh\n"
+            "echo server_started >> \"%s\"\n"
+            "trap 'exit 0' TERM\n"
+            "while true; do sleep 0.1; done\n"
+        )
+        % log
     )
     browser_script = bin_dir / "chromium-browser"
     browser_script.write_text(
@@ -24,7 +30,7 @@ def test_start_kiosk_launches_browser(tmp_path):
     env = os.environ.copy()
     env["PATH"] = f"{bin_dir}:{env['PATH']}"
 
-    script = Path("src/piwardrive/scripts/start_kiosk.sh")
+    script = Path("scripts/start_kiosk.sh")
     subprocess.run(["bash", str(script)], env=env, check=True)
 
     assert "server_started" in log.read_text()

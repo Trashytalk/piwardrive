@@ -19,7 +19,7 @@ Android
 
 Use the helper script to build the debug APK::
 
-    ./src/piwardrive/scripts/build_android.sh
+    ./scripts/build_android.sh
 
 The first run downloads the Android toolchain and may take time. The
 APK is placed under ``bin/``. Adjust ``buildozer.spec`` to change the
@@ -30,7 +30,7 @@ iOS
 
 To generate an Xcode project run::
 
-    ./src/piwardrive/scripts/build_ios.sh
+    ./scripts/build_ios.sh
 
 Open the created project in Xcode to build and sign the app.
 
