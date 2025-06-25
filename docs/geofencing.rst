@@ -36,6 +36,7 @@ Web UI
 
 The browser dashboard includes a matching geofence editor. Click on the map to
 draw polygons and press "Finish" to save them. Existing geofences can be
-renamed or removed and optional entry/exit messages configured. All operations
-are performed through the ``/geofences`` REST API and saved to the same
-``geofences.json`` file used by the on-device editor.
+renamed or removed, entry/exit messages edited and the current status
+(inside/outside) is shown next to each polygon. All operations are performed
+through the ``/geofences`` REST API and saved to the same ``geofences.json``
+file used by the on-device editor.
