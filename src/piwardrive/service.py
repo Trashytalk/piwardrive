@@ -65,6 +65,7 @@ from sync import upload_data
 from piwardrive.gpsd_client import client as gps_client
 from piwardrive import orientation_sensors
 from piwardrive import export
+from piwardrive.config import CONFIG_DIR
 
 
 security = HTTPBasic(auto_error=False)
@@ -74,6 +75,29 @@ app = FastAPI()
 ALLOWED_LOG_PATHS = [
     sanitize_path(p) for p in config.DEFAULT_CONFIG.log_paths + [DEFAULT_LOG_PATH]
 ]
+
+# Path storing polygon geofences
+GEOFENCE_FILE = os.path.join(CONFIG_DIR, "geofences.json")
+
+
+def _load_geofences() -> list:
+    """Return list of saved geofence dictionaries."""
+    try:
+        with open(GEOFENCE_FILE, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if isinstance(data, list):
+            return data
+    except FileNotFoundError:
+        return []
+    except Exception:
+        return []
+    return []
+
+
+def _save_geofences(polys: list) -> None:
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    with open(GEOFENCE_FILE, "w", encoding="utf-8") as fh:
+        json.dump(polys, fh, indent=2)
 
 
 def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
@@ -305,6 +329,63 @@ async def update_dashboard_settings_endpoint(
     widgets = data.get("widgets", [])
     await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
     return {"layout": layout, "widgets": widgets}
+
+
+@app.get("/geofences")
+async def list_geofences_endpoint(_auth: None = Depends(_check_auth)) -> list:
+    """Return saved geofence polygons."""
+    return _load_geofences()
+
+
+@app.post("/geofences")
+async def add_geofence_endpoint(data: dict = Body(...), _auth: None = Depends(_check_auth)) -> list:
+    """Add a new polygon to ``geofences.json``."""
+    polys = _load_geofences()
+    polys.append(
+        {
+            "name": data.get("name", "geofence"),
+            "points": data.get("points", []),
+            "enter_message": data.get("enter_message"),
+            "exit_message": data.get("exit_message"),
+        }
+    )
+    _save_geofences(polys)
+    return polys
+
+
+@app.put("/geofences/{name}")
+async def update_geofence_endpoint(
+    name: str,
+    updates: dict = Body(...),
+    _auth: None = Depends(_check_auth),
+) -> dict:
+    """Modify a saved polygon."""
+    polys = _load_geofences()
+    for poly in polys:
+        if poly.get("name") == name:
+            if "name" in updates:
+                poly["name"] = updates["name"]
+            if "points" in updates:
+                poly["points"] = updates["points"]
+            if "enter_message" in updates:
+                poly["enter_message"] = updates["enter_message"]
+            if "exit_message" in updates:
+                poly["exit_message"] = updates["exit_message"]
+            _save_geofences(polys)
+            return poly
+    raise HTTPException(status_code=404, detail="Not found")
+
+
+@app.delete("/geofences/{name}")
+async def remove_geofence_endpoint(name: str, _auth: None = Depends(_check_auth)) -> dict:
+    """Delete ``name`` from ``geofences.json``."""
+    polys = _load_geofences()
+    for idx, poly in enumerate(polys):
+        if poly.get("name") == name:
+            polys.pop(idx)
+            _save_geofences(polys)
+            return {"removed": True}
+    raise HTTPException(status_code=404, detail="Not found")
 
 
 @app.post("/sync")

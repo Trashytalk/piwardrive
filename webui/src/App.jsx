@@ -7,6 +7,7 @@ import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
 import StatsDashboard from './components/StatsDashboard.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
+import GeofenceEditor from './components/GeofenceEditor.jsx';
 import SettingsForm from './components/SettingsForm.jsx';
 import MapScreen from './components/MapScreen.jsx';
 import Orientation from './components/Orientation.jsx';
@@ -76,7 +77,23 @@ export default function App() {
 
       <h2>Logs</h2>
       <pre>{logs}</pre>
-      <SettingsForm />
+      <h2>Geofences</h2>
+      <GeofenceEditor />
+      {configData && (
+        <section>
+          <h2>Settings</h2>
+          {Object.keys(configData).map(k => (
+            <div key={k}>
+              <label>{k}</label>
+              <input
+                value={configData[k] ?? ''}
+                onChange={e => handleChange(k, e.target.value)}
+              />
+            </div>
+          ))}
+          <button onClick={saveConfig}>Save</button>
+        </section>
+      )}
     </div>
   );
 }
