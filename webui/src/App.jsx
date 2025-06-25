@@ -22,16 +22,17 @@ import VectorTileCustomizer from './components/VectorTileCustomizer.jsx';
 export default function App() {
   const [status, setStatus] = useState([]);
   const [metrics, setMetrics] = useState(null);
-  const [logs, setLogs] = useState('');
+  const [logs, setLogs] = useState("");
   const [plugins, setPlugins] = useState([]);
   const [widgets, setWidgets] = useState([]);
   const [orientationData, setOrientationData] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
 
   useEffect(() => {
-    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     let ws;
     let es;
+    let ping;
 
     const handleData = (raw) => {
       try {
@@ -39,47 +40,75 @@ export default function App() {
         if (data.status) setStatus(data.status);
         if (data.metrics) setMetrics(data.metrics);
       } catch (e) {
-        console.error('status parse error', e);
+        console.error("status parse error", e);
       }
     };
 
     const startSse = () => {
-      es = new EventSource('/sse/status');
+      if (es) es.close();
+      es = new EventSource("/sse/status");
       es.onmessage = (ev) => handleData(ev.data);
-      es.onerror = () => es.close();
+      es.onerror = () => {
+        es.close();
+        setTimeout(startSse, 3000);
+      };
     };
 
-    if (window.WebSocket) {
+    const startWs = () => {
+      if (ws) ws.close();
       try {
         ws = new WebSocket(`${proto}//${window.location.host}/ws/status`);
+        ws.onopen = () => {
+          if (ping) clearInterval(ping);
+          ping = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send("ping");
+            }
+          }, 15000);
+        };
         ws.onmessage = (ev) => handleData(ev.data);
-        ws.onerror = () => {
-          ws.close();
-          startSse();
+        ws.onerror = () => ws.close();
+        ws.onclose = () => {
+          if (ping) {
+            clearInterval(ping);
+            ping = null;
+          }
+          setTimeout(() => {
+            if (window.WebSocket) {
+              startWs();
+            } else {
+              startSse();
+            }
+          }, 3000);
         };
       } catch (e) {
         startSse();
       }
+    };
+
+    if (window.WebSocket) {
+      startWs();
     } else {
       startSse();
     }
 
-    fetch('/status')
-      .then(r => r.json())
+    fetch("/status")
+      .then((r) => r.json())
       .then(setStatus);
-    fetch('/widget-metrics')
-      .then(r => r.json())
+    fetch("/widget-metrics")
+      .then((r) => r.json())
       .then(setMetrics);
-    fetch('/api/plugins')
-      .then(r => r.json())
+    fetch("/api/plugins")
+      .then((r) => r.json())
       .then(setPlugins);
-    fetch('/logs?lines=20')
-      .then(r => r.json())
-      .then(d => setLogs(d.lines.join('\n')));
-    fetch('/config')
-      .then(r => r.json())
+    fetch("/logs?lines=20")
+      .then((r) => r.json())
+      .then((d) => setLogs(d.lines.join("\n")));
+    fetch("/config")
+      .then((r) => r.json())
       .then(setConfigData);
     return () => {
+      if (ping) clearInterval(ping);
       if (ws) ws.close();
       if (es) es.close();
     };
@@ -115,7 +144,7 @@ export default function App() {
       <pre>{JSON.stringify(metrics, null, 2)}</pre>
       <h2>Plugin Widgets</h2>
       <ul>
-        {plugins.map(p => (
+        {plugins.map((p) => (
           <li key={p}>{p}</li>
         ))}
       </ul>
@@ -142,12 +171,12 @@ export default function App() {
       {configData && (
         <section>
           <h2>Settings</h2>
-          {Object.keys(configData).map(k => (
+          {Object.keys(configData).map((k) => (
             <div key={k}>
               <label>{k}</label>
               <input
-                value={configData[k] ?? ''}
-                onChange={e => handleChange(k, e.target.value)}
+                value={configData[k] ?? ""}
+                onChange={(e) => handleChange(k, e.target.value)}
               />
             </div>
           ))}
@@ -157,4 +186,3 @@ export default function App() {
     </div>
   );
 }
-
