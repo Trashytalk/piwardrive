@@ -556,6 +556,34 @@ def test_orientation_endpoint_mpu(monkeypatch) -> None:
         assert data["gyroscope"] == {"y": 2}
 
 
+def test_vehicle_endpoint(monkeypatch) -> None:
+    with (
+        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=55.0),
+        mock.patch(
+            "piwardrive.service.vehicle_sensors.read_speed_obd", return_value=55.0
+        ),
+        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=1800.0),
+        mock.patch(
+            "piwardrive.service.vehicle_sensors.read_rpm_obd", return_value=1800.0
+        ),
+        mock.patch(
+            "service.vehicle_sensors.read_engine_load_obd", return_value=40.0
+        ),
+        mock.patch(
+            "piwardrive.service.vehicle_sensors.read_engine_load_obd",
+            return_value=40.0,
+        ),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/vehicle")
+        assert resp.status_code == 200
+        assert resp.json() == {
+            "speed": 55.0,
+            "rpm": 1800.0,
+            "engine_load": 40.0,
+        }
+
+
 def test_gps_endpoint(monkeypatch) -> None:
     with (
         mock.patch("service.gps_client.get_position", return_value=(1.0, 2.0)),

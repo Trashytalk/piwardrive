@@ -5,7 +5,11 @@ import HandshakeCount from './components/HandshakeCount.jsx';
 import SignalStrength from './components/SignalStrength.jsx';
 import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
+import StatsDashboard from './components/StatsDashboard.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
+import MapScreen from './components/MapScreen.jsx';
+import Orientation from './components/Orientation.jsx';
+import VehicleInfo from './components/VehicleInfo.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -14,6 +18,9 @@ export default function App() {
   const [configData, setConfigData] = useState(null);
   const [plugins, setPlugins] = useState([]);
   const [widgets, setWidgets] = useState([]);
+  const [orientationData, setOrientationData] = useState(null);
+  const [vehicleData, setVehicleData] = useState(null);
+
 
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -47,6 +54,14 @@ export default function App() {
     fetch('/config')
       .then(r => r.json())
       .then(setConfigData);
+    fetch('/orientation')
+      .then(r => r.json())
+      .then(setOrientationData)
+      .catch(() => setOrientationData(null));
+    fetch('/vehicle')
+      .then(r => r.json())
+      .then(setVehicleData)
+      .catch(() => setVehicleData(null));
     return () => ws.close();
   }, []);
 
@@ -67,6 +82,8 @@ export default function App() {
 
   return (
     <div>
+      <h2>Map</h2>
+      <MapScreen />
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
       <h2>Widget Metrics</h2>
@@ -79,8 +96,11 @@ export default function App() {
       <HandshakeCount metrics={metrics} />
       <SignalStrength metrics={metrics} />
       <VehicleStats metrics={metrics} />
+      <Orientation data={orientationData} />
+      <VehicleInfo data={vehicleData} />
       <NetworkThroughput metrics={metrics} />
       <CPUTempGraph metrics={metrics} />
+      <StatsDashboard />
 
       <h2>Logs</h2>
       <pre>{logs}</pre>
