@@ -11,8 +11,6 @@ Prerequisites
 
 * **Android**: Python 3.10 or later, Java JDK 17, Android SDK/NDK and
   ``buildozer`` (``pip install buildozer``).
-* **iOS**: macOS with Xcode installed and ``kivy-ios``
-  (``pip install kivy-ios sh pbxproj cookiecutter``).
 
 Android
 -------
@@ -38,5 +36,4 @@ Mobile-specific Adjustments
 ---------------------------
 
 System service management and some diagnostics rely on Linux-only
-utilities. When running on Android or iOS those features are disabled.
-Check ``kivy.utils.platform`` at runtime to detect the platform.
+utilities. When running on Android those features are disabled.

@@ -680,3 +680,25 @@ def test_service_control_endpoint_invalid_action() -> None:
     resp = client.post("/service/kismet/invalid")
     assert resp.status_code == 400
 
+
+def test_service_status_endpoint() -> None:
+    with (
+        mock.patch("service.service_status_async", return_value=True),
+        mock.patch("piwardrive.service.service_status_async", return_value=True),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/service/kismet")
+        assert resp.status_code == 200
+        assert resp.json() == {"service": "kismet", "active": True}
+
+
+def test_service_status_endpoint_inactive() -> None:
+    with (
+        mock.patch("service.service_status_async", return_value=False),
+        mock.patch("piwardrive.service.service_status_async", return_value=False),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/service/bettercap")
+        assert resp.status_code == 200
+        assert resp.json() == {"service": "bettercap", "active": False}
+

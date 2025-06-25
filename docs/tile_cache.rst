@@ -5,13 +5,13 @@ Tile Cache
 
 
 PiWardrive can operate without an internet connection by storing map tiles on disk.  The
-:class:`piwardrive.screens.map_screen.MapScreen` exposes helpers for prefetching tiles and keeping
+``TileMaintainer`` exposes helpers for prefetching tiles and keeping
 the cache from growing indefinitely.
 
 Prefetching Tiles
 -----------------
 
-Use :meth:`~piwardrive.screens.map_screen.MapScreen.prefetch_tiles` to download PNG images
+Use ``piwardrive-prefetch`` to download PNG images
 covering a bounding box.  Tiles are saved under ``/mnt/ssd/tiles`` by default and
 ``prefetch_visible_region`` grabs the area currently shown on screen.  These
 functions fetch data from OpenStreetMap so they should be run while online.
@@ -39,9 +39,9 @@ Each line of ``boxes.txt`` should contain ``min_lat min_lon max_lat max_lon``.
 Cache Maintenance
 -----------------
 
-:meth:`~piwardrive.screens.map_screen.MapScreen.purge_old_tiles` deletes cached files older
+``TileMaintainer.purge_old_tiles`` deletes cached files older
 than ``max_age_days`` (30 days by default).  To avoid filling the SSD,
-:meth:`~piwardrive.screens.map_screen.MapScreen.enforce_cache_limit` removes the oldest
+``TileMaintainer.enforce_cache_limit`` removes the oldest
 tiles when the folder exceeds ``limit_mb`` megabytes.  A 512&nbsp;MB limit works
 well for most deployments.
 
@@ -62,6 +62,9 @@ set of tiles from recent GPS fixes. The prefetcher computes heading and speed
 from the two most recent points and extrapolates future positions using
 great‑circle math. ``route_prefetch_lookahead`` controls how far ahead of the
 current location tiles are fetched.
+
+The browser-based dashboard honors these options and prefetches route tiles
+with the same logic when installed as a progressive web app.
 
 
 Paths

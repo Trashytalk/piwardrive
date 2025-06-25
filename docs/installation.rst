@@ -6,8 +6,7 @@ Installation
 
 This guide covers installing PiWardrive on Raspberry Pi OS and general Linux
 distributions. The recommended interface is the browser-based dashboard built
-with React. It requires Node.js 18 or newer to compile. A Kivy-based touch UI
-remains available as an alternative.
+with React. It requires Node.js 18 or newer to compile.
 
 You can also run ``scripts/quickstart.sh`` from the repository
 root to automatically install the required packages, create ``gui-env/`` and
@@ -72,7 +71,7 @@ Copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable 
 Generic Linux
 -------------
 
-The application can run on most Debian/Ubuntu based systems. Follow the same steps as above and ensure Kivy dependencies are available. Refer to the `Kivy documentation <https://kivy.org/doc/stable/gettingstarted/installation.html>`_ if you encounter build errors.
+The application can run on most Debian/Ubuntu based systems. Follow the same steps as above and install the Python dependencies listed in ``requirements.txt``.
 
 Before cloning the repository on a fresh Raspberry Pi, expand the filesystem and
 enable SSH for remote access. A quality power supply is required when using
@@ -82,8 +81,6 @@ file system corruption.
 Troubleshooting
 ---------------
 
-* ``ModuleNotFoundError: No module named 'kivy'``
-  - Verify that the virtual environment is activated and ``pip install -r requirements.txt`` completed successfully.
 * ``kismet.service failed``
   - Check the service logs with ``sudo journalctl -u kismet`` to diagnose missing hardware or configuration errors.
 * ``gpsd reports "can't bind to port"``
