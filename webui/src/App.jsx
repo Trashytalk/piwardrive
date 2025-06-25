@@ -27,6 +27,22 @@ export default function App() {
   const [widgets, setWidgets] = useState([]);
   const [orientationData, setOrientationData] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
+  const [configData, setConfigData] = useState(null);
+
+  const handleChange = (key, value) => {
+    setConfigData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const saveConfig = () => {
+    fetch('/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(configData),
+    })
+      .then(r => r.json())
+      .then(setConfigData)
+      .catch(() => {});
+  };
 
   useEffect(() => {
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
