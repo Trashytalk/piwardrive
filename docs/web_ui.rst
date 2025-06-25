@@ -28,6 +28,12 @@ device.  The React dashboard exposes a dedicated **Settings** page mirroring the
 former Kivy interface. Configuration options are fetched from ``/config`` and
 saved back via a POST request so changes persist to ``config.json``.
 
+Heatmap overlays derived from the aggregation service can be toggled on the map
+screen. The layer uses ``leaflet.heat`` and displays points returned by the
+``/overlay`` API. A simple **Vector Tile Customizer** form lets you apply
+MapLibre style metadata to an MBTiles database via the
+``/api/vector-tiles/style`` endpoint.
+
 Build the frontend with **Node.js 18+** and npm::
 
    cd webui
