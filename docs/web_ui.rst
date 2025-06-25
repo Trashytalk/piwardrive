@@ -23,8 +23,9 @@ columns.
 
 
 The ``/config`` endpoint now allows the web UI to modify settings on the
-device.  Each option is rendered as a simple form field and saved back to
-``config.json`` via a POST request.  Changes take effect on the next reload.
+device.  The React dashboard exposes a dedicated **Settings** page mirroring the
+former Kivy interface. Configuration options are fetched from ``/config`` and
+saved back via a POST request so changes persist to ``config.json``.
 
 Build the frontend with **Node.js 18+** and npm::
 
