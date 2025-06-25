@@ -242,6 +242,8 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 
 def validate_config_data(data: Dict[str, Any]) -> None:
     """Validate configuration values using :class:`ConfigModel`."""
+        if data.get("remote_sync_url") == "":
+        data["remote_sync_url"] = None
     ConfigModel(**data)
 
 
