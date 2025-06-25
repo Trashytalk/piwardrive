@@ -273,12 +273,34 @@ BoxLayout:
                     height: self.texture_size[1]
 
 # Console Screen layout
+#:import os os
 <ConsoleScreen>:
-    LogViewer:
-        id: console_log
-        size_hint_y: 1
-        size_hint_x: 1
-        log_path: '/var/log/syslog'
+    BoxLayout:
+        orientation: 'vertical'
+        MDBoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            spacing: dp(4)
+            padding: dp(4)
+            MDTextField:
+                id: log_filter
+                hint_text: 'Filter'
+                size_hint_x: 0.6
+                on_text: console_log.filter_regex = self.text
+            MDRaisedButton:
+                id: path_btn
+                text: os.path.basename(console_log.log_path)
+                size_hint_x: 0.2
+                on_release: console_log.show_path_menu(self)
+            MDRaisedButton:
+                text: 'Jump Error'
+                size_hint_x: 0.2
+                on_release: console_log.jump_to_latest_error()
+        LogViewer:
+            id: console_log
+            size_hint_y: 1
+            size_hint_x: 1
+            log_path: app.log_paths[0] if len(app.log_paths) > 0 else '/var/log/syslog'
 # Map Screen layout
 <MapScreen>:
     BoxLayout:
