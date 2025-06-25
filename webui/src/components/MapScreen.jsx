@@ -1,0 +1,132 @@
+import { useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
+
+function GPSMarker({ position }) {
+  if (!position) return null;
+  return (
+    <Marker position={position}>
+      <Popup>GPS</Popup>
+    </Marker>
+  );
+}
+
+export default function MapScreen() {
+  const [center, setCenter] = useState([0, 0]);
+  const [zoom] = useState(16);
+  const [follow, setFollow] = useState(true);
+  const [aps, setAps] = useState([]);
+  const [filter, setFilter] = useState({ ssid: '', encryption: '' });
+  const track = useRef([]);
+
+  // fetch GPS periodically
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const resp = await fetch('/gps');
+        const data = await resp.json();
+        if (data && data.lat != null && data.lon != null) {
+          if (follow) setCenter([data.lat, data.lon]);
+          track.current.push([data.lat, data.lon]);
+        }
+      } catch (e) {
+        console.error('gps fetch failed', e);
+      }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [follow]);
+
+  // fetch APs once
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const resp = await fetch('/export/aps?fmt=geojson');
+        const j = await resp.json();
+        const markers = j.features.map(f => ({
+          ...f.properties,
+          lat: f.geometry.coordinates[1],
+          lon: f.geometry.coordinates[0]
+        }));
+        setAps(markers);
+      } catch (e) {
+        console.error('ap fetch error', e);
+      }
+    };
+    load();
+  }, []);
+
+  // offline cache maintenance daily
+  useEffect(() => {
+    const run = async () => {
+      await purgeOldTiles(30);
+      await enforceCacheLimit(512);
+    };
+    run();
+    const id = setInterval(run, 86400000);
+    return () => clearInterval(id);
+  }, []);
+
+  // route prefetch hourly
+  useEffect(() => {
+    const id = setInterval(() => {
+      routePrefetch(track.current, 5, 0.01, zoom);
+    }, 3600000);
+    return () => clearInterval(id);
+  }, [zoom]);
+
+  const filtered = aps.filter(ap => {
+    if (filter.ssid && !(ap.ssid || '').includes(filter.ssid)) return false;
+    if (filter.encryption && filter.encryption !== ap.encryption) return false;
+    return true;
+  });
+
+  const prefetchView = () => {
+    const bounds = [
+      center[0] - 0.01,
+      center[1] - 0.01,
+      center[0] + 0.01,
+      center[1] + 0.01
+    ];
+    prefetchTiles(bounds, zoom);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: '0.5em' }}>
+        <label>
+          <input
+            type="checkbox"
+            checked={follow}
+            onChange={() => setFollow(!follow)}
+          />
+          Follow GPS
+        </label>
+        <button onClick={prefetchView} style={{ marginLeft: '1em' }}>
+          Prefetch View
+        </button>
+        <input
+          placeholder="SSID filter"
+          value={filter.ssid}
+          onChange={e => setFilter({ ...filter, ssid: e.target.value })}
+          style={{ marginLeft: '1em' }}
+        />
+        <input
+          placeholder="Encryption"
+          value={filter.encryption}
+          onChange={e => setFilter({ ...filter, encryption: e.target.value })}
+          style={{ marginLeft: '1em' }}
+        />
+      </div>
+      <MapContainer center={center} zoom={zoom} style={{ height: '80vh' }}>
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {filtered.map(ap => (
+          <Marker key={ap.bssid} position={[ap.lat, ap.lon]}>
+            <Popup>{ap.ssid || ap.bssid}</Popup>
+          </Marker>
+        ))}
+        <GPSMarker position={center} />
+      </MapContainer>
+    </div>
+  );
+}

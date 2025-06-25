@@ -216,13 +216,15 @@ Alternatively serve `webui/dist` with any webserver while running
 `http://localhost:8000`.
 
 This starts a FastAPI server on `http://0.0.0.0:8000` with the API under `/api`.
-Launch Chromium in kiosk mode to display the dashboard:
+Launch Chromium in kiosk mode with the helper command:
 
 ```bash
-chromium-browser --kiosk http://localhost:8000
+piwardrive-kiosk
 ```
-Chromium must run inside a graphical environment. Ensure an X server is
-available and ``$DISPLAY`` is set. Headless setups can use ``Xvfb``.
+The command runs `piwardrive-webui` in the background and opens Chromium with
+`--kiosk` pointing to the dashboard. Chromium must run inside a graphical
+environment. Ensure an X server is available and ``$DISPLAY`` is set.
+Headless setups can use ``Xvfb``.
 
 #### Touch Interface (optional)
 
@@ -271,7 +273,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
 * **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
-* **Browser Kiosk Mode** – build the React frontend (see above), then run `python -m piwardrive.webui_server` from the repository root and open Chromium with `--kiosk http://localhost:8000`.
+* **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
