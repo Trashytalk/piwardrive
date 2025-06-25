@@ -1,21 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
 import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
-import { adjustGpsInterval } from '../dynamicGps.js';
-
-function haversine(p1, p2) {
-  const R = 6371000;
-  const lat1 = (p1[0] * Math.PI) / 180;
-  const lat2 = (p2[0] * Math.PI) / 180;
-  const dLat = lat2 - lat1;
-  const dLon = ((p2[1] - p1[1]) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 function GPSMarker({ position }) {
   if (!position) return null;
@@ -26,115 +13,34 @@ function GPSMarker({ position }) {
   );
 }
 
-export default function MapScreen() {
+export default function TrackMap() {
   const [center, setCenter] = useState([0, 0]);
   const [zoom] = useState(16);
   const [follow, setFollow] = useState(true);
   const [aps, setAps] = useState([]);
-  const [filter, setFilter] = useState({ ssid: '', encryption: '' });
+  const [bts, setBts] = useState([]);
+  const [filter, setFilter] = useState({ ssid: '', encryption: '', btName: '' });
   const [showHeatmap, setShowHeatmap] = useState(false);
-  const [geofences, setGeofences] = useState([]);
-  const geofencesRef = useRef([]);
-  const [prefetchProgress, setPrefetchProgress] = useState(null);
-  const track = useRef([]);
-  const [config, setConfig] = useState(null);
-  const conf = useRef({ poll: 5, max: 30, thresh: 1.0 });
-  const last = useRef(null);
-  const lastTime = useRef(0);
-  const timer = useRef(null);
-
-  useEffect(() => {
-    fetch('/config')
-      .then(r => r.json())
-      .then(c => {
-        conf.current = {
-          poll: c.map_poll_gps ?? 5,
-          max: c.map_poll_gps_max ?? 30,
-          thresh: c.gps_movement_threshold ?? 1.0,
-        };
-      })
-      .catch(() => {});
-  }, []);
-
-  
-  // load configuration
-  useEffect(() => {
-    fetch('/config')
-      .then(r => r.json())
-      .then(setConfig)
-      .catch(e => console.error('config fetch failed', e));
-  }, []);
-
-  useEffect(() => {
-    geofencesRef.current = geofences;
-  }, [geofences]);
-
-  const pointInPoly = (pt, poly) => {
-    let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const [lat1, lon1] = poly[i];
-      const [lat2, lon2] = poly[j];
-      if ((lon1 > pt[1]) !== (lon2 > pt[1])) {
-        const intersect = (lat2 - lat1) * (pt[1] - lon1) / (lon2 - lon1) + lat1;
-        if (pt[0] < intersect) inside = !inside;
-      }
-    }
-    return inside;
-  };
+  const [showTrack, setShowTrack] = useState(true);
+  const trackRef = useRef([]);
+  const [, forceUpdate] = useState(0);
 
   // fetch GPS periodically
   useEffect(() => {
-    let active = true;
-    let interval = conf.current.poll * 1000;
-    const poll = async () => {
-      if (!active) return;
+    const id = setInterval(async () => {
       try {
         const resp = await fetch('/gps');
         const data = await resp.json();
         if (data && data.lat != null && data.lon != null) {
-          const pos = [data.lat, data.lon];
-          if (follow) setCenter(pos);
-          track.current.push(pos);
-            const now = Date.now();
-          if (last.current) {
-            const dist = haversine(last.current, [data.lat, data.lon]);
-            const dt = (now - lastTime.current) / 1000;
-            const speed = dt > 0 ? dist / dt : 0;
-            const next = adjustGpsInterval(
-              interval / 1000,
-              speed,
-              conf.current.poll,
-              conf.current.max,
-              conf.current.thresh
-            );
-            interval = next * 1000;
-          }
-          last.current = [data.lat, data.lon];
-          lastTime.current = now;
-          if (geofencesRef.current.length) {
-            setGeofences(gfs =>
-              gfs.map(g => {
-                const inside = pointInPoly(pos, g.points);
-                if (inside && !g.inside && g.enter_message) {
-                  alert(g.enter_message.replace('{name}', g.name));
-                } else if (!inside && g.inside && g.exit_message) {
-                  alert(g.exit_message.replace('{name}', g.name));
-                }
-                return { ...g, inside };
-              })
-            );
-          }
+          if (follow) setCenter([data.lat, data.lon]);
+          trackRef.current.push([data.lat, data.lon]);
+          forceUpdate(n => n + 1);
         }
       } catch (e) {
         console.error('gps fetch failed', e);
       }
-      if (active) timer.current = setTimeout(poll, interval);
-    };
-    timer.current = setTimeout(poll, interval);
-    return () => {
-      active = false;
-      if (timer.current) clearTimeout(timer.current);
-    };
+    }, 5000);
+    return () => clearInterval(id);
   }, [follow]);
 
   // fetch APs once
@@ -156,11 +62,23 @@ export default function MapScreen() {
     load();
   }, []);
 
+  // fetch Bluetooth devices once
   useEffect(() => {
-    fetch('/geofences')
-      .then(r => r.json())
-      .then(data => setGeofences(data.map(g => ({ ...g, inside: false }))))
-      .catch(() => {});
+    const load = async () => {
+      try {
+        const resp = await fetch('/export/bt?fmt=geojson');
+        const j = await resp.json();
+        const markers = j.features.map(f => ({
+          ...f.properties,
+          lat: f.geometry.coordinates[1],
+          lon: f.geometry.coordinates[0]
+        }));
+        setBts(markers);
+      } catch (e) {
+        console.error('bt fetch error', e);
+      }
+    };
+    load();
   }, []);
 
   // subscribe to new APs
@@ -222,20 +140,22 @@ export default function MapScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // route prefetch on interval from config
+  // route prefetch hourly
   useEffect(() => {
-    if (!config) return;
-    const intervalMs = (config.route_prefetch_interval || 3600) * 1000;
-    const lookahead = config.route_prefetch_lookahead || 5;
     const id = setInterval(() => {
-      routePrefetch(track.current, lookahead, 0.01, zoom);
-    }, intervalMs);
+      routePrefetch(trackRef.current, 5, 0.01, zoom);
+    }, 3600000);
     return () => clearInterval(id);
-  }, [zoom, config]);
+  }, [zoom]);
 
-  const filtered = aps.filter(ap => {
+  const filteredAps = aps.filter(ap => {
     if (filter.ssid && !(ap.ssid || '').includes(filter.ssid)) return false;
     if (filter.encryption && filter.encryption !== ap.encryption) return false;
+    return true;
+  });
+
+  const filteredBts = bts.filter(bt => {
+    if (filter.btName && !(bt.name || '').includes(filter.btName)) return false;
     return true;
   });
 
@@ -246,12 +166,7 @@ export default function MapScreen() {
       center[0] + 0.01,
       center[1] + 0.01
     ];
-    setPrefetchProgress({ done: 0, total: 0 });
-    prefetchTiles(bounds, zoom, (d, t) => {
-      setPrefetchProgress({ done: d, total: t });
-    }).finally(() => {
-      setTimeout(() => setPrefetchProgress(null), 2000);
-    });
+    prefetchTiles(bounds, zoom);
   };
 
   return (
@@ -273,16 +188,17 @@ export default function MapScreen() {
           />
           Show Heatmap
         </label>
+        <label style={{ marginLeft: '1em' }}>
+          <input
+            type="checkbox"
+            checked={showTrack}
+            onChange={() => setShowTrack(!showTrack)}
+          />
+          Show Track
+        </label>
         <button onClick={prefetchView} style={{ marginLeft: '1em' }}>
           Prefetch View
         </button>
-        {prefetchProgress && (
-          <progress
-            value={prefetchProgress.done}
-            max={prefetchProgress.total}
-            style={{ marginLeft: '1em' }}
-          />
-        )}
         <input
           placeholder="SSID filter"
           value={filter.ssid}
@@ -295,16 +211,27 @@ export default function MapScreen() {
           onChange={e => setFilter({ ...filter, encryption: e.target.value })}
           style={{ marginLeft: '1em' }}
         />
+        <input
+          placeholder="BT name"
+          value={filter.btName}
+          onChange={e => setFilter({ ...filter, btName: e.target.value })}
+          style={{ marginLeft: '1em' }}
+        />
       </div>
       <MapContainer center={center} zoom={zoom} style={{ height: '80vh' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <HeatmapLayer show={showHeatmap} />
-        {geofences.map((g, idx) => (
-          <Polygon key={idx} positions={g.points} pathOptions={{ color: 'red' }} />
-        ))}
-        {filtered.map(ap => (
+        {showTrack && trackRef.current.length > 1 && (
+          <Polyline positions={trackRef.current} color="red" />
+        )}
+        {filteredAps.map(ap => (
           <Marker key={ap.bssid} position={[ap.lat, ap.lon]}>
             <Popup>{ap.ssid || ap.bssid}</Popup>
+          </Marker>
+        ))}
+        {filteredBts.map(bt => (
+          <Marker key={bt.address} position={[bt.lat, bt.lon]}>
+            <Popup>{bt.name || bt.address}</Popup>
           </Marker>
         ))}
         <GPSMarker position={center} />

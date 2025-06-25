@@ -41,6 +41,7 @@ export default function SettingsForm() {
     ['map_use_offline', 'Use Offline Tiles', 'checkbox'],
     ['map_auto_prefetch', 'Auto Prefetch Tiles', 'checkbox'],
     ['route_prefetch_interval', 'Route Prefetch Interval', 'number'],
+    ['route_prefetch_lookahead', 'Route Prefetch Lookahead', 'number'],
     ['map_show_gps', 'Show GPS', 'checkbox'],
     ['map_show_aps', 'Show APs', 'checkbox'],
     ['map_show_bt', 'Show Bluetooth', 'checkbox'],
