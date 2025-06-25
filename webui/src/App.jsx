@@ -1,4 +1,9 @@
 import { useEffect, useState } from 'react';
+
+// Vite will bundle any components that match this glob so plugin widgets can be
+// loaded dynamically by name. Plugin authors should place React components under
+// `webui/src/components` with file names matching the Python class names.
+const pluginModules = import.meta.glob('./components/*.jsx');
 import BatteryStatus from './components/BatteryStatus.jsx';
 import ServiceStatus from './components/ServiceStatus.jsx';
 import HandshakeCount from './components/HandshakeCount.jsx';
@@ -80,6 +85,26 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const loadWidgets = async () => {
+      const loaded = [];
+      for (const name of plugins) {
+        const path = `./components/${name}.jsx`;
+        const importer = pluginModules[path];
+        if (importer) {
+          try {
+            const mod = await importer();
+            loaded.push({ name, Component: mod.default });
+          } catch (err) {
+            console.error('Failed loading plugin component', name, err);
+          }
+        }
+      }
+      setWidgets(loaded);
+    };
+    loadWidgets();
+  }, [plugins]);
+
   return (
     <div>
       <h2>Map</h2>
@@ -94,6 +119,9 @@ export default function App() {
           <li key={p}>{p}</li>
         ))}
       </ul>
+      {widgets.map(({ name, Component }) => (
+        <Component key={name} metrics={metrics} />
+      ))}
       <h2>Dashboard</h2>
       <BatteryStatus metrics={metrics} />
       <ServiceStatus metrics={metrics} />
