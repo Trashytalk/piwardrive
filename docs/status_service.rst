@@ -93,6 +93,14 @@ the ``log_paths`` whitelist defined in ``config.json``::
 ``/export/bt``
     Return Bluetooth scan results in the requested format.
 
+``/service/{name}``
+    Return ``{"service": name, "active": true/false}`` indicating whether a
+    ``systemd`` unit is active.
+
+``/service/{name}/{action}``
+    Start, stop or restart the given service. ``action`` must be ``start``,
+    ``stop`` or ``restart``.
+
 ``/ws/aps`` streams newly discovered Wi-Fi access points over WebSocket::
 
    websocat ws://localhost:8000/ws/aps
