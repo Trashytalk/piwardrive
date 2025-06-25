@@ -22,7 +22,6 @@ export default function App() {
   const [orientationData, setOrientationData] = useState(null);
   const [vehicleData, setVehicleData] = useState(null);
 
-
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const ws = new WebSocket(`${proto}//${window.location.host}/ws/status`);
@@ -43,7 +42,7 @@ export default function App() {
     fetch('/widget-metrics')
       .then(r => r.json())
       .then(setMetrics);
-    fetch('/plugins')
+    fetch('/api/plugins')
       .then(r => r.json())
       .then(setPlugins);
     fetch('/logs?lines=20')
@@ -62,7 +61,11 @@ export default function App() {
       <h2>Widget Metrics</h2>
       <pre>{JSON.stringify(metrics, null, 2)}</pre>
       <h2>Plugin Widgets</h2>
-      <pre>{JSON.stringify(plugins, null, 2)}</pre>
+      <ul>
+        {plugins.map(p => (
+          <li key={p}>{p}</li>
+        ))}
+      </ul>
       <h2>Dashboard</h2>
       <BatteryStatus metrics={metrics} />
       <ServiceStatus metrics={metrics} />
