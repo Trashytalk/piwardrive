@@ -11,6 +11,7 @@ import SignalStrength from './components/SignalStrength.jsx';
 import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
 import StatsDashboard from './components/StatsDashboard.jsx';
+import SystemStats from './components/SystemStats.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
 import GeofenceEditor from './components/GeofenceEditor.jsx';
 import SettingsForm from './components/SettingsForm.jsx';
@@ -153,6 +154,8 @@ export default function App() {
   return (
     <div>
       <h2>Map</h2>
+      <MapScreen />
+      <SystemStats />
       <TrackMap />
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
