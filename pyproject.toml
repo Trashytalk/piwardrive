@@ -20,7 +20,6 @@ license = {file = "LICENSE"}
 authors = [{name = "PiWardrive contributors"}]
 
 [project.scripts]
-piwardrive = "piwardrive.main:main"
 piwardrive-service = "piwardrive.service:main"
 piwardrive-webui = "piwardrive.webui_server:main"
 health-export = "piwardrive.scripts.health_export:main"
