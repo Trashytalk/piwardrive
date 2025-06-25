@@ -17,6 +17,11 @@ Plugin widgets stored under ``~/.config/piwardrive/plugins`` are also
 detected.  The new ``/plugins`` route lists the discovered classes so the web UI
 can show them.
 
+Dashboard widgets appear in a drag-and-drop layout identical to the on-device
+interface. Positions are stored in ``config.json`` via the
+``/dashboard-settings`` API so rearranging widgets from the browser persists the
+order for both frontends.
+
 The UI can also poll ``/orientation`` and ``/gps`` for sensor data when running
 on hardware equipped with accelerometers or a GPS module.
 
