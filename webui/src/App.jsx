@@ -6,6 +6,7 @@ import SignalStrength from './components/SignalStrength.jsx';
 import NetworkThroughput from './components/NetworkThroughput.jsx';
 import CPUTempGraph from './components/CPUTempGraph.jsx';
 import VehicleStats from './components/VehicleStats.jsx';
+import MapScreen from './components/MapScreen.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -66,6 +67,8 @@ export default function App() {
 
   return (
     <div>
+      <h2>Map</h2>
+      <MapScreen />
       <h2>Status</h2>
       <pre>{JSON.stringify(status, null, 2)}</pre>
       <h2>Widget Metrics</h2>
