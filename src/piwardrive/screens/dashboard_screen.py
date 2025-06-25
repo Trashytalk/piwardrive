@@ -1,5 +1,6 @@
 """Drag-and-drop dashboard screen with metrics widgets."""
 import logging
+import importlib
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.screenmanager import Screen
@@ -58,63 +59,45 @@ class DashboardScreen(Screen):
     def load_widgets(self):
         """Instantiate dashboard widgets from config or defaults."""
         app = App.get_running_app()
-        cls_map = {
-            'SignalStrengthWidget': SignalStrengthWidget,
-            'GPSStatusWidget': GPSStatusWidget,
-            'HandshakeCounterWidget': HandshakeCounterWidget,
-            'ServiceStatusWidget': ServiceStatusWidget,
-            'StorageUsageWidget': StorageUsageWidget,
-            'HealthStatusWidget': HealthStatusWidget,
-            'DiskUsageTrendWidget': DiskUsageTrendWidget,
-            'CPUTempGraphWidget': CPUTempGraphWidget,
-            'NetworkThroughputWidget': NetworkThroughputWidget,
-            'BatteryStatusWidget': BatteryStatusWidget,
-        }
+        widgets_mod = importlib.import_module("widgets")
+
+        def _make_widget(name: str) -> object | None:
+            cls = getattr(widgets_mod, name, None)
+            return cls() if cls else None
 
         widgets: list[object] = []
         if app.dashboard_layout:
-
-            cls_map = {
-                'SignalStrengthWidget': SignalStrengthWidget,
-                'GPSStatusWidget': GPSStatusWidget,
-                'HandshakeCounterWidget': HandshakeCounterWidget,
-                'ServiceStatusWidget': ServiceStatusWidget,
-                'StorageUsageWidget': StorageUsageWidget,
-                'HealthStatusWidget': HealthStatusWidget,
-                'DiskUsageTrendWidget': DiskUsageTrendWidget,
-                'CPUTempGraphWidget': CPUTempGraphWidget,
-                'NetworkThroughputWidget': NetworkThroughputWidget,
-                'BatteryStatusWidget': BatteryStatusWidget,
-                'HealthAnalysisWidget': HealthAnalysisWidget,
-            }
-
             for info in app.dashboard_layout:
-                cls = cls_map.get(info.get('cls'))
-                if not cls:
+                name = info.get("cls")
+                if not name:
                     continue
-                widget = cls()
-                if pos := info.get('pos'):
+                widget = _make_widget(name)
+                if not widget:
+                    continue
+                if pos := info.get("pos"):
                     widget.pos = pos
                 widgets.append(widget)
         else:
-            widgets = [
-                SignalStrengthWidget(),
-                GPSStatusWidget(),
-                HandshakeCounterWidget(),
-                ServiceStatusWidget(),
-                StorageUsageWidget(),
-                HealthStatusWidget(),
+            names = [
+                "SignalStrengthWidget",
+                "GPSStatusWidget",
+                "HandshakeCounterWidget",
+                "ServiceStatusWidget",
+                "StorageUsageWidget",
+                "HealthStatusWidget",
             ]
-            if getattr(app, 'widget_disk_trend', False):
-                widgets.append(DiskUsageTrendWidget())
-            if getattr(app, 'widget_cpu_temp', False):
-                widgets.append(CPUTempGraphWidget())
-            if getattr(app, 'widget_net_throughput', False):
-                widgets.append(NetworkThroughputWidget())
-            if getattr(app, 'widget_battery_status', False):
-                widgets.append(BatteryStatusWidget())
-            if getattr(app, 'widget_health_analysis', False):
-                widgets.append(HealthAnalysisWidget())
+            if getattr(app, "widget_disk_trend", False):
+                names.append("DiskUsageTrendWidget")
+            if getattr(app, "widget_cpu_temp", False):
+                names.append("CPUTempGraphWidget")
+            if getattr(app, "widget_net_throughput", False):
+                names.append("NetworkThroughputWidget")
+            if getattr(app, "widget_battery_status", False):
+                names.append("BatteryStatusWidget")
+            if getattr(app, "widget_health_analysis", False):
+                names.append("HealthAnalysisWidget")
+
+            widgets = [w for n in names if (w := _make_widget(n))]
 
 
         for widget in widgets:
