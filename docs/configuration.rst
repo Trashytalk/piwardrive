@@ -78,3 +78,19 @@ Automatic uploads to a remote server are controlled by several options:
 ``remote_sync_interval``
     How often to sync the database in minutes. Set to ``0`` to disable
     the scheduler.
+
+Tile Prefetch and Maintenance
+----------------------------
+
+``tile_maintenance_interval``
+    How often the cache cleanup routine runs in seconds.
+
+``route_prefetch_interval``
+    Interval in seconds between automatic route tile prefetch attempts.
+
+``route_prefetch_lookahead``
+    Number of extrapolated GPS points used when predicting future tiles.
+
+These options appear in the Settings form and can also be set via
+``PW_TILE_MAINTENANCE_INTERVAL`` and ``PW_ROUTE_PREFETCH_INTERVAL``
+environment variables.
