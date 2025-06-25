@@ -76,6 +76,8 @@ class DummyApp:
         self.cleanup_rotated_logs = True
         self.widget_battery_status = False
         self.ui_font_size = 16
+        self.tile_maintenance_interval = 604800
+        self.route_prefetch_interval = 3600
         self.theme = "Dark"
         self.theme_cls = SimpleNamespace(theme_style="Dark")
         self.config_data = config.Config()
@@ -106,7 +108,13 @@ def make_screen(module: ModuleType, app: DummyApp) -> Any:
     screen.debug_switch = SimpleNamespace(active=app.debug_mode)
     screen.battery_switch = SimpleNamespace(active=app.widget_battery_status)
     screen.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
-    screen.theme_switch = SimpleNamespace(active=app.theme == "Dark")
+    screen.tile_maint_field = SimpleNamespace(
+        text=str(app.tile_maintenance_interval)
+    )
+    screen.route_prefetch_field = SimpleNamespace(
+        text=str(app.route_prefetch_interval)
+    )
+    screen.theme_field = SimpleNamespace(text=app.theme)
     screen.theme_cls = SimpleNamespace(theme_style=app.theme)
     return screen
 
@@ -206,6 +214,34 @@ def test_save_settings_updates_multiple_fields(monkeypatch: Any) -> None:
     assert saved
     assert saved.get("map_cluster_capacity") == 12
     assert saved.get("map_auto_prefetch") is True
+
+
+def test_save_settings_additional_fields(monkeypatch: Any) -> None:
+    module = load_screen(monkeypatch)
+    app = DummyApp()
+    monkeypatch.setattr(module.App, "get_running_app", lambda: app)
+    screen = make_screen(module, app)
+
+    screen.tile_maint_field.text = "86400"
+    screen.route_prefetch_field.text = "1800"
+    screen.theme_field.text = "Light"
+
+    monkeypatch.setattr(module.os.path, "exists", lambda p: True)
+    saved: dict[str, Any] = {}
+
+    def fake_save(cfg: config.Config) -> None:
+        saved.update(cfg.__dict__)
+
+    monkeypatch.setattr(module, "save_config", fake_save)
+
+    screen.save_settings()
+
+    assert app.tile_maintenance_interval == 86400
+    assert app.route_prefetch_interval == 1800
+    assert app.theme == "Light"
+    assert saved.get("tile_maintenance_interval") == 86400
+    assert saved.get("route_prefetch_interval") == 1800
+    assert saved.get("theme") == "Light"
 
 
 @pytest.mark.asyncio

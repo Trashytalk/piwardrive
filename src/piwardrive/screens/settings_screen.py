@@ -42,6 +42,9 @@ class SettingsScreen:
         self.debug_switch = SimpleNamespace(active=app.debug_mode)
         self.battery_switch = SimpleNamespace(active=app.widget_battery_status)
         self.font_size_field = SimpleNamespace(text=str(app.ui_font_size))
+        self.tile_maint_field = SimpleNamespace(text=str(app.tile_maintenance_interval))
+        self.route_prefetch_field = SimpleNamespace(text=str(app.route_prefetch_interval))
+        self.theme_field = SimpleNamespace(text=app.theme)
 
     # ------------------------------------------------------------------
     def save_settings(self) -> None:  # pragma: no cover - exercised via tests
@@ -103,8 +106,22 @@ class SettingsScreen:
             if val <= 0:
                 raise ValueError
             app.map_cluster_capacity = val
+
+            val = int(self.tile_maint_field.text)
+            if val <= 0:
+                raise ValueError
+            app.tile_maintenance_interval = val
+
+            val = int(self.route_prefetch_field.text)
+            if val <= 0:
+                raise ValueError
+            app.route_prefetch_interval = val
         except ValueError:
             report_error("GPS poll invalid")
+
+        app.theme = self.theme_field.text or app.theme
+        if hasattr(app, "theme_cls"):
+            app.theme_cls.theme_style = app.theme
 
         app.map_show_gps = self.show_gps_switch.active
         app.map_show_aps = self.show_aps_switch.active
@@ -134,10 +151,13 @@ class SettingsScreen:
         cfg.map_cluster_aps = app.map_cluster_aps
         cfg.map_auto_prefetch = app.map_auto_prefetch
         cfg.map_cluster_capacity = app.map_cluster_capacity
+        cfg.tile_maintenance_interval = app.tile_maintenance_interval
+        cfg.route_prefetch_interval = app.route_prefetch_interval
         cfg.debug_mode = app.debug_mode
         cfg.widget_battery_status = app.widget_battery_status
         cfg.ui_font_size = app.ui_font_size
         cfg.offline_tile_path = app.offline_tile_path
+        cfg.theme = app.theme
 
         save_config(cfg)
 

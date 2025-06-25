@@ -16,7 +16,9 @@ class SettingsScreen(Screen):
     log_rotate_field: Any
     log_archives_field: Any
     offline_path_field: Any
-    theme_switch: Any
+    tile_maint_field: Any
+    route_prefetch_field: Any
+    theme_field: Any
     offline_switch: Any
     show_gps_switch: Any
     show_aps_switch: Any
