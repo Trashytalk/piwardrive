@@ -197,6 +197,65 @@ Some components rely on additional Python packages. Install them only if you nee
 
 Activate the virtual environment and run `pip install <package>` for any that apply.
 
+## Installation Prerequisites & Setup
+
+Follow these steps to configure the Python and React development environment.
+
+1. **Enter your project directory**
+   ```bash
+   cd ~/piwardrive
+   ```
+
+2. **Install system prerequisites (run once):**
+   ```bash
+   sudo apt update
+   sudo apt install -y \
+     build-essential pkg-config meson ninja-build \
+     libdbus-1-dev libdbus-glib-1-dev \
+     r-base r-base-dev libtirpc-dev \
+     python3-dev python3-venv \
+     nodejs npm
+   ```
+
+3. **Create and activate a Python venv**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+4. **Upgrade pip/setuptools and install Python deps**
+   ```bash
+   pip install --upgrade pip setuptools wheel meson ninja
+   pip install -r requirements.txt
+   ```
+
+5. **Build the React frontend**
+   ```bash
+   cd webui
+   npm install         # only on first run or when package.json changes
+   npm run build
+   cd ..
+   ```
+
+6. **Install the package in editable mode**
+   ```bash
+   pip install --editable .
+   ```
+
+7. **Start the ASGI server**
+   ```bash
+   uvicorn piwardrive.webui_server:app --reload
+   ```
+
+8. **Verify**
+   ```bash
+   # Visit the React UI
+   http://127.0.0.1:8000/
+
+   # Check the API endpoint
+   http://127.0.0.1:8000/api/status/cpu_history?limit=5
+   ```
+
 ### Running
 
 #### Web Interface
@@ -304,6 +363,70 @@ Restart=on-failure
 WantedBy=multi-user.target
 ```
 
+## Kiosk Setup on Pi OS Lite
+
+1. **Install prerequisites**
+   ```bash
+   sudo apt update
+   sudo apt install -y xserver-xorg xinit matchbox-window-manager chromium-browser
+   ```
+
+2. **Create `~/kiosk.sh`**
+   ```bash
+   #!/bin/sh
+   xset -dpms
+   xset s off
+   matchbox-window-manager &
+   chromium-browser --kiosk http://127.0.0.1:8000/
+   ```
+
+3. **Create `~/.xsession`**
+   ```bash
+   exec sh /home/pi/kiosk.sh
+   ```
+
+4. **Define `kiosk.service`**
+   ```ini
+   [Unit]
+   Description=Chromium Kiosk
+   After=graphical.target
+
+   [Service]
+   Type=simple
+   User=pi
+   Environment=DISPLAY=:0
+   ExecStart=/usr/bin/startx
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+5. **(Optional) `piwardrive.service`**
+   ```ini
+   [Unit]
+   Description=PiWardrive Backend
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=pi
+   WorkingDirectory=/home/pi/piwardrive
+   ExecStart=/home/pi/piwardrive/venv/bin/uvicorn piwardrive.webui_server:app --reload
+   Restart=on-failure
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+6. **Enable services and reboot**
+   ```bash
+   sudo systemctl enable kiosk.service
+   sudo systemctl enable piwardrive.service  # optional
+   sudo reboot
+   ```
+
+7. **Verification**
+   After reboot, Chromium should launch automatically in full-screen kiosk mode displaying the PiWardrive dashboard. If it does not, check the service logs with `journalctl -u kiosk.service` and `journalctl -u piwardrive.service`.
 
 ## Mobile Builds
 
