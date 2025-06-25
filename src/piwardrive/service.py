@@ -194,6 +194,16 @@ async def get_orientation_endpoint(
     }
 
 
+@app.get("/vehicle")
+async def get_vehicle_endpoint(_auth: None = Depends(_check_auth)) -> dict:
+    """Return vehicle metrics from OBD-II sensors."""
+    return {
+        "speed": vehicle_sensors.read_speed_obd(),
+        "rpm": vehicle_sensors.read_rpm_obd(),
+        "engine_load": vehicle_sensors.read_engine_load_obd(),
+    }
+
+
 @app.get("/gps")
 async def get_gps_endpoint(_auth: None = Depends(_check_auth)) -> dict:
     """Return current GPS position."""
