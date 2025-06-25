@@ -13,6 +13,7 @@ export default function App() {
   const [logs, setLogs] = useState('');
   const [configData, setConfigData] = useState(null);
   const [plugins, setPlugins] = useState([]);
+  const [widgets, setWidgets] = useState([]);
 
   useEffect(() => {
     const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
