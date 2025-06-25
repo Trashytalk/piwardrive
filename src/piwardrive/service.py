@@ -59,6 +59,7 @@ from piwardrive.utils import (
     run_service_cmd,
     async_tail_file,
 )
+from piwardrive import diagnostics
 import psutil
 import vehicle_sensors
 import config
@@ -194,6 +195,16 @@ async def get_storage(
 ) -> dict:
     """Return disk usage percentage for ``path``."""
     return {"percent": get_disk_usage(path)}
+
+
+@app.get("/health")
+async def get_health(_auth: None = Depends(_check_auth)) -> dict:
+    """Return latest health monitor data or run a self-test."""
+    monitor = getattr(app, "health_monitor", None)
+    data = getattr(monitor, "data", None) if monitor else None
+    if data is not None:
+        return data
+    return await asyncio.to_thread(diagnostics.self_test)
 
 
 @app.get("/orientation")

@@ -680,3 +680,24 @@ def test_service_control_endpoint_invalid_action() -> None:
     resp = client.post("/service/kismet/invalid")
     assert resp.status_code == 400
 
+
+def test_health_endpoint_uses_monitor(monkeypatch) -> None:
+    app = service.app
+    app.health_monitor = SimpleNamespace(data={"services": {"kismet": True}})
+
+    client = TestClient(app)
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json()["services"]["kismet"] is True
+
+
+def test_health_endpoint_runs_self_test(monkeypatch) -> None:
+    monkeypatch.setattr(service, "diagnostics", SimpleNamespace(self_test=lambda: {"ok": True}))
+    if hasattr(service.app, "health_monitor"):
+        delattr(service.app, "health_monitor")
+
+    client = TestClient(service.app)
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True}
+
