@@ -20,6 +20,7 @@ export default function MapScreen() {
   const [aps, setAps] = useState([]);
   const [filter, setFilter] = useState({ ssid: '', encryption: '' });
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [prefetchProgress, setPrefetchProgress] = useState(null);
   const track = useRef([]);
 
   // fetch GPS periodically
@@ -138,7 +139,12 @@ export default function MapScreen() {
       center[0] + 0.01,
       center[1] + 0.01
     ];
-    prefetchTiles(bounds, zoom);
+    setPrefetchProgress({ done: 0, total: 0 });
+    prefetchTiles(bounds, zoom, (d, t) => {
+      setPrefetchProgress({ done: d, total: t });
+    }).finally(() => {
+      setTimeout(() => setPrefetchProgress(null), 2000);
+    });
   };
 
   return (
@@ -163,6 +169,13 @@ export default function MapScreen() {
         <button onClick={prefetchView} style={{ marginLeft: '1em' }}>
           Prefetch View
         </button>
+        {prefetchProgress && (
+          <progress
+            value={prefetchProgress.done}
+            max={prefetchProgress.total}
+            style={{ marginLeft: '1em' }}
+          />
+        )}
         <input
           placeholder="SSID filter"
           value={filter.ssid}
