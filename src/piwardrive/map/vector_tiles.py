@@ -14,12 +14,28 @@ class MBTiles:
     """Simple reader for MBTiles formatted vector tiles."""
 
     def __init__(self, path: str) -> None:
+        """
+        Initialize an MBTiles reader for the specified file path.
+        
+        Raises:
+            FileNotFoundError: If the provided path does not exist.
+        """
         if not os.path.exists(path):
             raise FileNotFoundError(path)
         self.path = path
 
     def tiles(self, z: int, x: int, y: int) -> bytes | None:
-        """Return the raw tile data for ``(z, x, y)`` if present."""
+        """
+        Retrieve the raw vector tile data for the specified zoom level, column, and row.
+        
+        Parameters:
+        	z (int): Zoom level of the tile.
+        	x (int): Tile column.
+        	y (int): Tile row.
+        
+        Returns:
+        	bytes | None: The raw tile data as bytes if found; otherwise, None.
+        """
         try:
             with sqlite3.connect(self.path) as db:
                 cur = db.execute(
@@ -37,7 +53,15 @@ class MBTiles:
 
 
 def available_tiles(path: str) -> Iterable[Tuple[int, int, int]]:
-    """Yield ``(z, x, y)`` for tiles stored in ``path``."""
+    """
+    Yield (z, x, y) tuples for all tiles stored in the MBTiles file at the specified path.
+    
+    Parameters:
+        path (str): Path to the MBTiles SQLite database file.
+    
+    Yields:
+        Tuple[int, int, int]: Tuples representing the zoom level, column, and row of each available tile.
+    """
     with sqlite3.connect(path) as db:
         cur = db.execute("SELECT zoom_level, tile_column, tile_row FROM tiles")
         yield from cur.fetchall()

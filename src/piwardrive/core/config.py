@@ -45,14 +45,26 @@ CLOUD_PROFILE = ""
 
 
 def get_config_path(profile: Optional[str] = None) -> str:
-    """Return path to ``profile`` or the main ``config.json``."""
+    """
+    Return the file path to the configuration file for the specified profile or the main configuration file if no profile is given.
+    
+    If no profile is specified, the active profile is used if set; otherwise, the main configuration file path is returned.
+    """
     if profile is None:
         profile = get_active_profile()
     return _profile_path(profile) if profile else CONFIG_PATH
 
 
 def config_mtime(profile: Optional[str] = None) -> Optional[float]:
-    """Return modification time for the active config file if it exists."""
+    """
+    Return the modification time of the configuration file for the specified profile.
+    
+    Parameters:
+        profile (Optional[str]): The profile name. If None, uses the main configuration file.
+    
+    Returns:
+        Optional[float]: The last modification time as a Unix timestamp, or None if the file does not exist.
+    """
     path = get_config_path(profile)
     try:
         return Path(path).stat().st_mtime
@@ -133,7 +145,9 @@ ENV_OVERRIDE_MAP: Dict[str, str] = {
 
 
 def list_env_overrides() -> Dict[str, str]:
-    """Return available ``PW_`` environment variable overrides."""
+    """
+    Return a dictionary mapping available PW_ environment variable names to their corresponding configuration keys.
+    """
     return dict(ENV_OVERRIDE_MAP)
 
 
@@ -211,7 +225,18 @@ class ConfigModel(FileConfigModel):
 
     @field_validator("theme", mode="before")
     def check_theme(cls, value: Any) -> Theme:
-        """Validate that ``value`` is a known :class:`Theme`."""
+        """
+        Validates that the provided value corresponds to a valid Theme enum member.
+        
+        Parameters:
+            value (Any): The value to validate as a Theme.
+        
+        Returns:
+            Theme: The corresponding Theme enum member.
+        
+        Raises:
+            ValueError: If the value is not a valid Theme.
+        """
         try:
             return Theme(value)
         except Exception as exc:  # pragma: no cover - should raise
@@ -219,7 +244,16 @@ class ConfigModel(FileConfigModel):
 
 
 def _parse_env_value(raw: str, default: Any) -> Any:
-    """Return ``raw`` converted to the type of ``default``."""
+    """
+    Convert a raw environment variable string to the type of a given default value.
+    
+    Parameters:
+    	raw (str): The environment variable value as a string.
+    	default (Any): The default value whose type determines the conversion.
+    
+    Returns:
+    	Any: The converted value matching the type of `default`, or `default` if conversion fails.
+    """
     if isinstance(default, bool):
         return raw.lower() in {"1", "true", "yes", "on"}
     if isinstance(default, int):
@@ -241,12 +275,20 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 
 
 def validate_config_data(data: Dict[str, Any]) -> None:
-    """Validate configuration values using :class:`ConfigModel`."""
+    """
+    Validates configuration data against the ConfigModel schema.
+    
+    Raises a validation error if the data does not conform to required types or constraints.
+    """
     ConfigModel(**data)
 
 
 def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    """Return a copy of ``cfg`` with ``PW_`` environment overrides."""
+    """
+    Return a copy of the configuration dictionary with environment variable overrides applied.
+    
+    Environment variables prefixed with ``PW_`` are mapped to configuration keys and their values are parsed to match the expected types. Special handling is provided for the ``theme`` and ``remote_sync_url`` keys.
+    """
     result = dict(cfg)
     for env_var, key in ENV_OVERRIDE_MAP.items():
         default = DEFAULTS[key]
@@ -266,11 +308,21 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _profile_path(name: str) -> str:
+    """
+    Return the file path for a profile with the given name in the profiles directory.
+    
+    The returned path is always a JSON file, with the profile name sanitized to its stem.
+    """
     return str(Path(PROFILES_DIR) / f"{Path(name).stem}.json")
 
 
 def list_profiles() -> List[str]:
-    """Return available profile names under ``PROFILES_DIR``."""
+    """
+    Lists the names of all available configuration profiles.
+    
+    Returns:
+        List of profile names found in the profiles directory, excluding file extensions.
+    """
     profiles_dir = Path(PROFILES_DIR)
     if not profiles_dir.is_dir():
         return []
@@ -278,7 +330,11 @@ def list_profiles() -> List[str]:
 
 
 def get_active_profile() -> Optional[str]:
-    """Return the active profile name if set."""
+    """
+    Returns the name of the currently active configuration profile.
+    
+    Checks the `PW_PROFILE_NAME` environment variable first; if not set, reads from the active profile file. Returns `None` if no active profile is set.
+    """
     env = os.getenv("PW_PROFILE_NAME")
     if env:
         return env
@@ -291,14 +347,26 @@ def get_active_profile() -> Optional[str]:
 
 
 def set_active_profile(name: str) -> None:
-    """Persist ``name`` as the active profile."""
+    """
+    Sets the specified profile name as the active profile by writing it to the active profile file.
+    
+    Parameters:
+        name (str): The profile name to set as active.
+    """
     Path(CONFIG_DIR).mkdir(parents=True, exist_ok=True)
     with open(ACTIVE_PROFILE_FILE, "w", encoding="utf-8") as f:
         f.write(name)
 
 
 def load_config(profile: Optional[str] = None) -> Config:
-    """Load configuration from ``profile`` or ``CONFIG_PATH``."""
+    """
+    Loads the application configuration from the specified profile or the main config file.
+    
+    If a profile is provided or active, loads its configuration; otherwise, loads the default configuration file. Merges loaded values with defaults and returns a validated Config instance.
+     
+    Returns:
+        Config: The loaded and merged configuration object.
+    """
 
     if profile is None:
         profile = get_active_profile()
@@ -319,7 +387,11 @@ def load_config(profile: Optional[str] = None) -> Config:
 
 
 def save_config(config: Config, profile: Optional[str] = None) -> None:
-    """Persist ``config`` dataclass to ``profile`` or ``CONFIG_PATH``."""
+    """
+    Save the given configuration to the specified profile or the main configuration file.
+    
+    If a profile is provided or active, the configuration is saved to that profile's file; otherwise, it is saved to the main config file. The configuration is validated before saving, and necessary directories are created if they do not exist.
+    """
     if profile is None:
         profile = get_active_profile()
     path = get_config_path(profile)
@@ -332,7 +404,17 @@ def save_config(config: Config, profile: Optional[str] = None) -> None:
 
 
 def export_config(config: Config, path: str) -> None:
-    """Export ``config`` to ``path`` in JSON or YAML format."""
+    """
+    Export a configuration object to a file in JSON or YAML format.
+    
+    Parameters:
+        config (Config): The configuration instance to export.
+        path (str): The destination file path. The file extension determines the format: `.json` for JSON, `.yaml` or `.yml` for YAML.
+    
+    Raises:
+        RuntimeError: If YAML export is requested but PyYAML is not installed.
+        ValueError: If the file extension is not supported.
+    """
     ext = Path(path).suffix.lower()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     data = asdict(config)
@@ -351,7 +433,19 @@ def export_config(config: Config, path: str) -> None:
 
 
 def import_config(path: str) -> Config:
-    """Load configuration from ``path`` (JSON or YAML)."""
+    """
+    Imports configuration data from a JSON or YAML file, validates it, merges with default values, and returns a Config instance.
+    
+    Parameters:
+        path (str): Path to the configuration file (must be .json, .yaml, or .yml).
+    
+    Returns:
+        Config: The loaded and validated configuration.
+    
+    Raises:
+        RuntimeError: If YAML import is requested but PyYAML is not installed.
+        ValueError: If the file extension is not supported.
+    """
     ext = Path(path).suffix.lower()
     with open(path, "r", encoding="utf-8") as f:
         if ext == ".json":
@@ -425,25 +519,49 @@ class AppConfig:
 
     @classmethod
     def load(cls) -> "AppConfig":
-        """Load configuration with environment overrides."""
+        """
+        Loads the application configuration, applying environment variable overrides and validation.
+        
+        Returns:
+            AppConfig: An instance of AppConfig with merged and validated configuration values.
+        """
         file_cfg = asdict(load_config())
         merged = _apply_env_overrides(file_cfg)
         validate_config_data(merged)
         return cls(**merged)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return configuration as a plain dictionary."""
+        """
+        Return the configuration as a dictionary mapping field names to their values.
+        
+        Returns:
+            dict: A dictionary representation of the configuration.
+        """
         return {field: getattr(self, field) for field in DEFAULTS.keys()}
 
 
 def switch_profile(name: str) -> Config:
-    """Set ``name`` as active and load its configuration."""
+    """
+    Sets the specified profile as active and loads its configuration.
+    
+    Parameters:
+        name (str): The name of the profile to activate.
+    
+    Returns:
+        Config: The configuration associated with the activated profile.
+    """
     set_active_profile(name)
     return load_config(profile=name)
 
 
 def export_profile(name: str, dest: str) -> None:
-    """Write ``name`` profile to ``dest`` path."""
+    """
+    Copies the specified profile's JSON file to a destination path.
+    
+    Parameters:
+        name (str): The name of the profile to export.
+        dest (str): The file path where the profile will be copied.
+    """
     src = _profile_path(name)
     with (
         open(src, "r", encoding="utf-8") as fsrc,
@@ -453,7 +571,16 @@ def export_profile(name: str, dest: str) -> None:
 
 
 def import_profile(path: str, name: Optional[str] = None) -> str:
-    """Import a profile from ``path`` and save as ``name``."""
+    """
+    Imports a profile from a JSON file, validates and merges it with defaults, saves it under the specified or derived name, and returns the profile name.
+    
+    Parameters:
+        path (str): Path to the profile JSON file.
+        name (Optional[str]): Name to save the imported profile as. If not provided, the name is derived from the file stem.
+    
+    Returns:
+        str: The name under which the profile was saved.
+    """
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     FileConfigModel(**data)
@@ -465,7 +592,12 @@ def import_profile(path: str, name: Optional[str] = None) -> str:
 
 
 def delete_profile(name: str) -> None:
-    """Remove the specified profile file."""
+    """
+    Deletes the profile file for the given profile name if it exists.
+    
+    Parameters:
+        name (str): The name of the profile to delete.
+    """
     try:
         os.remove(_profile_path(name))
     except FileNotFoundError:

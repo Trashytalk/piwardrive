@@ -15,6 +15,9 @@ from piwardrive import config
 
 
 def _db_path() -> str:
+    """
+    Return the file path to the SQLite database, using the PW_DB_PATH environment variable if set, or defaulting to the config directory.
+    """
     env = os.getenv("PW_DB_PATH")
     if env:
         return os.path.expanduser(env)
@@ -41,7 +44,9 @@ _MIGRATIONS: list[Migration] = []
 
 
 async def _migration_1(conn: aiosqlite.Connection) -> None:
-    """Initial schema creation."""
+    """
+    Create the initial database schema with tables for health records, application state, and access point cache, including relevant indexes.
+    """
     await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS health_records (
@@ -87,7 +92,9 @@ _MIGRATIONS.append(_migration_1)
 
 
 async def _migration_2(conn: aiosqlite.Connection) -> None:
-    """Add dashboard settings table."""
+    """
+    Creates the `dashboard_settings` table if it does not exist, adding columns for layout and widgets.
+    """
     await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS dashboard_settings (
@@ -103,7 +110,12 @@ _MIGRATIONS.append(_migration_2)
 
 
 async def _get_conn() -> aiosqlite.Connection:
-    """Return a cached SQLite connection initialized with the proper schema."""
+    """
+    Obtain a cached asynchronous SQLite connection, initializing the database schema and applying migrations if necessary.
+    
+    Returns:
+        aiosqlite.Connection: An active SQLite connection configured for the current event loop and configuration directory.
+    """
     global _DB_CONN, _DB_LOOP, _DB_DIR
     loop = asyncio.get_running_loop()
     cur_dir = config.CONFIG_DIR
@@ -153,7 +165,11 @@ class DashboardSettings:
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
-    """Create or migrate the SQLite schema to the latest version."""
+    """
+    Apply all necessary schema migrations to bring the SQLite database to the latest version.
+    
+    Ensures the `schema_version` table exists, determines the current schema version, and sequentially applies pending migrations. Updates the schema version after each migration and commits changes to the database.
+    """
     await conn.execute(
         "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER)"
     )
@@ -179,7 +195,11 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
 
 
 async def flush_health_records() -> None:
-    """Write any buffered :class:`HealthRecord` rows to the database."""
+    """
+    Persist all buffered HealthRecord entries to the database.
+    
+    Flushes the in-memory buffer of HealthRecord objects by inserting them into the `health_records` table and clears the buffer. If the buffer is empty, no action is taken.
+    """
     global _LAST_FLUSH
     if not _HEALTH_BUFFER:
         return
@@ -198,7 +218,11 @@ async def flush_health_records() -> None:
 
 
 async def save_health_record(rec: HealthRecord) -> None:
-    """Queue ``rec`` for insertion into ``health_records``."""
+    """
+    Buffers a health record for later insertion into the database, flushing the buffer if limits are exceeded.
+    
+    The record is added to an in-memory buffer and will be written to the database when the buffer reaches a size or time threshold.
+    """
     await _get_conn()  # ensure DB file exists
     _HEALTH_BUFFER.append(asdict(rec))
     now = time.time()
@@ -207,7 +231,15 @@ async def save_health_record(rec: HealthRecord) -> None:
 
 
 async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
-    """Return up to ``limit`` most recent :class:`HealthRecord` entries."""
+    """
+    Retrieve the most recent health records up to the specified limit.
+    
+    Parameters:
+        limit (int): Maximum number of recent HealthRecord entries to return. Defaults to 10.
+    
+    Returns:
+        List[HealthRecord]: A list of HealthRecord objects ordered from most to least recent.
+    """
     await flush_health_records()
     conn = await _get_conn()
     cur = await conn.execute(
@@ -220,7 +252,12 @@ async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
 
 
 async def purge_old_health(days: int) -> None:
-    """Delete ``health_records`` older than ``days`` days."""
+    """
+    Delete health records older than the specified number of days from the database.
+    
+    Parameters:
+        days (int): The age threshold in days; records older than this will be removed.
+    """
     await flush_health_records()
     cutoff = (datetime.now() - timedelta(days=days)).isoformat()
     conn = await _get_conn()
@@ -232,7 +269,12 @@ async def purge_old_health(days: int) -> None:
 
 
 async def save_app_state(state: AppState) -> None:
-    """Persist application ``state``."""
+    """
+    Persist the provided application state to the database, replacing any existing state.
+    
+    Parameters:
+        state (AppState): The application state to be saved.
+    """
     conn = await _get_conn()
     await conn.execute("DELETE FROM app_state WHERE id = 1")
     await conn.execute(
@@ -246,7 +288,12 @@ async def save_app_state(state: AppState) -> None:
 
 
 async def load_app_state() -> AppState:
-    """Load persisted :class:`AppState` or defaults."""
+    """
+    Load the persisted application state from the database, or return default values if none exist.
+    
+    Returns:
+        AppState: The loaded application state, or a default AppState if no record is found.
+    """
     conn = await _get_conn()
     cur = await conn.execute(
         "SELECT last_screen, last_start, first_run FROM app_state WHERE id = 1"
@@ -262,7 +309,9 @@ async def load_app_state() -> AppState:
 
 
 async def save_dashboard_settings(settings: DashboardSettings) -> None:
-    """Persist dashboard layout and widgets."""
+    """
+    Persist the provided dashboard layout and widget configuration to the database, replacing any existing settings.
+    """
     conn = await _get_conn()
     await conn.execute("DELETE FROM dashboard_settings WHERE id = 1")
     await conn.execute(
@@ -276,7 +325,12 @@ async def save_dashboard_settings(settings: DashboardSettings) -> None:
 
 
 async def load_dashboard_settings() -> DashboardSettings:
-    """Load persisted :class:`DashboardSettings` or defaults."""
+    """
+    Load the persisted dashboard settings from the database, or return default settings if none are found.
+    
+    Returns:
+        DashboardSettings: The loaded dashboard settings, or defaults if not previously saved.
+    """
     conn = await _get_conn()
     cur = await conn.execute(
         "SELECT layout, widgets FROM dashboard_settings WHERE id = 1"
@@ -291,7 +345,12 @@ async def load_dashboard_settings() -> DashboardSettings:
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
-    """Replace ``ap_cache`` contents with ``records``."""
+    """
+    Replace all rows in the `ap_cache` table with the provided records.
+    
+    Parameters:
+        records (list[dict[str, Any]]): List of dictionaries representing access point cache entries to be inserted.
+    """
     conn = await _get_conn()
     await conn.execute("DELETE FROM ap_cache")
     if records:
@@ -306,7 +365,12 @@ async def save_ap_cache(records: list[dict[str, Any]]) -> None:
 
 
 async def load_ap_cache() -> list[dict[str, Any]]:
-    """Return all rows from ``ap_cache`` as dictionaries."""
+    """
+    Retrieve all access point cache entries from the database.
+    
+    Returns:
+        A list of dictionaries, each representing a row from the `ap_cache` table with keys: bssid, ssid, encryption, lat, lon, and last_time.
+    """
     conn = await _get_conn()
     cur = await conn.execute(
         "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
@@ -316,7 +380,12 @@ async def load_ap_cache() -> list[dict[str, Any]]:
 
 
 async def get_table_counts() -> dict[str, int]:
-    """Return row counts for all user tables."""
+    """
+    Return a dictionary mapping each user-defined table name to its row count in the database.
+    
+    Returns:
+        dict[str, int]: A mapping of table names to the number of rows in each table, excluding SQLite internal tables.
+    """
     conn = await _get_conn()
     cur = await conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table'"
@@ -332,7 +401,9 @@ async def get_table_counts() -> dict[str, int]:
 
 
 async def vacuum() -> None:
-    """Run ``VACUUM`` on the active database connection."""
+    """
+    Flushes any buffered health records and runs the SQLite VACUUM command to optimize the database.
+    """
     await flush_health_records()
     conn = await _get_conn()
     await conn.execute("VACUUM")
@@ -340,5 +411,9 @@ async def vacuum() -> None:
 
 
 async def migrate() -> None:
-    """Ensure the database schema is up to date."""
+    """
+    Ensures the SQLite database schema is migrated to the latest version.
+    
+    This function initializes the database connection and applies any pending schema migrations as needed.
+    """
     await _get_conn()
