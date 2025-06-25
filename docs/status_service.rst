@@ -26,8 +26,8 @@ Use the ``limit`` query parameter to control how many entries are returned.
 Autostart
 ---------
 
-Copy ``examples/service_api.service`` into ``/etc/systemd/system/`` and enable it
-with ``sudo systemctl enable --now service_api.service`` to run ``piwardrive-service`` on boot.
+Copy ``examples/service_api.service`` into ``/etc/systemd/system/`` and enable it with ``sudo systemctl enable --now service_api.service`` to run ``piwardrive-service`` on boot.
+Copy ``examples/piwardrive-webui.service`` for the combined API and web interface if you built the dashboard.
 
 
 Additional Routes

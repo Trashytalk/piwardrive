@@ -1,0 +1,14 @@
+[Unit]
+Description=PiWardrive API and Web UI
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piwardrive
+Environment=PW_WEBUI_DIST=/home/pi/piwardrive/webui/dist
+ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-webui
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -209,6 +209,8 @@ npm run build
 cd ..
 python -m piwardrive.webui_server
 ```
+To autostart the dashboard on boot copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service`.
+
 
 Alternatively serve `webui/dist` with any webserver while running
 `piwardrive-service` for the API. During development you can run

@@ -34,6 +34,7 @@ SD Card Image
        npm install
        npm run build
        python -m piwardrive.webui_server
+Copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service` to run the dashboard on boot.
 8. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
 
 Docker Container
