@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App.jsx';
 import ConsoleView from './components/ConsoleView.jsx';
+import SplitScreen from './components/SplitScreen.jsx';
+
+let Root = App;
+const path = window.location.pathname;
+if (path.startsWith('/console')) Root = ConsoleView;
+if (path.startsWith('/split')) Root = SplitScreen;
 import SettingsForm from './components/SettingsForm.jsx';
 import SplitView from './components/SplitView.jsx';
 import NavBar from './components/NavBar.jsx';
