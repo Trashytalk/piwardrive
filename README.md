@@ -21,7 +21,7 @@ graph LR
 ## Project Layout
 
 - All source code resides under `src/piwardrive/`.
-- Top-level scripts and modules are legacy wrappers slated for removal.
+- Command-line helper scripts live in the top-level `scripts/` directory.
 - Import from `piwardrive` directly when running tools or tests.
 
 ## Data Inputs
@@ -133,7 +133,7 @@ sudo apt install -y r-base r-base-dev
 
 ```
 
-You can run `src/piwardrive/scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
+You can run `scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
 
 #### Step-by-Step Setup
 
@@ -267,7 +267,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 
 #### Manual Steps
 
-* **Installation** – run `src/piwardrive/scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
+* **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
 * **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
 * **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
@@ -301,11 +301,11 @@ WantedBy=multi-user.target
 
 ## Mobile Builds
 
-Scripts under `src/piwardrive/scripts/` create Android or iOS builds:
+Scripts under `scripts/` create Android or iOS builds:
 
 ```bash
-./src/piwardrive/scripts/build_android.sh  # Android APK
-./src/piwardrive/scripts/build_ios.sh      # iOS project
+./scripts/build_android.sh  # Android APK
+./scripts/build_ios.sh      # iOS project
 ```
 
 ## Configuration

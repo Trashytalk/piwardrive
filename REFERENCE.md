@@ -73,7 +73,7 @@ The application polls `gpsd` at a configurable interval, increasing the delay wh
 
 ## Mobile Builds
 
-Helper scripts `src/piwardrive/scripts/build_android.sh` and `src/piwardrive/scripts/build_ios.sh` package PiWardrive for Android or iOS. Android builds rely on Buildozer while iOS builds require `kivy-ios`. Some diagnostics and service management features are disabled on mobile platforms.
+Helper scripts `scripts/build_android.sh` and `scripts/build_ios.sh` package PiWardrive for Android or iOS. Android builds rely on Buildozer while iOS builds require `kivy-ios`. Some diagnostics and service management features are disabled on mobile platforms.
 
 ## Building the CKML Extension
 
@@ -87,10 +87,10 @@ See `docs/ckml_build.rst` for troubleshooting compiler issues.
 
 ## R Integration
 
-`src/piwardrive/scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
-`src/piwardrive/scripts/health_export.py` dumps recent metrics to JSON or CSV while
-`src/piwardrive/scripts/health_import.py` loads such files back into the tracking database.
-`src/piwardrive/scripts/service_status.py` prints the active state of common services.
+`scripts/health_summary.R` can analyse exported `HealthRecord` data. Install `rpy2`, `r-base` and the `ggplot2`/`jsonlite` R packages to enable `r_integration.health_summary`.
+`scripts/health_export.py` dumps recent metrics to JSON or CSV while
+`scripts/health_import.py` loads such files back into the tracking database.
+`scripts/service_status.py` prints the active state of common services.
 
 Additional optional features use `pandas`, `orjson` and `pyprof2calltree` which can be installed via:
 

@@ -57,9 +57,9 @@ Launching in Kiosk Mode
 -----------------------
 
 After building the frontend you can start the API server and open Chromium in
-kiosk mode with ``src/piwardrive/scripts/start_kiosk.sh``::
+kiosk mode with ``scripts/start_kiosk.sh``::
 
-   src/piwardrive/scripts/start_kiosk.sh
+   scripts/start_kiosk.sh
 
 The script runs ``piwardrive-service`` in the background and then executes
 ``chromium-browser --kiosk http://localhost:8000`` (falling back to

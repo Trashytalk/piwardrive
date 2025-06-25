@@ -88,7 +88,7 @@ The dev server watches the source files and automatically reloads the page. API 
 For a dedicated dashboard device you can automate the startup process with the helper script:
 
 ```bash
-src/piwardrive/scripts/start_kiosk.sh
+scripts/start_kiosk.sh
 ```
 
 The script runs `piwardrive-service` in the background and then opens Chromium in kiosk mode pointing to the local web UI. If `chromium-browser` is not installed it falls back to `chromium`. An X server must be available; headless environments may use `Xvfb`.

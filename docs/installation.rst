@@ -9,7 +9,7 @@ distributions. The recommended interface is the browser-based dashboard built
 with React. It requires Node.js 18 or newer to compile. A Kivy-based touch UI
 remains available as an alternative.
 
-You can also run ``src/piwardrive/scripts/quickstart.sh`` from the repository
+You can also run ``scripts/quickstart.sh`` from the repository
 root to automatically install the required packages, create ``gui-env/`` and
 install the Python dependencies.
 
