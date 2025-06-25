@@ -12,6 +12,7 @@ import SettingsForm from './components/SettingsForm.jsx';
 import MapScreen from './components/MapScreen.jsx';
 import Orientation from './components/Orientation.jsx';
 import VehicleInfo from './components/VehicleInfo.jsx';
+import VectorTileCustomizer from './components/VectorTileCustomizer.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
@@ -109,6 +110,7 @@ export default function App() {
       <pre>{logs}</pre>
       <h2>Geofences</h2>
       <GeofenceEditor />
+      <VectorTileCustomizer />
       {configData && (
         <section>
           <h2>Settings</h2>

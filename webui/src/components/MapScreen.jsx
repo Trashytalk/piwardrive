@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
 import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
 
@@ -18,6 +19,7 @@ export default function MapScreen() {
   const [follow, setFollow] = useState(true);
   const [aps, setAps] = useState([]);
   const [filter, setFilter] = useState({ ssid: '', encryption: '' });
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const track = useRef([]);
 
   // fetch GPS periodically
@@ -150,6 +152,14 @@ export default function MapScreen() {
           />
           Follow GPS
         </label>
+        <label style={{ marginLeft: '1em' }}>
+          <input
+            type="checkbox"
+            checked={showHeatmap}
+            onChange={() => setShowHeatmap(!showHeatmap)}
+          />
+          Show Heatmap
+        </label>
         <button onClick={prefetchView} style={{ marginLeft: '1em' }}>
           Prefetch View
         </button>
@@ -168,6 +178,7 @@ export default function MapScreen() {
       </div>
       <MapContainer center={center} zoom={zoom} style={{ height: '80vh' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <HeatmapLayer show={showHeatmap} />
         {filtered.map(ap => (
           <Marker key={ap.bssid} position={[ap.lat, ap.lon]}>
             <Popup>{ap.ssid || ap.bssid}</Popup>
