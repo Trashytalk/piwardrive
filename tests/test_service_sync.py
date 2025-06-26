@@ -12,9 +12,9 @@ from piwardrive.persistence import HealthRecord
 
 def _load_service(monkeypatch):
     aiohttp_mod = ModuleType('aiohttp')
-    aiohttp_mod.ClientSession = object
-    aiohttp_mod.ClientTimeout = lambda *a, **k: None
-    aiohttp_mod.ClientError = Exception
+    aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
+    aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
+    aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, 'aiohttp', aiohttp_mod)
 
     utils_mod = ModuleType('utils')
