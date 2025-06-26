@@ -1,6 +1,8 @@
 import os
 import sys
+import asyncio
 from types import ModuleType
+import pytest
 
 
 from piwardrive import lora_scanner
@@ -41,4 +43,29 @@ def test_plot_signal_trend(tmp_path, monkeypatch):
 
     lora_scanner.plot_signal_trend(packets, str(path))
     assert path.is_file()
+
+
+def test_async_scan_lora(monkeypatch):
+    async def fake_exec(*_a, **_k):
+        class P:
+            async def communicate(self):
+                return b"a\nb\n", b""
+
+        return P()
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    lines = asyncio.run(lora_scanner.async_scan_lora("l0"))
+    assert lines == ["a", "b"]
+
+
+def test_main(capsys, monkeypatch):
+    monkeypatch.setattr(lora_scanner, "scan_lora", lambda iface="l0": ["x"])
+    argv = sys.argv
+    sys.argv = ["prog"]
+    try:
+        lora_scanner.main()
+    finally:
+        sys.argv = argv
+    out = capsys.readouterr().out
+    assert "x" in out
 
