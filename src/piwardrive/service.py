@@ -87,21 +87,23 @@ from piwardrive import orientation_sensors
 from piwardrive import export
 from piwardrive.config import CONFIG_DIR
 
-fetch_metrics_async = _utils.fetch_metrics_async
-get_avg_rssi = _utils.get_avg_rssi
-get_cpu_temp = _utils.get_cpu_temp
+fetch_metrics_async = getattr(
+    _utils, "fetch_metrics_async", lambda *_a, **_k: ([], [], 0)
+)
+get_avg_rssi = getattr(_utils, "get_avg_rssi", lambda *_a, **_k: None)
+get_cpu_temp = getattr(_utils, "get_cpu_temp", lambda *_a, **_k: None)
 get_mem_usage = getattr(_utils, "get_mem_usage", lambda *_a, **_k: None)
 get_disk_usage = getattr(_utils, "get_disk_usage", lambda *_a, **_k: None)
-get_network_throughput = _utils.get_network_throughput
-get_gps_fix_quality = _utils.get_gps_fix_quality
+get_network_throughput = getattr(_utils, "get_network_throughput", lambda *_a, **_k: (0, 0))
+get_gps_fix_quality = getattr(_utils, "get_gps_fix_quality", lambda *_a, **_k: None)
 get_gps_accuracy = getattr(_utils, "get_gps_accuracy", lambda *_a, **_k: None)
-service_status_async = _utils.service_status_async
+service_status_async = getattr(_utils, "service_status_async", lambda *_a, **_k: None)
 from typing import Callable, Tuple
 
 run_service_cmd: Callable[[str, str], Tuple[bool, str, str] | None] = getattr(
     _utils, "run_service_cmd", lambda *_a, **_k: None
 )
-async_tail_file = _utils.async_tail_file
+async_tail_file = getattr(_utils, "async_tail_file", lambda *_a, **_k: [])
 
 
 security = HTTPBasic(auto_error=False)
