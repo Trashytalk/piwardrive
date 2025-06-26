@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Container } from '../src/di.js';
+import { Container } from '../src/di.ts';
 
 describe('Container', () => {
   it('registers instance and resolves', () => {
