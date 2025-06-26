@@ -20,6 +20,13 @@ class AsyncGPSDClient:
         self._lock = asyncio.Lock()
         self._connected = False
 
+    async def __aenter__(self) -> "AsyncGPSDClient":
+        await self._ensure_connection()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        await self.close()
+
     async def _connect(self) -> None:
         try:
             self._reader, self._writer = await asyncio.open_connection(
@@ -40,6 +47,19 @@ class AsyncGPSDClient:
     async def _ensure_connection(self) -> None:
         if not self._connected:
             await self._connect()
+
+    async def close(self) -> None:
+        """Close the GPSD connection if open."""
+        writer = self._writer
+        self._writer = None
+        self._reader = None
+        self._connected = False
+        if writer is not None:
+            try:
+                writer.close()
+                await writer.wait_closed()
+            except Exception as exc:  # pragma: no cover - close errors
+                logging.getLogger(__name__).error("GPSD close failed: %s", exc)
 
     async def _poll(self) -> dict[str, Any] | None:
         async with self._lock:
