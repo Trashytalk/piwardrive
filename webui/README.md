@@ -133,3 +133,15 @@ await exportMapKml(track, filtered, [], 'track.kml');
 ```
 
 Supported formats are **CSV**, **JSON**, **GPX**, **KML**, **GeoJSON** and **SHP**.
+
+## 12. Diagnostics Helpers
+
+`diagnostics.js` offers utilities for gathering system metrics and rotating log files similar to the Python module.
+
+```javascript
+import { selfTest, rotateLog } from './src/diagnostics.js';
+
+const report = selfTest();
+rotateLog('/var/log/piwardrive.log');
+```
+
