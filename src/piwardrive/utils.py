@@ -16,7 +16,7 @@ except Exception:
     # features can be patched in tests without import errors.
 
     def _stub(*_args: object, **_kwargs: object) -> None:  # pragma: no cover - placeholder
-        """Placeholder for optional functionality."""
+        """Raise ``NotImplementedError`` when optional functionality is unavailable."""
         raise NotImplementedError
 
     # The following stubs match the names used by the builtin widgets.  They are
