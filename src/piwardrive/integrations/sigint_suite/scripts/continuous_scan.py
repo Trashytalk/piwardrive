@@ -1,20 +1,20 @@
 """Module continuous_scan."""
 import argparse
 import os
-import time
 
 from piwardrive.sigint_suite import paths
-
-from piwardrive.sigint_suite.bluetooth import scan_bluetooth
 from piwardrive.sigint_suite.exports import export_json
-from piwardrive.sigint_suite.wifi import scan_wifi
+from piwardrive.sigint_suite import continuous_scan
+
+
+def _save_results(export_dir: str, results: continuous_scan.Result) -> None:
+    export_json(results["wifi"], os.path.join(export_dir, "wifi.json"))
+    export_json(results["bluetooth"], os.path.join(export_dir, "bluetooth.json"))
 
 
 def run_once(export_dir: str) -> None:
-    wifi_data = scan_wifi()
-    bt_data = scan_bluetooth()
-    export_json(wifi_data, os.path.join(export_dir, "wifi.json"))
-    export_json(bt_data, os.path.join(export_dir, "bluetooth.json"))
+    """Perform one scan cycle and write JSON files."""
+    _save_results(export_dir, continuous_scan.scan_once())
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -42,13 +42,11 @@ def main(argv: list[str] | None = None) -> None:
 
     os.makedirs(args.export_dir, exist_ok=True)
 
-    count = 0
-    while True:
-        run_once(args.export_dir)
-        count += 1
-        if args.iterations and count >= args.iterations:
-            break
-        time.sleep(args.interval)
+    continuous_scan.run_continuous_scan(
+        interval=args.interval,
+        iterations=args.iterations,
+        on_result=lambda res: _save_results(args.export_dir, res),
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover - manual use
