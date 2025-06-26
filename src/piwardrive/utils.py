@@ -15,8 +15,9 @@ except Exception:
     # core utils couldn't be imported; define minimal stubs so optional
     # features can be patched in tests without import errors.
 
-    def _stub(*_args: object, **_kwargs: object) -> None:  # pragma: no cover - placeholder
-        """Raise ``NotImplementedError`` when optional functionality is unavailable."""
+    # pragma: no cover - placeholder
+    def _stub(*_args: object, **_kwargs: object) -> None:
+        """Placeholder for optional functionality."""
         raise NotImplementedError
 
     # The following stubs match the names used by the builtin widgets.  They are
@@ -34,7 +35,10 @@ except Exception:
     def get_disk_usage(*_args: object, **_kwargs: object) -> float | None:
         return None
 
-    async def fetch_kismet_devices_async(*_args: object, **_kwargs: object) -> tuple[list, list]:
+    async def fetch_kismet_devices_async(
+        *_args: object,
+        **_kwargs: object,
+    ) -> tuple[list, list]:
         return [], []
 
     def run_async_task(*_args: object, **_kwargs: object) -> None:
