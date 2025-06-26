@@ -11,6 +11,7 @@ DEFAULT_LOG_PATH = os.path.join(CONFIG_DIR, "app.log")
 
 
 class JsonFormatter(logging.Formatter):
+
     """Format log records as JSON strings."""
 
     def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
@@ -33,7 +34,8 @@ def setup_logging(
     handlers: Optional[Iterable[logging.Handler]] = None,
     stdout: bool = False,
 ) -> Logger:
-    """Configure root logger with JSON output.
+    """
+    Configure root logger with JSON output.
 
     ``PW_LOG_LEVEL`` may override ``level`` with a name like ``DEBUG`` or a
     numeric value. Invalid values are ignored.

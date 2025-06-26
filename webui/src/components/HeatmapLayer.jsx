@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
+import { reportError } from '../exceptionHandler.js';
 import 'leaflet.heat';
 
 export default function HeatmapLayer({ show }) {
@@ -14,7 +15,7 @@ export default function HeatmapLayer({ show }) {
         const pts = (data.points || []).map(([lat, lon, cnt]) => [lat, lon, cnt]);
         layer = window.L.heatLayer(pts, { radius: 25 }).addTo(map);
       } catch (e) {
-        console.error('heatmap load error', e);
+        reportError(e);
       }
     };
     load();

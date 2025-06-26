@@ -17,9 +17,8 @@ describe('histogramPoints', () => {
     const hist = [[0,1],[2,0]];
     const pts = histogramPoints(hist, [0,1], [0,1]);
     expect(pts.length).toBe(2);
-    const values = pts.map(p => [Number(p[0].toFixed(1)), Number(p[1].toFixed(1)), p[2]]);
-    const set = new Set(values.map(v => v.join(',')));
-    expect(set.has('0.2,0.8,1') || set.has('0.8,0.2,2')).toBe(true);
+    const set = new Set(pts.map(p => `${p[0]},${p[1]},${p[2]}`));
+    expect(set.has('0.75,0.25,2') || set.has('0.25,0.75,1')).toBe(true);
   });
 });
 

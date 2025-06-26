@@ -271,8 +271,9 @@ newer is required for the build tools. From the repository root run:
 cd webui
 npm install
 npm run build
-cd ..
-python -m piwardrive.webui_server
+npm start  # starts the Node server
+# or use the Python version
+# python -m piwardrive.webui_server
 ```
 To autostart the dashboard on boot copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service`.
 

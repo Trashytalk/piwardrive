@@ -81,7 +81,11 @@ get_network_throughput = _utils.get_network_throughput
 get_gps_fix_quality = _utils.get_gps_fix_quality
 get_gps_accuracy = getattr(_utils, "get_gps_accuracy", lambda *_a, **_k: None)
 service_status_async = _utils.service_status_async
-run_service_cmd = getattr(_utils, "run_service_cmd", lambda *_a, **_k: None)
+from typing import Callable, Tuple
+
+run_service_cmd: Callable[[str, str], Tuple[bool, str, str] | None] = getattr(
+    _utils, "run_service_cmd", lambda *_a, **_k: None
+)
 async_tail_file = _utils.async_tail_file
 import psutil
 import vehicle_sensors
@@ -321,7 +325,8 @@ async def control_service_endpoint(
     """Start or stop a systemd service."""
     if action not in {"start", "stop", "restart"}:
         raise HTTPException(status_code=400, detail="Invalid action")
-    success, _out, err = run_service_cmd(name, action)
+    result = run_service_cmd(name, action) or (False, "", "")
+    success, _out, err = result
     if not success:
         msg = err.strip() if isinstance(err, str) else str(err)
         raise HTTPException(status_code=500, detail=msg or "command failed")
@@ -348,7 +353,6 @@ async def update_config_endpoint(
     updates: dict = Body(...),
     _auth: None = Depends(_check_auth),
 ) -> dict:
-    
     """Update configuration values and persist them."""
     cfg = config.load_config()
     data = asdict(cfg)

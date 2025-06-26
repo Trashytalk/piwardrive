@@ -1,3 +1,5 @@
+import { reportError } from './exceptionHandler.js';
+
 let OUI_MAP = null;
 export const DEFAULT_OUI_URL = '/oui.csv';
 
@@ -16,7 +18,7 @@ export async function loadOuiMap(url = DEFAULT_OUI_URL) {
     OUI_MAP = map;
     return map;
   } catch (e) {
-    console.error('OUI map load failed:', e);
+    reportError(e);
     OUI_MAP = {};
     return OUI_MAP;
   }
