@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { reportError } from '../exceptionHandler.js';
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
@@ -62,7 +63,7 @@ export default function MapScreen() {
     fetch('/config')
       .then(r => r.json())
       .then(setConfig)
-      .catch(e => console.error('config fetch failed', e));
+      .catch(e => reportError(e));
   }, []);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function MapScreen() {
           }
         }
       } catch (e) {
-        console.error('gps fetch failed', e);
+        reportError(e);
       }
       if (active) timer.current = setTimeout(poll, interval);
     };
@@ -150,7 +151,7 @@ export default function MapScreen() {
         }));
         setAps(markers);
       } catch (e) {
-        console.error('ap fetch error', e);
+        reportError(e);
       }
     };
     load();
@@ -180,7 +181,7 @@ export default function MapScreen() {
           });
         }
       } catch (e) {
-        console.error('ap stream parse error', e);
+        reportError(e);
       }
     };
 

@@ -2,6 +2,7 @@
 // loaded dynamically by name. Plugin authors should place React components under
 // `webui/src/components` with file names matching the Python class names.
 import { useEffect, useState } from "react";
+import { reportError } from "./exceptionHandler.js";
 import BatteryStatus from "./components/BatteryStatus.jsx";
 import ServiceStatus from "./components/ServiceStatus.jsx";
 import HandshakeCount from "./components/HandshakeCount.jsx";
@@ -55,7 +56,7 @@ export default function App() {
         if (data.status) setStatus(data.status);
         if (data.metrics) setMetrics(data.metrics);
       } catch (e) {
-        console.error("status parse error", e);
+        reportError(e);
       }
     };
 
@@ -136,7 +137,7 @@ export default function App() {
             const mod = await importer();
             loaded.push({ name, Component: mod.default });
           } catch (err) {
-            console.error('Failed loading plugin component', name, err);
+            reportError(err);
           }
         }
       }
