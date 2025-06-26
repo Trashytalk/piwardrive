@@ -78,9 +78,9 @@ def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "fastapi.security", security_mod)
 
     aiohttp_mod = ModuleType("aiohttp")
-    aiohttp_mod.ClientSession = object
-    aiohttp_mod.ClientTimeout = lambda *a, **k: None
-    aiohttp_mod.ClientError = Exception
+    aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
+    aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
+    aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "aiohttp", aiohttp_mod)
 
 

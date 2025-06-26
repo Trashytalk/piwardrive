@@ -88,7 +88,9 @@ class AsyncGPSDClient:
             return "Unknown"
         mode = tpv.get("mode")
         mode_map = {1: "No Fix", 2: "2D", 3: "3D", 4: "DGPS"}
-        return mode_map.get(mode, str(mode))
+        if isinstance(mode, int):
+            return mode_map.get(mode, str(mode))
+        return str(mode)
 
 
 async_client = AsyncGPSDClient()

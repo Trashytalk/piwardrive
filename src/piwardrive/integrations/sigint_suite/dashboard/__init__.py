@@ -25,7 +25,6 @@ DEFAULT_EXPORT_DIR = os.path.abspath(
 
 def _load_json(path: str) -> List[Dict[str, Any]]:
     """Return parsed JSON from ``path`` or an empty list on failure."""
-
     if not os.path.exists(path):
         return []
     try:
@@ -42,7 +41,6 @@ def load_data(
     export_dir: str = DEFAULT_EXPORT_DIR,
 ) -> Mapping[str, List[Dict[str, Any]]]:
     """Load Wi-Fi and Bluetooth scan data from ``export_dir``."""
-
     wifi = _load_json(os.path.join(export_dir, "wifi.json"))
     bluetooth = _load_json(os.path.join(export_dir, "bluetooth.json"))
     return {"wifi": wifi, "bluetooth": bluetooth}
@@ -50,7 +48,6 @@ def load_data(
 
 def format_text(data: Mapping[str, List[Dict[str, Any]]]) -> str:
     """Return a compact multi-line summary of the provided ``data``."""
-
     lines: List[str] = []
 
     wifi = data.get("wifi", [])
@@ -86,7 +83,6 @@ def format_text(data: Mapping[str, List[Dict[str, Any]]]) -> str:
 
 def main() -> None:  # pragma: no cover - small CLI helper
     """Entry point for ``python -m sigint_suite.dashboard``."""
-
     parser = argparse.ArgumentParser(description="Show exported scan results")
     parser.add_argument(
         "--export-dir",

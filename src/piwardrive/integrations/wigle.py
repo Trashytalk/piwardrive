@@ -24,7 +24,6 @@ async def fetch_wigle_networks(
     radius: float = 0.01,
 ) -> List[Dict[str, Any]]:
     """Return Wi-Fi networks around ``lat``/``lon`` via the WiGLE API."""
-
     auth = aiohttp.BasicAuth(api_name, api_key)
     params = {
         "latrange1": lat - radius,

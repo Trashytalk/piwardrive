@@ -59,7 +59,8 @@ Return to the repository root and run the bundled server. It serves the API unde
 
 ```bash
 cd ..
-python -m piwardrive.webui_server
+npm start  # launches the Node server
+# python -m piwardrive.webui_server  # alternative Python version
 ```
 
 Open a browser and navigate to `http://localhost:8000`. You should see the dashboard showing live system metrics. The server listens on all interfaces so other devices on the network may connect using the Pi's IP address.
@@ -115,3 +116,20 @@ After the first successful build, the dashboard registers a service worker. It c
 ---
 
 Once these steps are complete you have a functioning browser based dashboard. Use the interface to monitor running services, view logs and adjust configuration without needing the on-device GUI.
+
+## 11. Export Utilities
+
+`exportUtils.js` mirrors the Python helpers for exporting collected records. It can filter result sets and save them to various geospatial formats.
+
+```javascript
+import { filterRecords, exportRecords, exportMapKml } from './src/exportUtils.js';
+
+const records = [{ ssid: 'AP', bssid: 'AA', lat: 1, lon: 2 }];
+const track = [[1, 2], [3, 4]];
+
+const filtered = filterRecords(records, { encryption: 'OPEN' });
+await exportRecords(filtered, 'out.csv', 'csv');
+await exportMapKml(track, filtered, [], 'track.kml');
+```
+
+Supported formats are **CSV**, **JSON**, **GPX**, **KML**, **GeoJSON** and **SHP**.

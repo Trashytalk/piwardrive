@@ -139,7 +139,6 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
 
 async def _async_scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
     """Async wrapper for ``bluetoothctl``."""
-
     cmd = ["bluetoothctl", "--timeout", str(timeout), "scan", "on"]
     try:
         proc = await asyncio.create_subprocess_exec(

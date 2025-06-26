@@ -231,7 +231,6 @@ def run_async_task(
     callback: Callable[[T], None] | None = None,
 ) -> Future[T]:
     """Schedule ``coro`` on the background loop and invoke ``callback``."""
-
     _ensure_async_loop_running()
     assert _async_loop is not None  # for mypy
     fut: Future[T] = asyncio.run_coroutine_threadsafe(coro, _async_loop)
@@ -349,8 +348,8 @@ def ensure_service_running(
 
 
 def get_cpu_temp() -> float | None:
-    """
-    Read the Raspberry Pi CPU temperature from sysfs.
+    """Read the Raspberry Pi CPU temperature from sysfs.
+
     Returns temperature in °C as a float, or None on failure.
     """
     try:
@@ -362,9 +361,7 @@ def get_cpu_temp() -> float | None:
 
 
 def get_mem_usage() -> float | None:
-    """
-    Return system memory usage percentage.
-    """
+    """Return system memory usage percentage."""
     now = time.time()
     pct = _MEM_USAGE_CACHE.get("percent")
     ts = _MEM_USAGE_CACHE.get("timestamp", 0.0)
@@ -380,9 +377,7 @@ def get_mem_usage() -> float | None:
 
 
 def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
-    """
-    Return disk usage percentage for given path.
-    """
+    """Return disk usage percentage for given path."""
     now = time.time()
     cache = _DISK_USAGE_CACHE.get(path)
     if cache is not None:
@@ -524,7 +519,6 @@ async def async_tail_file(path: str, lines: int = 50) -> list[str]:
 
 def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
     """Fallback ``systemctl`` invocation capturing output."""
-
     cmd = ["systemctl", action, f"{service}.service"]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -541,7 +535,6 @@ def _run_service_cmd_sync(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Execute DBus service commands synchronously as a fallback."""
-
     try:
         import dbus
     except Exception:  # pragma: no cover - fallback when DBus missing
@@ -588,7 +581,6 @@ def _run_service_cmd_sync(
 @asynccontextmanager
 async def message_bus() -> Any:
     """Yield a connected ``dbus-fast`` ``MessageBus`` instance."""
-
     from dbus_fast.aio import MessageBus
     from dbus_fast import BusType
 
@@ -604,7 +596,6 @@ async def _run_service_cmd_async(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Async DBus implementation using ``dbus-fast``."""
-
     from piwardrive.security import validate_service_name
 
     validate_service_name(service)
@@ -680,7 +671,6 @@ def run_service_cmd(
     service: str, action: str, attempts: int = 1, delay: float = 0
 ) -> tuple[bool, str, str]:
     """Run ``_run_service_cmd_async`` in a synchronous context."""
-
     fut = run_async_task(
         _run_service_cmd_async(service, action, attempts=attempts, delay=delay)
     )
@@ -766,22 +756,18 @@ def scan_bt_devices() -> list[BluetoothDevice]:
 
 
 def now_timestamp() -> str:
-    """
-    Return the current time as a formatted string.
-    """
+    """Return the current time as a formatted string."""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 def fetch_kismet_devices() -> tuple[list, list]:
     """Synchronize Kismet device data using the async helper."""
-
     fut = run_async_task(fetch_kismet_devices_async())
     return fut.result()
 
 
 async def fetch_kismet_devices_async() -> tuple[list, list]:
     """Asynchronously fetch Kismet device data using ``aiohttp``."""
-
     if network_scanning_disabled():
         return [], []
 
@@ -931,8 +917,8 @@ def get_gps_fix_quality(force_refresh: bool = False) -> str:
 
 
 def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
-    """
-    Compute average RSSI (signal_dbm) from a list of access_points.
+    """Compute average RSSI (signal_dbm) from a list of access_points.
+
     Returns float average or None if no data.
     """
     try:
@@ -952,9 +938,7 @@ def parse_latest_gps_accuracy(force_refresh: bool = False) -> float | None:
 
 
 def tail_log_file(path: str, lines: int = 50) -> list[str]:
-    """
-    Alias for tail_file.
-    """
+    """Alias for tail_file."""
     return tail_file(path, lines)
 
 

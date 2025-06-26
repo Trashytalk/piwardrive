@@ -1,3 +1,5 @@
+import { reportError } from './exceptionHandler.js';
+
 export const DEFAULT_ORIENTATION_MAP = {
   normal: 0.0,
   'bottom-up': 180.0,
@@ -54,7 +56,7 @@ export function getOrientationDbus() {
       iface.ReleaseAccelerometer();
     }
   } catch (e) {
-    console.error('DBus orientation read failed:', e);
+    reportError(e);
     return null;
   }
 }
@@ -68,7 +70,7 @@ export function readMpu6050(address = 0x68) {
       gyroscope: sensor.get_gyro_data(),
     };
   } catch (e) {
-    console.error('MPU6050 read failed:', e);
+    reportError(e);
     return null;
   }
 }

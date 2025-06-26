@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { reportError } from '../exceptionHandler.js';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
@@ -37,7 +38,7 @@ export default function TrackMap() {
           forceUpdate(n => n + 1);
         }
       } catch (e) {
-        console.error('gps fetch failed', e);
+        reportError(e);
       }
     }, 5000);
     return () => clearInterval(id);
@@ -56,7 +57,7 @@ export default function TrackMap() {
         }));
         setAps(markers);
       } catch (e) {
-        console.error('ap fetch error', e);
+        reportError(e);
       }
     };
     load();
@@ -75,7 +76,7 @@ export default function TrackMap() {
         }));
         setBts(markers);
       } catch (e) {
-        console.error('bt fetch error', e);
+        reportError(e);
       }
     };
     load();
@@ -98,7 +99,7 @@ export default function TrackMap() {
           });
         }
       } catch (e) {
-        console.error('ap stream parse error', e);
+        reportError(e);
       }
     };
 

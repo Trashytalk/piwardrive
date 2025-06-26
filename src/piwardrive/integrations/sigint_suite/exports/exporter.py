@@ -29,7 +29,6 @@ def export_json(records: Iterable[Any], path: str) -> None:
 
 def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
     """Export ``records`` to ``path`` in CSV format."""
-
     it = iter(records)
     try:
         first = next(it)

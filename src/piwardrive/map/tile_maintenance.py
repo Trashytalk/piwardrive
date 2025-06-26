@@ -34,7 +34,6 @@ def purge_old_tiles(folder: str, max_age_days: int) -> None:
 
 def enforce_cache_limit(folder: str, limit_mb: int) -> None:
     """Ensure tile cache does not exceed ``limit_mb`` megabytes."""
-
     try:
         if not os.path.isdir(folder):
             return

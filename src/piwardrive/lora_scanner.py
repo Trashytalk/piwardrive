@@ -60,7 +60,6 @@ def parse_packets(lines: Sequence[str]) -> List[LoRaPacket]:
 
 def plot_signal_trend(packets: Sequence[LoRaPacket], path: str) -> None:
     """Plot RSSI trend from ``packets`` to ``path`` using matplotlib."""
-
     rssi = [p.rssi for p in packets if p.rssi is not None]
     if not rssi:
         with open(path, "wb") as fh:
