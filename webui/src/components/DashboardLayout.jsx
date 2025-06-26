@@ -5,6 +5,15 @@ import HandshakeCount from './HandshakeCount.jsx';
 import SignalStrength from './SignalStrength.jsx';
 import NetworkThroughput from './NetworkThroughput.jsx';
 import CPUTempGraph from './CPUTempGraph.jsx';
+import GPSStatus from './GPSStatus.jsx';
+import StorageUsage from './StorageUsage.jsx';
+import DiskUsageTrend from './DiskUsageTrend.jsx';
+import VehicleSpeed from './VehicleSpeed.jsx';
+import DBStats from './DBStats.jsx';
+import HealthStatus from './HealthStatus.jsx';
+import HealthAnalysis from './HealthAnalysis.jsx';
+import LoRaScan from './LoRaScan.jsx';
+import LogViewer from './LogViewer.jsx';
 
 const COMPONENTS = {
   BatteryStatusWidget: BatteryStatus,
@@ -13,6 +22,15 @@ const COMPONENTS = {
   SignalStrengthWidget: SignalStrength,
   NetworkThroughputWidget: NetworkThroughput,
   CPUTempGraphWidget: CPUTempGraph,
+  GPSStatusWidget: GPSStatus,
+  StorageUsageWidget: StorageUsage,
+  DiskUsageTrendWidget: DiskUsageTrend,
+  VehicleSpeedWidget: VehicleSpeed,
+  DBStatsWidget: DBStats,
+  HealthStatusWidget: HealthStatus,
+  HealthAnalysisWidget: HealthAnalysis,
+  LoRaScanWidget: LoRaScan,
+  LogViewer: LogViewer,
 };
 
 export default function DashboardLayout({ metrics }) {
