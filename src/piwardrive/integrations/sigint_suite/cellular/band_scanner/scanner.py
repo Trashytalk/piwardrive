@@ -26,7 +26,7 @@ def scan_bands(
     ``BAND_SCAN_TIMEOUT`` environment variable (``10`` seconds).
     """
 
-    cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
+    cmd_str = str(cmd or os.getenv("BAND_SCAN_CMD", "celltrack"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
@@ -49,7 +49,7 @@ async def async_scan_bands(
 ) -> List[BandRecord]:
     """Asynchronously scan for cellular bands using ``celltrack``."""
 
-    cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
+    cmd_str = str(cmd or os.getenv("BAND_SCAN_CMD", "celltrack"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))

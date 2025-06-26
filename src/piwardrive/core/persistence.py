@@ -269,7 +269,11 @@ async def load_dashboard_settings() -> DashboardSettings:
     """Load persisted :class:`DashboardSettings` from ``config.json``."""
     cfg = config.load_config()
     layout = cfg.dashboard_layout
-    widgets = [item.get("cls") for item in layout if isinstance(item, dict)]
+    widgets = [
+        cls
+        for item in layout
+        if isinstance(item, dict) and (cls := item.get("cls"))
+    ]
     return DashboardSettings(layout=layout, widgets=widgets)
 
 
