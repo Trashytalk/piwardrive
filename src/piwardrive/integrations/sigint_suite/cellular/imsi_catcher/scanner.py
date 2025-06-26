@@ -1,15 +1,15 @@
 """Module scanner."""
+import asyncio
+import logging
 import os
 import shlex
 import subprocess
-import logging
-import asyncio
 from typing import Callable, List, Optional
 
-from piwardrive.sigint_suite.models import ImsiRecord
 from piwardrive.sigint_suite.cellular.parsers import parse_imsi_output
 from piwardrive.sigint_suite.gps import get_position
 from piwardrive.sigint_suite.hooks import apply_post_processors
+from piwardrive.sigint_suite.models import ImsiRecord
 
 logger = logging.getLogger(__name__)
 

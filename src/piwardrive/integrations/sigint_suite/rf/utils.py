@@ -59,10 +59,8 @@ def parse_frequency(value: str | float) -> float:
     Strings may include units like ``kHz``, ``MHz`` or ``GHz`` (case-insensitive).
     Numbers are assumed to already be in Hz.
     """
-
     if isinstance(value, (int, float)):
         return float(value)
-
     match = re.match(r"\s*(\d+(?:\.\d+)?)([kKmMgG]?Hz)?\s*", value)
     if not match:
         raise ValueError(f"invalid frequency: {value!r}")
