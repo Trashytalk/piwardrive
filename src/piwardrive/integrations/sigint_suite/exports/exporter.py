@@ -80,6 +80,7 @@ def export_records(
     :func:`piwardrive.export.export_records`.
     """
 
+
     fmt = fmt.lower()
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unsupported format: {fmt}")
