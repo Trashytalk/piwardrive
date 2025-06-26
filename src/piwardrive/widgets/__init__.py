@@ -109,9 +109,14 @@ def load_plugin(mod_name: str, path: Path) -> Optional[type]:
 def _load_plugins() -> None:
     """Load widget classes from ``~/.config/piwardrive/plugins``."""
     plugin_dir = Path.home() / ".config" / "piwardrive" / "plugins"
-    if not plugin_dir.is_dir():
-        return
     global _PLUGIN_STAMP
+    if not plugin_dir.is_dir():
+        if _PLUGIN_STAMP is not None:
+            _PLUGIN_STAMP = None
+            _PLUGIN_CLASSES.clear()
+            __all__[:] = [n for n in __all__ if n in _MODULE_MAP]
+        return
+
     stamp = plugin_dir.stat().st_mtime
     if _PLUGIN_STAMP == stamp and _PLUGIN_CLASSES:
         return
