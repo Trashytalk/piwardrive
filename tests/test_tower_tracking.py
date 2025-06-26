@@ -62,3 +62,17 @@ async def test_async_logging_and_retrieval(tmp_path):
     assert wifi and wifi[0]["timestamp"] == 50
     assert bt and bt[0]["timestamp"] == 60
     await tracker.close()
+
+
+@pytest.mark.asyncio
+async def test_tower_history(tmp_path):
+    db = tmp_path / "towers.db"
+    tr = TowerTracker(str(db))
+
+    await tr.log_tower("tower1", "-70", lat=1.0, lon=2.0, timestamp=100)
+    await tr.log_tower("tower1", "-60", lat=1.1, lon=2.1, timestamp=200)
+
+    hist = await tr.tower_history("tower1")
+    assert hist and [rec["rssi"] for rec in hist] == ["-60", "-70"]
+
+    await tr.close()

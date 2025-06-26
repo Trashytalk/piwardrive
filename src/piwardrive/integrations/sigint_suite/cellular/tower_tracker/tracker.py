@@ -12,6 +12,15 @@ class TowerTracker:
         self.db_path = db_path
         self.conn: aiosqlite.Connection | None = None
 
+    async def __aenter__(self) -> "TowerTracker":
+        """Allow usage as an async context manager."""
+        await self._get_conn()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        """Close the underlying database connection."""
+        await self.close()
+
     async def _get_conn(self) -> aiosqlite.Connection:
         if self.conn is None:
             self.conn = await aiosqlite.connect(self.db_path)
