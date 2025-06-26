@@ -44,4 +44,11 @@ Several helper scripts are installed alongside the React dashboard and optional 
         config-cli get theme
         config-cli set map_use_offline true
 
+``piwardrive-maintain-tiles``
+    Run cache cleanup from the command line. Combine ``--purge``,
+    ``--limit`` and ``--vacuum`` to control which maintenance operations
+    run::
+
+        piwardrive-maintain-tiles --purge --limit --vacuum --offline offline.mbtiles
+
 See ``--help`` on each command for additional options.
