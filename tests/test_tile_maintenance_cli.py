@@ -1,6 +1,19 @@
 import os
 import sys
 from types import SimpleNamespace
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _dummy_modules(monkeypatch):
+    modules = {
+        "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+        "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
+        "aiohttp": SimpleNamespace(),
+    }
+    for name, mod in modules.items():
+        monkeypatch.setitem(sys.modules, name, mod)
+    yield
 
 
 from types import ModuleType

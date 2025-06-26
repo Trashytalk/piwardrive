@@ -3,21 +3,27 @@ import sys
 import time
 from types import SimpleNamespace
 from pathlib import Path
+import pytest
 
 
-modules = {
-    "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
-    "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
-    "aiohttp": SimpleNamespace(),
-}
-for name, mod in modules.items():
-    sys.modules[name] = mod
-sys.modules.setdefault("requests", SimpleNamespace(RequestException=Exception))
-sys.modules.setdefault(
-    "aiosqlite",
-    SimpleNamespace(Connection=object, Row=object, connect=lambda p: None),
-)
-sys.modules.setdefault("pydantic", SimpleNamespace(BaseModel=object, Field=lambda *a, **k: None, ValidationError=Exception, field_validator=lambda *a, **k: lambda x: x))
+@pytest.fixture(autouse=True)
+def _dummy_modules(monkeypatch):
+    modules = {
+        "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+        "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
+        "aiohttp": SimpleNamespace(),
+        "requests": SimpleNamespace(RequestException=Exception),
+        "aiosqlite": SimpleNamespace(Connection=object, Row=object, connect=lambda p: None),
+        "pydantic": SimpleNamespace(
+            BaseModel=object,
+            Field=lambda *a, **k: None,
+            ValidationError=Exception,
+            field_validator=lambda *a, **k: (lambda x: x),
+        ),
+    }
+    for name, mod in modules.items():
+        monkeypatch.setitem(sys.modules, name, mod)
+    yield
 
 from piwardrive import tile_maintenance  # noqa: E402
 from piwardrive.scheduler import PollScheduler  # noqa: E402
