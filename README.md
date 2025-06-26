@@ -1,6 +1,10 @@
 # PiWardrive
 
-PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. A browser-based dashboard provides an optional GUI when the React frontend is built.
+PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
+
+```bash
+python -m piwardrive.webui_server
+```
 
 For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory.
 
@@ -289,6 +293,11 @@ The command runs `piwardrive-webui` in the background and opens Chromium with
 environment. Ensure an X server is available and ``$DISPLAY`` is set.
 Headless setups can use ``Xvfb``.
 
+Combine the web UI service with the example ``kiosk.service`` unit to
+launch the browser automatically on boot. This setup fully replaces the
+on-device Kivy GUI so the Pi's touch screen displays the React dashboard
+in full‑screen mode.
+
 ### Optional C Extensions
 
 Two small C modules, `ckml` and `cgeom`, speed up geometry and KML parsing. They
@@ -327,7 +336,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
 * **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
 * **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
-* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
+* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
@@ -375,21 +384,10 @@ WantedBy=multi-user.target
    exec sh /home/pi/kiosk.sh
    ```
 
-4. **Define `kiosk.service`**
-   ```ini
-   [Unit]
-   Description=Chromium Kiosk
-   After=graphical.target
-
-   [Service]
-   Type=simple
-   User=pi
-   Environment=DISPLAY=:0
-   ExecStart=/usr/bin/startx
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
+4. **Install `kiosk.service`**
+   Copy `examples/kiosk.service` into `/etc/systemd/system/` and adjust the
+   paths if PiWardrive lives elsewhere. The unit starts `startx` which runs
+   `~/.xsession` and in turn launches Chromium in kiosk mode.
 
 5. **(Optional) `piwardrive.service`**
    ```ini

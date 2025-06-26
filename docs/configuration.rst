@@ -33,8 +33,8 @@ See :mod:`config` for defaults and helpers.
 Environment variables are parsed on startup. Any option in ``Config`` can be
 specified as ``PW_<OPTION>``. Boolean variables accept ``1`` or ``0`` while
 strings and integers are used verbatim. Invalid values trigger an early
-``ValueError`` so configuration mistakes are detected before either the touch
-GUI or browser interface launches.
+``ValueError`` so configuration mistakes are detected before the React dashboard
+or optional touch interface launches.
 
 Configuration Profiles
 ----------------------
