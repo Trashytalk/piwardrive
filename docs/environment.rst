@@ -108,4 +108,15 @@ SIGINT Suite
 ``SIGINT_DEBUG``
     Set to ``1`` to enable debug logging for SIGINT scanners.
 
+SIGINT Plugins
+~~~~~~~~~~~~~~
+
+Custom SIGINT scanners can be added as plugins. Place Python modules in
+``~/.config/piwardrive/sigint_plugins`` and they will be imported automatically
+whenever :mod:`piwardrive.sigint_suite` is loaded. Each plugin should provide a
+``scan()`` function returning records such as ``WifiNetwork`` or
+``BluetoothDevice``. After installing new plugins, call
+``piwardrive.sigint_suite.plugins.clear_plugin_cache()`` so the next import
+reloads the directory.
+
 
