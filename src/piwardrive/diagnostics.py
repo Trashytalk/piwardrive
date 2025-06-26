@@ -243,6 +243,10 @@ class HealthMonitor:
         collector: DataCollector | None = None,
         daily_summary: bool = False,
     ) -> None:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.set_event_loop(asyncio.new_event_loop())
         self._scheduler = scheduler
         self._interval = interval
         self._collector: DataCollector = collector or SelfTestCollector()
