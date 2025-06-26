@@ -242,7 +242,7 @@ def _parse_env_value(raw: str, default: Any) -> Any:
 
 def validate_config_data(data: Dict[str, Any]) -> None:
     """Validate configuration values using :class:`ConfigModel`."""
-        if data.get("remote_sync_url") == "":
+    if data.get("remote_sync_url") == "":
         data["remote_sync_url"] = None
     ConfigModel(**data)
 
@@ -380,11 +380,13 @@ class AppConfig:
     map_poll_gps_max: int = DEFAULTS["map_poll_gps_max"]
     map_poll_aps: int = DEFAULTS["map_poll_aps"]
     map_poll_bt: int = DEFAULTS["map_poll_bt"]
+    map_poll_wigle: int = DEFAULTS["map_poll_wigle"]
     map_show_gps: bool = DEFAULTS["map_show_gps"]
     map_follow_gps: bool = DEFAULTS["map_follow_gps"]
     map_show_aps: bool = DEFAULTS["map_show_aps"]
     map_show_bt: bool = DEFAULTS["map_show_bt"]
     map_show_heatmap: bool = DEFAULTS["map_show_heatmap"]
+    map_show_wigle: bool = DEFAULTS["map_show_wigle"]
     map_cluster_aps: bool = DEFAULTS["map_cluster_aps"]
     map_cluster_capacity: int = DEFAULTS["map_cluster_capacity"]
     map_use_offline: bool = DEFAULTS["map_use_offline"]
