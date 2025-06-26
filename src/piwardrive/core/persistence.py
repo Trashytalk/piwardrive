@@ -155,7 +155,7 @@ class DashboardSettings:
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
     """Create or migrate the SQLite schema to the latest version."""
-            await conn.execute("UPDATE schema_version SET version = ?", (current,))
+    await conn.execute("UPDATE schema_version SET version = ?", (current,))
     cur = await conn.execute("SELECT version FROM schema_version")
     row = await cur.fetchone()
     current = row["version"] if row else 0
@@ -261,7 +261,7 @@ async def load_app_state() -> AppState:
 
 
 async def save_dashboard_settings(settings: DashboardSettings) -> None:
-   """Persist dashboard layout to ``config.json``."""
+    """Persist dashboard layout to ``config.json``."""
     cfg = config.load_config()
     cfg.dashboard_layout = settings.layout
     config.save_config(cfg)

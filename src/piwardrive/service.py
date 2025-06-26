@@ -159,6 +159,11 @@ async def list_widgets(_auth: None = Depends(_check_auth)) -> dict:
     widgets_mod = importlib.import_module("piwardrive.widgets")
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
+# Alias without the "/api" prefix for mounting under ``/api``
+@app.get("/widgets")
+async def list_widgets_alias(_auth: None = Depends(_check_auth)) -> dict:
+    return await list_widgets(_auth)
+
 
 @app.get("/widget-metrics")
 async def get_widget_metrics(_auth: None = Depends(_check_auth)) -> dict:
