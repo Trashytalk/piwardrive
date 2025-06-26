@@ -353,7 +353,6 @@ async def update_config_endpoint(
     updates: dict = Body(...),
     _auth: None = Depends(_check_auth),
 ) -> dict:
-    
     """Update configuration values and persist them."""
     cfg = config.load_config()
     data = asdict(cfg)

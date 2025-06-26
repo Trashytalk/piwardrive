@@ -62,8 +62,7 @@ async def async_scan_imsis(
     timeout: int | None = None,
 ) -> List[ImsiRecord]:
     """Asynchronously scan for IMSI numbers."""
-
-    cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
+    cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
     timeout = (
         timeout
