@@ -2,7 +2,7 @@
 
 from typing import List
 
-from sigint_suite.models import BandRecord, ImsiRecord, TowerRecord
+from piwardrive.sigint_suite.models import BandRecord, ImsiRecord, TowerRecord
 
 
 def parse_band_output(output: str) -> List[BandRecord]:

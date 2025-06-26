@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-import aiohttp
 from typing import Any, Dict, List
+from types import SimpleNamespace
+
+try:  # pragma: no cover - optional dependency
+    import aiohttp
+except Exception:  # pragma: no cover - aiohttp not installed
+    aiohttp = SimpleNamespace(
+        BasicAuth=lambda *_a, **_k: None,
+        ClientTimeout=lambda *_a, **_k: None,
+        ClientSession=None,
+    )
 
 
 async def fetch_wigle_networks(
@@ -46,3 +55,6 @@ async def fetch_wigle_networks(
             }
         )
     return nets
+
+
+__all__ = ["fetch_wigle_networks", "aiohttp"]
