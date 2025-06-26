@@ -8,6 +8,7 @@ import sys
 try:  # pragma: no cover - optional dependency
     sigint_suite = import_module("piwardrive.integrations.sigint_suite")
     sys.modules.setdefault("sigint_suite", sigint_suite)
+    sys.modules.setdefault(__name__ + ".sigint_suite", sigint_suite)
 except Exception:  # pragma: no cover - missing optional modules
     sigint_suite = None
 
