@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import subprocess
 from dataclasses import dataclass
@@ -17,6 +18,22 @@ def scan_lora(interface: str = "lora0") -> List[str]:
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return proc.stdout.splitlines()
+    except Exception as exc:  # pragma: no cover - runtime errors
+        logger.error("LoRa scan failed: %s", exc)
+        return []
+
+
+async def async_scan_lora(interface: str = "lora0") -> List[str]:
+    """Asynchronously invoke the LoRa scanning tool and return raw lines."""
+    cmd = ["lora-scan", "--iface", interface]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        stdout, _ = await proc.communicate()
+        return stdout.decode().splitlines()
     except Exception as exc:  # pragma: no cover - runtime errors
         logger.error("LoRa scan failed: %s", exc)
         return []
@@ -82,3 +99,26 @@ def plot_signal_trend(packets: Sequence[LoRaPacket], path: str) -> None:
     plt.tight_layout()
     plt.savefig(path)
     plt.close()
+
+
+def main() -> None:  # pragma: no cover - CLI helper
+    """Run a LoRa scan and print results."""
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description="Scan LoRa devices")
+    parser.add_argument("--iface", default="lora0", help="LoRa interface")
+    parser.add_argument("--json", action="store_true", help="print as JSON")
+    args = parser.parse_args()
+
+    lines = scan_lora(args.iface)
+    if args.json:
+        packets = [p.__dict__ for p in parse_packets(lines)]
+        print(json.dumps(packets, indent=2))
+    else:
+        for line in lines:
+            print(line)
+
+
+if __name__ == "__main__":  # pragma: no cover - manual execution
+    main()
