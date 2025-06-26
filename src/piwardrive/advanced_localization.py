@@ -24,7 +24,6 @@ class Config:
     dbscan_min_samples: int = 5
     centroid_rssi_weight_power: float = 1.5
     min_points_for_confidence: int = 5
-    map_zoom_start: int = 16
 
 
 def load_config(path: str | Path) -> Config:

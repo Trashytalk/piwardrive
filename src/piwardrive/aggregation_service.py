@@ -91,8 +91,9 @@ async def _process_upload(path: str) -> None:
 
 
 @app.post("/upload")
-async def upload(file: UploadFile) -> dict:
+async def upload(file: UploadFile) -> dict:  # noqa: V103 - FastAPI route
     """Save ``file`` and merge its contents into the aggregation database."""
+    # Called by FastAPI as a route handler.
     dest = os.path.join(UPLOAD_DIR, file.filename)
     fd, tmp_path = tempfile.mkstemp(dir=UPLOAD_DIR)
     os.close(fd)
@@ -106,8 +107,9 @@ async def upload(file: UploadFile) -> dict:
 
 
 @app.get("/stats")
-async def stats() -> dict:
+async def stats() -> dict:  # noqa: V103 - FastAPI route
     """Return averaged system metrics from all records."""
+    # Called by FastAPI as a route handler.
     conn = await _get_conn()
     cur = await conn.execute(
         "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
@@ -119,8 +121,9 @@ async def stats() -> dict:
 
 
 @app.get("/overlay")
-async def overlay(bins: int = 100) -> dict:
+async def overlay(bins: int = 100) -> dict:  # noqa: V103 - FastAPI route
     """Return heatmap points derived from all uploaded access points."""
+    # Called by FastAPI as a route handler.
     conn = await _get_conn()
     cur = await conn.execute("SELECT lat, lon FROM ap_points")
     coords = [(float(r[0]), float(r[1])) for r in await cur.fetchall()]
@@ -136,6 +139,9 @@ async def main() -> None:
     config = uvicorn.Config(app, host="0.0.0.0", port=9100)
     server = uvicorn.Server(config)
     await server.serve()
+
+
+__all__ = ["app", "main", "upload", "stats", "overlay"]
 
 
 if __name__ == "__main__":

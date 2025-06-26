@@ -15,11 +15,13 @@ class _ConfigHandler(FileSystemEventHandler):
         self._path = os.path.abspath(path)
         self._callback = callback
 
-    def on_modified(self, event):  # type: ignore[override]
+    def on_modified(self, event) -> None:  # noqa: V105 - Watchdog callback
+        """Watchdog callback for modifications to the watched file."""
         if os.path.abspath(event.src_path) == self._path:
             self._callback()
 
-    def on_created(self, event):  # type: ignore[override]
+    def on_created(self, event) -> None:  # noqa: V105 - Watchdog callback
+        """Watchdog callback for creation of the watched file."""
         if os.path.abspath(event.src_path) == self._path:
             self._callback()
 
@@ -31,3 +33,6 @@ def watch_config(path: str, callback: Callable[[], None]) -> Observer:
     observer.schedule(handler, os.path.dirname(path) or ".", recursive=False)
     observer.start()
     return observer
+
+
+__all__ = ["watch_config"]
