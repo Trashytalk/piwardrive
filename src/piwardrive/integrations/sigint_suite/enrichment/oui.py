@@ -9,7 +9,7 @@ from typing import Dict, Optional
 
 from piwardrive.utils import HTTP_SESSION
 
-from sigint_suite import paths
+from piwardrive.sigint_suite import paths
 
 # Persist the OUI registry under the main configuration directory
 OUI_PATH = paths.OUI_PATH

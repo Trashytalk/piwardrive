@@ -7,7 +7,7 @@ import contextlib
 from typing import Dict, List
 
 
-from sigint_suite.models import BluetoothDevice
+from piwardrive.sigint_suite.models import BluetoothDevice
 
 logger = logging.getLogger(__name__)
 
