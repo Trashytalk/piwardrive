@@ -36,6 +36,12 @@ them sequentially::
 
 Each line of ``boxes.txt`` should contain ``min_lat min_lon max_lat max_lon``.
 
+``scripts/tileMaintenance.js`` provides similar functionality in Node.  Invoke
+``prefetch`` along with optional cleanup commands when preparing tiles
+offline::
+
+   node scripts/tileMaintenance.js prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
+
 Cache Maintenance
 -----------------
 
