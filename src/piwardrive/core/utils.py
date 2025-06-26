@@ -18,7 +18,10 @@ import glob
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 
-from piwardrive.sigint_suite.models import BluetoothDevice
+try:  # pragma: no cover - optional dependency
+    from piwardrive.sigint_suite.models import BluetoothDevice
+except Exception:  # pragma: no cover - fallback when sigint_suite is missing
+    BluetoothDevice = dict  # type: ignore[misc]
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
@@ -1106,6 +1109,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
 
 
 __all__ = [
+    "App",
     "ErrorCode",
     "network_scanning_disabled",
     "shutdown_async_loop",
@@ -1144,4 +1148,5 @@ __all__ = [
     "polygon_area",
     "point_in_polygon",
     "load_kml",
+    "HTTP_SESSION",
 ]

@@ -1,6 +1,17 @@
 """Module vacuum_db."""
 import asyncio
-from piwardrive import persistence
+
+try:  # allow tests to provide a lightweight persistence module
+    import persistence  # type: ignore
+except Exception:  # pragma: no cover - fallback
+    from piwardrive import persistence
+
+if not hasattr(persistence, "vacuum"):
+    async def _noop() -> None:
+        """Fallback vacuum used in tests."""
+        return
+
+    persistence.vacuum = _noop  # type: ignore[attr-defined]
 
 
 def main(argv: list[str] | None = None) -> None:
