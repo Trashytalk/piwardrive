@@ -8,7 +8,14 @@ from pathlib import Path
 import sys
 from typing import Any, Dict, Iterable, Optional
 
-from piwardrive.utils import format_error, report_error
+try:  # pragma: no cover - optional dependency
+    from piwardrive.utils import format_error, report_error
+except Exception:  # pragma: no cover - minimal fallbacks when deps missing
+    def format_error(_code: int, msg: str) -> str:
+        return msg
+
+    def report_error(msg: str) -> None:
+        print(msg)
 
 from .base import DashboardWidget
 

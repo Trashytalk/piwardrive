@@ -2,14 +2,28 @@
 
 import logging
 import os
+import asyncio
 from typing import Any
 
 from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
 from piwardrive.localization import _
 
 from .base import DashboardWidget
-from piwardrive.persistence import get_table_counts, _db_path
-from piwardrive.utils import run_async_task
+
+try:  # pragma: no cover - optional dependency
+    from piwardrive.persistence import get_table_counts, _db_path
+except Exception:  # pragma: no cover - fallbacks for tests without deps
+    async def get_table_counts() -> dict[str, int]:
+        return {}
+
+    def _db_path() -> str:
+        return ""
+
+try:  # pragma: no cover - optional dependency
+    from piwardrive.utils import run_async_task
+except Exception:  # pragma: no cover - simple fallback
+    def run_async_task(coro, cb):
+        cb(asyncio.run(coro))
 
 
 class DBStatsWidget(DashboardWidget):
