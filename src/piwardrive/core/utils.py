@@ -662,9 +662,7 @@ async def _run_service_cmd_async(
         logging.exception(
             "Service command '%s %s' failed: %s", service, action, exc
         )
-        return await asyncio.get_running_loop().run_in_executor(
-            None, lambda: _run_systemctl(service, action)
-        )
+        return False, "", str(exc)
 
 
 def run_service_cmd(
