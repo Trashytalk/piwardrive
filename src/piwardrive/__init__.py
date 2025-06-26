@@ -19,6 +19,8 @@ for _mod in (
     "orientation_sensors",
     "config",
     "sync",
+    "diagnostics",
+    "exception_handler",
 ):
     try:  # pragma: no cover - optional imports may fail
         module = import_module(f"piwardrive.{_mod}")
