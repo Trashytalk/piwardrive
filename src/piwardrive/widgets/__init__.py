@@ -6,7 +6,7 @@ Lazy loading wrapper for widget classes with plugin support.
 from importlib import import_module, util
 from pathlib import Path
 import sys
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from piwardrive.utils import format_error, report_error
 
@@ -57,6 +57,48 @@ __all__: list[str] = [
 ]
 
 
+def iter_plugin_paths(plugin_dir: Path) -> Iterable[tuple[str, Path]]:
+    """Yield module name and file path for every plugin candidate."""
+    for path in plugin_dir.iterdir():
+        mod_name = path.stem if path.is_file() else path.name
+        load_path: Path | None = None
+        if path.is_file() and path.suffix in {".py", ".so", ".pyd"}:
+            load_path = path
+        elif path.is_dir():
+            if (path / "__init__.py").exists():
+                load_path = path / "__init__.py"
+            else:
+                so_files = list(path.glob("*.so")) + list(path.glob("*.pyd"))
+                if so_files:
+                    load_path = so_files[0]
+        if load_path is not None:
+            yield mod_name, load_path
+
+
+def load_plugin(mod_name: str, path: Path) -> Optional[type]:
+    """Load plugin module ``mod_name`` from ``path`` and return widget class."""
+    spec = util.spec_from_file_location(mod_name, path)
+    if not spec or not spec.loader:
+        return None
+    try:
+        module = util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+    except Exception as exc:  # pragma: no cover - import errors
+        report_error(
+            format_error(401, f"Failed to load plugin {path.name}: {exc}")
+        )
+        return None
+    for name, obj in vars(module).items():
+        if (
+            isinstance(obj, type)
+            and issubclass(obj, DashboardWidget)
+            and obj is not DashboardWidget
+        ):
+            return obj
+    return None
+
+
 def _load_plugins() -> None:
     """Load widget classes from ``~/.config/piwardrive/plugins``."""
     plugin_dir = Path.home() / ".config" / "piwardrive" / "plugins"
@@ -69,44 +111,11 @@ def _load_plugins() -> None:
     if _PLUGIN_STAMP != stamp:
         _PLUGIN_CLASSES.clear()
         __all__[:] = [n for n in __all__ if n in _MODULE_MAP]
-    for path in plugin_dir.iterdir():
-        module: Optional[object] = None
-        load_path: Path | None = None
-        if path.is_file() and path.suffix in {".py", ".so", ".pyd"}:
-            mod_name = path.name.split(".")[0]
-            load_path = path
-        elif path.is_dir():
-            mod_name = path.name
-            if (path / "__init__.py").exists():
-                load_path = path / "__init__.py"
-            else:
-                so_files = list(path.glob("*.so")) + list(path.glob("*.pyd"))
-                if so_files:
-                    load_path = so_files[0]
-        if load_path is None:
-            continue
-        spec = util.spec_from_file_location(mod_name, load_path)
-        if spec and spec.loader:
-            try:
-                module = util.module_from_spec(spec)
-                sys.modules[spec.name] = module
-                spec.loader.exec_module(module)
-            except Exception as exc:  # pragma: no cover - import errors
-                report_error(
-                    format_error(
-                        401,
-                        f"Failed to load plugin {load_path.name}: {exc}",
-                    )
-                )
-                continue
-            for name, obj in vars(module).items():
-                if (
-                    isinstance(obj, type)
-                    and issubclass(obj, DashboardWidget)
-                    and obj is not DashboardWidget
-                ):
-                    _PLUGIN_CLASSES[name] = obj
-                    __all__.append(name)
+    for mod_name, path in iter_plugin_paths(plugin_dir):
+        cls = load_plugin(mod_name, path)
+        if cls is not None:
+            _PLUGIN_CLASSES[cls.__name__] = cls
+            __all__.append(cls.__name__)
     _PLUGIN_STAMP = plugin_dir.stat().st_mtime
 
 
