@@ -156,6 +156,7 @@ class DashboardSettings:
 async def _init_db(conn: aiosqlite.Connection) -> None:
     """Create or migrate the SQLite schema to the latest version."""
 
+    
     await conn.execute(
         "CREATE TABLE IF NOT EXISTS schema_version (version INTEGER)"
     )
