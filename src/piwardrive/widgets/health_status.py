@@ -3,10 +3,7 @@
 import logging
 from typing import Any
 
-from kivy.app import App
-from kivy.metrics import dp
-from kivymd.uix.label import MDLabel
-from kivymd.uix.card import MDCard
+from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
 from piwardrive.localization import _
 
 from .base import DashboardWidget
@@ -31,8 +28,12 @@ class HealthStatusWidget(DashboardWidget):
     def update(self) -> None:  # pragma: no cover - GUI update
         """Refresh the widget with the latest health metrics."""
         try:
-            app = App.get_running_app()
-            monitor = getattr(app, "health_monitor", None)
+            monitor = None
+            try:
+                from piwardrive import main
+                monitor = getattr(main, "GLOBAL_HEALTH_MONITOR", None)
+            except Exception:
+                monitor = None
             data = monitor.data if monitor else None
             if not data:
                 self.label.text = f"{_('health')}: {_('not_available')}"

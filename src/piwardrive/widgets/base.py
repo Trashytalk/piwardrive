@@ -1,23 +1,18 @@
-"""Base classes for dashboard widgets with drag-and-drop support."""
+"""Base classes for dashboard widgets."""
 
 from typing import Any
 
-from kivy.uix.behaviors import DragBehavior
-from kivymd.uix.boxlayout import MDBoxLayout
+from piwardrive.simpleui import BoxLayout
 
 
-class DashboardWidget(DragBehavior, MDBoxLayout):
-    """Simple draggable widget container."""
+class DashboardWidget(BoxLayout):
+    """Simple widget container without GUI dependencies."""
 
     update_interval = 5.0
-    
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize draggable widget container."""
-        super().__init__(**kwargs)
-        self.drag_rectangle = self.x, self.y, self.width, self.height
-        self.drag_timeout = 10000000
-        self.drag_distance = 0
 
-    def on_size(self, *args: Any) -> None:
-        """Update drag area when the widget size changes."""
-        self.drag_rectangle = self.x, self.y, self.width, self.height
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+
+    def on_size(self, *_args: Any) -> None:  # pragma: no cover - no GUI
+        pass
+

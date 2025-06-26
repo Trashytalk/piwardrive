@@ -5,6 +5,8 @@ import HandshakeCount from './HandshakeCount.jsx';
 import SignalStrength from './SignalStrength.jsx';
 import NetworkThroughput from './NetworkThroughput.jsx';
 import CPUTempGraph from './CPUTempGraph.jsx';
+import LoRaScan from './LoRaScan.jsx';
+import DBStats from './DBStats.jsx';
 
 const COMPONENTS = {
   BatteryStatusWidget: BatteryStatus,
@@ -13,6 +15,8 @@ const COMPONENTS = {
   SignalStrengthWidget: SignalStrength,
   NetworkThroughputWidget: NetworkThroughput,
   CPUTempGraphWidget: CPUTempGraph,
+  LoRaScanWidget: LoRaScan,
+  DBStatsWidget: DBStats,
 };
 
 export default function DashboardLayout({ metrics }) {

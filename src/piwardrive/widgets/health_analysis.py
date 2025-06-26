@@ -3,11 +3,12 @@ import logging
 from typing import Any
 import tempfile
 
-from kivy.app import App
-from kivy.metrics import dp
-from kivy.uix.image import Image
-from kivymd.uix.card import MDCard
-from kivymd.uix.label import MDLabel
+from piwardrive.simpleui import (
+    dp,
+    Image,
+    Card as MDCard,
+    Label as MDLabel,
+)
 from piwardrive.localization import _
 
 from .base import DashboardWidget
@@ -35,9 +36,6 @@ class HealthAnalysisWidget(DashboardWidget):
         self.add_widget(self.card)
         self._tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
         self._event = f"health_analysis_{id(self)}"
-        App.get_running_app().scheduler.schedule(
-            self._event, lambda dt: self.update(), self.update_interval
-        )
         self.update()
 
     def update(self) -> None:  # pragma: no cover - GUI update

@@ -2,15 +2,13 @@
 
 from typing import Any, List
 import os
-
-from kivy.app import App
-from kivymd.uix.menu import MDDropdownMenu
-
-from kivy.clock import Clock
-from kivy.properties import NumericProperty, StringProperty
 import re
-from kivy.uix.label import Label
-from kivy.uix.scrollview import ScrollView
+
+from piwardrive.simpleui import (
+    Label,
+    ScrollView,
+    DropdownMenu as MDDropdownMenu,
+)
 
 from piwardrive.utils import tail_file
 
@@ -18,11 +16,11 @@ from piwardrive.utils import tail_file
 class LogViewer(ScrollView):
     """Display the last N lines of a log file and update periodically."""
 
-    log_path = StringProperty("/var/log/syslog")
-    max_lines = NumericProperty(200)
-    poll_interval = NumericProperty(1.0)
-    filter_regex = StringProperty("")
-    error_regex = StringProperty("error")
+    log_path: str = "/var/log/syslog"
+    max_lines: int = 200
+    poll_interval: float = 1.0
+    filter_regex: str = ""
+    error_regex: str = "error"
     log_paths: List[str] = []
 
     def __init__(self, **kwargs: Any) -> None:
@@ -36,9 +34,7 @@ class LogViewer(ScrollView):
         self._error_re: re.Pattern[str] = re.compile(self.error_regex, re.IGNORECASE)
         self.bind(filter_regex=self._compile_filter)
         self.bind(error_regex=self._compile_error)
-        app = App.get_running_app()
-        self.log_paths = getattr(app, "log_paths", [self.log_path])
-        Clock.schedule_interval(self._refresh, self.poll_interval)
+        self.log_paths = [self.log_path]
         self._menu: MDDropdownMenu | None = None
 
     def _compile_filter(self, *_args: Any) -> None:
