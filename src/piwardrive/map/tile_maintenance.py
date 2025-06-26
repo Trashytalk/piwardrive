@@ -8,17 +8,33 @@ import heapq
 from piwardrive.scheduler import PollScheduler
 from piwardrive import utils
 from typing import Optional
+import typing
 
 try:
     _run_async = utils.run_async_task
 except AttributeError:  # pragma: no cover - core utils missing
-    def _run_async(coro) -> None:
+    from typing import Any, Callable, Coroutine, TypeVar
+    from concurrent.futures import Future
+
+    T = TypeVar("T")
+
+    def _run_async(
+        coro: Coroutine[Any, Any, T], callback: Callable[[T], None] | None = None
+    ) -> Future[T]:
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            asyncio.run(coro)
+            result = asyncio.run(coro)
+            fut: Future[T] = Future()
+            fut.set_result(result)
+            if callback is not None:
+                callback(result)
+            return fut
         else:
-            loop.create_task(coro)
+            task = loop.create_task(coro)
+            if callback is not None:
+                task.add_done_callback(lambda f: callback(f.result()))
+            return typing.cast(Future[T], task)
 
 try:
     from watchdog.observers import Observer

@@ -11,11 +11,11 @@ from typing import Any, Dict, Iterable, Optional
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import format_error, report_error
 except Exception:  # pragma: no cover - minimal fallbacks when deps missing
-    def format_error(_code: int, msg: str) -> str:
-        return msg
+    def format_error(code: int, message: str) -> str:
+        return message
 
-    def report_error(msg: str) -> None:
-        print(msg)
+    def report_error(message: str) -> None:
+        print(message)
 
 from .base import DashboardWidget
 
