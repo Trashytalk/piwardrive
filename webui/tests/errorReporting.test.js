@@ -1,11 +1,39 @@
-import { describe, it, expect, vi } from 'vitest';
-vi.mock('../src/exceptionHandler.js', () => ({ reportError: vi.fn() }));
-import { reportError } from '../src/errorReporting.js';
-import { reportError as inner } from '../src/exceptionHandler.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-describe('error reporting', () => {
-  it('delegates to exception handler', () => {
-    reportError('boom');
-    expect(inner).toHaveBeenCalledWith('boom');
+vi.mock('../src/logconfig.js', () => ({
+  setupLogging: vi.fn(() => ({ error: vi.fn() }))
+}));
+
+import { setupLogging } from '../src/logconfig.js';
+
+let origAlert;
+
+beforeEach(() => {
+  origAlert = global.alert;
+  vi.resetModules();
+});
+
+afterEach(() => {
+  global.alert = origAlert;
+});
+
+describe('reportError', () => {
+  it('logs the message', async () => {
+    const log = { error: vi.fn() };
+    setupLogging.mockReturnValue(log);
+    const mod = await import('../src/errorReporting.js');
+    mod.reportError('boom');
+    expect(log.error).toHaveBeenCalledWith('boom');
+  });
+
+  it('alerts when requested', async () => {
+    const log = { error: vi.fn() };
+    setupLogging.mockReturnValue(log);
+    const alertSpy = vi.fn();
+    global.alert = alertSpy;
+    const mod = await import('../src/errorReporting.js');
+    mod.reportError('boom', true);
+    expect(alertSpy).toHaveBeenCalledWith('boom');
+    expect(log.error).toHaveBeenCalledWith('boom');
   });
 });
