@@ -1,15 +1,19 @@
 import os
 import sys
 from types import SimpleNamespace
+import pytest
 
 
-modules = {
-    "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
-    "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
-    "aiohttp": SimpleNamespace(),
-}
-for name, mod in modules.items():
-    sys.modules[name] = mod
+@pytest.fixture(autouse=True)
+def _dummy_modules(monkeypatch):
+    modules = {
+        "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+        "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
+        "aiohttp": SimpleNamespace(),
+    }
+    for name, mod in modules.items():
+        monkeypatch.setitem(sys.modules, name, mod)
+    yield
 
 
 def test_tile_maintenance_cli(monkeypatch):

@@ -15,9 +15,15 @@ except Exception:  # pragma: no cover - minimal fallback
             raise RuntimeError("HTTP session unavailable")
 
     HTTP_SESSION = _DummySession()
-    import requests  # type: ignore
-except Exception:  # pragma: no cover - missing dependency
-    requests = None  # type: ignore
+    try:
+        import requests  # type: ignore
+    except Exception:  # pragma: no cover - missing dependency
+        requests = None  # type: ignore
+else:  # pragma: no cover - optional dependency available
+    try:
+        import requests  # type: ignore
+    except Exception:  # pragma: no cover - missing dependency
+        requests = None  # type: ignore
 
 if requests is not None:
     HTTP_SESSION = requests.Session()
