@@ -1,16 +1,19 @@
-"""Module scanner."""
+"""Wi-Fi scanning utilities."""
+
+from __future__ import annotations
+
+import asyncio
 import logging
 import os
 import shlex
 import subprocess
-import asyncio
+from typing import Dict, Iterable, List, Optional, Union
 
-from typing import Dict, Iterable, List, Optional
-from typing import Dict, List, Optional, Union
-from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
-from piwardrive.sigint_suite.models import WifiNetwork
-from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
 from piwardrive import orientation_sensors
+from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
+from piwardrive.sigint_suite.hooks import (apply_post_processors,
+                                           register_post_processor)
+from piwardrive.sigint_suite.models import WifiNetwork
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +21,9 @@ logger = logging.getLogger(__name__)
 lookup_vendor = cached_lookup_vendor
 
 
-def _vendor_hook(records: List[Dict[str, Union[str, float]]]) -> List[Dict[str, Union[str, float]]]:
+def _vendor_hook(
+    records: List[Dict[str, Union[str, float]]],
+) -> List[Dict[str, Union[str, float]]]:
     """Add vendor names based on BSSID prefixes."""
     for rec in records:
         bssid = rec.get("bssid")
@@ -68,7 +73,6 @@ def _parse_iwlist_output(
     records: List[Dict[str, Union[str, float]]] = []
     current: Dict[str, Union[str, float]] = {}
     enc_lines: List[str] = []
-
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
@@ -95,7 +99,7 @@ def scan_wifi(
     timeout: Optional[int] = None,
 ) -> List[WifiNetwork]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
-    iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
+    iwlist_cmd = str(iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist"))
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
     cmd: List[str] = []
@@ -108,14 +112,17 @@ def scan_wifi(
 
     try:
         output = subprocess.check_output(
-            cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+            cmd,
+            text=True,
+            stderr=subprocess.DEVNULL,
+            timeout=timeout,
         )
-    except Exception as exc:
+    except Exception as exc:  # pragma: no cover - external command
         logger.exception("Wi-Fi scan failed: %s", exc)
         return []
 
     heading = orientation_sensors.get_heading()
-    records = [rec for rec in _parse_iwlist_output(output, heading)]
+    records = list(_parse_iwlist_output(output, heading))
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
 
@@ -137,9 +144,7 @@ async def async_scan_wifi(
         cmd.extend(shlex.split(priv_cmd))
     cmd.extend([iwlist_cmd, interface, "scanning"])
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
     )
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -149,7 +154,7 @@ async def async_scan_wifi(
         )
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         output = stdout.decode()
-    except Exception:
+    except Exception:  # pragma: no cover - external command
         return []
 
     heading = orientation_sensors.get_heading()

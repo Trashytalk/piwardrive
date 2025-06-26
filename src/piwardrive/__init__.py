@@ -2,7 +2,10 @@
 """PiWardrive package initializer."""
 
 from importlib import import_module
+from types import ModuleType
 import sys
+
+sigint_suite: ModuleType | None
 
 # Expose ``sigint_suite`` as a top-level module for backwards compatibility
 try:  # pragma: no cover - optional dependency
@@ -12,7 +15,6 @@ except Exception:  # pragma: no cover - missing optional modules
         sigint_suite = import_module("piwardrive.integrations.sigint_suite")
     except Exception:
         sigint_suite = None
-
 if sigint_suite is not None:
     sys.modules.setdefault("sigint_suite", sigint_suite)
     sys.modules.setdefault(__name__ + ".sigint_suite", sigint_suite)

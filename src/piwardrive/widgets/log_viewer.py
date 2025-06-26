@@ -44,7 +44,7 @@ class LogViewer(ScrollView):
         self._error_re = re.compile(self.error_regex, re.IGNORECASE)
 
     def _update_text_size(self, _instance: Any, _value: Any) -> None:
-        self.label.text_size = (self.width, None)
+        self.label.text_size = (self.width, 0)
 
     def _update_height(self, _instance: Any, _value: Any) -> None:
         self.label.height = self.label.texture_size[1]

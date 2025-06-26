@@ -2,22 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-import os
 import inspect
+import os
 import typing
+from dataclasses import asdict
 
 try:  # pragma: no cover - optional FastAPI dependency
-    from fastapi import (
-        FastAPI,
-        Depends,
-        HTTPException,
-        WebSocket,
-        WebSocketDisconnect,
-        Body,
-        Request,
-    )
-    from fastapi.responses import StreamingResponse, Response
+    from fastapi import (Body, Depends, FastAPI, HTTPException, Request,
+                         WebSocket, WebSocketDisconnect)
+    from fastapi.responses import Response, StreamingResponse
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
     FastAPI = type(
@@ -43,27 +36,23 @@ except Exception:
     StreamingResponse = Response = object
     HTTPBasic = type("HTTPBasic", (), {"__init__": lambda self, **k: None})
     HTTPBasicCredentials = type("HTTPBasicCredentials", (), {})
-import importlib
-
 import asyncio
-import time
+import importlib
 import json
 import tempfile
+import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from collections.abc import Sequence, Mapping
-from typing import Any
+from typing import Any, Tuple
 
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
-    from persistence import (
-        load_recent_health,
-        load_ap_cache,
-        load_dashboard_settings,
-        save_dashboard_settings,
-        DashboardSettings,
-    )  # type: ignore
+    from persistence import (DashboardSettings, load_ap_cache,  # type: ignore
+                             load_dashboard_settings, load_recent_health,
+                             save_dashboard_settings)
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
@@ -72,38 +61,66 @@ except Exception:  # pragma: no cover - fall back to real module
         save_dashboard_settings,
         DashboardSettings,
     )
+
 from piwardrive.security import sanitize_path, verify_password
+
 try:  # allow tests to provide a simplified utils module
     import utils as _utils
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import utils as _utils
 
+import config
 import psutil
 import vehicle_sensors
-import config
 from sync import upload_data
-from piwardrive.gpsd_client import client as gps_client
-from piwardrive import orientation_sensors
-from piwardrive import export
-from piwardrive.config import CONFIG_DIR
 
-fetch_metrics_async = getattr(
-    _utils, "fetch_metrics_async", lambda *_a, **_k: ([], [], 0)
+from piwardrive import export, orientation_sensors
+from piwardrive.config import CONFIG_DIR
+from piwardrive.gpsd_client import client as gps_client
+
+from typing import Awaitable, Callable
+
+
+async def _default_fetch_metrics_async(*_a: Any, **_k: Any) -> tuple[list[Any], list[Any], int]:
+    return [], [], 0
+
+
+fetch_metrics_async: Callable[..., Awaitable[tuple[list[Any], list[Any], int]]] = getattr(
+    _utils, "fetch_metrics_async", _default_fetch_metrics_async
 )
 get_avg_rssi = getattr(_utils, "get_avg_rssi", lambda *_a, **_k: None)
 get_cpu_temp = getattr(_utils, "get_cpu_temp", lambda *_a, **_k: None)
 get_mem_usage = getattr(_utils, "get_mem_usage", lambda *_a, **_k: None)
 get_disk_usage = getattr(_utils, "get_disk_usage", lambda *_a, **_k: None)
-get_network_throughput = getattr(_utils, "get_network_throughput", lambda *_a, **_k: (0, 0))
+get_network_throughput = getattr(
+    _utils,
+    "get_network_throughput",
+    lambda *_a, **_k: (0, 0),
+)
 get_gps_fix_quality = getattr(_utils, "get_gps_fix_quality", lambda *_a, **_k: None)
 get_gps_accuracy = getattr(_utils, "get_gps_accuracy", lambda *_a, **_k: None)
-service_status_async = getattr(_utils, "service_status_async", lambda *_a, **_k: None)
-from typing import Callable, Tuple
+
+
+async def _default_service_status_async(*_a: Any, **_k: Any) -> bool:
+    return False
+
+
+service_status_async: Callable[[str], Awaitable[bool]] = getattr(
+    _utils, "service_status_async", _default_service_status_async
+)
 
 run_service_cmd: Callable[[str, str], Tuple[bool, str, str] | None] = getattr(
     _utils, "run_service_cmd", lambda *_a, **_k: None
 )
-async_tail_file = getattr(_utils, "async_tail_file", lambda *_a, **_k: [])
+
+
+async def _default_async_tail_file(*_a: Any, **_k: Any) -> list[str]:
+    return []
+
+
+async_tail_file: Callable[[str, int], Awaitable[list[str]]] = getattr(
+    _utils, "async_tail_file", _default_async_tail_file
+)
 
 
 security = HTTPBasic(auto_error=False)
@@ -364,8 +381,6 @@ async def update_config_endpoint(
     updates: dict = Body(...),
     _auth: None = Depends(_check_auth),
 ) -> dict:
-
-  
     """Update configuration values and persist them."""
     cfg = config.load_config()
     data = asdict(cfg)

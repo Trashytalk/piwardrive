@@ -3,10 +3,12 @@ import logging
 try:
     from kivy.app import App  # type: ignore
 except Exception:  # pragma: no cover - allow running without Kivy
-    class App:
+    class _App:
         @staticmethod
         def get_running_app() -> None:
             return None
+
+    App = _App
 
 ERROR_PREFIX = "E"
 

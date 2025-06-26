@@ -22,8 +22,24 @@ except Exception:  # pragma: no cover - fallbacks for tests without deps
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import run_async_task
 except Exception:  # pragma: no cover - simple fallback
-    def run_async_task(coro, cb):
-        cb(asyncio.run(coro))
+    from typing import Any, Callable, Coroutine, TypeVar
+    from concurrent.futures import Future
+
+    T = TypeVar("T")
+
+    def run_async_task(
+        coro: Coroutine[Any, Any, T], callback: Callable[[T], None] | None = None
+    ) -> Future[T]:
+        fut: Future[T] = Future()
+
+        try:
+            result = asyncio.run(coro)
+            fut.set_result(result)
+            if callback is not None:
+                callback(result)
+        except Exception as exc:
+            fut.set_exception(exc)
+        return fut
 
 
 class DBStatsWidget(DashboardWidget):

@@ -9,23 +9,20 @@ effect within ``piwardrive.service``.  When the package isn't installed, the
 
 from __future__ import annotations
 
+import importlib
 import os
 import sys
-import importlib
 
 SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from piwardrive import service as _p  # noqa: E402
-from piwardrive import orientation_sensors  # noqa: F401,E402
+from typing import Any, Callable  # noqa: E402
 
+from piwardrive import orientation_sensors  # noqa: F401,E402
+from piwardrive import service as _p  # noqa: E402
 # Re-export everything from the real module
 from piwardrive.service import *  # noqa: F401,F403,E402
-
-from importlib import import_module
-from types import ModuleType
-from typing import Any, Callable
 
 
 def _proxy(name: str) -> Callable[..., Any]:
@@ -44,7 +41,7 @@ _p.load_recent_health = _proxy("load_recent_health")  # type: ignore[attr-define
 """Compatibility wrapper for :mod:`piwardrive.service`."""
 
 try:  # pragma: no cover - optional dependency loading
-    _service = importlib.import_module("piwardrive.service")
+    _service: ModuleType | None = importlib.import_module("piwardrive.service")
 except Exception:  # pragma: no cover - allow import without extras
     _service = None
 

@@ -1,6 +1,7 @@
 """Module exporter."""
 import csv
 import json
+from dataclasses import asdict, is_dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
 from piwardrive import export as _exp
@@ -14,7 +15,7 @@ def export_json(records: Iterable[Any], path: str) -> None:
     def normalise(record: Any) -> Any:
         if hasattr(record, "model_dump"):
             return record.model_dump()
-        if is_dataclass(record):
+        if is_dataclass(record) and not isinstance(record, type):
             return asdict(record)
         if isinstance(record, Mapping):
             return dict(record)
@@ -75,7 +76,10 @@ def export_records(
     fmt: str,
     fields: Sequence[str] | None = None,
 ) -> None:
-    """Export ``records`` using ``fmt`` similar to :func:`piwardrive.export.export_records`."""
+    """Export ``records`` using ``fmt`` similar to
+    :func:`piwardrive.export.export_records`.
+    """
+
 
     fmt = fmt.lower()
     if fmt not in EXPORT_FORMATS:
