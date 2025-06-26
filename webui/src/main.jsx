@@ -12,6 +12,7 @@ if (path.startsWith('/split')) Root = SplitScreen;
 import SettingsForm from './components/SettingsForm.jsx';
 import SplitView from './components/SplitView.jsx';
 import NavBar from './components/NavBar.jsx';
+import HealthImport from './components/HealthImport.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<App />} />
         <Route path="/console" element={<ConsoleView />} />
         <Route path="/settings" element={<SettingsForm />} />
+        <Route path="/import-health" element={<HealthImport />} />
         <Route path="/split" element={<SplitView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
