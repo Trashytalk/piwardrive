@@ -1,7 +1,9 @@
-export default function LoRaScan({ metrics }) {
+import { useEffect, useState } from 'react';
+
+export function LoRaScanStatic({ metrics }) {
   const count = metrics?.lora_devices;
   return <div>LoRa: {count != null ? count : 'N/A'}</div>;
-import { useEffect, useState } from 'react';
+}
 
 export default function LoRaScan() {
   const [count, setCount] = useState(null);
