@@ -43,7 +43,9 @@ import tempfile
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable, Tuple
+from collections.abc import Sequence, Mapping
+from typing import Any, Tuple
+
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
@@ -76,8 +78,15 @@ from piwardrive import export, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 
-fetch_metrics_async = getattr(
-    _utils, "fetch_metrics_async", lambda *_a, **_k: ([], [], 0)
+from typing import Awaitable, Callable
+
+
+async def _default_fetch_metrics_async(*_a: Any, **_k: Any) -> tuple[list[Any], list[Any], int]:
+    return [], [], 0
+
+
+fetch_metrics_async: Callable[..., Awaitable[tuple[list[Any], list[Any], int]]] = getattr(
+    _utils, "fetch_metrics_async", _default_fetch_metrics_async
 )
 get_avg_rssi = getattr(_utils, "get_avg_rssi", lambda *_a, **_k: None)
 get_cpu_temp = getattr(_utils, "get_cpu_temp", lambda *_a, **_k: None)
@@ -90,11 +99,28 @@ get_network_throughput = getattr(
 )
 get_gps_fix_quality = getattr(_utils, "get_gps_fix_quality", lambda *_a, **_k: None)
 get_gps_accuracy = getattr(_utils, "get_gps_accuracy", lambda *_a, **_k: None)
-service_status_async = getattr(_utils, "service_status_async", lambda *_a, **_k: None)
+
+
+async def _default_service_status_async(*_a: Any, **_k: Any) -> bool:
+    return False
+
+
+service_status_async: Callable[[str], Awaitable[bool]] = getattr(
+    _utils, "service_status_async", _default_service_status_async
+)
+
 run_service_cmd: Callable[[str, str], Tuple[bool, str, str] | None] = getattr(
     _utils, "run_service_cmd", lambda *_a, **_k: None
 )
-async_tail_file = getattr(_utils, "async_tail_file", lambda *_a, **_k: [])
+
+
+async def _default_async_tail_file(*_a: Any, **_k: Any) -> list[str]:
+    return []
+
+
+async_tail_file: Callable[[str, int], Awaitable[list[str]]] = getattr(
+    _utils, "async_tail_file", _default_async_tail_file
+)
 
 
 security = HTTPBasic(auto_error=False)

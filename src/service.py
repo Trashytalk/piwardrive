@@ -41,7 +41,7 @@ _p.load_recent_health = _proxy("load_recent_health")  # type: ignore[attr-define
 """Compatibility wrapper for :mod:`piwardrive.service`."""
 
 try:  # pragma: no cover - optional dependency loading
-    _service = importlib.import_module("piwardrive.service")
+    _service: ModuleType | None = importlib.import_module("piwardrive.service")
 except Exception:  # pragma: no cover - allow import without extras
     _service = None
 

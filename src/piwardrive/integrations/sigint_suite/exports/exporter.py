@@ -15,7 +15,7 @@ def export_json(records: Iterable[Any], path: str) -> None:
     def normalise(record: Any) -> Any:
         if hasattr(record, "model_dump"):
             return record.model_dump()
-        if is_dataclass(record):
+        if is_dataclass(record) and not isinstance(record, type):
             return asdict(record)
         if isinstance(record, Mapping):
             return dict(record)
