@@ -12,8 +12,8 @@ def load_scheduler(monkeypatch: Any):
 
     class DummyClock:
         def __init__(self) -> None:
-            self.callback = None
-            self.interval = None
+            self.callback: Any | None = None
+            self.interval: float | None = None
 
         def schedule_interval(self, cb: Any, interval: float) -> Any:
             self.callback = cb
@@ -24,10 +24,10 @@ def load_scheduler(monkeypatch: Any):
             pass
 
     clock = DummyClock()
-    clk_mod.Clock = clock
-    clk_mod.ClockEvent = object
+    clk_mod.Clock = clock  # type: ignore[assignment, attr-defined]
+    clk_mod.ClockEvent = object  # type: ignore[attr-defined]
     app_mod = ModuleType("kivy.app")
-    app_mod.App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
+    app_mod.App = type("App", (), {"get_running_app": staticmethod(lambda: None)})  # type: ignore[assignment, attr-defined]
     monkeypatch.setitem(sys.modules, "kivy.clock", clk_mod)
     monkeypatch.setitem(sys.modules, "kivy.app", app_mod)
     if "scheduler" in sys.modules:

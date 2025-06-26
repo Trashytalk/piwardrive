@@ -18,6 +18,17 @@ if sigint_suite is not None:
     # Register the module under legacy import paths
     sys.modules.setdefault("sigint_suite", sigint_suite)
     sys.modules.setdefault(__name__ + ".sigint_suite", sigint_suite)
+from types import ModuleType
+
+try:  # pragma: no cover - optional dependency
+    sigint_suite: ModuleType | None = import_module("piwardrive.integrations.sigint_suite")
+    # Expose as ``sigint_suite`` and ``piwardrive.sigint_suite`` for backwards
+    # compatibility with older paths used throughout the tests.
+    if sigint_suite is not None:
+        sys.modules.setdefault("sigint_suite", sigint_suite)
+        sys.modules.setdefault(__name__ + ".sigint_suite", sigint_suite)
+except Exception:  # pragma: no cover - missing optional modules
+    sigint_suite = None
 
 # Provide top-level access to frequently imported modules
 for _mod in (

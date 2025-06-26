@@ -247,7 +247,6 @@ def export_map_kml(
     compute_position: bool = False,
 ) -> None:
     """Export GPS track, APs and BT devices to ``path`` as KML or KMZ."""
-
     root = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
     doc = ET.SubElement(root, "Document")
 

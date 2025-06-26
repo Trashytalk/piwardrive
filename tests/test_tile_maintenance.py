@@ -33,7 +33,9 @@ class DummyScheduler:
     def __init__(self) -> None:
         self.scheduled: list[tuple[str, int]] = []
 
-    def schedule(self, name: str, cb: any, interval: int) -> None:
+    from typing import Any
+
+    def schedule(self, name: str, cb: Any, interval: int) -> None:
         self.scheduled.append((name, interval))
         cb(0)
 

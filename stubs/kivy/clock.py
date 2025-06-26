@@ -3,6 +3,7 @@
 
 class DummyEvent:
     """Placeholder for scheduled events."""
+
     def cancel(self):
         """No-op used by tests."""
         pass
@@ -10,6 +11,7 @@ class DummyEvent:
 
 class Clock:
     """Simplified clock implementation used in headless tests."""
+
     @staticmethod
     def schedule_interval(callback, interval):
         """Return a dummy event for periodic callbacks."""
@@ -34,7 +36,7 @@ class Clock:
 
 
 def mainthread(func):
-    """Decorator returning ``func`` unchanged for tests."""
+    """Return ``func`` unchanged for tests."""
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
     return wrapper

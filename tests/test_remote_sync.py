@@ -7,10 +7,10 @@ import pytest
 
 # stub aiohttp before importing module
 aiohttp_mod = ModuleType('aiohttp')
-aiohttp_mod.ClientSession = object
-aiohttp_mod.ClientTimeout = lambda *a, **k: None
-aiohttp_mod.ClientError = Exception
-aiohttp_mod.FormData = lambda: type('FormData', (), {'add_field': lambda *a, **k: None})()
+aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
+aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
+aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
+aiohttp_mod.FormData = lambda: type('FormData', (), {'add_field': lambda *a, **k: None})()  # type: ignore[attr-defined]
 sys.modules['aiohttp'] = aiohttp_mod
 
 from piwardrive import remote_sync

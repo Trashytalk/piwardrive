@@ -8,9 +8,9 @@ import asyncio
 from types import ModuleType
 
 aiohttp_mod = ModuleType('aiohttp')
-aiohttp_mod.ClientSession = object
-aiohttp_mod.ClientTimeout = lambda *a, **k: None
-aiohttp_mod.ClientError = Exception
+aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
+aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
+aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules['aiohttp'] = aiohttp_mod
 from piwardrive import diagnostics  # noqa: E402
 from piwardrive.scheduler import PollScheduler

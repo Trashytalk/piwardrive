@@ -5,7 +5,7 @@ import shlex
 import subprocess
 import asyncio
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 from piwardrive.sigint_suite.models import WifiNetwork
 from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
@@ -14,11 +14,11 @@ from piwardrive import orientation_sensors
 logger = logging.getLogger(__name__)
 
 
-def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def _vendor_hook(records: List[Dict[str, Union[str, float]]]) -> List[Dict[str, Union[str, float]]]:
     """Add vendor names based on BSSID prefixes."""
     for rec in records:
         bssid = rec.get("bssid")
-        vendor = lookup_vendor(bssid)
+        vendor = cached_lookup_vendor(bssid)
         if vendor:
             rec["vendor"] = vendor
     return records
@@ -32,9 +32,9 @@ def scan_wifi(
     iwlist_cmd: Optional[str] = None,
     priv_cmd: Optional[str] = None,
     timeout: Optional[int] = None,
-) -> List[Dict[str, str]]:
+) -> List[WifiNetwork]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
-    iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
+    iwlist_cmd = str(iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist"))
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
     cmd: List[str] = []
@@ -54,9 +54,9 @@ def scan_wifi(
         return []
 
     heading = orientation_sensors.get_heading()
-    records: List[Dict[str, str]] = []
+    records: List[Dict[str, Union[str, float]]] = []
 
-    current: Dict[str, str] = {}
+    current: Dict[str, Union[str, float]] = {}
     enc_lines: List[str] = []
 
     for line in output.splitlines():
@@ -123,7 +123,6 @@ async def async_scan_wifi(
     timeout: int | None = None,
 ) -> List[WifiNetwork]:
     """Asynchronously scan for Wi-Fi networks using ``iwlist``."""
-
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
@@ -149,8 +148,8 @@ async def async_scan_wifi(
 
     heading = orientation_sensors.get_heading()
 
-    records: List[Dict[str, str]] = []
-    current: Dict[str, str] = {}
+    records: List[Dict[str, Union[str, float]]] = []
+    current: Dict[str, Union[str, float]] = {}
     for line in output.splitlines():
         line = line.strip()
         if line.startswith("Cell"):
@@ -169,7 +168,7 @@ async def async_scan_wifi(
         elif "Address" in line:
             bssid = line.split("Address:")[-1].strip()
             current["bssid"] = bssid
-            vendor = lookup_vendor(bssid)
+            vendor = cached_lookup_vendor(bssid)
             if vendor:
                 current["vendor"] = vendor
         elif "Frequency" in line:

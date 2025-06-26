@@ -16,6 +16,19 @@ def _dummy_modules(monkeypatch):
     yield
 
 
+from types import ModuleType
+
+modules = {
+    "piwardrive.sigint_suite.models": SimpleNamespace(BluetoothDevice=object),
+    "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
+    "aiohttp": SimpleNamespace(),
+}
+for name, mod in modules.items():
+    module = ModuleType(name)
+    module.__dict__.update(mod.__dict__)
+    sys.modules[name] = module
+
+
 def test_tile_maintenance_cli(monkeypatch):
     called = {}
 
