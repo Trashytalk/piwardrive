@@ -1,36 +1,12 @@
 """Launch the web UI and open Chromium in kiosk mode."""
-import argparse
-import shutil
-import subprocess
-import time
-from typing import Sequence
+from __future__ import annotations
 
-DEFAULT_URL = "http://localhost:8000"
+import os
+import sys
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
-def main(argv: Sequence[str] | None = None) -> None:
-    """Start ``piwardrive-webui`` and open Chromium in kiosk mode."""
-    parser = argparse.ArgumentParser(
-        description="Start the API server and open Chromium in kiosk mode"
-    )
-    parser.add_argument(
-        "--url", default=DEFAULT_URL, help="dashboard URL to open"
-    )
-    parser.add_argument(
-        "--delay", type=float, default=2.0, help="seconds to wait for the server"
-    )
-    args = parser.parse_args(list(argv) if argv is not None else None)
-
-    proc = subprocess.Popen(["piwardrive-webui"])
-    try:
-        time.sleep(args.delay)
-        browser = shutil.which("chromium-browser") or shutil.which("chromium")
-        if browser is None:
-            raise FileNotFoundError("Chromium browser not found")
-        subprocess.run([browser, "--kiosk", args.url], check=True)
-    finally:
-        proc.terminate()
-
+from piwardrive.cli.kiosk import main
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation
     main()

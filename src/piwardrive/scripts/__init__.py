@@ -11,9 +11,11 @@ import sys
 # ``piwardrive.scripts.tile_maintenance_cli``.  Compute the correct path by
 # navigating four directories upwards from this file to reach the repository
 # root and then appending ``scripts``.
+PACKAGE_DIR = os.path.dirname(__file__)
 SCRIPTS_DIR = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "scripts")
+    os.path.join(PACKAGE_DIR, "..", "..", "..", "scripts")
 )
-if SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, SCRIPTS_DIR)
-__path__ = [SCRIPTS_DIR]
+for _p in (PACKAGE_DIR, SCRIPTS_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+__path__ = [PACKAGE_DIR, SCRIPTS_DIR]
