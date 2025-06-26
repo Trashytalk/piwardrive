@@ -2,10 +2,7 @@
 
 import logging
 from typing import Any
-from kivy.clock import Clock
-from kivy.metrics import dp
-from kivymd.uix.label import MDLabel
-from kivymd.uix.card import MDCard
+from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
 from piwardrive.localization import _
 
 from .base import DashboardWidget
@@ -35,13 +32,10 @@ class SignalStrengthWidget(DashboardWidget):
             aps, _ = result
             avg = get_avg_rssi(aps)
 
-            def _set(_dt: float) -> None:
-                if avg is not None:
-                    self.label.text = f"RSSI: {avg:.1f} dBm"
-                else:
-                    self.label.text = "RSSI: N/A"
-
-            Clock.schedule_once(_set, 0)
+            if avg is not None:
+                self.label.text = f"RSSI: {avg:.1f} dBm"
+            else:
+                self.label.text = "RSSI: N/A"
 
         try:
             run_async_task(fetch_kismet_devices_async(), _apply)

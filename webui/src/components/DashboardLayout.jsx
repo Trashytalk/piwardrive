@@ -5,6 +5,8 @@ import HandshakeCount from './HandshakeCount.jsx';
 import SignalStrength from './SignalStrength.jsx';
 import NetworkThroughput from './NetworkThroughput.jsx';
 import CPUTempGraph from './CPUTempGraph.jsx';
+import LoRaScan from './LoRaScan.jsx';
+import DBStats from './DBStats.jsx';
 import GPSStatus from './GPSStatus.jsx';
 import StorageUsage from './StorageUsage.jsx';
 import DiskUsageTrend from './DiskUsageTrend.jsx';
@@ -22,6 +24,8 @@ const COMPONENTS = {
   SignalStrengthWidget: SignalStrength,
   NetworkThroughputWidget: NetworkThroughput,
   CPUTempGraphWidget: CPUTempGraph,
+  LoRaScanWidget: LoRaScan,
+  DBStatsWidget: DBStats,
   GPSStatusWidget: GPSStatus,
   StorageUsageWidget: StorageUsage,
   DiskUsageTrendWidget: DiskUsageTrend,
@@ -29,7 +33,6 @@ const COMPONENTS = {
   DBStatsWidget: DBStats,
   HealthStatusWidget: HealthStatus,
   HealthAnalysisWidget: HealthAnalysis,
-  LoRaScanWidget: LoRaScan,
   LogViewer: LogViewer,
 };
 

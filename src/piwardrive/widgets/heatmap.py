@@ -6,11 +6,12 @@ import logging
 import tempfile
 from typing import Any
 
-from kivy.app import App
-from kivy.metrics import dp
-from kivy.uix.image import Image
-from kivymd.uix.card import MDCard
-from kivymd.uix.label import MDLabel
+from piwardrive.simpleui import (
+    dp,
+    Image,
+    Card as MDCard,
+    Label as MDLabel,
+)
 
 from .base import DashboardWidget
 from piwardrive.heatmap import histogram, save_png
@@ -35,9 +36,6 @@ class HeatmapWidget(DashboardWidget):
         self.add_widget(self.card)
         self._tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
         self._event = f"heatmap_{id(self)}"
-        App.get_running_app().scheduler.schedule(
-            self._event, lambda dt: self.update(), self.update_interval
-        )
         self.update()
 
     def update(self) -> None:  # pragma: no cover - GUI updates

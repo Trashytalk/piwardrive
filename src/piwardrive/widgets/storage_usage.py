@@ -2,9 +2,7 @@
 
 import logging
 from typing import Any
-from kivy.metrics import dp
-from kivymd.uix.label import MDLabel
-from kivymd.uix.card import MDCard
+from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
 from piwardrive.localization import _
 
 from .base import DashboardWidget

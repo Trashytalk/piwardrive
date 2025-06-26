@@ -2,9 +2,6 @@
 
 from typing import Any
 
-from kivy.app import App
-from kivy.animation import Animation
-from kivy_garden.graph import Graph, LinePlot
 from piwardrive.localization import _
 
 from .base import DashboardWidget
@@ -21,24 +18,7 @@ class CPUTempGraphWidget(DashboardWidget):
         self.max_points = max_points
         self.index: int = 0
         self.data: list[tuple[int, float]] = []
-        self.plot = LinePlot(color=[1, 0, 0, 1], line_width=1.5)
-        self.graph = Graph(
-            xlabel=_("samples"),
-            ylabel="°C",
-            x_ticks_minor=5,
-            x_grid=True,
-            y_grid=True,
-            ymin=0,
-            ymax=100,
-            xmin=0,
-            xmax=self.max_points,
-        )
-        self.graph.add_plot(self.plot)
-        self.add_widget(self.graph)
         self._event_name: str = f"cpu_temp_{id(self)}"
-        App.get_running_app().scheduler.schedule(
-            self._event_name, lambda dt: self.update(), self.update_interval
-        )
         self.update()
 
     def update(self) -> None:
@@ -50,9 +30,3 @@ class CPUTempGraphWidget(DashboardWidget):
         self.data.append((self.index, temp))
         if len(self.data) > self.max_points:
             self.data.pop(0)
-        self.plot.points = self.data
-        self.graph.xmax = max(self.index, self.max_points)
-        # fade in new data subtly
-        self.graph.opacity = 0.7
-        Animation.cancel_all(self.graph)
-        Animation(opacity=1, duration=0.2).start(self.graph)
