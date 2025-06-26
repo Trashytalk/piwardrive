@@ -24,7 +24,7 @@ if requests is not None:
 else:  # pragma: no cover - unit tests stub this out
     HTTP_SESSION = None  # type: ignore
 
-from sigint_suite import paths
+from piwardrive.sigint_suite import paths
 
 # Persist the OUI registry under the main configuration directory
 OUI_PATH = paths.OUI_PATH

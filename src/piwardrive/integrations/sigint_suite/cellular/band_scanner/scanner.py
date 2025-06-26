@@ -7,8 +7,8 @@ import asyncio
 from typing import List, Optional
 
 
-from sigint_suite.cellular.parsers import parse_band_output
-from sigint_suite.models import BandRecord
+from piwardrive.sigint_suite.cellular.parsers import parse_band_output
+from piwardrive.sigint_suite.models import BandRecord
 
 logger = logging.getLogger(__name__)
 

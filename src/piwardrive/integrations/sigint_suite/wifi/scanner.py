@@ -6,9 +6,9 @@ import subprocess
 import asyncio
 
 from typing import Dict, List, Optional
-from sigint_suite.enrichment import lookup_vendor
-from sigint_suite.models import WifiNetwork
-from sigint_suite.hooks import apply_post_processors, register_post_processor
+from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
+from piwardrive.sigint_suite.models import WifiNetwork
+from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
 from piwardrive import orientation_sensors
 
 logger = logging.getLogger(__name__)
