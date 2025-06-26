@@ -42,7 +42,7 @@ _MIGRATIONS: list[Migration] = []
 
 
 async def _migration_1(conn: aiosqlite.Connection) -> None:
-    """Initial schema creation."""
+    """Create initial database schema."""
     await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS health_records (
@@ -300,7 +300,6 @@ async def load_ap_cache() -> list[dict[str, Any]]:
 
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
-
     path = _db_path()
 
     def _work() -> dict[str, int]:

@@ -1,9 +1,11 @@
-"""Entry point for :mod:`piwardrive.service` when running from the repo.
+"""
+Entry point for :mod:`piwardrive.service` when running from the repo.
 
 This stub mirrors the real module located under ``src/piwardrive`` but ensures
 that tests can monkeypatch attributes on ``service`` and have those patches take
 effect within ``piwardrive.service``.  When the package isn't installed, the
-``src`` directory is added to ``sys.path`` so imports succeed."""
+``src`` directory is added to ``sys.path`` so imports succeed.
+"""
 
 from __future__ import annotations
 

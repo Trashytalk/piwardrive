@@ -123,7 +123,6 @@ async def async_scan_wifi(
     timeout: int | None = None,
 ) -> List[WifiNetwork]:
     """Asynchronously scan for Wi-Fi networks using ``iwlist``."""
-
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
