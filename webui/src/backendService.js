@@ -19,3 +19,8 @@ export async function fetchSigintData(type) {
   const resp = await fetch(`/export/${type}?fmt=json`);
   return await resp.json();
 }
+
+export async function fetchStatus(limit = 5) {
+  const resp = await fetch(`/status?limit=${limit}`);
+  return await resp.json();
+}
