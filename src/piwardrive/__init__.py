@@ -31,14 +31,18 @@ except Exception:  # pragma: no cover - missing optional modules
     sigint_suite = None
 
 # Provide top-level access to frequently imported modules
+# Import commonly used modules and expose them at the package root so that
+# ``import <module>`` works both when the package is installed and when it is
+# used directly from the repository.  ``service`` depends on ``config`` and
+# ``sync`` during import, therefore those modules must be loaded first.
 for _mod in (
     "persistence",
     "utils",
     "vehicle_sensors",
     "orientation_sensors",
-    "service",
     "config",
     "sync",
+    "service",
     "diagnostics",
     "exception_handler",
 ):
