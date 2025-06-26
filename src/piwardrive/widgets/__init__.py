@@ -3,7 +3,7 @@
 Lazy loading wrapper for widget classes with plugin support.
 """
 
-from importlib import import_module, util
+from importlib import import_module, util, machinery
 from pathlib import Path
 import sys
 from typing import Any, Dict, Iterable, Optional
@@ -67,17 +67,28 @@ __all__: list[str] = [
 def iter_plugin_paths(plugin_dir: Path) -> Iterable[tuple[str, Path]]:
     """Yield module name and file path for every plugin candidate."""
     for path in plugin_dir.iterdir():
-        mod_name = path.stem if path.is_file() else path.name
         load_path: Path | None = None
-        if path.is_file() and path.suffix in {".py", ".so", ".pyd"}:
-            load_path = path
+        mod_name = path.name
+        if path.is_file():
+            if path.suffix == ".py":
+                mod_name = path.stem
+                load_path = path
+            else:
+                for suf in machinery.EXTENSION_SUFFIXES:
+                    if mod_name.endswith(suf):
+                        mod_name = mod_name[: -len(suf)]
+                        load_path = path
+                        break
         elif path.is_dir():
+            mod_name = path.name
             if (path / "__init__.py").exists():
                 load_path = path / "__init__.py"
             else:
-                so_files = list(path.glob("*.so")) + list(path.glob("*.pyd"))
-                if so_files:
-                    load_path = so_files[0]
+                for suf in machinery.EXTENSION_SUFFIXES:
+                    so_files = list(path.glob(f"*{suf}"))
+                    if so_files:
+                        load_path = so_files[0]
+                        break
         if load_path is not None:
             yield mod_name, load_path
 
