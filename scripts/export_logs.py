@@ -1,7 +1,11 @@
 """Module export_logs."""
 import argparse
 import asyncio
-from piwardrive.main import PiWardriveApp
+
+try:  # allow tests to substitute a lightweight main module
+    from main import PiWardriveApp  # type: ignore
+except Exception:  # pragma: no cover - fallback
+    from piwardrive.main import PiWardriveApp
 
 
 def main(argv: list[str] | None = None) -> None:
