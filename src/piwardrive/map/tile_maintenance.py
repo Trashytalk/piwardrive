@@ -10,6 +10,17 @@ from piwardrive import utils
 from typing import Optional
 
 try:
+    _run_async = utils.run_async_task
+except AttributeError:  # pragma: no cover - core utils missing
+    def _run_async(coro) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(coro)
+        else:
+            loop.create_task(coro)
+
+try:
     from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
 except Exception:  # pragma: no cover - watchdog optional for tests
@@ -147,7 +158,7 @@ class TileMaintainer:
         if interval > 0:
             scheduler.schedule(
                 "tile_maintenance",
-                lambda dt: utils.run_async_task(self._run()),
+                lambda dt: _run_async(self._run()),
                 interval,
             )
 
@@ -187,4 +198,4 @@ class TileMaintainer:
                 finally:
                     self._running = False
 
-            utils.run_async_task(_runner())
+            _run_async(_runner())
