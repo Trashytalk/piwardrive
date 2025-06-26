@@ -5,13 +5,16 @@ import shlex
 import subprocess
 import asyncio
 
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 from piwardrive.sigint_suite.models import WifiNetwork
 from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
 from piwardrive import orientation_sensors
 
 logger = logging.getLogger(__name__)
+
+# expose lookup_vendor for tests, defaulting to cached_lookup_vendor
+lookup_vendor = cached_lookup_vendor
 
 
 def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
@@ -25,6 +28,63 @@ def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
 
 
 register_post_processor("wifi", _vendor_hook)
+
+
+def _parse_iwlist_output(output: str, heading: float | None) -> Iterable[Dict[str, str]]:
+    """Yield dictionaries parsed from ``iwlist`` command output."""
+    current: Dict[str, str] = {}
+    enc_lines: List[str] = []
+
+    for line in output.splitlines():
+        line = line.strip()
+        if line.startswith("Cell"):
+            if current:
+                if heading is not None:
+                    current["heading"] = heading
+                if enc_lines:
+                    if "encryption" in current:
+                        current["encryption"] = (
+                            f"{current['encryption']} {' '.join(enc_lines)}"
+                        ).strip()
+                    else:
+                        current["encryption"] = " ".join(enc_lines).strip()
+                yield current
+            bssid = None
+            if "Address:" in line:
+                bssid = line.split("Address:")[-1].strip()
+            current = {"cell": line}
+            if bssid:
+                current["bssid"] = bssid
+            enc_lines = []
+        elif "ESSID" in line:
+            current["ssid"] = line.split(":", 1)[-1].strip('"')
+        elif line.startswith("Encryption key:"):
+            current["encryption"] = line.split("Encryption key:")[-1].strip()
+        elif line.startswith("IE:"):
+            enc_lines.append(line.split("IE:", 1)[-1].strip())
+        elif "Address" in line:
+            current["bssid"] = line.split("Address:")[-1].strip()
+        elif "Frequency" in line:
+            current["frequency"] = line.split("Frequency:")[-1].split()[0]
+            if "(Channel" in line:
+                ch = line.split("(Channel")[-1].split(")")[0].strip()
+                current["channel"] = ch
+        elif line.startswith("Channel:"):
+            current["channel"] = line.split("Channel:")[-1].strip()
+        elif "Quality" in line:
+            current["quality"] = line.split("Quality=")[-1].split()[0]
+
+    if current:
+        if heading is not None:
+            current["heading"] = heading
+        if enc_lines:
+            if "encryption" in current:
+                current["encryption"] = (
+                    f"{current['encryption']} {' '.join(enc_lines)}"
+                ).strip()
+            else:
+                current["encryption"] = " ".join(enc_lines).strip()
+        yield current
 
 
 def scan_wifi(
@@ -54,64 +114,7 @@ def scan_wifi(
         return []
 
     heading = orientation_sensors.get_heading()
-    records: List[Dict[str, str]] = []
-
-    current: Dict[str, str] = {}
-    enc_lines: List[str] = []
-
-    for line in output.splitlines():
-        line = line.strip()
-        if line.startswith("Cell"):
-            if current:
-                if heading is not None:
-                    current["heading"] = heading
-                if enc_lines:
-                    if "encryption" in current:
-                        current["encryption"] = (
-                            f"{current['encryption']} {' '.join(enc_lines)}"
-                        ).strip()
-                    else:
-                        current["encryption"] = " ".join(enc_lines).strip()
-                records.append(current)
-            bssid = None
-            if "Address:" in line:
-                bssid = line.split("Address:")[-1].strip()
-            current = {"cell": line}
-            if bssid:
-                current["bssid"] = bssid
-            enc_lines = []
-        elif "ESSID" in line:
-            current["ssid"] = line.split(":", 1)[-1].strip('"')
-        elif line.startswith("Encryption key:"):
-            current["encryption"] = line.split("Encryption key:")[-1].strip()
-        elif line.startswith("IE:"):
-            enc_lines.append(line.split("IE:", 1)[-1].strip())
-        elif "ESSID" in line:
-            current["ssid"] = line.split(":", 1)[-1].strip('"')
-        elif "Address" in line:
-            current["bssid"] = line.split("Address:")[-1].strip()
-        elif "Frequency" in line:
-            current["frequency"] = line.split("Frequency:")[-1].split()[0]
-            if "(Channel" in line:
-                ch = line.split("(Channel")[-1].split(")")[0].strip()
-                current["channel"] = ch
-        elif line.startswith("Channel:"):
-            current["channel"] = line.split("Channel:")[-1].strip()
-        elif "Quality" in line:
-            current["quality"] = line.split("Quality=")[-1].split()[0]
-
-    if current:
-        if heading is not None:
-            current["heading"] = heading
-        if enc_lines:
-            if "encryption" in current:
-                current["encryption"] = (
-                    f"{current['encryption']} {' '.join(enc_lines)}"
-                ).strip()
-            else:
-                current["encryption"] = " ".join(enc_lines).strip()
-        records.append(current)
-
+    records = [rec for rec in _parse_iwlist_output(output, heading)]
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
 
@@ -149,37 +152,7 @@ async def async_scan_wifi(
 
     heading = orientation_sensors.get_heading()
 
-    records: List[Dict[str, str]] = []
-    current: Dict[str, str] = {}
-    for line in output.splitlines():
-        line = line.strip()
-        if line.startswith("Cell"):
-            if current:
-                if heading is not None:
-                    current["heading"] = heading
-                records.append(current)
-            bssid = None
-            if "Address:" in line:
-                bssid = line.split("Address:")[-1].strip()
-            current = {"cell": line}
-            if bssid:
-                current["bssid"] = bssid
-        elif "ESSID" in line:
-            current["ssid"] = line.split(":", 1)[-1].strip('"')
-        elif "Address" in line:
-            bssid = line.split("Address:")[-1].strip()
-            current["bssid"] = bssid
-            vendor = lookup_vendor(bssid)
-            if vendor:
-                current["vendor"] = vendor
-        elif "Frequency" in line:
-            current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
-        elif "Quality" in line:
-            current["quality"] = line.split("Quality=")[-1].split(" ")[0]
-    if current:
-        if heading is not None:
-            current["heading"] = heading
-        records.append(current)
+    records = [rec for rec in _parse_iwlist_output(output, heading)]
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
 
