@@ -1107,6 +1107,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
 
 
 __all__ = [
+    "App",
     "ErrorCode",
     "network_scanning_disabled",
     "shutdown_async_loop",
@@ -1145,4 +1146,5 @@ __all__ = [
     "polygon_area",
     "point_in_polygon",
     "load_kml",
+    "HTTP_SESSION",
 ]

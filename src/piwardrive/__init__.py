@@ -7,7 +7,10 @@ import sys
 # Expose ``sigint_suite`` as a top-level module for backwards compatibility
 try:  # pragma: no cover - optional dependency
     sigint_suite = import_module("piwardrive.integrations.sigint_suite")
+    # Expose as ``sigint_suite`` and ``piwardrive.sigint_suite`` for backwards
+    # compatibility with older paths used throughout the tests.
     sys.modules.setdefault("sigint_suite", sigint_suite)
+    sys.modules.setdefault(__name__ + ".sigint_suite", sigint_suite)
 except Exception:  # pragma: no cover - missing optional modules
     sigint_suite = None
 
@@ -20,6 +23,8 @@ for _mod in (
     "service",
     "config",
     "sync",
+    "diagnostics",
+    "exception_handler",
 ):
     try:  # pragma: no cover - optional imports may fail
         module = import_module(f"piwardrive.{_mod}")

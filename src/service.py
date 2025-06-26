@@ -32,3 +32,15 @@ def _proxy(name: str):
 # module's attributes.  This allows tests to patch ``service.load_recent_health``
 # without also patching ``piwardrive.service.load_recent_health``.
 _p.load_recent_health = _proxy("load_recent_health")  # type: ignore[attr-defined]
+
+"""Compatibility wrapper for :mod:`piwardrive.service`."""
+
+from importlib import import_module
+
+try:  # pragma: no cover - optional dependency loading
+    _service = import_module("piwardrive.service")
+except Exception:  # pragma: no cover - allow import without extras
+    _service = None
+
+if _service is not None:
+    globals().update(_service.__dict__)
