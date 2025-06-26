@@ -20,6 +20,7 @@ for _mod in (
     "utils",
     "vehicle_sensors",
     "orientation_sensors",
+    "service",
     "config",
     "sync",
     "diagnostics",

@@ -20,8 +20,8 @@ from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 
 try:  # pragma: no cover - optional dependency
     from piwardrive.sigint_suite.models import BluetoothDevice
-except Exception:  # pragma: no cover - missing optional module
-    BluetoothDevice = object  # type: ignore[misc,assignment]
+except Exception:  # pragma: no cover - fallback when sigint_suite is missing
+    BluetoothDevice = dict  # type: ignore[misc]
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
@@ -42,11 +42,11 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
-import requests_cache
-try:  # pragma: no cover - optional dependency
-    import aiohttp
-except Exception:  # pragma: no cover - allow running without aiohttp
-    aiohttp = None  # type: ignore
+try:  # pragma: no cover - optional caching
+    import requests_cache
+except Exception:  # pragma: no cover - if missing use plain requests
+    requests_cache = None  # type: ignore
+import aiohttp
 from piwardrive import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
@@ -86,7 +86,14 @@ HANDSHAKE_CACHE_SECONDS = 10.0  # default TTL in seconds
 _HANDSHAKE_CACHE: dict[str, tuple[float, int]] = {}
 
 
-HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
+if requests_cache is not None:
+    HTTP_SESSION = requests_cache.CachedSession(
+        expire_after=SAFE_REQUEST_CACHE_SECONDS
+    )
+else:  # pragma: no cover - fallback without caching
+    import requests
+
+    HTTP_SESSION = requests.Session()
 
 
 def _prune_safe_request_cache(now: float) -> None:
