@@ -59,7 +59,8 @@ Return to the repository root and run the bundled server. It serves the API unde
 
 ```bash
 cd ..
-python -m piwardrive.webui_server
+npm start  # launches the Node server
+# python -m piwardrive.webui_server  # alternative Python version
 ```
 
 Open a browser and navigate to `http://localhost:8000`. You should see the dashboard showing live system metrics. The server listens on all interfaces so other devices on the network may connect using the Pi's IP address.
