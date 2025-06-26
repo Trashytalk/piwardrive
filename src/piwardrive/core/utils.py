@@ -39,7 +39,10 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
-import requests_cache
+try:
+    import requests_cache
+except Exception:  # pragma: no cover - optional dependency
+    requests_cache = None  # type: ignore
 import aiohttp
 from piwardrive import persistence
 
@@ -80,7 +83,16 @@ HANDSHAKE_CACHE_SECONDS = 10.0  # default TTL in seconds
 _HANDSHAKE_CACHE: dict[str, tuple[float, int]] = {}
 
 
-HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
+if requests_cache is not None:
+    HTTP_SESSION = requests_cache.CachedSession(
+        expire_after=SAFE_REQUEST_CACHE_SECONDS
+    )
+else:  # pragma: no cover - fallback without requests_cache
+    class _DummySession:
+        def get(self, *args: Any, **kwargs: Any) -> Any:
+            return requests.get(*args, **kwargs)
+
+    HTTP_SESSION = _DummySession()
 
 
 def _prune_safe_request_cache(now: float) -> None:

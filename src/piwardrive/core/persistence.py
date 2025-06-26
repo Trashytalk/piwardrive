@@ -155,7 +155,7 @@ class DashboardSettings:
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
     """Create or migrate the SQLite schema to the latest version."""
-            await conn.execute("UPDATE schema_version SET version = ?", (current,))
+    await conn.execute("CREATE TABLE IF NOT EXISTS schema_version (version INTEGER)")
     cur = await conn.execute("SELECT version FROM schema_version")
     row = await cur.fetchone()
     current = row["version"] if row else 0
@@ -170,9 +170,7 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
             )
             row = {"version": current}  # type: ignore[assignment]
         else:
-            await conn.execute(
-                "UPDATE schema_version SET version = ?", (current,)
-            )
+            await conn.execute("UPDATE schema_version SET version = ?", (current,))
 
     await conn.commit()
 
@@ -261,7 +259,7 @@ async def load_app_state() -> AppState:
 
 
 async def save_dashboard_settings(settings: DashboardSettings) -> None:
-   """Persist dashboard layout to ``config.json``."""
+    """Persist dashboard layout to ``config.json``."""
     cfg = config.load_config()
     cfg.dashboard_layout = settings.layout
     config.save_config(cfg)
@@ -302,18 +300,26 @@ async def load_ap_cache() -> list[dict[str, Any]]:
 
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-        " AND name NOT LIKE 'sqlite_%'"
-    )
-    tables = [row["name"] for row in await cur.fetchall()]
-    result: dict[str, int] = {}
-    for name in tables:
-        cur = await conn.execute(f"SELECT COUNT(*) as cnt FROM {name}")
-        row = await cur.fetchone()
-        result[name] = int(row["cnt"]) if row else 0
-    return result
+
+    path = _db_path()
+
+    def _work() -> dict[str, int]:
+        result: dict[str, int] = {}
+        if not os.path.exists(path):
+            return result
+        import sqlite3
+
+        with sqlite3.connect(path) as db:
+            cur = db.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            )
+            tables = [row[0] for row in cur.fetchall()]
+            for name in tables:
+                row = db.execute(f"SELECT COUNT(*) FROM {name}").fetchone()
+                result[name] = int(row[0]) if row else 0
+        return result
+
+    return await asyncio.to_thread(_work)
 
 
 async def vacuum() -> None:
