@@ -3,7 +3,6 @@ from unittest import mock
 from typing import Any
 import importlib
 import sys
-import os
 
 
 def load_handler(monkeypatch: Any) -> ModuleType:
@@ -24,8 +23,9 @@ def load_handler(monkeypatch: Any) -> ModuleType:
     base.ExceptionHandler = DummyHandler
     monkeypatch.setitem(sys.modules, 'kivy.base', base)
 
-    if 'exception_handler' in sys.modules:
-        monkeypatch.delitem(sys.modules, 'exception_handler', raising=False)
+    for mod_name in ('exception_handler', 'piwardrive.exception_handler'):
+        if mod_name in sys.modules:
+            monkeypatch.delitem(sys.modules, mod_name, raising=False)
 
     return importlib.import_module('exception_handler')
 
@@ -40,3 +40,15 @@ def test_install_adds_handler(monkeypatch):
     with mock.patch('logging.exception') as log_exc:
         handler.handle_exception(RuntimeError('boom'))
         log_exc.assert_called()
+
+
+def test_install_only_once(monkeypatch):
+    handler_mod = load_handler(monkeypatch)
+    manager = handler_mod.ExceptionManager
+    manager.handlers = []
+    handler_mod.install()
+    handler_mod.install()
+    count = sum(
+        isinstance(h, handler_mod.LogExceptionHandler) for h in manager.handlers
+    )
+    assert count == 1
