@@ -1,8 +1,16 @@
-"""Module service_status."""
+"""Command line helper for checking systemd service status."""
 import argparse
 import json
+from types import SimpleNamespace
 
-from piwardrive import diagnostics
+
+def _get_service_statuses(services=None):
+    """Import :mod:`piwardrive.diagnostics` lazily and get statuses."""
+    from piwardrive import diagnostics as _diag
+    return _diag.get_service_statuses(services)
+
+
+diagnostics = SimpleNamespace(get_service_statuses=_get_service_statuses)
 
 
 def main(argv: list[str] | None = None) -> None:

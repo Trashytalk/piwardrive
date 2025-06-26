@@ -3,11 +3,18 @@ import os
 import sys
 from pathlib import Path
 
-# Add the top level ``scripts`` directory to ``sys.path`` so that test modules
-# can import ``piwardrive.scripts.*``.  ``__file__`` is
-# ``src/piwardrive/scripts/__init__.py`` so ``parents[3]`` resolves to the
-# repository root.
-SCRIPTS_DIR = str(Path(__file__).resolve().parents[3] / "scripts")
+# ``piwardrive.scripts`` acts as a thin wrapper around the top level ``scripts``
+# directory that contains the actual CLI implementations.  Historically the
+# project used a `src` layout which places the package under ``src/piwardrive``
+# while CLI utilities live in ``scripts`` at the repository root.  The previous
+# path calculation accidentally pointed to ``src/scripts`` which does not exist
+# resulting in ``ModuleNotFoundError`` when importing submodules such as
+# ``piwardrive.scripts.tile_maintenance_cli``.  Compute the correct path by
+# navigating four directories upwards from this file to reach the repository
+# root and then appending ``scripts``.
+SCRIPTS_DIR = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "scripts")
+)
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 __path__ = [SCRIPTS_DIR]
