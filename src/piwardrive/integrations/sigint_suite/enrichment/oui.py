@@ -7,7 +7,15 @@ import time
 from functools import lru_cache
 from typing import Dict, Optional
 
-from piwardrive.utils import HTTP_SESSION
+try:  # pragma: no cover - optional dependency
+    import requests  # type: ignore
+except Exception:  # pragma: no cover - missing dependency
+    requests = None  # type: ignore
+
+if requests is not None:
+    HTTP_SESSION = requests.Session()
+else:  # pragma: no cover - unit tests stub this out
+    HTTP_SESSION = None  # type: ignore
 
 from sigint_suite import paths
 
