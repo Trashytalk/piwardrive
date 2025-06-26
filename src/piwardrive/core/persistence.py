@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import time
-import json
 import aiosqlite
 from dataclasses import dataclass, asdict, field
 from typing import Any, List, Optional, Callable, Awaitable
@@ -311,7 +310,8 @@ async def get_table_counts() -> dict[str, int]:
 
         with sqlite3.connect(path) as db:
             cur = db.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+                "SELECT name FROM sqlite_master "
+                "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
             )
             tables = [row[0] for row in cur.fetchall()]
             for name in tables:

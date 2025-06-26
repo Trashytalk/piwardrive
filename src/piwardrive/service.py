@@ -28,11 +28,15 @@ except Exception:
             "websocket": lambda *a, **k: (lambda f: f),
         },
     )
-    Depends = lambda *a, **k: None
+
+    def _noop(*_a, **_k) -> None:
+        return None
+
+    Depends = _noop
     HTTPException = type("HTTPException", (Exception,), {})
     WebSocket = object
     WebSocketDisconnect = Exception
-    Body = lambda *a, **k: None
+    Body = _noop
     Request = object
     StreamingResponse = Response = object
     HTTPBasic = type("HTTPBasic", (), {"__init__": lambda self, **k: None})
@@ -72,6 +76,15 @@ try:  # allow tests to provide a simplified utils module
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import utils as _utils
 
+import psutil
+import vehicle_sensors
+import config
+from sync import upload_data
+from piwardrive.gpsd_client import client as gps_client
+from piwardrive import orientation_sensors
+from piwardrive import export
+from piwardrive.config import CONFIG_DIR
+
 fetch_metrics_async = _utils.fetch_metrics_async
 get_avg_rssi = _utils.get_avg_rssi
 get_cpu_temp = _utils.get_cpu_temp
@@ -83,14 +96,6 @@ get_gps_accuracy = getattr(_utils, "get_gps_accuracy", lambda *_a, **_k: None)
 service_status_async = _utils.service_status_async
 run_service_cmd = getattr(_utils, "run_service_cmd", lambda *_a, **_k: None)
 async_tail_file = _utils.async_tail_file
-import psutil
-import vehicle_sensors
-import config
-from sync import upload_data
-from piwardrive.gpsd_client import client as gps_client
-from piwardrive import orientation_sensors
-from piwardrive import export
-from piwardrive.config import CONFIG_DIR
 
 
 security = HTTPBasic(auto_error=False)
@@ -182,6 +187,8 @@ async def list_widgets(_auth: None = Depends(_check_auth)) -> dict:
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
 # Alias without the "/api" prefix for mounting under ``/api``
+
+
 @app.get("/widgets")
 async def list_widgets_alias(_auth: None = Depends(_check_auth)) -> dict:
     return await list_widgets(_auth)
@@ -348,7 +355,7 @@ async def update_config_endpoint(
     updates: dict = Body(...),
     _auth: None = Depends(_check_auth),
 ) -> dict:
-    
+
     """Update configuration values and persist them."""
     cfg = config.load_config()
     data = asdict(cfg)
@@ -394,7 +401,9 @@ async def list_geofences_endpoint(_auth: None = Depends(_check_auth)) -> list:
 
 
 @app.post("/geofences")
-async def add_geofence_endpoint(data: dict = Body(...), _auth: None = Depends(_check_auth)) -> list:
+async def add_geofence_endpoint(
+    data: dict = Body(...), _auth: None = Depends(_check_auth)
+) -> list:
     """Add a new polygon to ``geofences.json``."""
     polys = _load_geofences()
     polys.append(
@@ -433,7 +442,9 @@ async def update_geofence_endpoint(
 
 
 @app.delete("/geofences/{name}")
-async def remove_geofence_endpoint(name: str, _auth: None = Depends(_check_auth)) -> dict:
+async def remove_geofence_endpoint(
+    name: str, _auth: None = Depends(_check_auth)
+) -> dict:
     """Delete ``name`` from ``geofences.json``."""
     polys = _load_geofences()
     for idx, poly in enumerate(polys):
@@ -659,5 +670,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     finally:
         from utils import shutdown_async_loop
-        
         shutdown_async_loop()

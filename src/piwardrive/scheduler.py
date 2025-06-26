@@ -10,9 +10,6 @@ from typing import Any, Awaitable, Callable, Dict
 ClockEvent = object
 
 
-from piwardrive import utils
-
-
 class PollScheduler:
     """Manage named periodic callbacks using ``asyncio``."""
 
@@ -21,7 +18,9 @@ class PollScheduler:
         self._next_runs: Dict[str, float] = {}
         self._durations: Dict[str, float] = {}
 
-    def schedule(self, name: str, callback: Callable[[float], Any], interval: float) -> None:
+    def schedule(
+        self, name: str, callback: Callable[[float], Any], interval: float
+    ) -> None:
         """Register ``callback`` to run every ``interval`` seconds."""
         self.cancel(name)
 

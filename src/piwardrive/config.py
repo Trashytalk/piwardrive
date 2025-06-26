@@ -1,1 +1,1 @@
-from .core.config import *
+from .core.config import *  # noqa: F401,F403

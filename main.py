@@ -7,13 +7,14 @@ SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from piwardrive.main import PiWardriveApp as _BaseApp
+from piwardrive.main import PiWardriveApp as _BaseApp  # noqa: E402
+from piwardrive import utils  # noqa: E402
 
 
 class PiWardriveApp(_BaseApp):
     """Thin wrapper that exposes :class:`~piwardrive.main.PiWardriveApp`."""
 
-    def control_service(self, svc: str, action: str) -> None:  # pragma: no cover - logic tested via wrapper
+    def control_service(self, svc: str, action: str) -> None:  # pragma: no cover
         """Run a systemctl command for a given service with retries."""
         import os
         import getpass as _getpass
