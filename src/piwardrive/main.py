@@ -155,6 +155,36 @@ class PiWardriveApp:
             utils.report_error(f"Failed to export logs: {exc}")
             return ""
 
+    async def export_log_bundle(
+        self, path: str | None = None, lines: int = 200
+    ) -> str:
+        """Write the last ``lines`` from each configured log to ``path``."""
+        from logconfig import DEFAULT_LOG_PATH
+        from piwardrive.security import sanitize_path
+        import zipfile
+
+        if path is None:
+            ts = int(time.time())
+            path = os.path.join(
+                os.path.expanduser("~"), f"piwardrive-log-bundle-{ts}.zip"
+            )
+
+        log_paths = [DEFAULT_LOG_PATH] + list(self.config_data.log_paths)
+
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                for p in log_paths:
+                    safe = sanitize_path(p)
+                    lines_text = "\n".join(utils.tail_file(safe, lines))
+                    zf.writestr(os.path.basename(safe), lines_text)
+            logging.info("Exported log bundle to %s", path)
+            return path
+        except Exception as exc:  # pragma: no cover - file errors
+            logging.exception("Failed to export log bundle: %s", exc)
+            utils.report_error(f"Failed to export log bundle: {exc}")
+            return ""
+
     def _auto_save(self, key: str, value: Any) -> None:
         """Update ``config_data`` and persist to disk."""
         if self._updating_config:
