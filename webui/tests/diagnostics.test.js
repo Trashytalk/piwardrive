@@ -1,9 +1,22 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Mock child_process before loading the module under test so that the
+// imported functions use the mocked implementation. This avoids errors
+// when spying on builtin modules in ESM mode.
+vi.mock('child_process', () => {
+  const execSync = vi.fn();
+  return { execSync, default: { execSync } };
+});
+
 import fs from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import * as childProcess from 'child_process';
+import { execSync } from 'child_process';
 import { rotateLog, runNetworkTest, listUsbDevices } from '../src/diagnostics.js';
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 describe('rotateLog', () => {
   it('compresses and rotates', () => {
@@ -23,29 +36,26 @@ describe('rotateLog', () => {
 
 describe('runNetworkTest', () => {
   it('uses cache on success', () => {
-    const spy = vi.spyOn(childProcess, 'execSync').mockReturnValue('');
+    execSync.mockReturnValue('');
     expect(runNetworkTest('localhost', 30)).toBe(true);
-    const calls = spy.mock.calls.length;
+    const calls = execSync.mock.calls.length;
     expect(runNetworkTest('localhost', 30)).toBe(true);
-    expect(spy.mock.calls.length).toBe(calls);
-    spy.mockRestore();
+    expect(execSync.mock.calls.length).toBe(calls);
   });
 
   it('handles failure', () => {
-    const spy = vi.spyOn(childProcess, 'execSync').mockImplementation(() => {
+    execSync.mockImplementation(() => {
       throw new Error('fail');
     });
     expect(runNetworkTest('localhost', 0)).toBe(false);
-    spy.mockRestore();
   });
 });
 
 describe('listUsbDevices', () => {
   it('returns empty on failure', () => {
-    const spy = vi.spyOn(childProcess, 'execSync').mockImplementation(() => {
+    execSync.mockImplementation(() => {
       throw new Error('boom');
     });
     expect(listUsbDevices()).toEqual([]);
-    spy.mockRestore();
   });
 });
