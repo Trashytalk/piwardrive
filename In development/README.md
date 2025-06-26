@@ -1,6 +1,6 @@
 # Browser-based Setup (Experimental)
 
-This directory contains prototypes for running PiWardrive in a self-hosted browser environment in place of the Kivy GUI.
+PiWardrive's default interface is a React dashboard served by ``piwardrive.webui_server``. This directory holds early prototypes for running PiWardrive in a self-hosted browser environment that replaced the original Kivy GUI.
 
 Two approaches are provided:
 
@@ -35,7 +35,7 @@ This uses a small React application built with Vite.
 
 ## MapLibre Prototype
 
-This lightweight framework mirrors the Kivy dashboard using plain HTML, Tailwind and MapLibre. Static files live in `web_gui/` and the FastAPI backend is defined in `web_api.py`.
+This lightweight framework mirrors the former Kivy dashboard using plain HTML, Tailwind and MapLibre. Static files live in `web_gui/` and the FastAPI backend is defined in `web_api.py`.
 
 Start it with:
 

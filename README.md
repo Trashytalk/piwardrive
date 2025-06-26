@@ -1,6 +1,10 @@
 # PiWardrive
 
-PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. A browser-based dashboard provides an optional GUI when the React frontend is built.
+PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
+
+```bash
+python -m piwardrive.webui_server
+```
 
 For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory.
 
@@ -332,7 +336,7 @@ docker run --device=/dev/ttyUSB0 --rm piwardrive
 * **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
 * **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
 * **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
-* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without the GUI.
+* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
