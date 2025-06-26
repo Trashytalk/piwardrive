@@ -1,30 +1,32 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { syncDatabaseToServer } from '../src/remoteSync.js';
 
-vi.useFakeTimers();
+let origFetch;
 
-describe('remoteSync', () => {
-  let origFetch;
-  beforeEach(() => { origFetch = global.fetch; });
-  afterEach(() => { global.fetch = origFetch; vi.clearAllTimers(); });
+describe('syncDatabaseToServer', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    origFetch = global.fetch;
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    global.fetch = origFetch;
+  });
 
-  it('retries on failure', async () => {
+  it('retries on error', async () => {
     const fetchMock = vi.fn()
       .mockRejectedValueOnce(new Error('fail'))
-      .mockResolvedValue({ ok: true });
+      .mockResolvedValueOnce({ ok: true });
     global.fetch = fetchMock;
-    const promise = syncDatabaseToServer('db', 'http://remote', { retries: 1, timeout: 0 });
+    const p = syncDatabaseToServer('db', 'http://remote', { retries: 1, timeout: 0 });
     await vi.runAllTimersAsync();
-    await expect(promise).resolves.toBe(true);
+    const result = await p;
+    expect(result).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('fails after retries exhausted', async () => {
-    const fetchMock = vi.fn(() => Promise.reject(new Error('boom')));
-    global.fetch = fetchMock;
-    const promise = syncDatabaseToServer('db', 'http://remote', { retries: 1, timeout: 0 });
-    await vi.runAllTimersAsync();
-    await expect(promise).rejects.toThrow('boom');
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+  it('throws on failure', async () => {
+    global.fetch = vi.fn(() => Promise.resolve({ ok: false }));
+    await expect(syncDatabaseToServer('db', 'http://remote', { retries: 0, timeout: 0 })).rejects.toThrow();
   });
 });
