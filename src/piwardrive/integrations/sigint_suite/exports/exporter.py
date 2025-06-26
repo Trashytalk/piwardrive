@@ -76,7 +76,6 @@ def export_records(
     fields: Sequence[str] | None = None,
 ) -> None:
     """Export ``records`` using ``fmt`` similar to :func:`piwardrive.export.export_records`."""
-
     fmt = fmt.lower()
     if fmt not in EXPORT_FORMATS:
         raise ValueError(f"Unsupported format: {fmt}")
