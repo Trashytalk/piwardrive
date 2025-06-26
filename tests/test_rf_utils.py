@@ -8,6 +8,12 @@ import pytest
 from piwardrive.sigint_suite.rf.spectrum import spectrum_scan
 from piwardrive.sigint_suite.rf.demod import demodulate_fm
 from piwardrive.sigint_suite.rf import demod as demod_module
+from piwardrive.sigint_suite.rf.utils import (
+    hz_to_khz,
+    hz_to_mhz,
+    mhz_to_hz,
+    parse_frequency,
+)
 
 
 class DummySdr:
@@ -67,3 +73,16 @@ def test_fm_demodulate_basic():
     samples = np.exp(1j * np.linspace(0, np.pi, 5))
     demod = demod_module.fm_demodulate(samples)
     assert np.allclose(demod, np.full(4, np.pi / 4))
+
+
+def test_frequency_conversions():
+    assert mhz_to_hz(100.0) == 100.0 * 1_000_000.0
+    assert hz_to_mhz(50_000_000.0) == 50.0
+    assert hz_to_khz(30_000.0) == 30.0
+
+
+def test_parse_frequency():
+    assert parse_frequency("2.4GHz") == 2.4e9
+    assert parse_frequency("100MHz") == 100e6
+    assert parse_frequency("200kHz") == 200e3
+    assert parse_frequency("300") == 300.0
