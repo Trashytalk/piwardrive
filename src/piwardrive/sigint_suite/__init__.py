@@ -12,7 +12,9 @@ _impl = cast(Any, importlib.import_module("piwardrive.integrations.sigint_suite"
 
 # Reload paths to pick up environment changes (e.g. HOME) that may occur between
 # imports during tests.
-_paths_mod = importlib.reload(importlib.import_module("piwardrive.integrations.sigint_suite.paths"))
+_paths_mod = importlib.reload(
+    importlib.import_module("piwardrive.integrations.sigint_suite.paths")
+)
 _impl.paths = _paths_mod
 sys.modules[__name__ + ".paths"] = _paths_mod
 
@@ -36,7 +38,9 @@ sys.modules.setdefault("sigint_suite", sys.modules[__name__])
 # Expose package submodules by extending __path__ to include the implementation
 # package directory. This allows ``piwardrive.sigint_suite.<mod>`` imports to
 # resolve to modules under ``piwardrive.integrations.sigint_suite``.
-_pkg_dir = os.path.join(os.path.dirname(__file__), os.pardir, "integrations", "sigint_suite")
+_pkg_dir = os.path.join(
+    os.path.dirname(__file__), os.pardir, "integrations", "sigint_suite"
+)
 if os.path.isdir(_pkg_dir) and _pkg_dir not in __path__:
     __path__.append(_pkg_dir)
 
@@ -45,10 +49,11 @@ __all__ = list(getattr(_impl, "__all__", []))
 
 def __getattr__(name: str) -> Any:
     return getattr(_impl, name)
-from importlib import import_module
-import sys
 
-_real = import_module("piwardrive.integrations.sigint_suite")
+
+import sys  # noqa: E402
+
+_real = importlib.import_module("piwardrive.integrations.sigint_suite")
 # Mirror the public attributes of the real package
 globals().update(_real.__dict__)
 sys.modules.setdefault(__name__, _real)

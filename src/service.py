@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import sys
+import importlib
 
 SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
@@ -43,7 +44,7 @@ _p.load_recent_health = _proxy("load_recent_health")  # type: ignore[attr-define
 """Compatibility wrapper for :mod:`piwardrive.service`."""
 
 try:  # pragma: no cover - optional dependency loading
-    _service: ModuleType | None = import_module("piwardrive.service")
+    _service = importlib.import_module("piwardrive.service")
 except Exception:  # pragma: no cover - allow import without extras
     _service = None
 

@@ -1,7 +1,6 @@
 """Compatibility package for CLI scripts."""
 import os
 import sys
-from pathlib import Path
 
 # ``piwardrive.scripts`` acts as a thin wrapper around the top level ``scripts``
 # directory that contains the actual CLI implementations.  Historically the
