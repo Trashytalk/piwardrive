@@ -42,9 +42,9 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
-try:  # pragma: no cover - optional caching
+try:
     import requests_cache
-except Exception:  # pragma: no cover - if missing use plain requests
+except Exception:  # pragma: no cover - optional dependency
     requests_cache = None  # type: ignore
 import aiohttp
 from piwardrive import persistence
@@ -90,10 +90,12 @@ if requests_cache is not None:
     HTTP_SESSION = requests_cache.CachedSession(
         expire_after=SAFE_REQUEST_CACHE_SECONDS
     )
-else:  # pragma: no cover - fallback without caching
-    import requests
+else:  # pragma: no cover - fallback without requests_cache
+    class _DummySession:
+        def get(self, *args: Any, **kwargs: Any) -> Any:
+            return requests.get(*args, **kwargs)
 
-    HTTP_SESSION = requests.Session()
+    HTTP_SESSION = _DummySession()
 
 
 def _prune_safe_request_cache(now: float) -> None:
