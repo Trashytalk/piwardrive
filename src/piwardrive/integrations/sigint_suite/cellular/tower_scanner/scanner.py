@@ -20,7 +20,7 @@ def scan_towers(
     timeout: Optional[int] = None,
 ) -> List[TowerRecord]:
     """Scan for nearby cell towers and return a list of records."""
-    cmd_str = cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan")
+    cmd_str = str(cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout
@@ -55,7 +55,7 @@ async def async_scan_towers(
     timeout: int | None = None,
 ) -> List[TowerRecord]:
     """Asynchronously scan for cell towers."""
-    cmd_str = cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan")
+    cmd_str = str(cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout

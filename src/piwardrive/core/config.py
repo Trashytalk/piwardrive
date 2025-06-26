@@ -301,7 +301,6 @@ def set_active_profile(name: str) -> None:
 
 def load_config(profile: Optional[str] = None) -> Config:
     """Load configuration from ``profile`` or ``CONFIG_PATH``."""
-
     if profile is None:
         profile = get_active_profile()
     path = get_config_path(profile)

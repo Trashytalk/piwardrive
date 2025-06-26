@@ -6,6 +6,7 @@ import subprocess
 import asyncio
 
 from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional, Union
 from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 from piwardrive.sigint_suite.models import WifiNetwork
 from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
@@ -17,11 +18,11 @@ logger = logging.getLogger(__name__)
 lookup_vendor = cached_lookup_vendor
 
 
-def _vendor_hook(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
+def _vendor_hook(records: List[Dict[str, Union[str, float]]]) -> List[Dict[str, Union[str, float]]]:
     """Add vendor names based on BSSID prefixes."""
     for rec in records:
         bssid = rec.get("bssid")
-        vendor = lookup_vendor(bssid)
+        vendor = cached_lookup_vendor(bssid)
         if vendor:
             rec["vendor"] = vendor
     return records
@@ -33,6 +34,36 @@ register_post_processor("wifi", _vendor_hook)
 def _parse_iwlist_output(output: str, heading: float | None) -> Iterable[Dict[str, str]]:
     """Yield dictionaries parsed from ``iwlist`` command output."""
     current: Dict[str, str] = {}
+def scan_wifi(
+    interface: str = "wlan0",
+    iwlist_cmd: Optional[str] = None,
+    priv_cmd: Optional[str] = None,
+    timeout: Optional[int] = None,
+) -> List[WifiNetwork]:
+    """Scan for Wi-Fi networks using ``iwlist`` and return results."""
+    iwlist_cmd = str(iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist"))
+    priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
+
+    cmd: List[str] = []
+    if priv_cmd:
+        cmd.extend(shlex.split(priv_cmd))
+    cmd.extend([iwlist_cmd, interface, "scanning"])
+    timeout = (
+        timeout if timeout is not None else int(os.getenv("WIFI_SCAN_TIMEOUT", "10"))
+    )
+
+    try:
+        output = subprocess.check_output(
+            cmd, text=True, stderr=subprocess.DEVNULL, timeout=timeout
+        )
+    except Exception as exc:
+        logger.exception("Wi-Fi scan failed: %s", exc)
+        return []
+
+    heading = orientation_sensors.get_heading()
+    records: List[Dict[str, Union[str, float]]] = []
+
+    current: Dict[str, Union[str, float]] = {}
     enc_lines: List[str] = []
 
     for line in output.splitlines():
@@ -126,7 +157,6 @@ async def async_scan_wifi(
     timeout: int | None = None,
 ) -> List[WifiNetwork]:
     """Asynchronously scan for Wi-Fi networks using ``iwlist``."""
-
     iwlist_cmd = iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist")
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
@@ -153,6 +183,37 @@ async def async_scan_wifi(
     heading = orientation_sensors.get_heading()
 
     records = [rec for rec in _parse_iwlist_output(output, heading)]
+    records: List[Dict[str, Union[str, float]]] = []
+    current: Dict[str, Union[str, float]] = {}
+    for line in output.splitlines():
+        line = line.strip()
+        if line.startswith("Cell"):
+            if current:
+                if heading is not None:
+                    current["heading"] = heading
+                records.append(current)
+            bssid = None
+            if "Address:" in line:
+                bssid = line.split("Address:")[-1].strip()
+            current = {"cell": line}
+            if bssid:
+                current["bssid"] = bssid
+        elif "ESSID" in line:
+            current["ssid"] = line.split(":", 1)[-1].strip('"')
+        elif "Address" in line:
+            bssid = line.split("Address:")[-1].strip()
+            current["bssid"] = bssid
+            vendor = cached_lookup_vendor(bssid)
+            if vendor:
+                current["vendor"] = vendor
+        elif "Frequency" in line:
+            current["frequency"] = line.split("Frequency:")[-1].split(" ")[0]
+        elif "Quality" in line:
+            current["quality"] = line.split("Quality=")[-1].split(" ")[0]
+    if current:
+        if heading is not None:
+            current["heading"] = heading
+        records.append(current)
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
 

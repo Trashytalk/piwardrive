@@ -5,10 +5,10 @@ import importlib
 import os
 import sys
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 # Import the actual implementation from piwardrive.integrations.sigint_suite
-_impl: ModuleType = importlib.import_module("piwardrive.integrations.sigint_suite")
+_impl = cast(Any, importlib.import_module("piwardrive.integrations.sigint_suite"))
 
 # Reload paths to pick up environment changes (e.g. HOME) that may occur between
 # imports during tests.
