@@ -7,17 +7,36 @@ import os
 import inspect
 import typing
 
-from fastapi import (
-    FastAPI,
-    Depends,
-    HTTPException,
-    WebSocket,
-    WebSocketDisconnect,
-    Body,
-    Request,
-)
-from fastapi.responses import StreamingResponse, Response
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+try:  # pragma: no cover - optional FastAPI dependency
+    from fastapi import (
+        FastAPI,
+        Depends,
+        HTTPException,
+        WebSocket,
+        WebSocketDisconnect,
+        Body,
+        Request,
+    )
+    from fastapi.responses import StreamingResponse, Response
+    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+except Exception:
+    FastAPI = type(
+        "FastAPI",
+        (),
+        {
+            "get": lambda *a, **k: (lambda f: f),
+            "websocket": lambda *a, **k: (lambda f: f),
+        },
+    )
+    Depends = lambda *a, **k: None
+    HTTPException = type("HTTPException", (Exception,), {})
+    WebSocket = object
+    WebSocketDisconnect = Exception
+    Body = lambda *a, **k: None
+    Request = object
+    StreamingResponse = Response = object
+    HTTPBasic = type("HTTPBasic", (), {"__init__": lambda self, **k: None})
+    HTTPBasicCredentials = type("HTTPBasicCredentials", (), {})
 import importlib
 
 import asyncio
