@@ -18,7 +18,10 @@ import glob
 from datetime import datetime
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
 
-from piwardrive.sigint_suite.models import BluetoothDevice
+try:  # pragma: no cover - optional dependency
+    from piwardrive.sigint_suite.models import BluetoothDevice
+except Exception:  # pragma: no cover - missing optional module
+    BluetoothDevice = object  # type: ignore[misc,assignment]
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
@@ -40,7 +43,10 @@ from enum import IntEnum
 import psutil
 import requests  # type: ignore
 import requests_cache
-import aiohttp
+try:  # pragma: no cover - optional dependency
+    import aiohttp
+except Exception:  # pragma: no cover - allow running without aiohttp
+    aiohttp = None  # type: ignore
 from piwardrive import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
@@ -1094,6 +1100,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
 
 
 __all__ = [
+    "App",
     "ErrorCode",
     "network_scanning_disabled",
     "shutdown_async_loop",
@@ -1132,4 +1139,5 @@ __all__ = [
     "polygon_area",
     "point_in_polygon",
     "load_kml",
+    "HTTP_SESSION",
 ]

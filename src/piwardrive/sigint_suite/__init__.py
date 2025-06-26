@@ -45,3 +45,10 @@ __all__ = list(getattr(_impl, "__all__", []))
 
 def __getattr__(name: str) -> Any:
     return getattr(_impl, name)
+from importlib import import_module
+import sys
+
+_real = import_module("piwardrive.integrations.sigint_suite")
+# Mirror the public attributes of the real package
+globals().update(_real.__dict__)
+sys.modules.setdefault(__name__, _real)

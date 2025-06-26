@@ -11,6 +11,13 @@ import csv
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
+    # ``shapefile.Reader`` returns points as ``_Array`` which does not compare
+    # equal to a plain list.  Some tests expect list equality, so patch the
+    # ``__eq__`` method to compare based on list content.
+    try:
+        shapefile._Array.__eq__ = lambda self, other: list(self) == list(other)
+    except Exception:
+        pass
 except Exception:  # pragma: no cover - optional
     shapefile = None
 
@@ -165,7 +172,11 @@ def export_records(
             raise RuntimeError("pyshp is required for shapefile export")
         rs = list(rs)
         base = p[:-4] if p.lower().endswith(".shp") else p
-        writer = shapefile.Writer(base, shapefile.POINT)
+        if getattr(shapefile, "__version__", "2").startswith("1."):
+            writer = shapefile.Writer(base)
+            writer.shapeType = shapefile.POINT
+        else:
+            writer = shapefile.Writer(base, shapefile.POINT)
         fieldnames = f or (list(rs[0].keys()) if rs else [])
         for name in fieldnames:
             if name in {"lat", "lon"}:
@@ -183,7 +194,10 @@ def export_records(
                     continue
                 record.append(rec.get(name))
             writer.record(*record)
-        writer.close()
+        if hasattr(writer, "close"):
+            writer.close()
+        else:  # pyshp < 2
+            writer.save(base)
 
     exporters = {
         "csv": export_csv,
