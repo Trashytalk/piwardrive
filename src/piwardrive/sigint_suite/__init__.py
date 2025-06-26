@@ -4,7 +4,6 @@ from __future__ import annotations
 import importlib
 import os
 import sys
-from types import ModuleType
 from typing import Any, cast
 
 # Import the actual implementation from piwardrive.integrations.sigint_suite

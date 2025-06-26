@@ -78,7 +78,11 @@ def build_mbtiles(folder: str, output: str) -> None:
                 with open(os.path.join(root, f), "rb") as fh:
                     data = fh.read()
                 db.execute(
-                    "INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)",
+                    (
+                        "INSERT OR REPLACE INTO tiles "
+                        "(zoom_level, tile_column, tile_row, tile_data) "
+                        "VALUES (?, ?, ?, ?)"
+                    ),
                     (z_i, x_i, tile_row, data),
                 )
         db.commit()

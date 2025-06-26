@@ -4,12 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-
+from typing import Any
 
 CONFIG_PATH = Path.home() / ".config" / "piwardrive" / "setup.json"
-
-
-from typing import Any
 
 
 def run_wizard() -> None:
