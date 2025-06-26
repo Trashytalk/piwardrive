@@ -1,8 +1,11 @@
 """Module exporter."""
 import csv
 import json
-from dataclasses import asdict, is_dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Sequence
+
+from piwardrive import export as _exp
+
+EXPORT_FORMATS = ("csv", "json", "yaml", "gpx", "kml", "geojson", "shp")
 
 
 def export_json(records: Iterable[Any], path: str) -> None:
@@ -64,3 +67,31 @@ def export_yaml(records: Iterable[Any], path: str) -> None:
             data.append(rec)
     with open(path, "w", encoding="utf-8") as fh:
         yaml.safe_dump(data, fh, sort_keys=False)
+
+
+def export_records(
+    records: Iterable[Mapping[str, Any]],
+    path: str,
+    fmt: str,
+    fields: Sequence[str] | None = None,
+) -> None:
+    """Export ``records`` using ``fmt`` similar to :func:`piwardrive.export.export_records`."""
+
+    fmt = fmt.lower()
+    if fmt not in EXPORT_FORMATS:
+        raise ValueError(f"Unsupported format: {fmt}")
+
+    if fields is not None:
+        records = [{k: r.get(k) for k in fields} for r in records]
+
+    if fmt == "json":
+        export_json(records, path)
+        return
+    if fmt == "csv":
+        export_csv(records, path)
+        return
+    if fmt == "yaml":
+        export_yaml(records, path)
+        return
+
+    _exp.export_records(list(records), path, fmt)
