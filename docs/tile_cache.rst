@@ -21,7 +21,7 @@ current GPS location whenever it updates.
 Command Line
 ------------
 
-Tiles can also be prefetched without launching the on-device GUI using the
+Tiles can also be prefetched without launching the dashboard using the
 ``piwardrive-prefetch`` entry point::
 
    piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
