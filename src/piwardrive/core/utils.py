@@ -1139,4 +1139,5 @@ __all__ = [
     "polygon_area",
     "point_in_polygon",
     "load_kml",
+    "HTTP_SESSION",
 ]
