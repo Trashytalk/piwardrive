@@ -25,6 +25,8 @@ except Exception:
         (),
         {
             "get": lambda *a, **k: (lambda f: f),
+            "post": lambda *a, **k: (lambda f: f),
+            "delete": lambda *a, **k: (lambda f: f),
             "websocket": lambda *a, **k: (lambda f: f),
         },
     )
