@@ -1,8 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
+vi.mock('child_process', () => {
+  const execFileSync = vi.fn();
+  const execFile = vi.fn();
+  return { execFileSync, execFile, default: { execFileSync, execFile } };
+});
 import { parseTowerOutput, scanTowers, asyncScanTowers } from '../src/towerScanner.js';
 import * as childProcess from 'child_process';
-
-vi.mock('child_process');
 
 describe('parseTowerOutput', () => {
   it('parses lines', () => {
@@ -17,20 +20,20 @@ describe('parseTowerOutput', () => {
 
 describe('scanTowers', () => {
   it('executes command', () => {
-    const spy = vi.spyOn(childProcess, 'execFileSync').mockReturnValue('123,-70');
+    childProcess.execFileSync.mockReturnValue('123,-70');
     const res = scanTowers('dummy');
-    expect(spy).toHaveBeenCalled();
+    expect(childProcess.execFileSync).toHaveBeenCalled();
     expect(res.length).toBe(1);
-    spy.mockRestore();
   });
 });
 
 describe('asyncScanTowers', () => {
   it('returns records', async () => {
-    vi.spyOn(childProcess, 'execFile').mockImplementation((cmd, opts, cb) => {
+    childProcess.execFile.mockImplementation((cmd, opts, cb) => {
       cb(null, '123,-70');
     });
     const res = await asyncScanTowers('dummy');
     expect(res).toEqual([{ tower_id: '123', rssi: '-70', lat: null, lon: null }]);
+    expect(childProcess.execFile).toHaveBeenCalled();
   });
 });

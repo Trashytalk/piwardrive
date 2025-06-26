@@ -12,6 +12,7 @@ from piwardrive import utils  # noqa: E402
 
 
 class PiWardriveApp(_BaseApp):
+
     """Thin wrapper that exposes :class:`~piwardrive.main.PiWardriveApp`."""
 
     def control_service(self, svc: str, action: str) -> None:  # pragma: no cover

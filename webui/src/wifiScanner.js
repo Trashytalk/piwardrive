@@ -1,6 +1,7 @@
 import { execFileSync, execFile } from 'child_process';
 import { getHeading } from './orientationSensors.js';
 import { cachedLookupVendor } from './ouiRegistry.js';
+import { reportError } from './exceptionHandler.js';
 
 export function parseIwlist(output) {
   const records = [];
@@ -67,7 +68,7 @@ export function scanWifi(iface = 'wlan0', iwlistCmd = 'iwlist', privCmd = 'sudo'
     });
     return parseIwlist(out);
   } catch (e) {
-    console.error('Wi-Fi scan failed:', e);
+    reportError(e);
     return [];
   }
 }

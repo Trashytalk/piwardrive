@@ -41,7 +41,7 @@ _MIGRATIONS: list[Migration] = []
 
 
 async def _migration_1(conn: aiosqlite.Connection) -> None:
-    """Initial schema creation."""
+    """Create initial database schema."""
     await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS health_records (
@@ -268,7 +268,11 @@ async def load_dashboard_settings() -> DashboardSettings:
     """Load persisted :class:`DashboardSettings` from ``config.json``."""
     cfg = config.load_config()
     layout = cfg.dashboard_layout
-    widgets = [item.get("cls") for item in layout if isinstance(item, dict)]
+    widgets = [
+        cls
+        for item in layout
+        if isinstance(item, dict) and (cls := item.get("cls"))
+    ]
     return DashboardSettings(layout=layout, widgets=widgets)
 
 
@@ -299,7 +303,6 @@ async def load_ap_cache() -> list[dict[str, Any]]:
 
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
-
     path = _db_path()
 
     def _work() -> dict[str, int]:

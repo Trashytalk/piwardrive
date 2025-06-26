@@ -73,7 +73,6 @@ class TowerTracker:
         self, tower_id: str, lat: float, lon: float, last_seen: Optional[int] = None
     ) -> None:
         """Insert or update ``tower_id`` with location and timestamp."""
-
         if last_seen is None:
             last_seen = int(time.time())
         conn = await self._get_conn()
@@ -92,7 +91,6 @@ class TowerTracker:
 
     async def get_tower(self, tower_id: str) -> Optional[Dict[str, float]]:
         """Return tower details or ``None`` if not found."""
-
         conn = await self._get_conn()
         cur = await conn.execute(
             "SELECT tower_id, lat, lon, last_seen FROM towers WHERE tower_id=?",
@@ -110,7 +108,6 @@ class TowerTracker:
 
     async def all_towers(self) -> List[Dict[str, float]]:
         """Return all tracked towers."""
-
         conn = await self._get_conn()
         cur = await conn.execute(
             "SELECT tower_id, lat, lon, last_seen FROM towers"
@@ -120,7 +117,6 @@ class TowerTracker:
 
     async def close(self) -> None:
         """Close the database connection."""
-
         if self.conn is not None:
             await self.conn.close()
 
@@ -137,7 +133,6 @@ class TowerTracker:
         timestamp: Optional[int] = None,
     ) -> None:
         """Persist a cell tower observation."""
-
         if timestamp is None:
             timestamp = int(time.time())
         conn = await self._get_conn()
@@ -152,7 +147,6 @@ class TowerTracker:
 
     async def tower_history(self, tower_id: str) -> List[Dict[str, float]]:
         """Return all records for ``tower_id`` sorted by newest first."""
-
         conn = await self._get_conn()
         cur = await conn.execute(
             """
@@ -178,7 +172,6 @@ class TowerTracker:
         timestamp: Optional[int] = None,
     ) -> None:
         """Persist a Wi-Fi observation."""
-
         if timestamp is None:
             timestamp = int(time.time())
         conn = await self._get_conn()
@@ -193,7 +186,6 @@ class TowerTracker:
 
     async def wifi_history(self, bssid: str) -> List[Dict[str, float]]:
         """Return all Wi-Fi records for ``bssid`` sorted by newest first."""
-
         conn = await self._get_conn()
         cur = await conn.execute(
             """
@@ -219,7 +211,6 @@ class TowerTracker:
         timestamp: Optional[int] = None,
     ) -> None:
         """Persist a Bluetooth observation."""
-
         if timestamp is None:
             timestamp = int(time.time())
         conn = await self._get_conn()
@@ -234,7 +225,6 @@ class TowerTracker:
 
     async def bluetooth_history(self, address: str) -> List[Dict[str, float]]:
         """Return all Bluetooth records for ``address`` sorted by newest first."""
-
         conn = await self._get_conn()
         cur = await conn.execute(
             """

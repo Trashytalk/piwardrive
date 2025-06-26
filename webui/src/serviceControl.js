@@ -1,3 +1,5 @@
+import { reportError } from './exceptionHandler.js';
+
 export async function controlService(service, action) {
   let password = sessionStorage.getItem('adminPassword') || null;
   const headers = {};
@@ -7,7 +9,7 @@ export async function controlService(service, action) {
   try {
     resp = await fetch(`/service/${service}/${action}`, { method: 'POST', headers });
   } catch (e) {
-    alert(`Failed to ${action} ${service}`);
+    reportError(e, true);
     return false;
   }
   if (resp.status === 401) {
@@ -17,7 +19,7 @@ export async function controlService(service, action) {
     resp = await fetch(`/service/${service}/${action}`, { method: 'POST', headers: { 'X-Admin-Password': password } });
   }
   if (!resp.ok) {
-    alert(`Failed to ${action} ${service}`);
+    reportError(new Error(`Failed to ${action} ${service}`), true);
     return false;
   }
   return true;

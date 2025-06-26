@@ -20,4 +20,14 @@ describe('TowerTracker', () => {
     expect(wifi[0].ssid).toBe('Test');
     expect(bt[0].name).toBe('Phone');
   });
+
+  it('async logging and retrieval', async () => {
+    const tr = new TowerTracker();
+    await tr.logWifi('DE:AD:BE', 'Net', undefined, undefined, 50);
+    await tr.logBluetooth('AA:BB:CC', 'Headset', undefined, undefined, 60);
+    const wifi = await tr.wifiHistory('DE:AD:BE');
+    const bt = await tr.bluetoothHistory('AA:BB:CC');
+    expect(wifi[0].timestamp).toBe(50);
+    expect(bt[0].timestamp).toBe(60);
+  });
 });

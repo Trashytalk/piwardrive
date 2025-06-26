@@ -21,7 +21,7 @@ def scan_imsis(
     timeout: Optional[int] = None,
 ) -> List[ImsiRecord]:
     """Scan for IMSI numbers using an external command."""
-    cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
+    cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
@@ -62,7 +62,6 @@ async def async_scan_imsis(
     timeout: int | None = None,
 ) -> List[ImsiRecord]:
     """Asynchronously scan for IMSI numbers."""
-
     cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
     args = shlex.split(cmd_str)
     timeout = (

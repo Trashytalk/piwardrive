@@ -20,7 +20,7 @@ def test_export_yaml(tmp_path):
     records = [{"a": 1, "b": 2}]
     out = tmp_path / "data.yaml"
     export_yaml(records, str(out))
-    import yaml
+    import yaml  # type: ignore
 
     loaded = yaml.safe_load(open(out))
     assert loaded == records

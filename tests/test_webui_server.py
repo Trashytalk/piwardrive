@@ -6,10 +6,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 aiosqlite_mod = ModuleType("aiosqlite")
-aiosqlite_mod.Connection = object
+aiosqlite_mod.Connection = object  # type: ignore[attr-defined]
 sys.modules.setdefault("aiosqlite", aiosqlite_mod)
 rc_mod = ModuleType("requests_cache")
-rc_mod.CachedSession = lambda *a, **k: None
+rc_mod.CachedSession = lambda *a, **k: None  # type: ignore[attr-defined]
 sys.modules.setdefault("requests_cache", rc_mod)
 
 from piwardrive import webui_server
