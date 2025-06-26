@@ -8,6 +8,13 @@ from functools import lru_cache
 from typing import Dict, Optional
 
 try:  # pragma: no cover - optional dependency
+    from piwardrive.utils import HTTP_SESSION
+except Exception:  # pragma: no cover - minimal fallback
+    class _DummySession:
+        def get(self, *_a, **_k):  # pragma: no cover - simple stub
+            raise RuntimeError("HTTP session unavailable")
+
+    HTTP_SESSION = _DummySession()
     import requests  # type: ignore
 except Exception:  # pragma: no cover - missing dependency
     requests = None  # type: ignore

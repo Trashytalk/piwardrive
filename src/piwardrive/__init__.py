@@ -10,7 +10,7 @@ try:  # pragma: no cover - optional dependency
     # Expose as ``sigint_suite`` and ``piwardrive.sigint_suite`` for backwards
     # compatibility with older paths used throughout the tests.
     sys.modules.setdefault("sigint_suite", sigint_suite)
-    sys.modules.setdefault("piwardrive.sigint_suite", sigint_suite)
+    sys.modules.setdefault(__name__ + ".sigint_suite", sigint_suite)
 except Exception:  # pragma: no cover - missing optional modules
     sigint_suite = None
 
