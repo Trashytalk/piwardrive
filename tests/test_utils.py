@@ -455,6 +455,44 @@ def test_fetch_kismet_devices_cache(monkeypatch: Any, tmp_path: Path) -> None:
     assert clients == []
 
 
+def test_fetch_kismet_devices_async_cache(monkeypatch: Any) -> None:
+    calls: list[int] = []
+
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return '{"access_points": [], "clients": []}'
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    class FakeSession:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+        def get(self, _url: str, **_k: Any) -> FakeResp:
+            calls.append(1)
+            return FakeResp()
+
+    monkeypatch.setattr(utils.aiohttp, "ClientSession", lambda *a, **k: FakeSession())
+    monkeypatch.setattr(persistence, "save_ap_cache", mock.AsyncMock())
+    times = [0.0, 1.0, 3.5]
+    monkeypatch.setattr(utils.time, "time", lambda: times.pop(0))
+
+    asyncio.run(utils.fetch_kismet_devices_async())
+    asyncio.run(utils.fetch_kismet_devices_async())
+    assert len(calls) == 1
+    asyncio.run(utils.fetch_kismet_devices_async())
+    assert len(calls) == 2
+
+
 def test_safe_request_retries(monkeypatch: Any) -> None:
     calls: list[str] = []
 
