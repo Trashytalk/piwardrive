@@ -3,11 +3,14 @@
 import logging
 import os
 import threading
+from typing import Any, cast
 
+gpsd: Any
 try:
-    import gpsd
+    import gpsd as _gpsd
+    gpsd = _gpsd
 except Exception as exc:  # pragma: no cover - optional dependency
-    gpsd = None  # type: ignore
+    gpsd = None
     logging.getLogger(__name__).error("gpsd library not available: %s", exc)
 
 
@@ -34,7 +37,7 @@ class GPSDClient:
         if not self._connected:
             self._connect()
 
-    def _get_packet(self):
+    def _get_packet(self) -> Any | None:
         with self._lock:
             self._ensure_connection()
             if not self._connected or gpsd is None:
@@ -53,7 +56,7 @@ class GPSDClient:
             return None
         try:
             if hasattr(pkt, "position"):
-                return pkt.position()  # type: ignore[no-any-return]
+                return cast(tuple[float, float], pkt.position())
             lat = getattr(pkt, "lat", None)
             lon = getattr(pkt, "lon", None)
             if lat is not None and lon is not None:

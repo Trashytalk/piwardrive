@@ -6,7 +6,8 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any
+from types import TracebackType
+from typing import Any, Optional, Type
 
 
 class AsyncGPSDClient:
@@ -24,7 +25,12 @@ class AsyncGPSDClient:
         await self._ensure_connection()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: Type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         await self.close()
 
     async def _connect(self) -> None:

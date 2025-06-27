@@ -12,17 +12,21 @@ check for ``None`` to gracefully handle setups without these sensors.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    import dbus as dbus_type
+    from mpu6050 import mpu6050 as mpu6050_type
 
 try:  # pragma: no cover - optional DBus dependency
-    import dbus  # type: ignore
+    import dbus
 except Exception:  # pragma: no cover - missing dependency
-    dbus = None  # type: ignore
+    dbus = None
 
 try:  # pragma: no cover - optional hardware dependency
-    from mpu6050 import mpu6050  # type: ignore
+    from mpu6050 import mpu6050
 except Exception:  # pragma: no cover - missing dependency
-    mpu6050 = None  # type: ignore
+    mpu6050 = None
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +116,7 @@ def read_mpu6050(address: int = 0x68) -> Optional[Dict[str, Any]]:
     if mpu6050 is None:
         return None
     try:
-        sensor = mpu6050(address)  # type: ignore
+        sensor = mpu6050(address)
         return {
             "accelerometer": sensor.get_accel_data(),
             "gyroscope": sensor.get_gyro_data(),
