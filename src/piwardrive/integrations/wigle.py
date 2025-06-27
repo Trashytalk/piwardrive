@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Any, Dict, List
 from types import SimpleNamespace
 
+from piwardrive.core.utils import async_ttl_cache, WIGLE_CACHE_SECONDS
+
 try:  # pragma: no cover - optional dependency
     import aiohttp
 except Exception:  # pragma: no cover - aiohttp not installed
@@ -15,6 +17,7 @@ except Exception:  # pragma: no cover - aiohttp not installed
     )
 
 
+@async_ttl_cache(lambda: WIGLE_CACHE_SECONDS)
 async def fetch_wigle_networks(
     api_name: str,
     api_key: str,

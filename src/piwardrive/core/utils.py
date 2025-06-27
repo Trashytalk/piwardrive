@@ -10,6 +10,7 @@ import os
 import subprocess
 import threading
 import time
+import functools
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -96,6 +97,10 @@ TAIL_FILE_CACHE_SECONDS = pw_config.DEFAULT_CONFIG.log_tail_cache_seconds
 _TAIL_FILE_CACHE: dict[str, tuple[float, float, list[str]]] = {}
 _TAIL_FILE_CACHE_LOCK = threading.Lock()
 
+# Cache for service endpoint data
+KISMET_CACHE_SECONDS = 2.0
+WIGLE_CACHE_SECONDS = 30.0
+
 
 if requests_cache is not None:
     HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
@@ -122,6 +127,31 @@ def _prune_safe_request_cache(now: float) -> None:
         limit = len(_SAFE_REQUEST_CACHE) - SAFE_REQUEST_CACHE_MAX_SIZE
         for url, _ in sorted_items[:limit]:
             _SAFE_REQUEST_CACHE.pop(url, None)
+
+
+def async_ttl_cache(ttl_getter: float | Callable[[], float]):
+    """Return decorator caching async function results for ``ttl`` seconds."""
+
+    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+        cache: dict[tuple[Any, ...], tuple[float, T]] = {}
+        lock = asyncio.Lock()
+
+        @functools.wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> T:
+            ttl = ttl_getter() if callable(ttl_getter) else ttl_getter
+            key = (args, tuple(sorted(kwargs.items())))
+            async with lock:
+                entry = cache.get(key)
+                if entry and time.time() - entry[0] <= ttl:
+                    return entry[1]
+            result = await func(*args, **kwargs)
+            async with lock:
+                cache[key] = (time.time(), result)
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 class ErrorCode(IntEnum):
@@ -760,6 +790,7 @@ def fetch_kismet_devices() -> tuple[list, list]:
     return fut.result()
 
 
+@async_ttl_cache(lambda: KISMET_CACHE_SECONDS)
 async def fetch_kismet_devices_async() -> tuple[list, list]:
     """Asynchronously fetch Kismet device data using ``aiohttp``."""
     if network_scanning_disabled():
