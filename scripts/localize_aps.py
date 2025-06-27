@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from pathlib import Path
+
+from piwardrive.logconfig import setup_logging
 
 from piwardrive.advanced_localization import load_config, load_kismet_data, localize_aps
 
@@ -41,6 +44,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    setup_logging(stdout=True)
     cfg = load_config(args.config)
     data = load_kismet_data(args.database)
     coords = localize_aps(data, cfg)
@@ -48,7 +52,7 @@ def main(argv: list[str] | None = None) -> None:
     if folium is not None:
         _save_map(coords, Path(args.output), cfg.map_zoom_start)
     else:
-        print(json.dumps(coords, indent=2))
+        logging.info(json.dumps(coords, indent=2))
 
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation

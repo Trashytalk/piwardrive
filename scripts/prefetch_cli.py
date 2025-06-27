@@ -1,6 +1,9 @@
 """Module prefetch_cli."""
 import argparse
+import logging
 from piwardrive.screens.map_utils import tile_cache
+
+from piwardrive.logconfig import setup_logging
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -19,8 +22,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--concurrency", type=int, help="number of concurrent requests")
     args = parser.parse_args(argv)
 
+    setup_logging(stdout=True)
+
     def progress(done: int, total: int) -> None:
-        print(f"{done}/{total}", end="\r", flush=True)
+        logging.info("%s/%s", done, total)
 
     tile_cache.prefetch_tiles(
         (args.min_lat, args.min_lon, args.max_lat, args.max_lon),

@@ -1,6 +1,7 @@
 import os
 import sys
 import asyncio
+import json
 from types import ModuleType
 import pytest
 
@@ -75,6 +76,8 @@ def test_main(capsys, monkeypatch):
         lora_scanner.main()
     finally:
         sys.argv = argv
-    out = capsys.readouterr().out
-    assert "x" in out
+    out_lines = [
+        json.loads(l) for l in capsys.readouterr().out.strip().splitlines() if l
+    ]
+    assert any(rec["message"] == "x" for rec in out_lines)
 
