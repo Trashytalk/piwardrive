@@ -1,9 +1,8 @@
+import asyncio
+import importlib
 import os
 import sys
-import asyncio
 from typing import Any
-import importlib
-
 
 
 def _load_widget(add_dummy_module):

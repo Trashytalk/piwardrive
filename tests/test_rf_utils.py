@@ -1,19 +1,14 @@
 import os
 import sys
+
 import numpy as np
-
-
 import pytest
 
-from piwardrive.sigint_suite.rf.spectrum import spectrum_scan
-from piwardrive.sigint_suite.rf.demod import demodulate_fm
 from piwardrive.sigint_suite.rf import demod as demod_module
-from piwardrive.sigint_suite.rf.utils import (
-    hz_to_khz,
-    hz_to_mhz,
-    mhz_to_hz,
-    parse_frequency,
-)
+from piwardrive.sigint_suite.rf.demod import demodulate_fm
+from piwardrive.sigint_suite.rf.spectrum import spectrum_scan
+from piwardrive.sigint_suite.rf.utils import (hz_to_khz, hz_to_mhz, mhz_to_hz,
+                                              parse_frequency)
 
 
 class DummySdr:

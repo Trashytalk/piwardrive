@@ -1,5 +1,6 @@
 """Module migrate_db."""
 import asyncio
+
 from piwardrive import persistence
 
 

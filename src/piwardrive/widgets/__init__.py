@@ -3,9 +3,9 @@
 Lazy loading wrapper for widget classes with plugin support.
 """
 
-from importlib import import_module, util, machinery
-from pathlib import Path
 import sys
+from importlib import import_module, machinery, util
+from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
 try:  # pragma: no cover - optional dependency

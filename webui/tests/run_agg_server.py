@@ -1,5 +1,8 @@
-import os, sys, types
+import os
+import sys
+import types
 from dataclasses import dataclass
+
 
 @dataclass
 class HealthRecord:
@@ -14,7 +17,8 @@ mod.HealthRecord = HealthRecord
 sys.modules['piwardrive.persistence'] = mod
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
-import piwardrive.aggregation_service as m
 import uvicorn
+
+import piwardrive.aggregation_service as m
 
 uvicorn.run(m.app, host='127.0.0.1', port=int(os.environ['PORT']))

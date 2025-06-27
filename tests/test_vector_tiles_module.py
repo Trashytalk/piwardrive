@@ -1,4 +1,5 @@
 import sqlite3
+
 import pytest
 
 import piwardrive.vector_tiles as vt

@@ -203,6 +203,7 @@ def export_shp(
             writer.save(base)
         return
 
+
     fieldnames = fields or list(first.keys())
     for name in fieldnames:
         if name in {"lat", "lon"}:

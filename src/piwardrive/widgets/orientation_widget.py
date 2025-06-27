@@ -3,11 +3,13 @@
 import logging
 from typing import Any
 
-from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
+from piwardrive import orientation_sensors
 from piwardrive.localization import _
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
 
 from .base import DashboardWidget
-from piwardrive import orientation_sensors
 
 
 class OrientationWidget(DashboardWidget):

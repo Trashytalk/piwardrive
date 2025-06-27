@@ -6,9 +6,9 @@ import subprocess
 from typing import List, Optional
 
 from piwardrive.sigint_suite.cellular.parsers import parse_tower_output
-from piwardrive.sigint_suite.models import TowerRecord
 from piwardrive.sigint_suite.gps import get_position
 from piwardrive.sigint_suite.hooks import apply_post_processors
+from piwardrive.sigint_suite.models import TowerRecord
 
 logger = logging.getLogger(__name__)
 

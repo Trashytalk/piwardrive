@@ -1,11 +1,10 @@
+import builtins
 import os
 import sys
 from types import SimpleNamespace
-import builtins
 
-
-from piwardrive.sigint_suite.bluetooth import scanner as bt_scanner
 from piwardrive.sigint_suite.bluetooth import scan_bluetooth
+from piwardrive.sigint_suite.bluetooth import scanner as bt_scanner
 
 
 class DummyDevice(SimpleNamespace):

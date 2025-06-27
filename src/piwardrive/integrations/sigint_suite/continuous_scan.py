@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Callable, Dict, List
 import time
+from typing import Callable, Dict, List
 
-from .wifi import scan_wifi
 from .bluetooth import scan_bluetooth
+from .wifi import scan_wifi
 
 Result = Dict[str, List]
 

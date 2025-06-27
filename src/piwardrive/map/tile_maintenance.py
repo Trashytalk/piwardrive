@@ -1,20 +1,21 @@
 """Module tile_maintenance."""
 import asyncio
+import heapq
 import logging
 import os
 import sqlite3
 import time
-import heapq
-from piwardrive.scheduler import PollScheduler
-from piwardrive import utils
-from typing import Optional
 import typing
+from typing import Optional
+
+from piwardrive import utils
+from piwardrive.scheduler import PollScheduler
 
 try:
     _run_async = utils.run_async_task
 except AttributeError:  # pragma: no cover - core utils missing
-    from typing import Any, Callable, Coroutine, TypeVar
     from concurrent.futures import Future
+    from typing import Any, Callable, Coroutine, TypeVar
 
     T = TypeVar("T")
 
@@ -37,8 +38,8 @@ except AttributeError:  # pragma: no cover - core utils missing
             return typing.cast(Future[T], task)
 
 try:
-    from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
+    from watchdog.observers import Observer
 except Exception:  # pragma: no cover - watchdog optional for tests
     Observer = None  # type: ignore
     FileSystemEventHandler = object  # type: ignore

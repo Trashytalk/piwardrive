@@ -1,6 +1,6 @@
 import asyncio
-import sys
 import json
+import sys
 from types import ModuleType
 
 import pytest

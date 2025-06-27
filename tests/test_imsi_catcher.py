@@ -3,7 +3,8 @@ import sys
 
 BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-from piwardrive.sigint_suite.cellular.imsi_catcher.scanner import scan_imsis  # noqa: E402
+from piwardrive.sigint_suite.cellular.imsi_catcher.scanner import \
+    scan_imsis  # noqa: E402
 from piwardrive.sigint_suite.hooks import register_post_processor  # noqa: E402
 
 

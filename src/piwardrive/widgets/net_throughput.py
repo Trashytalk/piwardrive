@@ -1,8 +1,9 @@
 """Widget graphing network throughput."""
 from typing import Any
 
-from piwardrive.localization import _
 import psutil
+
+from piwardrive.localization import _
 
 from .base import DashboardWidget
 

@@ -7,9 +7,9 @@ import json
 import logging
 from pathlib import Path
 
+from piwardrive.advanced_localization import (load_config, load_kismet_data,
+                                              localize_aps)
 from piwardrive.logconfig import setup_logging
-
-from piwardrive.advanced_localization import load_config, load_kismet_data, localize_aps
 
 try:
     import folium

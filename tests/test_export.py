@@ -1,11 +1,11 @@
-import json
 import importlib
+import json
 import os
 import sys
+import time
 from types import ModuleType, SimpleNamespace
 
 import pytest
-import time
 
 import piwardrive.export as exp
 

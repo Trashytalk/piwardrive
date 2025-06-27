@@ -2,11 +2,15 @@
 
 import logging
 from typing import Any
-from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
+
 from piwardrive.localization import _
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
+from piwardrive.utils import (fetch_kismet_devices_async, get_avg_rssi,
+                              run_async_task)
 
 from .base import DashboardWidget
-from piwardrive.utils import fetch_kismet_devices_async, get_avg_rssi, run_async_task
 
 
 class SignalStrengthWidget(DashboardWidget):

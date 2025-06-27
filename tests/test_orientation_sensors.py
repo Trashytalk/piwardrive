@@ -1,7 +1,6 @@
-import types
-
 import os
 import sys
+import types
 
 import piwardrive.orientation_sensors as osens  # noqa: E402
 

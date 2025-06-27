@@ -1,5 +1,5 @@
 """Cellular band scanning utilities."""
 
-from .scanner import scan_bands, async_scan_bands
+from .scanner import async_scan_bands, scan_bands
 
 __all__ = ["scan_bands", "async_scan_bands"]

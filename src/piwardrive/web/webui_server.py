@@ -5,8 +5,8 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from piwardrive.service import app as api_app, list_widgets
-
+from piwardrive.service import app as api_app
+from piwardrive.service import list_widgets
 
 DEF_BUILD_DIR = os.path.join(
     os.path.dirname(__file__), os.pardir, os.pardir, "webui", "dist"
@@ -33,7 +33,7 @@ def create_app() -> FastAPI:
 def main() -> None:
     import uvicorn
 
-    uvicorn.run(create_app(), host="0.0.0.0", port=8000)
+    uvicorn.run(create_app(), host="127.0.0.1", port=8000)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution

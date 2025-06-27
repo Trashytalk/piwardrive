@@ -1,8 +1,8 @@
 """Module log_follow."""
 import argparse
+import logging
 import os
 import time
-import logging
 
 from logconfig import DEFAULT_LOG_PATH
 from utils import tail_file

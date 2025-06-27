@@ -1,8 +1,9 @@
 import asyncio
 import io
+import json
 import sys
 from types import ModuleType
-import json
+
 import pytest
 
 # provide a minimal aiohttp stub before importing the module

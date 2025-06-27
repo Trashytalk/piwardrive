@@ -1,17 +1,19 @@
 """Widget displaying SQLite table counts and database size."""
 
+import asyncio
 import logging
 import os
-import asyncio
 from typing import Any
 
-from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
 from piwardrive.localization import _
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
 
 from .base import DashboardWidget
 
 try:  # pragma: no cover - optional dependency
-    from piwardrive.persistence import get_table_counts, _db_path
+    from piwardrive.persistence import _db_path, get_table_counts
 except Exception:  # pragma: no cover - fallbacks for tests without deps
     async def get_table_counts() -> dict[str, int]:
         return {}
@@ -22,8 +24,8 @@ except Exception:  # pragma: no cover - fallbacks for tests without deps
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import run_async_task
 except Exception:  # pragma: no cover - simple fallback
-    from typing import Any, Callable, Coroutine, TypeVar
     from concurrent.futures import Future
+    from typing import Any, Callable, Coroutine, TypeVar
 
     T = TypeVar("T")
 

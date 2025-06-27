@@ -1,8 +1,7 @@
 import os
 import sys
-from types import ModuleType
 from pathlib import Path
-
+from types import ModuleType
 
 from piwardrive import analysis
 from piwardrive.persistence import HealthRecord

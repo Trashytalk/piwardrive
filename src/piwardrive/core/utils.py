@@ -103,7 +103,9 @@ else:  # pragma: no cover - fallback without requests_cache
 
     class _DummySession:
         def get(self, *args: Any, **kwargs: Any) -> Any:
-            return requests.get(*args, **kwargs)
+            """Fallback ``requests.get`` with a default timeout."""
+            timeout = kwargs.pop("timeout", 5)
+            return requests.get(*args, timeout=timeout, **kwargs)
 
     HTTP_SESSION = _DummySession()
 
@@ -1060,7 +1062,7 @@ def _parse_coord_text(text: str) -> list[tuple[float, float]]:
 
 def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
-    import xml.etree.ElementTree as ET
+    from defusedxml import ElementTree as ET
     import zipfile
 
     def _parse(root: ET.Element) -> list[dict[str, Any]]:

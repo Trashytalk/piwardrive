@@ -57,14 +57,9 @@ from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
-    from persistence import (
-        DashboardSettings,
-        _db_path,
-        get_table_counts,
-        load_dashboard_settings,
-        load_recent_health,
-        save_dashboard_settings,
-    )
+    from persistence import (DashboardSettings, _db_path, get_table_counts,
+                             load_dashboard_settings, load_recent_health,
+                             save_dashboard_settings)
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
@@ -747,7 +742,7 @@ async def main() -> None:
 
     import uvicorn
 
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000)
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
     server = uvicorn.Server(config)
     await server.serve()
 

@@ -1,9 +1,8 @@
+import importlib
 import os
 import sys
-import importlib
 from pathlib import Path
 from types import ModuleType
-
 
 
 def test_widget_plugin_cache(tmp_path, monkeypatch):
