@@ -1,9 +1,9 @@
 """Compute summary statistics and graphs for system health records."""
 
-from dataclasses import asdict
-from typing import List, Dict
-from statistics import fmean
 import math
+from dataclasses import asdict
+from statistics import fmean
+from typing import Dict, List
 
 from piwardrive.persistence import HealthRecord
 

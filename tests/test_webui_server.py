@@ -12,9 +12,7 @@ rc_mod = ModuleType("requests_cache")
 rc_mod.CachedSession = lambda *a, **k: None  # type: ignore[attr-defined]
 sys.modules.setdefault("requests_cache", rc_mod)
 
-from piwardrive import webui_server
-from piwardrive import service
-from piwardrive import security
+from piwardrive import security, service, webui_server
 
 
 def test_webui_serves_static_and_api(tmp_path, monkeypatch):

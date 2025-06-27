@@ -6,7 +6,6 @@ from types import ModuleType, SimpleNamespace
 from typing import Any
 
 
-
 def load_scheduler(monkeypatch: Any):
     clk_mod = ModuleType("kivy.clock")
 

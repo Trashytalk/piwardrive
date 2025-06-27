@@ -2,13 +2,15 @@
 
 # main_localization.py
 
-import pandas as pd
-import numpy as np
-import sqlite3
 import json
-from sklearn.cluster import DBSCAN
+import sqlite3
+
+import numpy as np
+import pandas as pd
 from folium import Map, Marker
 from logger import setup_logger
+from sklearn.cluster import DBSCAN
+
 logger = setup_logger()
 
 # Load configuration from JSON

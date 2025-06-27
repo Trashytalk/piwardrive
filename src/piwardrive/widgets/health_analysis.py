@@ -1,20 +1,18 @@
 """Widget displaying analyzed health metrics with a plot."""
 import logging
-from typing import Any
 import tempfile
+from typing import Any
 
-from piwardrive.simpleui import (
-    dp,
-    Image,
-    Card as MDCard,
-    Label as MDLabel,
-)
+from piwardrive.analysis import compute_health_stats, plot_cpu_temp
 from piwardrive.localization import _
+from piwardrive.persistence import load_recent_health
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Image
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
+from piwardrive.utils import run_async_task
 
 from .base import DashboardWidget
-from piwardrive.persistence import load_recent_health
-from piwardrive.utils import run_async_task
-from piwardrive.analysis import compute_health_stats, plot_cpu_temp
 
 
 class HealthAnalysisWidget(DashboardWidget):

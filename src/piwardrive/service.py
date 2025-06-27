@@ -22,7 +22,7 @@ try:  # pragma: no cover - optional FastAPI dependency
         WebSocket,
         WebSocketDisconnect,
     )
-    from fastapi.responses import Response, StreamingResponse
+    from fastapi.responses import Response, StreamingResponse  # noqa: E402
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
     FastAPI = type(
@@ -74,14 +74,9 @@ from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
-    from persistence import (
-        DashboardSettings,
-        _db_path,
-        get_table_counts,
-        load_dashboard_settings,
-        load_recent_health,
-        save_dashboard_settings,
-    )
+    from persistence import (DashboardSettings, _db_path, get_table_counts,
+                             load_dashboard_settings, load_recent_health,
+                             save_dashboard_settings)
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
@@ -116,6 +111,9 @@ try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner  # type: ignore
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
+
+
+logger = logging.getLogger(__name__)
 
 
 async def _default_fetch_metrics_async(
@@ -761,7 +759,7 @@ async def main() -> None:
 
     import uvicorn
 
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000)
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
     server = uvicorn.Server(config)
     await server.serve()
 

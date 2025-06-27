@@ -1,7 +1,6 @@
-import sys
 import asyncio
+import sys
 from types import ModuleType, SimpleNamespace
-
 
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
@@ -10,6 +9,7 @@ aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules['aiohttp'] = aiohttp_mod
 
 from piwardrive import sync
+
 
 class DummyConfig(SimpleNamespace):
     remote_sync_url: str = 'http://remote'

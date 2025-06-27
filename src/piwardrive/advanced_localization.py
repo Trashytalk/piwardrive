@@ -10,8 +10,8 @@ from typing import Dict, Iterable, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import DBSCAN
 from scipy import signal
+from sklearn.cluster import DBSCAN
 
 
 @dataclass

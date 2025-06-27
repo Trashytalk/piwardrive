@@ -1,14 +1,11 @@
-import os
+import asyncio
+import csv
+import json
 import os
 import sys
-import json
-import csv
-import asyncio
-
 
 import piwardrive.scripts.health_import as hi
-from piwardrive import persistence
-from piwardrive import config
+from piwardrive import config, persistence
 
 
 def setup_tmp(tmp_path):

@@ -1,11 +1,11 @@
-import sys
-import os
-from unittest import mock
-from typing import Any, cast
-from pathlib import Path
-import time
 import asyncio
+import os
+import sys
+import time
+from pathlib import Path
 from types import ModuleType
+from typing import Any, cast
+from unittest import mock
 
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]

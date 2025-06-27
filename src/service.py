@@ -19,6 +19,7 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
 from typing import Any, Callable  # noqa: E402
+from types import ModuleType  # noqa: E402
 
 from piwardrive import orientation_sensors  # noqa: F401,E402
 from piwardrive import service as _p  # noqa: E402

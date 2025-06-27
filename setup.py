@@ -1,6 +1,8 @@
 """Entry point for setup module."""
 from pathlib import Path
-from setuptools import setup, Extension, find_packages
+
+from setuptools import Extension, find_packages, setup
+
 try:  # Python >=3.11
     import tomllib  # type: ignore
 except ModuleNotFoundError:  # Python <=3.10

@@ -1,7 +1,8 @@
 import os
 import sys
-from unittest import mock
 import threading
+from unittest import mock
+
 import pytest
 
 from piwardrive.di import Container

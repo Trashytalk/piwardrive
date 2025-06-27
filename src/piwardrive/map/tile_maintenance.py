@@ -1,5 +1,6 @@
 """Module tile_maintenance."""
 import asyncio
+import heapq
 import logging
 import os
 import sqlite3
@@ -9,12 +10,16 @@ from piwardrive.scheduler import PollScheduler
 from piwardrive import utils
 from typing import Optional, TYPE_CHECKING
 import typing
+from typing import Optional
+
+from piwardrive import utils
+from piwardrive.scheduler import PollScheduler
 
 try:
     _run_async = utils.run_async_task
 except AttributeError:  # pragma: no cover - core utils missing
-    from typing import Any, Callable, Coroutine, TypeVar
     from concurrent.futures import Future
+    from typing import Any, Callable, Coroutine, TypeVar
 
     T = TypeVar("T")
 

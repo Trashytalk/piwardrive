@@ -39,3 +39,20 @@ utils.run_async_task
        run_async_task->>Future: add_done_callback()
        run_async_task-->>Caller: return Future
 
+Scheduled SIGINT scans
+----------------------
+
+Like ``PollScheduler.register_widget`` above, scheduled tasks invoke the
+SIGINT suite scanners and persist their results.
+
+.. mermaid::
+
+   sequenceDiagram
+       participant Scheduler
+       participant Scanners
+       participant Persistence
+
+       Scheduler->>Scanners: scan_wifi(), scan_bluetooth(), ...
+       Scanners-->>Scheduler: results
+       Scheduler->>Persistence: save results
+

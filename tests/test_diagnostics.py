@@ -1,18 +1,19 @@
 """Tests for system diagnostics helpers."""
+import asyncio
+import gzip
 import os
 import sys
-import gzip
-from unittest import mock
 from types import ModuleType
-import asyncio
+from unittest import mock
 
 aiohttp_mod = ModuleType('aiohttp')
 aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
 aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules['aiohttp'] = aiohttp_mod
-from piwardrive import diagnostics
 from typing import Any
+
+from piwardrive import diagnostics
 
 
 def test_generate_system_report_includes_temp(monkeypatch: Any) -> None:

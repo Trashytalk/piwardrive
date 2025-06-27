@@ -21,12 +21,15 @@ PiWardrive's primary interface is a React-based web dashboard served by
    persistence
    gps_polling
    tile_cache
+   tile_prefetching
    vector_tile_customizer
    bluetooth
    orientation
    geofencing
    status_service
+   service_prefetch
    remote_sync
+   sigint_workflow
    aggregation_service
    architecture
    function_flows

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Iterable, Tuple, Callable, Awaitable
+from typing import Awaitable, Callable, Iterable, Tuple
 
 
 async def playback_track(

@@ -1,5 +1,6 @@
 """Entry point for :mod:`piwardrive.main` when running from the repo."""
 from __future__ import annotations
+
 import os
 import sys
 
@@ -7,8 +8,8 @@ SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from piwardrive.main import PiWardriveApp as _BaseApp  # noqa: E402
 from piwardrive import utils  # noqa: E402
+from piwardrive.main import PiWardriveApp as _BaseApp  # noqa: E402
 
 
 class PiWardriveApp(_BaseApp):
@@ -17,12 +18,11 @@ class PiWardriveApp(_BaseApp):
 
     def control_service(self, svc: str, action: str) -> None:  # pragma: no cover
         """Run a systemctl command for a given service with retries."""
-        import os
         import getpass as _getpass
-        from piwardrive.security import (
-            verify_password as _verify,
-            validate_service_name as _validate,
-        )
+        import os
+
+        from piwardrive.security import validate_service_name as _validate
+        from piwardrive.security import verify_password as _verify
 
         cfg = getattr(self, "config_data", None)
         cfg_hash = getattr(cfg, "admin_password_hash", "")

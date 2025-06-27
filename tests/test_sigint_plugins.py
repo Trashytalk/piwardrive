@@ -1,7 +1,6 @@
+import importlib
 import os
 import sys
-import importlib
-
 
 
 def test_sigint_plugin_loaded(tmp_path, monkeypatch):

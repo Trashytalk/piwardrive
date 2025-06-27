@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import time
-import logging
 
-from sigint_suite.wifi import scan_wifi
-from sigint_suite.exports import export_json
 from sigint_suite import paths
+from sigint_suite.exports import export_json
+from sigint_suite.wifi import scan_wifi
 
 from piwardrive.logconfig import setup_logging
 

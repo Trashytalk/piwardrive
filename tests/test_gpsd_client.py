@@ -1,6 +1,6 @@
 import importlib
-import types
 import sys
+import types
 
 from piwardrive import gpsd_client
 

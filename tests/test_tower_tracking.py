@@ -1,8 +1,7 @@
+import importlib.util
 import os
 import sys
 
-
-import importlib.util
 import pytest
 
 tracker_path = os.path.join(

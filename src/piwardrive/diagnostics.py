@@ -2,34 +2,27 @@
 
 from __future__ import annotations
 
-import os
-import subprocess
-from datetime import datetime
-import time
+import asyncio
 import cProfile
-import pstats
-import io
 import gzip
+import io
+import logging
+import os
+import pstats
 import shutil
+import subprocess
+import time
+from datetime import datetime
 
 import psutil
-import logging
-import asyncio
 
-from piwardrive import utils
-from piwardrive.scheduler import PollScheduler
+from piwardrive import cloud_export, config, r_integration, utils
 from piwardrive.interfaces import DataCollector, SelfTestCollector
-from piwardrive.persistence import (
-    HealthRecord,
-    save_health_record,
-    load_recent_health,
-    purge_old_health,
-    vacuum,
-)
+from piwardrive.persistence import (HealthRecord, load_recent_health,
+                                    purge_old_health, save_health_record,
+                                    vacuum)
+from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
-from piwardrive import config
-from piwardrive import r_integration
-from piwardrive import cloud_export
 
 _PROFILER: cProfile.Profile | None = None
 _LAST_NETWORK_OK: float | None = None
@@ -291,9 +284,9 @@ class HealthMonitor:
             logging.exception("HealthMonitor poll failed: %s", exc)
 
     async def _run_summary(self) -> None:
-        from dataclasses import asdict
         import csv
         import json
+        from dataclasses import asdict
 
         try:
             records = await load_recent_health(10000)

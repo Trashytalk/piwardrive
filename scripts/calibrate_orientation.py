@@ -8,9 +8,8 @@ import logging
 from pathlib import Path
 from typing import Dict
 
-from piwardrive.logconfig import setup_logging
-
 from piwardrive import orientation_sensors as osens
+from piwardrive.logconfig import setup_logging
 
 
 def _prompt(angle: float) -> None:

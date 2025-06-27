@@ -1,5 +1,5 @@
-import sys
 import json
+import sys
 
 from piwardrive.scripts import tile_maintenance_cli as cli
 

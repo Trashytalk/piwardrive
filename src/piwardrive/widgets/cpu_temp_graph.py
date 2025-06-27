@@ -3,9 +3,9 @@
 from typing import Any
 
 from piwardrive.localization import _
+from piwardrive.utils import get_cpu_temp
 
 from .base import DashboardWidget
-from piwardrive.utils import get_cpu_temp
 
 
 class CPUTempGraphWidget(DashboardWidget):

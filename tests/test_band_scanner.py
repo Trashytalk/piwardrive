@@ -1,13 +1,10 @@
+import asyncio
 import os
 import sys
 import types
-import asyncio
-
 
 from piwardrive.sigint_suite.cellular.band_scanner.scanner import (
-    scan_bands,
-    async_scan_bands,
-)
+    async_scan_bands, scan_bands)
 
 
 def test_scan_bands_parses_output(monkeypatch):
