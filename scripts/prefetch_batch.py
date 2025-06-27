@@ -1,6 +1,9 @@
 """Module prefetch_batch."""
 import argparse
+import logging
 from screens.map_utils import tile_cache
+
+from piwardrive.logconfig import setup_logging
 
 
 def _parse_bboxes(path: str) -> list[tuple[float, float, float, float]]:
@@ -15,12 +18,12 @@ def _parse_bboxes(path: str) -> list[tuple[float, float, float, float]]:
             else:
                 parts = line.split()
             if len(parts) < 4:
-                print(f"Skipping line {lineno}: {line}")
+                logging.error("Skipping line %s: %s", lineno, line)
                 continue
             try:
                 box = tuple(map(float, parts[:4]))
             except ValueError:
-                print(f"Skipping line {lineno}: {line}")
+                logging.error("Skipping line %s: %s", lineno, line)
                 continue
             bboxes.append(box)  # type: ignore[arg-type]
     return bboxes
@@ -46,13 +49,14 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    setup_logging(stdout=True)
     bboxes = _parse_bboxes(args.input)
     if not bboxes:
-        print("No bounding boxes found")
+        logging.error("No bounding boxes found")
         return
 
     def progress(done: int, total: int) -> None:
-        print(f"{done}/{total}", end="\r", flush=True)
+        logging.info("%s/%s", done, total)
 
     for bbox in bboxes:
         tile_cache.prefetch_tiles(

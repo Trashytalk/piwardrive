@@ -5,10 +5,13 @@ from __future__ import annotations
 import argparse
 import os
 import time
+import logging
 
 from sigint_suite.wifi import scan_wifi
 from sigint_suite.exports import export_json
 from sigint_suite import paths
+
+from piwardrive.logconfig import setup_logging
 
 try:
     from dronekit import connect
@@ -44,6 +47,8 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    setup_logging(stdout=True)
+
     if connect is None:
         raise RuntimeError(
             "dronekit not installed. Use 'pip install dronekit' to enable UAV support"
@@ -78,7 +83,7 @@ def main(argv: list[str] | None = None) -> None:
     os.makedirs(args.export_dir, exist_ok=True)
     export_json(track, os.path.join(args.export_dir, "uav_track.json"))
     export_json(wifi_records, os.path.join(args.export_dir, "uav_wifi.json"))
-    print(f"Data saved to {args.export_dir}")
+    logging.info("Data saved to %s", args.export_dir)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual use

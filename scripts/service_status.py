@@ -1,7 +1,10 @@
 """Command line helper for checking systemd service status."""
 import argparse
 import json
+import logging
 from types import SimpleNamespace
+
+from piwardrive.logconfig import setup_logging
 
 
 def _get_service_statuses(services=None):
@@ -22,8 +25,9 @@ def main(argv: list[str] | None = None) -> None:
         help="Services to check (defaults to kismet, bettercap, gpsd)",
     )
     args = parser.parse_args(argv)
+    setup_logging(stdout=True)
     statuses = diagnostics.get_service_statuses(args.services or None)
-    print(json.dumps(statuses))
+    logging.info(json.dumps(statuses))
 
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation
