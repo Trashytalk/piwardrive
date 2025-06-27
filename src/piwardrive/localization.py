@@ -2,13 +2,13 @@
 import json
 import os
 from functools import lru_cache
-from typing import Dict
+
 
 _current = os.getenv("PW_LANG", "en")
 
 
 @lru_cache(maxsize=None)
-def _load_locale(locale: str) -> Dict[str, str]:
+def _load_locale(locale: str) -> dict[str, str]:
     """Read the JSON file for ``locale`` and cache the parsed result."""
     path = os.path.join(os.path.dirname(__file__), "locales", f"{locale}.json")
     try:

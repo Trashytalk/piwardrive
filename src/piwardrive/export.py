@@ -9,7 +9,7 @@ from typing import Any, Iterable, Mapping, Sequence, Callable
 import time
 
 try:  # Optional dependency for shapefile export
-    import shapefile  # type: ignore
+    import shapefile
     # ``shapefile.Reader`` returns points as ``_Array`` which does not compare
     # equal to a plain list.  Some tests expect list equality, so patch the
     # ``__eq__`` method to compare based on list content.
@@ -20,7 +20,7 @@ try:  # Optional dependency for shapefile export
 except Exception:  # pragma: no cover - optional
     shapefile = None
 
-EXPORT_FORMATS = ("csv", "json", "gpx", "kml", "geojson", "shp")
+EXPORT_FORMATS: tuple[str, ...] = ("csv", "json", "gpx", "kml", "geojson", "shp")
 
 __all__ = [
     "EXPORT_FORMATS",
