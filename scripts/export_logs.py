@@ -1,6 +1,8 @@
 """Module export_logs."""
+
 import argparse
 import asyncio
+import logging
 
 try:  # allow tests to substitute a lightweight main module
     from main import PiWardriveApp  # type: ignore
@@ -24,6 +26,7 @@ def main(argv: list[str] | None = None) -> None:
     app = PiWardriveApp()
     path = asyncio.run(app.export_logs(args.output, args.lines))
     if path:
+        logging.info("Logs exported to %s", path)
         print(path)
 
 
