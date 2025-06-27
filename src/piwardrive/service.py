@@ -8,9 +8,7 @@ import os
 import typing
 from dataclasses import asdict
 
-logger = logging.getLogger(__name__)
-
-try:  # pragma: no cover - optional FastAPI dependency
+try:  # pragma: no cover - optional FastAPI dependency  # noqa: E402
     from fastapi import (
         Body,
         Depends,
@@ -20,7 +18,7 @@ try:  # pragma: no cover - optional FastAPI dependency
         WebSocket,
         WebSocketDisconnect,
     )
-    from fastapi.responses import Response, StreamingResponse
+    from fastapi.responses import Response, StreamingResponse  # noqa: E402
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
     FastAPI = type(
@@ -101,6 +99,9 @@ try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner  # type: ignore
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
+
+
+logger = logging.getLogger(__name__)
 
 
 async def _default_fetch_metrics_async(

@@ -9,6 +9,8 @@ import subprocess  # nosec B404
 from dataclasses import dataclass
 from typing import List, Sequence
 
+from piwardrive.logconfig import setup_logging
+
 profile = globals().get("profile", lambda f: f)  # type: ignore[no-redef]
 
 

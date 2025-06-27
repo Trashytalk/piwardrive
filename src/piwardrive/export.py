@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
+from piwardrive.errors import ExportError
+
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
@@ -201,6 +203,20 @@ def export_shp(
             writer.save(base)
         return
 
+    fieldnames = fields or list(first.keys())
+    for name in fieldnames:
+        if name in {"lat", "lon"}:
+            continue
+        writer.field(name[:10], "C")
+
+    def _write(rec: Mapping[str, Any]) -> None:
+        lat = rec.get("lat")
+        lon = rec.get("lon")
+        if lat is None or lon is None:
+            return
+        writer.point(lon, lat)
+        record = [rec.get(name) for name in fieldnames if name not in {"lat", "lon"}]
+        writer.record(*record)
 
     _write(first)
     for rec in it:
@@ -209,18 +225,6 @@ def export_shp(
         writer.close()
     else:  # pyshp < 2
         writer.save(base)
-
-
-EXPORTERS: dict[
-    str, Callable[[Iterable[Mapping[str, Any]], str, Sequence[str] | None], None]
-=======
-    try:
-        if hasattr(writer, "close"):
-            writer.close()
-        else:  # pyshp < 2
-            writer.save(base)
-    except OSError as exc:  # pragma: no cover - write errors
-        logging.exception("Failed to write %s: %s", base, exc)
 
 
 EXPORTERS: dict[
