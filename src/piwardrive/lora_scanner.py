@@ -159,13 +159,15 @@ def main() -> None:  # pragma: no cover - CLI helper
     parser.add_argument("--json", action="store_true", help="print as JSON")
     args = parser.parse_args()
 
+    setup_logging(stdout=True)
+
     lines = scan_lora(args.iface)
     if args.json:
         packets = [p.__dict__ for p in parse_packets(lines)]
-        print(json.dumps(packets, indent=2))
+        logging.info(json.dumps(packets, indent=2))
     else:
         for line in lines:
-            print(line)
+            logging.info(line)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution

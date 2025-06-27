@@ -5,12 +5,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 
 from piwardrive.gps_track_playback import playback_track
+from piwardrive.logconfig import setup_logging
 
 
 async def _print_point(lat: float, lon: float) -> None:
-    print(f"{lat:.6f}, {lon:.6f}")
+    logging.info("%0.6f, %0.6f", lat, lon)
 
 
 async def _run(track_file: str, interval: float) -> None:
@@ -29,6 +31,7 @@ def main(argv: list[str] | None = None) -> None:
         help="seconds between points",
     )
     args = parser.parse_args(argv)
+    setup_logging(stdout=True)
     asyncio.run(_run(args.track, args.interval))
 
 
