@@ -151,8 +151,11 @@ def _load_geofences() -> list:
 
 def _save_geofences(polys: list) -> None:
     os.makedirs(CONFIG_DIR, exist_ok=True)
-    with open(GEOFENCE_FILE, "w", encoding="utf-8") as fh:
-        json.dump(polys, fh, indent=2)
+    try:
+        with open(GEOFENCE_FILE, "w", encoding="utf-8") as fh:
+            json.dump(polys, fh, indent=2)
+    except OSError as exc:
+        logging.exception("Failed to save geofences: %s", exc)
 
 
 def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
