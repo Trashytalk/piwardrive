@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import sqlite3
 import http.server
 import json
+import sqlite3
 from pathlib import Path
 
 

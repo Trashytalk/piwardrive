@@ -1,9 +1,10 @@
+import json
+import sqlite3
+import subprocess
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-import sqlite3
-import json
-import subprocess
 
 from piwardrive.security import validate_service_name
 

@@ -5,8 +5,8 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from piwardrive.service import app as api_app, list_widgets
-
+from piwardrive.service import app as api_app
+from piwardrive.service import list_widgets
 
 DEF_BUILD_DIR = os.path.join(
     os.path.dirname(__file__), os.pardir, os.pardir, "webui", "dist"

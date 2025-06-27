@@ -1,13 +1,13 @@
 import importlib
 import importlib.util
-from pathlib import Path
-from dataclasses import asdict
 import sys
+from dataclasses import asdict
+from pathlib import Path
 from types import ModuleType
 
 from fastapi.testclient import TestClient
-from piwardrive.persistence import HealthRecord
 
+from piwardrive.persistence import HealthRecord
 
 
 def _load_service(monkeypatch):

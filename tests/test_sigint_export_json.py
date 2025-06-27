@@ -1,7 +1,6 @@
+import json
 import os
 import sys
-import json
-
 
 from piwardrive.sigint_suite.exports import export_json
 

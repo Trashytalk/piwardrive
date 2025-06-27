@@ -1,8 +1,8 @@
 """Minimal dependency injection container."""
 from __future__ import annotations
 
-from typing import Any, Callable, Dict
 from threading import Lock
+from typing import Any, Callable, Dict
 
 
 class Container:

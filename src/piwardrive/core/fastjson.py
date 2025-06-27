@@ -1,3 +1,3 @@
-from ..fastjson import loads, dumps
+from ..fastjson import dumps, loads
 
 __all__ = ["loads", "dumps"]

@@ -1,11 +1,10 @@
 import logging
+import os
+import sys
+from typing import Any
 from unittest import mock
 
-import sys
-import os
-
 from piwardrive.utils import report_error
-from typing import Any
 
 
 def test_report_error_logs_and_alerts(caplog: Any) -> None:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Mapping, Any, List
+from typing import Any, Iterable, List, Mapping
 
 from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 

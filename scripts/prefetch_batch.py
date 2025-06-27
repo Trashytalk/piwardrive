@@ -1,6 +1,7 @@
 """Module prefetch_batch."""
 import argparse
 import logging
+
 from screens.map_utils import tile_cache
 
 from piwardrive.logconfig import setup_logging

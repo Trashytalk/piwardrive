@@ -8,7 +8,7 @@ import os
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Awaitable, Callable, List, Optional, AsyncIterator
+from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional
 
 import aiosqlite
 

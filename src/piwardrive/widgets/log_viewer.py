@@ -1,15 +1,11 @@
 """Scrollable widget that tails a log file."""
 
-from typing import Any, List
 import os
 import re
+from typing import Any, List
 
-from piwardrive.simpleui import (
-    Label,
-    ScrollView,
-    DropdownMenu as MDDropdownMenu,
-)
-
+from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
+from piwardrive.simpleui import Label, ScrollView
 from piwardrive.utils import tail_file
 
 

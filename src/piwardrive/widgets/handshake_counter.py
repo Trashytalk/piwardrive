@@ -2,11 +2,14 @@
 
 import logging
 from typing import Any
-from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
+
 from piwardrive.localization import _
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
+from piwardrive.utils import count_bettercap_handshakes
 
 from .base import DashboardWidget
-from piwardrive.utils import count_bettercap_handshakes
 
 
 class HandshakeCounterWidget(DashboardWidget):

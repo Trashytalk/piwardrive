@@ -1,11 +1,10 @@
 """Module scanner."""
+import asyncio
 import logging
 import os
 import shlex
 import subprocess
-import asyncio
 from typing import List, Optional
-
 
 from piwardrive.sigint_suite.cellular.parsers import parse_band_output
 from piwardrive.sigint_suite.models import BandRecord

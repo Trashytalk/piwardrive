@@ -1,9 +1,8 @@
+import importlib
+import logging
 import os
 import sys
 import types
-import importlib
-import logging
-
 
 from piwardrive.sigint_suite import paths
 

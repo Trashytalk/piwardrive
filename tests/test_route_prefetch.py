@@ -2,7 +2,6 @@ import os
 import sys
 from types import SimpleNamespace
 
-
 # minimal Kivy stub for testing without the real dependency
 sys.modules["kivy.app"] = SimpleNamespace(App=type("App", (), {"get_running_app": staticmethod(lambda: None)}))
 
@@ -19,8 +18,9 @@ def _haversine(a, b):
 sys.modules["scheduler"] = SimpleNamespace(PollScheduler=object)
 sys.modules["utils"] = SimpleNamespace(haversine_distance=_haversine)
 
-from piwardrive import route_prefetch  # noqa: E402
 import pytest
+
+from piwardrive import route_prefetch  # noqa: E402
 
 
 class DummyScheduler:

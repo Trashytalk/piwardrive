@@ -1,7 +1,7 @@
 import os
 import sys
-import numpy as np
 
+import numpy as np
 
 from piwardrive.advanced_localization import _kalman_1d
 

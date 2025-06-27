@@ -3,9 +3,10 @@
 import json
 import os
 import sys
-from pathlib import Path
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any
+
 import pytest
 from pydantic import ValidationError
 

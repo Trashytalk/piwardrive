@@ -10,8 +10,6 @@ import xml.etree.ElementTree as ET
 import zipfile
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
-from .errors import ExportError
-
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore

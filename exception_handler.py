@@ -1,7 +1,6 @@
 """Stub for :mod:`piwardrive.exception_handler` when running from the repo."""
 from __future__ import annotations
 
-import importlib
 import os
 import sys
 

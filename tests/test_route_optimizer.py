@@ -1,7 +1,6 @@
+import math
 import os
 import sys
-import math
-
 
 from piwardrive import route_optimizer  # noqa: E402  # type: ignore
 

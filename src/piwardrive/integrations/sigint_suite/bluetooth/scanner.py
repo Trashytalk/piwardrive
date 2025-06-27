@@ -1,11 +1,10 @@
 """Module scanner."""
 import asyncio
+import contextlib
 import logging
 import os
 import subprocess
-import contextlib
 from typing import Dict, List
-
 
 from piwardrive.sigint_suite.models import BluetoothDevice
 

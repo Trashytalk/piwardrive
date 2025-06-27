@@ -3,10 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Protocol
 
+from piwardrive import diagnostics, utils
 from piwardrive.gpsd_client import client as gps_client
-
-from piwardrive import diagnostics
-from piwardrive import utils
 
 
 class MapService(Protocol):

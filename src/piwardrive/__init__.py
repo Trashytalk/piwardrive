@@ -1,9 +1,9 @@
 
 """PiWardrive package initializer."""
 
+import sys
 from importlib import import_module
 from types import ModuleType
-import sys
 
 sigint_suite: ModuleType | None
 

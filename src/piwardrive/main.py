@@ -8,26 +8,16 @@ import time
 from dataclasses import asdict, fields
 from typing import Any, Callable
 
-from piwardrive.scheduler import PollScheduler
-from piwardrive.config import (
-    load_config,
-    save_config,
-    Config,
-    config_mtime,
-    CONFIG_PATH,
-)
+from piwardrive import diagnostics, exception_handler, remote_sync, utils
+from piwardrive.config import (CONFIG_PATH, Config, config_mtime, load_config,
+                               save_config)
 from piwardrive.config_watcher import watch_config
-from piwardrive.security import hash_password
-from piwardrive.persistence import (
-    save_app_state,
-    load_app_state,
-    AppState,
-    _db_path,
-)
-from piwardrive import remote_sync, diagnostics, utils
 from piwardrive.di import Container
 from piwardrive.logconfig import setup_logging
-from piwardrive import exception_handler
+from piwardrive.persistence import (AppState, _db_path, load_app_state,
+                                    save_app_state)
+from piwardrive.scheduler import PollScheduler
+from piwardrive.security import hash_password
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -100,10 +90,9 @@ class PiWardriveApp:
     def control_service(self, svc: str, action: str) -> None:
         """Run a systemctl command for a given service with retries."""
         import getpass as _getpass
-        from piwardrive.security import (
-            verify_password as _verify,
-            validate_service_name as _validate,
-        )
+
+        from piwardrive.security import validate_service_name as _validate
+        from piwardrive.security import verify_password as _verify
 
         cfg_hash = getattr(self.config_data, "admin_password_hash", "")
         pw = os.getenv("PW_ADMIN_PASSWORD")
@@ -159,9 +148,11 @@ class PiWardriveApp:
         self, path: str | None = None, lines: int = 200
     ) -> str:
         """Write the last ``lines`` from each configured log to ``path``."""
-        from logconfig import DEFAULT_LOG_PATH
-        from piwardrive.security import sanitize_path
         import zipfile
+
+        from logconfig import DEFAULT_LOG_PATH
+
+        from piwardrive.security import sanitize_path
 
         if path is None:
             ts = int(time.time())
