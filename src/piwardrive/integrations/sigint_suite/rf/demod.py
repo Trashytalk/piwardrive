@@ -1,13 +1,13 @@
 """Simple FM demodulation helpers using an RTL-SDR."""
 
-from typing import List
+from typing import List, cast
 
 import numpy as np
 
 try:
     from rtlsdr import RtlSdr
 except Exception:  # pragma: no cover - import failure handled at runtime
-    RtlSdr = None  # type: ignore
+    RtlSdr = None
 
 
 def fm_demodulate(samples: np.ndarray) -> np.ndarray:
@@ -37,4 +37,4 @@ def demodulate_fm(
     audio = fm_demodulate(samples)
     decim = max(int(sample_rate / audio_rate), 1)
     audio = audio[::decim]
-    return audio.tolist()
+    return cast(List[float], audio.tolist())

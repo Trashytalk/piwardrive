@@ -4,7 +4,7 @@ import logging
 import os
 import shlex
 import subprocess
-from typing import List, Optional
+from typing import List, Optional, cast
 
 from piwardrive.sigint_suite.cellular.parsers import parse_band_output
 from piwardrive.sigint_suite.models import BandRecord
@@ -23,7 +23,7 @@ def scan_bands(
     variable to override the executable. The timeout defaults to the
     ``BAND_SCAN_TIMEOUT`` environment variable (``10`` seconds).
     """
-    cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
+    cmd_str = str(cmd or os.getenv("BAND_SCAN_CMD", "celltrack"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
@@ -37,7 +37,7 @@ def scan_bands(
 
         return []
 
-    return parse_band_output(output)
+    return cast(List[BandRecord], parse_band_output(output))
 
 
 async def async_scan_bands(
@@ -45,7 +45,7 @@ async def async_scan_bands(
     timeout: int | None = None,
 ) -> List[BandRecord]:
     """Asynchronously scan for cellular bands using ``celltrack``."""
-    cmd_str = cmd or os.getenv("BAND_SCAN_CMD", "celltrack")
+    cmd_str = str(cmd or os.getenv("BAND_SCAN_CMD", "celltrack"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout if timeout is not None else int(os.getenv("BAND_SCAN_TIMEOUT", "10"))
@@ -63,7 +63,7 @@ async def async_scan_bands(
         logger.exception("Band scan failed: %s", exc)
         return []
 
-    return parse_band_output(output)
+    return cast(List[BandRecord], parse_band_output(output))
 
 
 def main() -> None:
