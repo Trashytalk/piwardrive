@@ -61,7 +61,7 @@ async def _merge_records(records: Iterable[Tuple]) -> None:
         """INSERT OR IGNORE INTO health_records
             (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
             VALUES (?, ?, ?, ?, ?)""",
-        list(records),
+        records,
     )
     await conn.commit()
 
@@ -70,7 +70,7 @@ async def _merge_points(points: Iterable[Tuple[float, float]]) -> None:
     conn = await _get_conn()
     await conn.executemany(
         "INSERT INTO ap_points (lat, lon) VALUES (?, ?)",
-        list(points),
+        points,
     )
     await conn.commit()
 
@@ -136,7 +136,7 @@ async def main() -> None:
     import uvicorn
 
     await _get_conn()
-    config = uvicorn.Config(app, host="0.0.0.0", port=9100)
+    config = uvicorn.Config(app, host="0.0.0.0", port=9100)  # nosec B104
     server = uvicorn.Server(config)
     await server.serve()
 

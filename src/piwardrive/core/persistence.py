@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 import time
-import aiosqlite
-from dataclasses import dataclass, asdict, field
-from typing import Any, List, Optional, Callable, Awaitable
-import asyncio
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-import logging
+from typing import Any, Awaitable, Callable, List, Optional
+
+import aiosqlite
 
 from piwardrive import config
 
@@ -186,7 +187,7 @@ async def flush_health_records() -> None:
         (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
         VALUES (:timestamp, :cpu_temp, :cpu_percent, :memory_percent, :disk_percent)
         """,
-        list(_HEALTH_BUFFER),
+        _HEALTH_BUFFER,
     )
     await conn.commit()
     _HEALTH_BUFFER.clear()
@@ -269,9 +270,7 @@ async def load_dashboard_settings() -> DashboardSettings:
     cfg = config.load_config()
     layout = cfg.dashboard_layout
     widgets = [
-        cls
-        for item in layout
-        if isinstance(item, dict) and (cls := item.get("cls"))
+        cls for item in layout if isinstance(item, dict) and (cls := item.get("cls"))
     ]
     return DashboardSettings(layout=layout, widgets=widgets)
 
@@ -318,7 +317,9 @@ async def get_table_counts() -> dict[str, int]:
             )
             tables = [row[0] for row in cur.fetchall()]
             for name in tables:
-                row = db.execute(f"SELECT COUNT(*) FROM {name}").fetchone()
+                row = db.execute(
+                    f"SELECT COUNT(*) FROM {name}"  # nosec B608
+                ).fetchone()
                 result[name] = int(row[0]) if row else 0
         return result
 
