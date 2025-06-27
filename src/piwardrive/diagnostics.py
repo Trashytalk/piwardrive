@@ -13,14 +13,19 @@ import shutil
 import subprocess
 import time
 from datetime import datetime
+from typing import Any, Dict
 
 import psutil
 
 from piwardrive import cloud_export, config, r_integration, utils
 from piwardrive.interfaces import DataCollector, SelfTestCollector
-from piwardrive.persistence import (HealthRecord, load_recent_health,
-                                    purge_old_health, save_health_record,
-                                    vacuum)
+from piwardrive.persistence import (
+    HealthRecord,
+    load_recent_health,
+    purge_old_health,
+    save_health_record,
+    vacuum,
+)
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
 
@@ -42,15 +47,15 @@ def _upload_to_cloud(path: str) -> None:
         logging.exception("Cloud upload failed: %s", exc)
 
 
-def generate_system_report() -> dict:
+def generate_system_report() -> Dict[str, Any]:
     """Return a dictionary with basic system metrics."""
     report = {
         "timestamp": datetime.now().isoformat(),
         "cpu_temp": utils.get_cpu_temp(),
         "cpu_percent": psutil.cpu_percent(interval=None),
         "memory_percent": psutil.virtual_memory().percent,
-        "disk_percent": psutil.disk_usage('/').percent,
-        "ssd_smart": utils.get_smart_status('/mnt/ssd'),
+        "disk_percent": psutil.disk_usage("/").percent,
+        "ssd_smart": utils.get_smart_status("/mnt/ssd"),
     }
     metrics = get_profile_metrics()
     if metrics:
@@ -139,11 +144,7 @@ def stop_profiling() -> str | None:
         return None
     _PROFILER.disable()
     s = io.StringIO()
-    stats = (
-        pstats.Stats(_PROFILER, stream=s)
-        .strip_dirs()
-        .sort_stats("cumulative")
-    )
+    stats = pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative")
     stats.print_stats(10)
     path = os.getenv("PW_PROFILE_CALLGRIND")
     if path:
@@ -163,7 +164,7 @@ def stop_profiling() -> str | None:
     return s.getvalue()
 
 
-def get_profile_metrics() -> dict | None:
+def get_profile_metrics() -> Dict[str, float] | None:
     """Return simple metrics from the active profiler."""
     if _PROFILER is None:
         return None
@@ -172,7 +173,7 @@ def get_profile_metrics() -> dict | None:
     return {"calls": len(stats), "cumtime": total}
 
 
-def run_network_test(host: str = '8.8.8.8', cache_seconds: float = 30.0) -> bool:
+def run_network_test(host: str = "8.8.8.8", cache_seconds: float = 30.0) -> bool:
     """Ping ``host`` once and return True if reachable.
 
     If the previous successful check occurred within ``cache_seconds`` the
@@ -183,16 +184,14 @@ def run_network_test(host: str = '8.8.8.8', cache_seconds: float = 30.0) -> bool
     if _LAST_NETWORK_OK is not None and now - _LAST_NETWORK_OK < cache_seconds:
         return True
     try:
-        subprocess.run(
-            ['ping', '-c', '1', host], capture_output=True, check=True
-        )
+        subprocess.run(["ping", "-c", "1", host], capture_output=True, check=True)
     except subprocess.CalledProcessError:
         return False
     _LAST_NETWORK_OK = now
     return True
 
 
-def get_interface_status() -> dict:
+def get_interface_status() -> Dict[str, bool]:
     """Return mapping of network interface names to ``isup`` booleans."""
     return {name: stats.isup for name, stats in psutil.net_if_stats().items()}
 
@@ -200,29 +199,29 @@ def get_interface_status() -> dict:
 def list_usb_devices() -> list[str]:
     """Return lines of ``lsusb`` output as a list."""
     try:
-        proc = subprocess.run(
-            ['lsusb'], capture_output=True, text=True, check=True
-        )
+        proc = subprocess.run(["lsusb"], capture_output=True, text=True, check=True)
     except subprocess.CalledProcessError:
         return []
     return proc.stdout.strip().splitlines()
 
 
-def get_service_statuses(services: tuple[str, ...] | list[str] | None = None) -> dict:
+def get_service_statuses(
+    services: tuple[str, ...] | list[str] | None = None,
+) -> Dict[str, bool]:
     """Return mapping of service names to their ``systemd`` active state."""
     if services is None:
-        services = ('kismet', 'bettercap', 'gpsd')
+        services = ("kismet", "bettercap", "gpsd")
     return {svc: utils.service_status(svc) for svc in services}
 
 
-def self_test() -> dict:
+def self_test() -> Dict[str, Any]:
     """Run a few checks and return their results."""
     return {
-        'system': generate_system_report(),
-        'network_ok': run_network_test(),
-        'interfaces': get_interface_status(),
-        'usb': list_usb_devices(),
-        'services': get_service_statuses(),
+        "system": generate_system_report(),
+        "network_ok": run_network_test(),
+        "interfaces": get_interface_status(),
+        "usb": list_usb_devices(),
+        "services": get_service_statuses(),
     }
 
 
@@ -231,7 +230,7 @@ class HealthMonitor:
 
     def __init__(
         self,
-        scheduler: 'PollScheduler',
+        scheduler: "PollScheduler",
         interval: float = 10.0,
         collector: DataCollector | None = None,
         daily_summary: bool = False,
@@ -243,7 +242,7 @@ class HealthMonitor:
         self._scheduler = scheduler
         self._interval = interval
         self._collector: DataCollector = collector or SelfTestCollector()
-        self.data: dict | None = None
+        self.data: Dict[str, Any] | None = None
         self._event = "health_monitor"
         scheduler.schedule(
             self._event,
@@ -334,9 +333,7 @@ class HealthMonitor:
         try:
             os.makedirs(config.HEALTH_EXPORT_DIR, exist_ok=True)
             ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-            path = os.path.join(
-                config.HEALTH_EXPORT_DIR, f"health_{ts}.json"
-            )
+            path = os.path.join(config.HEALTH_EXPORT_DIR, f"health_{ts}.json")
             await asyncio.to_thread(
                 health_export.main,
                 [path, "--format", "json", "--limit", "10000"],
@@ -355,9 +352,7 @@ class HealthMonitor:
     def _cleanup_exports(self) -> None:
         if config.HEALTH_EXPORT_RETENTION <= 0:
             return
-        cutoff = (
-            datetime.now().timestamp() - config.HEALTH_EXPORT_RETENTION * 86400
-        )
+        cutoff = datetime.now().timestamp() - config.HEALTH_EXPORT_RETENTION * 86400
         for fname in os.listdir(config.HEALTH_EXPORT_DIR):
             fpath = os.path.join(config.HEALTH_EXPORT_DIR, fname)
             try:
