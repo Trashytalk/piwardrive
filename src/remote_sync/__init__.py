@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
-
-import aiohttp
 import sqlite3
 import tempfile
-import json
 
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -42,21 +41,22 @@ def _make_range_db(src: str, start: int, end: int) -> str:
             )"""
         )
 
-        rows = src_db.execute(
+        cur = src_db.execute(
             "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
             " FROM health_records WHERE rowid BETWEEN ? AND ?",
             (start, end),
-        ).fetchall()
+        )
         dst_db.executemany(
-            "INSERT INTO health_records VALUES (?, ?, ?, ?, ?)", rows
+            "INSERT INTO health_records VALUES (?, ?, ?, ?, ?)",
+            cur,
         )
 
-        rows = src_db.execute(
+        cur = src_db.execute(
             "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache "
             "WHERE rowid BETWEEN ? AND ?",
             (start, end),
-        ).fetchall()
-        dst_db.executemany("INSERT INTO ap_cache VALUES (?, ?, ?, ?, ?, ?)", rows)
+        )
+        dst_db.executemany("INSERT INTO ap_cache VALUES (?, ?, ?, ?, ?, ?)", cur)
         dst_db.commit()
 
     return dest

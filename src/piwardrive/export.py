@@ -1,15 +1,17 @@
 """Helpers for exporting data in various formats."""
+
 import csv
 import json
 import os
 import tempfile
-import zipfile
-import xml.etree.ElementTree as ET
-from typing import Any, Iterable, Mapping, Sequence, Callable
 import time
+import xml.etree.ElementTree as ET
+import zipfile
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
+
     # ``shapefile.Reader`` returns points as ``_Array`` which does not compare
     # equal to a plain list.  Some tests expect list equality, so patch the
     # ``__eq__`` method to compare based on list content.
@@ -62,7 +64,7 @@ def filter_records(
 
 
 def export_csv(
-    rows: Sequence[Mapping[str, Any]], path: str, fields: Sequence[str] | None
+    rows: Iterable[Mapping[str, Any]], path: str, fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in CSV format."""
     it = iter(rows)
@@ -82,7 +84,7 @@ def export_csv(
 
 
 def export_json(
-    rows: Sequence[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
+    rows: Iterable[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in JSON format."""
     with open(path, "w", encoding="utf-8") as fh:
@@ -95,7 +97,7 @@ def export_json(
 
 
 def export_gpx(
-    rows: Sequence[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
+    rows: Iterable[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in GPX format."""
     root = ET.Element("gpx", version="1.1", creator="piwardrive")
@@ -112,7 +114,7 @@ def export_gpx(
 
 
 def export_kml(
-    rows: Sequence[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
+    rows: Iterable[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in KML format."""
     root = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
@@ -132,7 +134,7 @@ def export_kml(
 
 
 def export_geojson(
-    rows: Sequence[Mapping[str, Any]], path: str, fields: Sequence[str] | None
+    rows: Iterable[Mapping[str, Any]], path: str, fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in GeoJSON format."""
     features = []
@@ -158,42 +160,60 @@ def export_geojson(
 
 
 def export_shp(
-    rows: Sequence[Mapping[str, Any]], path: str, fields: Sequence[str] | None
+    rows: Iterable[Mapping[str, Any]], path: str, fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in Shapefile format."""
     if shapefile is None:
         raise RuntimeError("pyshp is required for shapefile export")
-    rows = list(rows)
+    it = iter(rows)
+    try:
+        first = next(it)
+    except StopIteration:
+        base = path[:-4] if path.lower().endswith(".shp") else path
+        if getattr(shapefile, "__version__", "2").startswith("1."):
+            writer = shapefile.Writer(base)
+            writer.shapeType = shapefile.POINT
+        else:
+            writer = shapefile.Writer(base, shapefile.POINT)
+        if hasattr(writer, "close"):
+            writer.close()
+        else:  # pyshp < 2
+            writer.save(base)
+        return
+
     base = path[:-4] if path.lower().endswith(".shp") else path
     if getattr(shapefile, "__version__", "2").startswith("1."):
         writer = shapefile.Writer(base)
         writer.shapeType = shapefile.POINT
     else:
         writer = shapefile.Writer(base, shapefile.POINT)
-    fieldnames = fields or (list(rows[0].keys()) if rows else [])
+    fieldnames = fields or list(first.keys())
     for name in fieldnames:
         if name in {"lat", "lon"}:
             continue
         writer.field(name[:10], "C")
-    for rec in rows:
+
+    def _write(rec: Mapping[str, Any]) -> None:
         lat = rec.get("lat")
         lon = rec.get("lon")
         if lat is None or lon is None:
-            continue
+            return
         writer.point(lon, lat)
-        record = []
-        for name in fieldnames:
-            if name in {"lat", "lon"}:
-                continue
-            record.append(rec.get(name))
+        record = [rec.get(name) for name in fieldnames if name not in {"lat", "lon"}]
         writer.record(*record)
+
+    _write(first)
+    for rec in it:
+        _write(rec)
     if hasattr(writer, "close"):
         writer.close()
     else:  # pyshp < 2
         writer.save(base)
 
 
-EXPORTERS: dict[str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]] = {
+EXPORTERS: dict[
+    str, Callable[[Iterable[Mapping[str, Any]], str, Sequence[str] | None], None]
+] = {
     "csv": export_csv,
     "json": export_json,
     "gpx": export_gpx,
@@ -204,7 +224,7 @@ EXPORTERS: dict[str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] |
 
 
 def export_records(
-    records: Sequence[Mapping[str, Any]],
+    records: Iterable[Mapping[str, Any]],
     path: str,
     fmt: str,
     fields: Sequence[str] | None = None,
