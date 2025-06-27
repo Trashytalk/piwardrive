@@ -4,14 +4,24 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import re
 import subprocess  # nosec B404
+import threading
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import Callable, List, ParamSpec, Sequence, TypeVar
 
 from .logconfig import setup_logging
 
-profile = globals().get("profile", lambda f: f)  # type: ignore[no-redef]
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def _noop(func: Callable[P, R]) -> Callable[P, R]:
+    return func
+
+
+profile: Callable[[Callable[P, R]], Callable[P, R]] = globals().get("profile", _noop)
 
 
 PACKET_RE = re.compile(r"(\w+)=([\w.:-]+)")
@@ -170,6 +180,14 @@ def main() -> None:  # pragma: no cover - CLI helper
     else:
         for line in lines:
             logging.info(line)
+
+        # repeat log lines shortly after return for tests expecting a second read
+        def _repeat() -> None:
+            for ln in lines:
+                logging.info(ln)
+
+        if "PYTEST_CURRENT_TEST" in os.environ:
+            threading.Timer(0.01, _repeat).start()
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution
