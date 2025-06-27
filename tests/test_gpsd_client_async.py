@@ -1,7 +1,6 @@
+import asyncio
 import os
 import sys
-import asyncio
-
 
 from piwardrive import gpsd_client_async
 

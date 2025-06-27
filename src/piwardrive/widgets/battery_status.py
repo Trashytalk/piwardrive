@@ -3,10 +3,14 @@
 import logging
 from typing import Any
 
-from piwardrive.simpleui import dp, Label as MDLabel, Card as MDCard
-from .base import DashboardWidget
-from piwardrive.localization import _
 import psutil
+
+from piwardrive.localization import _
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
+
+from .base import DashboardWidget
 
 
 class BatteryStatusWidget(DashboardWidget):

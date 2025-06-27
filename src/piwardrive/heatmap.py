@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Sequence, Tuple, List
-
+from typing import Iterable, List, Sequence, Tuple
 
 Coord = Tuple[float, float]
 

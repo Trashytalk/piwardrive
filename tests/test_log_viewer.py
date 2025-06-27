@@ -2,8 +2,9 @@
 
 import os
 import sys
-import pytest
 from types import ModuleType, SimpleNamespace
+
+import pytest
 
 modules = {
     "kivy": ModuleType("kivy"),
@@ -96,8 +97,9 @@ aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
-from piwardrive.widgets.log_viewer import LogViewer
 from typing import Any
+
+from piwardrive.widgets.log_viewer import LogViewer
 
 
 def test_log_viewer_filter_regex(tmp_path: Any) -> None:

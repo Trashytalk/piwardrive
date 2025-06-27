@@ -1,8 +1,7 @@
+import importlib
 import os
 import sys
 from typing import Any
-import importlib
-
 
 
 def _load_widgets(add_dummy_module):

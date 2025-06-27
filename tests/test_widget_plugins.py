@@ -1,9 +1,8 @@
-import os
-import sys
 import importlib
+import os
 import subprocess
+import sys
 from pathlib import Path
-
 
 
 def _setup_kivy(add_dummy_module):

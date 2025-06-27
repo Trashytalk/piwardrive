@@ -11,15 +11,8 @@ from dataclasses import asdict
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional FastAPI dependency
-    from fastapi import (
-        Body,
-        Depends,
-        FastAPI,
-        HTTPException,
-        Request,
-        WebSocket,
-        WebSocketDisconnect,
-    )
+    from fastapi import (Body, Depends, FastAPI, HTTPException, Request,
+                         WebSocket, WebSocketDisconnect)
     from fastapi.responses import Response, StreamingResponse
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
@@ -59,14 +52,9 @@ from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
-    from persistence import (
-        DashboardSettings,
-        _db_path,
-        get_table_counts,
-        load_dashboard_settings,
-        load_recent_health,
-        save_dashboard_settings,
-    )
+    from persistence import (DashboardSettings, _db_path, get_table_counts,
+                             load_dashboard_settings, load_recent_health,
+                             save_dashboard_settings)
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,

@@ -1,12 +1,11 @@
+import io
 import json
 import logging
 import os
 import sys
-import io
-
+from typing import Any
 
 from piwardrive.logconfig import setup_logging
-from typing import Any
 
 
 def test_setup_logging_writes_json(tmp_path: Any) -> None:

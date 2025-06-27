@@ -7,9 +7,9 @@ from dataclasses import asdict
 from typing import Iterable
 
 try:
-    from persistence import load_recent_health, HealthRecord  # type: ignore
+    from persistence import HealthRecord, load_recent_health  # type: ignore
 except Exception:  # pragma: no cover - fall back if tests replaced module
-    from piwardrive.persistence import load_recent_health, HealthRecord
+    from piwardrive.persistence import HealthRecord, load_recent_health
 
 
 EXPORT_FORMATS = ("csv", "json")

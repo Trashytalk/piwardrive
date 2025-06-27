@@ -1,11 +1,10 @@
-import os
-import sys
 import csv
 import json
+import os
+import sys
 
-
-from piwardrive.sigint_suite.exports import export_csv, export_yaml, export_json
-
+from piwardrive.sigint_suite.exports import (export_csv, export_json,
+                                             export_yaml)
 
 
 def test_export_csv(tmp_path):

@@ -17,8 +17,8 @@ if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
 try:  # pragma: no cover - optional dependencies
-    from piwardrive import service as _p  # noqa: E402
     from piwardrive import orientation_sensors  # noqa: F401,E402
+    from piwardrive import service as _p  # noqa: E402
     from piwardrive.service import *  # noqa: F401,F403,E402
 except Exception:  # pragma: no cover - allow import without extras
     _p = None

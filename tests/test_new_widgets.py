@@ -1,5 +1,5 @@
-import importlib
 import asyncio
+import importlib
 
 
 def _load(add_dummy_module):

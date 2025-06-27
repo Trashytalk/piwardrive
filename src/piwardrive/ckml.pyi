@@ -1,4 +1,3 @@
 from __future__ import annotations
 
-
 def parse_coords(text: str) -> list[tuple[float, float]]: ...

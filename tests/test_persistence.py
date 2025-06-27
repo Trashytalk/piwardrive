@@ -1,13 +1,11 @@
+import asyncio
 import os
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
-from datetime import datetime, timedelta
 
-
-from piwardrive import config
-from piwardrive import persistence
-import asyncio
+from piwardrive import config, persistence
 
 
 def setup_tmp(tmp_path: Path) -> None:

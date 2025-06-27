@@ -6,18 +6,16 @@ import logging
 import tempfile
 from typing import Any
 
-from piwardrive.simpleui import (
-    dp,
-    Image,
-    Card as MDCard,
-    Label as MDLabel,
-)
+from piwardrive.heatmap import histogram, save_png
+from piwardrive.localization import _
+from piwardrive.persistence import load_ap_cache
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Image
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
+from piwardrive.utils import run_async_task
 
 from .base import DashboardWidget
-from piwardrive.heatmap import histogram, save_png
-from piwardrive.persistence import load_ap_cache
-from piwardrive.utils import run_async_task
-from piwardrive.localization import _
 
 
 class HeatmapWidget(DashboardWidget):

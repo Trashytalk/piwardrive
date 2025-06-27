@@ -2,9 +2,8 @@
 import argparse
 import os
 
-from piwardrive.sigint_suite import paths
+from piwardrive.sigint_suite import continuous_scan, paths
 from piwardrive.sigint_suite.exports import export_json
-from piwardrive.sigint_suite import continuous_scan
 
 
 def _save_results(export_dir: str, results: continuous_scan.Result) -> None:

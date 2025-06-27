@@ -12,7 +12,6 @@ from kivy.app import App
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
 
-
 logger = logging.getLogger(__name__)
 
 

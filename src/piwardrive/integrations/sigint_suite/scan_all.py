@@ -1,12 +1,13 @@
 """Module scan_all."""
 import argparse
 import os
-from piwardrive.sigint_suite.wifi import scan_wifi
+
 from piwardrive.sigint_suite.bluetooth import scan_bluetooth
 from piwardrive.sigint_suite.cellular.band_scanner import scan_bands
 from piwardrive.sigint_suite.cellular.imsi_catcher import scan_imsis
 from piwardrive.sigint_suite.cellular.tower_scanner import scan_towers
 from piwardrive.sigint_suite.exports import export_json
+from piwardrive.sigint_suite.wifi import scan_wifi
 
 DEFAULT_EXPORT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "exports"))
 

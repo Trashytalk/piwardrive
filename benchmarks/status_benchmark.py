@@ -4,7 +4,7 @@ import asyncio
 import logging
 import time
 
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from service import app
 

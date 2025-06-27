@@ -1,8 +1,7 @@
+import json
 import os
 import sys
-import json
 from dataclasses import asdict
-
 
 import piwardrive.scripts.health_export as he
 from piwardrive.persistence import HealthRecord

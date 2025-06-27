@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Iterable, Tuple, List
+from typing import Iterable, List, Tuple
 
 Coord = Tuple[float, float]
 

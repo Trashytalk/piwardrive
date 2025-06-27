@@ -1,15 +1,13 @@
 import ast
+import importlib
 import os
 import subprocess
+import sys
 from types import SimpleNamespace
+from typing import Any, Callable, cast
 from unittest import mock
 
-import sys
-import importlib
-
-from piwardrive import utils
-from piwardrive import security
-from typing import Any, Callable, cast
+from piwardrive import security, utils
 
 
 def _load_control_service() -> Callable[[Any, str, str], Any]:
