@@ -701,3 +701,36 @@ def test_service_status_endpoint_inactive() -> None:
         resp = client.get("/service/bettercap")
         assert resp.status_code == 200
         assert resp.json() == {"service": "bettercap", "active": False}
+
+
+def test_db_stats_endpoint(monkeypatch) -> None:
+    async def fake_counts() -> dict:
+        return {"ap_cache": 2}
+
+    with (
+        mock.patch("service.get_table_counts", fake_counts),
+        mock.patch("piwardrive.service.get_table_counts", fake_counts),
+        mock.patch("service._db_path", lambda: "/tmp/db"),
+        mock.patch("piwardrive.service._db_path", lambda: "/tmp/db"),
+        mock.patch("service.os.path.getsize", return_value=2048),
+        mock.patch("piwardrive.service.os.path.getsize", return_value=2048),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/db-stats")
+        assert resp.status_code == 200
+        assert resp.json() == {"size_kb": 2.0, "tables": {"ap_cache": 2}}
+
+
+def test_lora_scan_endpoint(monkeypatch) -> None:
+    async def fake_scan(iface: str = "l0") -> list[str]:
+        assert iface == "l0"
+        return ["a", "b"]
+
+    with (
+        mock.patch("service.async_scan_lora", fake_scan),
+        mock.patch("piwardrive.service.async_scan_lora", fake_scan),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/lora-scan?iface=l0")
+        assert resp.status_code == 200
+        assert resp.json() == {"count": 2, "lines": ["a", "b"]}

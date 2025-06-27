@@ -24,7 +24,7 @@ describe('extra widgets', () => {
   it('fetches LoRa scan results', async () => {
     let origFetch = global.fetch;
     global.fetch = vi.fn(() => Promise.resolve({
-      json: () => Promise.resolve({ output: 'a\nb\nc' })
+      json: () => Promise.resolve({ count: 3 })
     }));
     render(<LoRaScan />);
     expect(await screen.findByText('LoRa Devices: 3')).toBeInTheDocument();
