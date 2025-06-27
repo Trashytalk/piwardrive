@@ -5,7 +5,11 @@ from typing import Any, Callable, Iterable
 
 class Label:
     def __init__(
-        self, text: str = "", halign: str = "center", valign: str = "middle", **_kwargs: Any
+        self,
+        text: str = "",
+        halign: str = "center",
+        valign: str = "middle",
+        **_kwargs: Any,
     ) -> None:
         self.text: str = text
         self.halign: str = halign

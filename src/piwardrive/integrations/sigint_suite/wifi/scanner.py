@@ -41,7 +41,10 @@ def _parse_iwlist_output(
 ) -> Iterable[Dict[str, Union[str, float]]]:
     """Parse ``iwlist`` command output into record dictionaries."""
 
-    def finalize(rec: Dict[str, Union[str, float]], enc: List[str]) -> Dict[str, Union[str, float]]:
+    def finalize(
+        rec: Dict[str, Union[str, float]],
+        enc: List[str],
+    ) -> Dict[str, Union[str, float]]:
         if heading is not None:
             rec["heading"] = heading
         if enc:
@@ -52,7 +55,11 @@ def _parse_iwlist_output(
                 rec["encryption"] = extra
         return rec
 
-    def parse_info(line: str, rec: Dict[str, Union[str, float]], enc: List[str]) -> None:
+    def parse_info(
+        line: str,
+        rec: Dict[str, Union[str, float]],
+        enc: List[str],
+    ) -> None:
         if "ESSID" in line:
             rec["ssid"] = line.split(":", 1)[-1].strip('"')
         elif line.startswith("Encryption key:"):
@@ -125,8 +132,6 @@ def scan_wifi(
     records = list(_parse_iwlist_output(output, heading))
     records = apply_post_processors("wifi", records)
     return [WifiNetwork(**rec) for rec in records]
-
-
 
 
 async def async_scan_wifi(
