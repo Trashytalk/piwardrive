@@ -16,7 +16,8 @@ class _DBHandler(http.server.BaseHTTPRequestHandler):
         cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [r[0] for r in cur.fetchall()]
         data = {
-            t: conn.execute(f"SELECT * FROM {t} LIMIT 100").fetchall()
+            # The table names come from sqlite_master and are not user supplied
+            t: conn.execute(f"SELECT * FROM {t} LIMIT 100").fetchall()  # nosec B608
             for t in tables
         }
 
@@ -27,8 +28,8 @@ class _DBHandler(http.server.BaseHTTPRequestHandler):
         conn.close()
 
 
-def launch_browser(db_path: str, port: int = 8080) -> None:
+def launch_browser(db_path: str, port: int = 8080, host: str = "127.0.0.1") -> None:
     """Start a simple HTTP server exposing the contents of ``db_path``."""
     handler = type("Handler", (_DBHandler,), {"db_path": Path(db_path)})
-    server = http.server.HTTPServer(("0.0.0.0", port), handler)
+    server = http.server.HTTPServer((host, port), handler)
     server.serve_forever()

@@ -5,6 +5,7 @@ from dataclasses import asdict
 from types import ModuleType, SimpleNamespace
 from typing import Any
 from unittest import mock
+import tempfile
 
 import pytest
 from fastapi import WebSocketDisconnect
@@ -710,8 +711,8 @@ def test_db_stats_endpoint(monkeypatch) -> None:
     with (
         mock.patch("service.get_table_counts", fake_counts),
         mock.patch("piwardrive.service.get_table_counts", fake_counts),
-        mock.patch("service._db_path", lambda: "/tmp/db"),
-        mock.patch("piwardrive.service._db_path", lambda: "/tmp/db"),
+        mock.patch("service._db_path", lambda: tempfile.gettempdir()),
+        mock.patch("piwardrive.service._db_path", lambda: tempfile.gettempdir()),
         mock.patch("service.os.path.getsize", return_value=2048),
         mock.patch("piwardrive.service.os.path.getsize", return_value=2048),
     ):
