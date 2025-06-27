@@ -354,7 +354,7 @@ def export_config(config: Config, path: str) -> None:
             json.dump(data, f, indent=2)
     elif ext in {".yaml", ".yml"}:
         try:
-            import yaml  # type: ignore
+            import yaml
         except Exception as exc:  # pragma: no cover - optional dep
             raise ConfigError("PyYAML required for YAML export") from exc
         with open(path, "w", encoding="utf-8") as f:
@@ -371,7 +371,7 @@ def import_config(path: str) -> Config:
             data = json.load(f)
         elif ext in {".yaml", ".yml"}:
             try:
-                import yaml  # type: ignore
+                import yaml
             except Exception as exc:  # pragma: no cover - optional dep
                 raise ConfigError("PyYAML required for YAML import") from exc
             data = yaml.safe_load(f) or {}
