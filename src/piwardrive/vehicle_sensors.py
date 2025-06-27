@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 try:
     import obd  # pragma: no cover - optional
 except Exception:  # pragma: no cover - library not available
-    obd = None  # type: ignore
+    obd = None
 
 
 def read_speed_obd(port: Optional[str] = None) -> float | None:
@@ -18,7 +18,7 @@ def read_speed_obd(port: Optional[str] = None) -> float | None:
     if obd is None:
         return None
     try:
-        conn = obd.OBD(port)  # type: ignore
+        conn = obd.OBD(port)
         rsp = conn.query(obd.commands.SPEED)
         return float(rsp.value.to("km/h")) if rsp.value is not None else None
     except Exception as exc:  # pragma: no cover - runtime errors
@@ -31,7 +31,7 @@ def read_rpm_obd(port: Optional[str] = None) -> float | None:
     if obd is None:
         return None
     try:
-        conn = obd.OBD(port)  # type: ignore
+        conn = obd.OBD(port)
         rsp = conn.query(obd.commands.RPM)
         return float(rsp.value.to("rpm")) if rsp.value is not None else None
     except Exception as exc:  # pragma: no cover - runtime errors
@@ -44,7 +44,7 @@ def read_engine_load_obd(port: Optional[str] = None) -> float | None:
     if obd is None:
         return None
     try:
-        conn = obd.OBD(port)  # type: ignore
+        conn = obd.OBD(port)
         rsp = conn.query(obd.commands.ENGINE_LOAD)
         return float(rsp.value.to("percent")) if rsp.value is not None else None
     except Exception as exc:  # pragma: no cover - runtime errors
