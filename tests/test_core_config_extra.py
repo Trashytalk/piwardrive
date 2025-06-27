@@ -29,6 +29,54 @@ def test_export_invalid_extension(tmp_path):
         config.export_config(cfg, str(bad))
 
 
+def test_apply_env_overrides_invalid_theme(monkeypatch):
+    base = {"theme": "Dark"}
+    monkeypatch.setenv("PW_THEME", "Blueish")
+    result = config._apply_env_overrides(base)
+    assert result["theme"] == "Blueish"
+
+
+@pytest.mark.parametrize(
+    "raw,default,expected",
+    [
+        ("true", False, True),
+        ("0", True, False),
+        ("10", 5, 10),
+        ("bad", 5, 5),
+        ("3.2", 1.0, 3.2),
+        ("oops", 1.0, 1.0),
+        ("[1, 2]", [0], [1, 2]),
+        ("oops", [0], [0]),
+    ],
+)
+def test_parse_env_value(raw, default, expected):
+    assert config._parse_env_value(raw, default) == expected
+
+
+def test_list_profiles(tmp_path, monkeypatch):
+    profiles = tmp_path / "profiles"
+    profiles.mkdir()
+    (profiles / "one.json").write_text("{}")
+    (profiles / "two.json").write_text("{}")
+    (profiles / "ignore.txt").write_text("")
+    monkeypatch.setattr(config, "PROFILES_DIR", str(profiles))
+    found = config.list_profiles()
+    assert set(found) == {"one", "two"}
+
+
+def test_switch_profile(tmp_path, monkeypatch):
+    cfg_dir = tmp_path
+    monkeypatch.setattr(config, "CONFIG_DIR", str(cfg_dir))
+    monkeypatch.setattr(config, "ACTIVE_PROFILE_FILE", str(cfg_dir / "active_profile"))
+    profiles = cfg_dir / "profiles"
+    monkeypatch.setattr(config, "PROFILES_DIR", str(profiles))
+    profiles.mkdir()
+    cfg = config.Config(theme="Light")
+    config.save_config(cfg, profile="p1")
+    loaded = config.switch_profile("p1")
+    assert loaded.theme == "Light"
+    assert (cfg_dir / "active_profile").read_text() == "p1"
+
 def test_import_config_missing_yaml(tmp_path, monkeypatch):
     """import_config raises RuntimeError if PyYAML is missing."""
     file = tmp_path / "cfg.yaml"
