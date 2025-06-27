@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import List, Sequence
 import re
 
+PACKET_RE = re.compile(r"(\w+)=([\w.:-]+)")
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,7 +64,7 @@ def parse_packets(lines: Sequence[str]) -> List[LoRaPacket]:
 
     packets: List[LoRaPacket] = []
     for line in lines:
-        fields = dict(re.findall(r"(\w+)=([\w.:-]+)", line))
+        fields = dict(PACKET_RE.findall(line))
         pkt = LoRaPacket(
             timestamp=fields.get("time"),
             freq=_to_float(fields.get("freq")),
@@ -73,6 +75,12 @@ def parse_packets(lines: Sequence[str]) -> List[LoRaPacket]:
         )
         packets.append(pkt)
     return packets
+
+
+async def async_parse_packets(lines: Sequence[str]) -> List[LoRaPacket]:
+    """Asynchronously parse packets from ``lines``."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, parse_packets, lines)
 
 
 def plot_signal_trend(packets: Sequence[LoRaPacket], path: str) -> None:

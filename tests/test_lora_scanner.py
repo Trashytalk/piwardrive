@@ -58,6 +58,15 @@ def test_async_scan_lora(monkeypatch):
     assert lines == ["a", "b"]
 
 
+def test_async_parse_packets():
+    lines = [
+        "time=2024-01-01T00:00:00Z freq=868.1 rssi=-120 snr=7.5 devaddr=ABC",
+        "time=2024-01-01T00:00:01Z freq=868.1 rssi=-118 snr=6.8 devaddr=ABC",
+    ]
+    packets = asyncio.run(lora_scanner.async_parse_packets(lines))
+    assert len(packets) == 2
+
+
 def test_main(capsys, monkeypatch):
     monkeypatch.setattr(lora_scanner, "scan_lora", lambda iface="l0": ["x"])
     argv = sys.argv
