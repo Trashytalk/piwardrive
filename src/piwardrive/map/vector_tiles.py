@@ -40,4 +40,4 @@ def available_tiles(path: str) -> Iterable[Tuple[int, int, int]]:
     """Yield ``(z, x, y)`` for tiles stored in ``path``."""
     with sqlite3.connect(path) as db:
         cur = db.execute("SELECT zoom_level, tile_column, tile_row FROM tiles")
-        yield from cur.fetchall()
+        yield from cur

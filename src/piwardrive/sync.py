@@ -1,10 +1,11 @@
 """Module sync."""
+
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
-from typing import Sequence, Any
+from typing import Any, Sequence
 
 import aiohttp
 
@@ -23,7 +24,7 @@ async def upload_data(records: Sequence[dict[str, Any]]) -> bool:
     if cfg.remote_sync_token:
         headers["Authorization"] = f"Bearer {cfg.remote_sync_token}"
 
-    payload = json.dumps(list(records))
+    payload = json.dumps(records)
     for attempt in range(1, cfg.remote_sync_retries + 1):
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
