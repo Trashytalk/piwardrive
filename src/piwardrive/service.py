@@ -8,6 +8,8 @@ import os
 import typing
 from dataclasses import asdict
 
+logger = logging.getLogger(__name__)
+
 try:  # pragma: no cover - optional FastAPI dependency
     from fastapi import (
         Body,
@@ -621,6 +623,7 @@ async def ws_aps(websocket: WebSocket) -> None:
                 records = await records
             load_time = time.perf_counter() - start
             new = records
+            logger.debug("ws_aps: fetched %d aps in %.6fs", len(new), load_time)
             if new:
                 last_time = max(r["last_time"] for r in new)
             data = {
@@ -659,6 +662,7 @@ async def sse_aps(request: Request) -> StreamingResponse:
                 records = await records
             load_time = time.perf_counter() - start
             new = records
+            logger.debug("sse_aps: fetched %d aps in %.6fs", len(new), load_time)
             if new:
                 last_time = max(r["last_time"] for r in new)
             data = {
