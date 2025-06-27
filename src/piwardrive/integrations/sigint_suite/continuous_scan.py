@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import time
-from typing import Callable, Dict, List
+from typing import Any, Callable, Dict, List
 
 from .bluetooth import scan_bluetooth
 from .wifi import scan_wifi
 
-Result = Dict[str, List]
+Result = Dict[str, List[Any]]
 
 
 def scan_once() -> Result:

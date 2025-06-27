@@ -4,7 +4,7 @@ import logging
 import os
 import shlex
 import subprocess
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional, cast
 
 from piwardrive.sigint_suite.cellular.parsers import parse_imsi_output
 from piwardrive.sigint_suite.gps import get_position
@@ -19,7 +19,7 @@ def scan_imsis(
     with_location: bool = True,
     enrich_func: Optional[Callable[[List[ImsiRecord]], List[ImsiRecord]]] = None,
     timeout: Optional[int] = None,
-) -> List[ImsiRecord]:
+) -> List[dict[str, Any]]:
     """Scan for IMSI numbers using an external command."""
     cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
     args = shlex.split(cmd_str)
@@ -34,7 +34,7 @@ def scan_imsis(
         logging.exception("Failed to run IMSI catcher", exc_info=exc)
         return []
 
-    records = parse_imsi_output(output)
+    records = cast(List[ImsiRecord], parse_imsi_output(output))
 
     if with_location:
         pos = get_position()
@@ -62,7 +62,7 @@ async def async_scan_imsis(
     timeout: int | None = None,
 ) -> List[ImsiRecord]:
     """Asynchronously scan for IMSI numbers."""
-    cmd_str = cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher")
+    cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
     args = shlex.split(cmd_str)
     timeout = (
         timeout
@@ -82,7 +82,7 @@ async def async_scan_imsis(
         logger.exception("IMSI scan failed: %s", exc)
         return []
 
-    records = parse_imsi_output(output)
+    records = cast(List[ImsiRecord], parse_imsi_output(output))
 
     if with_location:
         pos = get_position()
@@ -117,12 +117,20 @@ def main() -> None:  # pragma: no cover - CLI helper
 
     data = scan_imsis(args.cmd, with_location=not args.no_location)
     if args.json:
-        print(json.dumps([d.model_dump() for d in data], indent=2))
+        print(json.dumps(data, indent=2))
     else:
         for rec in data:
-            fields = [rec.imsi, rec.mcc, rec.mnc, rec.rssi]
-            if rec.lat is not None and rec.lon is not None:
-                fields.extend([str(rec.lat), str(rec.lon)])
+            fields = [
+                rec.get("imsi", ""),
+                rec.get("mcc", ""),
+                rec.get("mnc", ""),
+                rec.get("rssi", ""),
+            ]
+            if rec.get("lat") is not None and rec.get("lon") is not None:
+                fields.extend([
+                    str(rec.get("lat")),
+                    str(rec.get("lon")),
+                ])
             print(" ".join(fields))
 
 

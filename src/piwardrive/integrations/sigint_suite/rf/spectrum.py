@@ -1,13 +1,13 @@
 """Spectrum scanning utilities using an RTL-SDR."""
 
-from typing import List, Tuple
+from typing import List, Tuple, cast
 
 import numpy as np
 
 try:
     from rtlsdr import RtlSdr
 except Exception:  # pragma: no cover - import failure handled at runtime
-    RtlSdr = None  # type: ignore
+    RtlSdr = None
 
 
 def spectrum_scan(
@@ -32,4 +32,4 @@ def spectrum_scan(
     freqs = (
         np.fft.fftshift(np.fft.fftfreq(len(samples), 1.0 / sample_rate)) + center_freq
     )
-    return freqs.tolist(), power.tolist()
+    return cast(List[float], freqs.tolist()), cast(List[float], power.tolist())

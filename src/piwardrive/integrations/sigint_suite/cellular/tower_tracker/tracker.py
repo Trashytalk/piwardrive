@@ -1,6 +1,7 @@
 """Module tracker."""
 import time
 from typing import Dict, List, Optional
+from types import TracebackType
 
 import aiosqlite
 
@@ -17,7 +18,12 @@ class TowerTracker:
         await self._get_conn()
         return self
 
-    async def __aexit__(self, exc_type, exc, tb) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         """Close the underlying database connection."""
         await self.close()
 
