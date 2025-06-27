@@ -73,7 +73,7 @@ The application polls `gpsd` at a configurable interval, increasing the delay wh
 
 ## Mobile Builds
 
-Helper scripts `scripts/build_android.sh` and `scripts/build_ios.sh` package PiWardrive for Android or iOS. Android builds rely on Buildozer while iOS builds require `kivy-ios`. Some diagnostics and service management features are disabled on mobile platforms.
+PiWardrive no longer distributes helper scripts or configuration for building mobile packages. Previous Buildozer and `kivy-ios` setups have been removed.
 
 ## Building the CKML Extension
 

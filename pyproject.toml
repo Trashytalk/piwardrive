@@ -13,7 +13,7 @@ exclude = ["tests*", "docs*", "benchmarks*", "examples*"]
 [project]
 name = "piwardrive"
 version = "0.1.0"
-description = "Headless war-driving toolkit with a Kivy interface"
+description = "Headless war-driving toolkit with a browser-based interface"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}

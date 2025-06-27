@@ -1,3 +1,5 @@
+"""Tests for the aggregation service main entrypoint."""
+
 import asyncio
 import importlib
 from unittest.mock import AsyncMock
