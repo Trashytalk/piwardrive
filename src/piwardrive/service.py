@@ -10,6 +10,8 @@ from dataclasses import asdict
 
 logger = logging.getLogger(__name__)
 
+from typing import TYPE_CHECKING
+
 try:  # pragma: no cover - optional FastAPI dependency
     from fastapi import (
         Body,
@@ -46,6 +48,19 @@ except Exception:
     StreamingResponse = Response = object
     HTTPBasic = type("HTTPBasic", (), {"__init__": lambda self, **k: None})
     HTTPBasicCredentials = type("HTTPBasicCredentials", (), {})
+
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from fastapi import (
+        Body,
+        Depends,
+        FastAPI,
+        HTTPException,
+        Request,
+        WebSocket,
+        WebSocketDisconnect,
+    )
+    from fastapi.responses import Response, StreamingResponse
+    from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import asyncio
 import importlib
 import json
@@ -53,7 +68,7 @@ import tempfile
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any, Tuple, TYPE_CHECKING
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 

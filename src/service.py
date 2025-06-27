@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib
 import os
 import sys
+from types import ModuleType
 
 SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
