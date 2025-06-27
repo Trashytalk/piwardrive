@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
-
-import aiohttp
 import sqlite3
 import tempfile
-import json
 
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +46,7 @@ def _make_range_db(src: str, start: int, end: int) -> str:
             " FROM health_records WHERE rowid BETWEEN ? AND ?",
             (start, end),
         ).fetchall()
-        dst_db.executemany(
-            "INSERT INTO health_records VALUES (?, ?, ?, ?, ?)", rows
-        )
+        dst_db.executemany("INSERT INTO health_records VALUES (?, ?, ?, ?, ?)", rows)
 
         rows = src_db.execute(
             "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache "
@@ -71,8 +68,11 @@ def _load_sync_state(path: str) -> int:
 
 
 def _save_sync_state(path: str, row_id: int) -> None:
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump(row_id, fh)
+    try:
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(row_id, fh)
+    except OSError as exc:  # pragma: no cover - write errors
+        logger.exception("Failed to write %s: %s", path, exc)
 
 
 async def sync_new_records(
