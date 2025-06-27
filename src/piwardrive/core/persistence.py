@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 import time
-import aiosqlite
-from dataclasses import dataclass, asdict, field
-from typing import Any, List, Optional, Callable, Awaitable
-import asyncio
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-import logging
+from typing import Any, Awaitable, Callable, List, Optional
+
+import aiosqlite
 
 from piwardrive import config
 
@@ -269,9 +270,7 @@ async def load_dashboard_settings() -> DashboardSettings:
     cfg = config.load_config()
     layout = cfg.dashboard_layout
     widgets = [
-        cls
-        for item in layout
-        if isinstance(item, dict) and (cls := item.get("cls"))
+        cls for item in layout if isinstance(item, dict) and (cls := item.get("cls"))
     ]
     return DashboardSettings(layout=layout, widgets=widgets)
 
@@ -291,12 +290,19 @@ async def save_ap_cache(records: list[dict[str, Any]]) -> None:
     await conn.commit()
 
 
-async def load_ap_cache() -> list[dict[str, Any]]:
-    """Return all rows from ``ap_cache`` as dictionaries."""
+async def load_ap_cache(after: float | None = None) -> list[dict[str, Any]]:
+    """Return rows from ``ap_cache`` optionally newer than ``after``."""
     conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
-    )
+    if after is None:
+        cur = await conn.execute(
+            "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
+        )
+    else:
+        cur = await conn.execute(
+            "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache "
+            "WHERE last_time > ?",
+            (after,),
+        )
     rows = await cur.fetchall()
     return [dict(row) for row in rows]
 
