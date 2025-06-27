@@ -1,4 +1,3 @@
-import os
 from piwardrive.core import config
 import pytest
 
@@ -9,13 +8,15 @@ def test_env_override(monkeypatch):
     assert cfg.theme == "Red"
 
 
-def test_yaml_export_import(tmp_path):
+@pytest.mark.parametrize("ext", [".json", ".yaml"])
+def test_export_import_roundtrip(tmp_path, ext):
     cfg = config.Config(**config.DEFAULTS)
     cfg.remote_sync_url = "http://localhost"
-    path = tmp_path / "cfg.yaml"
+    path = tmp_path / f"cfg{ext}"
     config.export_config(cfg, str(path))
     loaded = config.import_config(str(path))
     assert loaded.theme == cfg.theme
+    assert loaded.remote_sync_url == cfg.remote_sync_url
 
 
 def test_export_invalid_extension(tmp_path):
