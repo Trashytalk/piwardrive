@@ -10,16 +10,9 @@ export default function LoRaScan() {
 
   useEffect(() => {
     const load = () => {
-      fetch('/command', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cmd: 'lora-scan --iface lora0' }),
-      })
+      fetch('/lora-scan')
         .then(r => r.json())
-        .then(d => {
-          const lines = d.output ? d.output.trim().split('\n') : [];
-          setCount(lines.length);
-        })
+        .then(d => setCount(d.count))
         .catch(() => setCount(null));
     };
     load();

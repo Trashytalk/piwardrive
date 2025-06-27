@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import logging
 import os
 import typing
 from dataclasses import asdict
@@ -49,14 +50,17 @@ from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
-    from persistence import (DashboardSettings, load_dashboard_settings,
-                             load_recent_health, save_dashboard_settings)
+    from persistence import (DashboardSettings, _db_path, get_table_counts,
+                             load_dashboard_settings, load_recent_health,
+                             save_dashboard_settings)
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
         load_ap_cache,
         load_dashboard_settings,
         save_dashboard_settings,
+        get_table_counts,
+        _db_path,
         DashboardSettings,
     )
 
@@ -77,6 +81,11 @@ from sync import upload_data
 from piwardrive import export, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
+
+try:  # allow tests to stub out lora_scanner
+    import lora_scanner as _lora_scanner  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive import lora_scanner as _lora_scanner
 
 
 async def _default_fetch_metrics_async(
@@ -99,6 +108,10 @@ get_network_throughput = getattr(
 )
 get_gps_fix_quality = getattr(_utils, "get_gps_fix_quality", lambda *_a, **_k: None)
 get_gps_accuracy = getattr(_utils, "get_gps_accuracy", lambda *_a, **_k: None)
+
+async_scan_lora: Callable[[str], Awaitable[list[str]]] = getattr(
+    _lora_scanner, "async_scan_lora", lambda *_a, **_k: []
+)
 
 
 async def _default_service_status_async(*_a: Any, **_k: Any) -> bool:
@@ -325,6 +338,26 @@ async def get_logs(
     else:
         lines_out = data
     return {"path": safe, "lines": lines_out}
+
+
+@app.get("/db-stats")
+async def get_db_stats_endpoint(_auth: None = Depends(_check_auth)) -> dict:
+    """Return SQLite table counts and database size."""
+    counts = await get_table_counts()
+    try:
+        size_kb = os.path.getsize(_db_path()) / 1024
+    except OSError:
+        size_kb = None
+    return {"size_kb": size_kb, "tables": counts}
+
+
+@app.get("/lora-scan")
+async def lora_scan_endpoint(
+    iface: str = "lora0", _auth: None = Depends(_check_auth)
+) -> dict:
+    """Run ``lora-scan`` on ``iface`` and return output lines."""
+    lines = await async_scan_lora(iface)
+    return {"count": len(lines), "lines": lines}
 
 
 @app.post("/command")
