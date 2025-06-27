@@ -419,12 +419,9 @@ WantedBy=multi-user.target
 
 ## Mobile Builds
 
-Scripts under `scripts/` create Android or iOS builds:
-
-```bash
-./scripts/build_android.sh  # Android APK
-./scripts/build_ios.sh      # iOS project
-```
+PiWardrive previously provided scripts to create Android and iOS builds.
+These helpers have been removed and mobile packages are no longer
+officially supported.
 
 ## Configuration
 
