@@ -8,7 +8,7 @@ import secrets
 
 from cryptography.fernet import Fernet
 
-_ALLOWED_SERVICE_RE = re.compile(r"^[\w.-]+$")
+_ALLOWED_SERVICE_RE: re.Pattern[str] = re.compile(r"^[\w.-]+$")
 
 
 def sanitize_path(path: str) -> str:
