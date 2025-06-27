@@ -1,27 +1,21 @@
 """Helpers for exporting data in various formats."""
-
 import csv
 import json
-import logging
 import os
 import tempfile
-import time
-import xml.etree.ElementTree as ET
 import zipfile
-from typing import Any, Callable, Iterable, Mapping, Sequence
-
-from piwardrive.errors import ExportError
-
+import xml.etree.ElementTree as ET
+from typing import Any, Iterable, Mapping, Sequence, Callable
+import time
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
-
     # ``shapefile.Reader`` returns points as ``_Array`` which does not compare
     # equal to a plain list.  Some tests expect list equality, so patch the
     # ``__eq__`` method to compare based on list content.
     try:
         shapefile._Array.__eq__ = lambda self, other: list(self) == list(other)
-    except Exception:  # nosec B110
+    except Exception:
         pass
 except Exception:  # pragma: no cover - optional
     shapefile = None
@@ -68,49 +62,40 @@ def filter_records(
 
 
 def export_csv(
-    rows: Iterable[Mapping[str, Any]], path: str, fields: Sequence[str] | None
+    rows: Sequence[Mapping[str, Any]], path: str, fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in CSV format."""
     it = iter(rows)
     try:
         first = next(it)
     except StopIteration:
-        try:
-            open(path, "w", newline="", encoding="utf-8").close()
-        except OSError as exc:  # pragma: no cover - write errors
-            logging.exception("Failed to write %s: %s", path, exc)
+        open(path, "w", newline="", encoding="utf-8").close()
         return
 
     fieldnames = fields or list(first.keys())
-    try:
-        with open(path, "w", newline="", encoding="utf-8") as fh:
-            writer = csv.DictWriter(fh, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerow(first)
-            for row in it:
-                writer.writerow(row)
-    except OSError as exc:  # pragma: no cover - write errors
-        logging.exception("Failed to write %s: %s", path, exc)
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow(first)
+        for row in it:
+            writer.writerow(row)
 
 
 def export_json(
-    rows: Iterable[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
+    rows: Sequence[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in JSON format."""
-    try:
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write("[")
-            for i, rec in enumerate(rows):
-                if i:
-                    fh.write(",")
-                json.dump(rec, fh)
-            fh.write("]")
-    except OSError as exc:  # pragma: no cover - write errors
-        logging.exception("Failed to write %s: %s", path, exc)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("[")
+        for i, rec in enumerate(rows):
+            if i:
+                fh.write(",")
+            json.dump(rec, fh)
+        fh.write("]")
 
 
 def export_gpx(
-    rows: Iterable[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
+    rows: Sequence[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in GPX format."""
     root = ET.Element("gpx", version="1.1", creator="piwardrive")
@@ -123,14 +108,11 @@ def export_gpx(
         name = rec.get("ssid") or rec.get("bssid")
         if name:
             ET.SubElement(wpt, "name").text = str(name)
-    try:
-        ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
-    except OSError as exc:  # pragma: no cover - write errors
-        logging.exception("Failed to write %s: %s", path, exc)
+    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
 
 
 def export_kml(
-    rows: Iterable[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
+    rows: Sequence[Mapping[str, Any]], path: str, _fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in KML format."""
     root = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
@@ -146,14 +128,11 @@ def export_kml(
             ET.SubElement(placemark, "name").text = str(name)
         point = ET.SubElement(placemark, "Point")
         ET.SubElement(point, "coordinates").text = f"{lon},{lat}"
-    try:
-        ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
-    except OSError as exc:  # pragma: no cover - write errors
-        logging.exception("Failed to write %s: %s", path, exc)
+    ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
 
 
 def export_geojson(
-    rows: Iterable[Mapping[str, Any]], path: str, fields: Sequence[str] | None
+    rows: Sequence[Mapping[str, Any]], path: str, fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in GeoJSON format."""
     features = []
@@ -174,63 +153,47 @@ def export_geojson(
                 "properties": props,
             }
         )
-    try:
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump({"type": "FeatureCollection", "features": features}, fh)
-    except OSError as exc:  # pragma: no cover - write errors
-        logging.exception("Failed to write %s: %s", path, exc)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump({"type": "FeatureCollection", "features": features}, fh)
 
 
 def export_shp(
-    rows: Iterable[Mapping[str, Any]], path: str, fields: Sequence[str] | None
+    rows: Sequence[Mapping[str, Any]], path: str, fields: Sequence[str] | None
 ) -> None:
     """Write ``rows`` to ``path`` in Shapefile format."""
     if shapefile is None:
         raise RuntimeError("pyshp is required for shapefile export")
-    it = iter(rows)
-    try:
-        first = next(it)
-    except StopIteration:
-        base = path[:-4] if path.lower().endswith(".shp") else path
-        if getattr(shapefile, "__version__", "2").startswith("1."):
-            writer = shapefile.Writer(base)
-            writer.shapeType = shapefile.POINT
-        else:
-            writer = shapefile.Writer(base, shapefile.POINT)
-        if hasattr(writer, "close"):
-            writer.close()
-        else:  # pyshp < 2
-            writer.save(base)
-        return
-
-
-    fieldnames = fields or list(first.keys())
+    rows = list(rows)
+    base = path[:-4] if path.lower().endswith(".shp") else path
+    if getattr(shapefile, "__version__", "2").startswith("1."):
+        writer = shapefile.Writer(base)
+        writer.shapeType = shapefile.POINT
+    else:
+        writer = shapefile.Writer(base, shapefile.POINT)
+    fieldnames = fields or (list(rows[0].keys()) if rows else [])
     for name in fieldnames:
         if name in {"lat", "lon"}:
             continue
         writer.field(name[:10], "C")
-
-    def _write(rec: Mapping[str, Any]) -> None:
+    for rec in rows:
         lat = rec.get("lat")
         lon = rec.get("lon")
         if lat is None or lon is None:
-            return
+            continue
         writer.point(lon, lat)
-        record = [rec.get(name) for name in fieldnames if name not in {"lat", "lon"}]
+        record = []
+        for name in fieldnames:
+            if name in {"lat", "lon"}:
+                continue
+            record.append(rec.get(name))
         writer.record(*record)
-
-    _write(first)
-    for rec in it:
-        _write(rec)
     if hasattr(writer, "close"):
         writer.close()
     else:  # pyshp < 2
         writer.save(base)
 
 
-EXPORTERS: dict[
-    str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]
-] = {
+EXPORTERS: dict[str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]] = {
     "csv": export_csv,
     "json": export_json,
     "gpx": export_gpx,
@@ -241,7 +204,7 @@ EXPORTERS: dict[
 
 
 def export_records(
-    records: Iterable[Mapping[str, Any]],
+    records: Sequence[Mapping[str, Any]],
     path: str,
     fmt: str,
     fields: Sequence[str] | None = None,
@@ -253,7 +216,7 @@ def export_records(
     try:
         exporter = EXPORTERS[fmt]
     except KeyError as exc:
-        raise ExportError(f"Unsupported format: {fmt}") from exc
+        raise ValueError(f"Unsupported format: {fmt}") from exc
     exporter(records, path, fields)
 
 
@@ -269,7 +232,7 @@ def estimate_location_from_rssi(
             lat = float(p["lat"])
             lon = float(p["lon"])
             rssi = float(p["rssi"])
-        except Exception:  # nosec B112
+        except Exception:
             continue
         weight = 1.0 / max(1.0, abs(rssi))
         sum_lat += lat * weight
@@ -328,18 +291,10 @@ def export_map_kml(
         ET.SubElement(pt, "coordinates").text = f"{lon},{lat}"
 
     if path.lower().endswith(".kmz"):
-        try:
-            with tempfile.TemporaryDirectory() as tmp:
-                kml_path = os.path.join(tmp, "doc.kml")
-                ET.ElementTree(root).write(
-                    kml_path, encoding="utf-8", xml_declaration=True
-                )
-                with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-                    zf.write(kml_path, "doc.kml")
-        except OSError as exc:  # pragma: no cover - write errors
-            logging.exception("Failed to write %s: %s", path, exc)
+        with tempfile.TemporaryDirectory() as tmp:
+            kml_path = os.path.join(tmp, "doc.kml")
+            ET.ElementTree(root).write(kml_path, encoding="utf-8", xml_declaration=True)
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+                zf.write(kml_path, "doc.kml")
     else:
-        try:
-            ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
-        except OSError as exc:  # pragma: no cover - write errors
-            logging.exception("Failed to write %s: %s", path, exc)
+        ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)

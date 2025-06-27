@@ -1,0 +1,8 @@
+{
+  "include": ["src"],
+  "exclude": ["tests", "benchmarks", "examples", "docs", "webui/tests", "webui/apps"],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "reportInvalidTypeForm": false,
+  "typeCheckingMode": "off"
+}

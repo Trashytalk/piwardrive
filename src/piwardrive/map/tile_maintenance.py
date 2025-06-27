@@ -5,6 +5,10 @@ import logging
 import os
 import sqlite3
 import time
+import heapq
+from piwardrive.scheduler import PollScheduler
+from piwardrive import utils
+from typing import Optional, TYPE_CHECKING
 import typing
 from typing import Optional
 
@@ -37,12 +41,16 @@ except AttributeError:  # pragma: no cover - core utils missing
                 task.add_done_callback(lambda f: callback(f.result()))
             return typing.cast(Future[T], task)
 
-try:
-    from watchdog.events import FileSystemEventHandler
+if TYPE_CHECKING:  # pragma: no cover - type hints only
     from watchdog.observers import Observer
-except Exception:  # pragma: no cover - watchdog optional for tests
-    Observer = None  # type: ignore
-    FileSystemEventHandler = object  # type: ignore
+    from watchdog.events import FileSystemEventHandler
+else:
+    try:
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+    except Exception:  # pragma: no cover - watchdog optional for tests
+        Observer = None  # type: ignore
+        FileSystemEventHandler = object  # type: ignore
 
 
 def purge_old_tiles(folder: str, max_age_days: int) -> None:
