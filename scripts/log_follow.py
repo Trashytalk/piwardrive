@@ -2,9 +2,12 @@
 import argparse
 import os
 import time
+import logging
 
 from logconfig import DEFAULT_LOG_PATH
 from utils import tail_file
+
+from piwardrive.logconfig import setup_logging
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -32,8 +35,10 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    setup_logging(stdout=True)
+
     for line in tail_file(args.path, args.lines):
-        print(line)
+        logging.info(line)
 
     try:
         with open(args.path, "r", encoding="utf-8", errors="ignore") as fh:
@@ -41,7 +46,7 @@ def main(argv: list[str] | None = None) -> None:
             while True:
                 line = fh.readline()
                 if line:
-                    print(line, end="")
+                    logging.info(line.rstrip())
                 else:
                     time.sleep(args.interval)
     except KeyboardInterrupt:

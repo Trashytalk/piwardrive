@@ -4,6 +4,8 @@ import argparse
 import asyncio
 import logging
 
+from piwardrive.logconfig import setup_logging
+
 try:  # allow tests to substitute a lightweight main module
     from main import PiWardriveApp  # type: ignore
 except Exception:  # pragma: no cover - fallback
@@ -23,11 +25,11 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    setup_logging(stdout=True)
     app = PiWardriveApp()
     path = asyncio.run(app.export_logs(args.output, args.lines))
     if path:
         logging.info("Logs exported to %s", path)
-        print(path)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation
