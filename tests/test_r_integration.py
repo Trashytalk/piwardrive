@@ -1,9 +1,8 @@
-import os
+import builtins
 import sys
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
-import builtins
 
 import pytest
 
@@ -26,7 +25,7 @@ def test_health_summary_missing_rpy2():
 
     with mock.patch.dict(sys.modules, {"rpy2": None, "rpy2.robjects": None}):
         with mock.patch("builtins.__import__", side_effect=fake_import):
-            with pytest.raises(RuntimeError, match="rpy2 is required"):
+            with pytest.raises(r_integration.PiWardriveError, match="rpy2 is required"):
                 r_integration.health_summary("file.csv")
 
 

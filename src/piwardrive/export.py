@@ -1,15 +1,19 @@
 """Helpers for exporting data in various formats."""
+
 import csv
 import json
 import os
 import tempfile
-import zipfile
-import xml.etree.ElementTree as ET
-from typing import Any, Iterable, Mapping, Sequence, Callable
 import time
+import xml.etree.ElementTree as ET
+import zipfile
+from typing import Any, Callable, Iterable, Mapping, Sequence
+
+from .errors import ExportError
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
+
     # ``shapefile.Reader`` returns points as ``_Array`` which does not compare
     # equal to a plain list.  Some tests expect list equality, so patch the
     # ``__eq__`` method to compare based on list content.
@@ -162,7 +166,7 @@ def export_shp(
 ) -> None:
     """Write ``rows`` to ``path`` in Shapefile format."""
     if shapefile is None:
-        raise RuntimeError("pyshp is required for shapefile export")
+        raise ExportError("pyshp is required for shapefile export")
     rows = list(rows)
     base = path[:-4] if path.lower().endswith(".shp") else path
     if getattr(shapefile, "__version__", "2").startswith("1."):
@@ -193,7 +197,9 @@ def export_shp(
         writer.save(base)
 
 
-EXPORTERS: dict[str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]] = {
+EXPORTERS: dict[
+    str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]
+] = {
     "csv": export_csv,
     "json": export_json,
     "gpx": export_gpx,
@@ -216,7 +222,7 @@ def export_records(
     try:
         exporter = EXPORTERS[fmt]
     except KeyError as exc:
-        raise ValueError(f"Unsupported format: {fmt}") from exc
+        raise ExportError(f"Unsupported format: {fmt}") from exc
     exporter(records, path, fields)
 
 
