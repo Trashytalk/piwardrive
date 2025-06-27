@@ -595,6 +595,24 @@ def test_count_bettercap_handshakes_missing(tmp_path: Any) -> None:
     assert utils.count_bettercap_handshakes(str(missing)) == 0
 
 
+def test_count_bettercap_handshakes_cache(monkeypatch: Any, tmp_path: Any) -> None:
+    log_dir = tmp_path
+    d1 = log_dir / "2024-01-01_bettercap"
+    d1.mkdir()
+    (d1 / "a.pcap").write_text("x")
+
+    monkeypatch.setattr(utils.time, "time", lambda: 1.0)
+    utils._HANDSHAKE_CACHE.clear()
+    assert utils.count_bettercap_handshakes(str(log_dir)) == 1
+
+    (d1 / "b.pcap").write_text("x")
+    monkeypatch.setattr(utils.time, "time", lambda: 5.0)
+    assert utils.count_bettercap_handshakes(str(log_dir)) == 1
+
+    monkeypatch.setattr(utils.time, "time", lambda: 12.0)
+    assert utils.count_bettercap_handshakes(str(log_dir)) == 2
+
+
 def test_network_scanning_disabled(monkeypatch: Any) -> None:
     monkeypatch.setenv("PW_DISABLE_SCANNING", "1")
     assert utils.network_scanning_disabled() is True

@@ -84,6 +84,7 @@ _SAFE_REQUEST_CACHE_LOCK = threading.Lock()
 # Cache for BetterCAP handshake counts
 HANDSHAKE_CACHE_SECONDS = 10.0  # default TTL in seconds
 _HANDSHAKE_CACHE: dict[str, tuple[float, int]] = {}
+_HANDSHAKE_CACHE_LOCK = threading.Lock()
 
 
 if requests_cache is not None:
@@ -861,18 +862,20 @@ def count_bettercap_handshakes(
 ) -> int:
     """Return handshake count using caching and glob lookup."""
     now = time.time()
-    cached = _HANDSHAKE_CACHE.get(log_folder)
-    if cache_seconds and cached:
-        ts, count = cached
-        if now - ts <= cache_seconds:
-            return count
+    with _HANDSHAKE_CACHE_LOCK:
+        cached = _HANDSHAKE_CACHE.get(log_folder)
+        if cache_seconds and cached:
+            ts, count = cached
+            if now - ts <= cache_seconds:
+                return count
     try:
         pattern = os.path.join(log_folder, '*_bettercap', '**', '*.pcap')
         files = glob.glob(pattern, recursive=True)
         count = len(files)
     except OSError:
         count = 0
-    _HANDSHAKE_CACHE[log_folder] = (now, count)
+    with _HANDSHAKE_CACHE_LOCK:
+        _HANDSHAKE_CACHE[log_folder] = (now, count)
     return count
 
 
