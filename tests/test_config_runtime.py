@@ -30,3 +30,9 @@ def test_config_mtime_returns_timestamp(tmp_path: Path) -> None:
     actual = config.config_mtime()
     assert actual is not None  # nosec B101
     assert abs(actual - expected) < 1e-3  # nosec B101
+
+
+def test_config_mtime_missing(tmp_path: Path) -> None:
+    """config_mtime returns None when the file does not exist."""
+    setup_tmp(tmp_path)
+    assert config.config_mtime() is None
