@@ -1,56 +1,57 @@
 """Module tile_maintenance."""
+
 import asyncio
 import heapq
 import logging
 import os
 import sqlite3
 import time
-import heapq
-from piwardrive.scheduler import PollScheduler
-from piwardrive import utils
-from typing import Optional, TYPE_CHECKING
-import typing
-from typing import Optional
+from concurrent.futures import Future
+from typing import (TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar,
+                    cast)
 
-from piwardrive import utils
 from piwardrive.scheduler import PollScheduler
 
-try:
-    _run_async = utils.run_async_task
-except AttributeError:  # pragma: no cover - core utils missing
-    from concurrent.futures import Future
-    from typing import Any, Callable, Coroutine, TypeVar
+T = TypeVar("T")
 
-    T = TypeVar("T")
 
-    def _run_async(
-        coro: Coroutine[Any, Any, T], callback: Callable[[T], None] | None = None
-    ) -> Future[T]:
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            result = asyncio.run(coro)
-            fut: Future[T] = Future()
-            fut.set_result(result)
-            if callback is not None:
-                callback(result)
-            return fut
-        else:
-            task = loop.create_task(coro)
-            if callback is not None:
-                task.add_done_callback(lambda f: callback(f.result()))
-            return typing.cast(Future[T], task)
+def _run_async(
+    coro: Coroutine[Any, Any, T], callback: Callable[[T], None] | None = None
+) -> Future[T]:
+    """Execute ``coro`` in the current or new event loop."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        result = asyncio.run(coro)
+        fut: Future[T] = Future()
+        fut.set_result(result)
+        if callback is not None:
+            callback(result)
+        return fut
+    else:
+        task = loop.create_task(coro)
+        if callback is not None:
+            task.add_done_callback(lambda f: callback(f.result()))
+        return cast(Future[T], task)
+
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
-    from watchdog.observers import Observer
     from watchdog.events import FileSystemEventHandler
+    from watchdog.observers import Observer
 else:
     try:
-        from watchdog.observers import Observer
-        from watchdog.events import FileSystemEventHandler
+        from watchdog.events import \
+            FileSystemEventHandler as _FileSystemEventHandler
+        from watchdog.observers import Observer as _Observer
     except Exception:  # pragma: no cover - watchdog optional for tests
-        Observer = None  # type: ignore
-        FileSystemEventHandler = object  # type: ignore
+        from typing import Any as _Observer  # type: ignore
+
+        _FileSystemEventHandler = object  # type: ignore
+
+    from typing import Any, cast
+
+    FileSystemEventHandler = _FileSystemEventHandler
+    Observer = cast(Any, _Observer)
 
 
 def purge_old_tiles(folder: str, max_age_days: int) -> None:
@@ -148,10 +149,12 @@ def vacuum_mbtiles(path: str) -> None:
 class _TileEventHandler(FileSystemEventHandler):
     """Handle file events for :class:`TileMaintainer`."""
 
+    maintainer: "TileMaintainer"
+
     def __init__(self, maintainer: "TileMaintainer") -> None:
         self.maintainer = maintainer
 
-    def on_any_event(self, _event) -> None:  # pragma: no cover - thin wrapper
+    def on_any_event(self, _event: object) -> None:  # pragma: no cover - thin wrapper
         self.maintainer.check_thresholds()
 
 
@@ -178,7 +181,7 @@ class TileMaintainer:
         self._vacuum = vacuum
         self._trigger_files = trigger_file_count
         self._running = False
-        self._observer: Optional[Observer] = None
+        self._observer: Optional[Any] = None
 
         if interval > 0:
             scheduler.schedule(
