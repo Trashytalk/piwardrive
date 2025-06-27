@@ -8,7 +8,7 @@ import os
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Awaitable, Callable, List, Optional
+from typing import Any, Awaitable, Callable, List, Optional, AsyncIterator
 
 import aiosqlite
 
@@ -290,8 +290,8 @@ async def save_ap_cache(records: list[dict[str, Any]]) -> None:
     await conn.commit()
 
 
-async def load_ap_cache(after: float | None = None) -> list[dict[str, Any]]:
-    """Return rows from ``ap_cache`` optionally newer than ``after``."""
+async def iter_ap_cache(after: float | None = None) -> AsyncIterator[dict[str, Any]]:
+    """Yield rows from ``ap_cache`` optionally newer than ``after``."""
     conn = await _get_conn()
     if after is None:
         cur = await conn.execute(
@@ -303,8 +303,13 @@ async def load_ap_cache(after: float | None = None) -> list[dict[str, Any]]:
             "WHERE last_time > ?",
             (after,),
         )
-    rows = await cur.fetchall()
-    return [dict(row) for row in rows]
+    async for row in cur:
+        yield dict(row)
+
+
+async def load_ap_cache(after: float | None = None) -> list[dict[str, Any]]:
+    """Return rows from ``ap_cache`` optionally newer than ``after``."""
+    return [row async for row in iter_ap_cache(after)]
 
 
 async def get_table_counts() -> dict[str, int]:

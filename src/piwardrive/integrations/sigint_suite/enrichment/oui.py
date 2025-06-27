@@ -8,7 +8,7 @@ from functools import lru_cache
 from typing import Dict, Optional
 
 try:  # pragma: no cover - optional dependency
-    from piwardrive.utils import HTTP_SESSION
+    from piwardrive.utils import HTTP_SESSION, robust_request
 except Exception:  # pragma: no cover - minimal fallback
     try:
         import requests  # type: ignore
@@ -16,12 +16,30 @@ except Exception:  # pragma: no cover - minimal fallback
         requests = None  # type: ignore
     if requests is not None:
         HTTP_SESSION = requests.Session()
+
+        def robust_request(url: str):
+            last_exc = None
+            for _ in range(3):
+                try:
+                    return requests.get(url, timeout=5)
+                except Exception as exc:  # pragma: no cover - simple retry
+                    last_exc = exc
+                    time.sleep(1)
+            if last_exc is not None:
+                raise last_exc
+            raise RuntimeError("Unreachable")
+
     else:
+
         class _DummySession:
             def get(self, *_a, **_k) -> None:  # pragma: no cover - simple stub
                 raise RuntimeError("HTTP session unavailable")
 
         HTTP_SESSION = _DummySession()
+
+        def robust_request(_url: str):  # pragma: no cover - simple stub
+            raise RuntimeError("HTTP session unavailable")
+
 else:  # pragma: no cover - optional dependency available
     try:
         import requests  # type: ignore
@@ -62,7 +80,7 @@ def update_oui_file(
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
     try:
-        resp = HTTP_SESSION.get(url, timeout=15)
+        resp = robust_request(url)
         resp.raise_for_status()
     except Exception as exc:
         logger.error("OUI registry download failed: %s", exc)

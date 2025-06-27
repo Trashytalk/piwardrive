@@ -3,6 +3,7 @@ from __future__ import annotations
 """Central aggregation server for PiWardrive units."""
 
 import asyncio
+import logging
 import os
 import shutil
 import tempfile
@@ -97,12 +98,20 @@ async def upload(file: UploadFile) -> dict:  # noqa: V103 - FastAPI route
     dest = os.path.join(UPLOAD_DIR, file.filename)
     fd, tmp_path = tempfile.mkstemp(dir=UPLOAD_DIR)
     os.close(fd)
-    with open(tmp_path, "wb") as fh:
-        shutil.copyfileobj(file.file, fh)
+    try:
+        with open(tmp_path, "wb") as fh:
+            shutil.copyfileobj(file.file, fh)
+    except OSError as exc:  # pragma: no cover - write errors
+        logging.exception("Failed to save upload %s: %s", tmp_path, exc)
+        raise
     await _process_upload(tmp_path)
-    with open(tmp_path, "rb") as src, open(dest, "ab") as out:
-        shutil.copyfileobj(src, out)
-    os.remove(tmp_path)
+    try:
+        with open(tmp_path, "rb") as src, open(dest, "ab") as out:
+            shutil.copyfileobj(src, out)
+        os.remove(tmp_path)
+    except OSError as exc:  # pragma: no cover - write errors
+        logging.exception("Failed to finalize upload %s: %s", dest, exc)
+        raise
     return {"saved": dest}
 
 

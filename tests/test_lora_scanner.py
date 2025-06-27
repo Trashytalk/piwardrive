@@ -1,9 +1,9 @@
-import os
-import sys
 import asyncio
+import sys
+import json
 from types import ModuleType
-import pytest
 
+import pytest
 
 from piwardrive import lora_scanner
 
@@ -14,10 +14,24 @@ def test_parse_packets():
         "time=2024-01-01T00:00:01Z freq=868.1 rssi=-118 snr=6.8 devaddr=ABC",
     ]
     packets = lora_scanner.parse_packets(lines)
-    assert len(packets) == 2
-    assert packets[0].freq == 868.1
-    assert packets[0].rssi == -120
-    assert packets[0].devaddr == "ABC"
+    assert len(packets) == 2  # nosec B101
+    assert packets[0].freq == 868.1  # nosec B101
+    assert packets[0].rssi == -120  # nosec B101
+    assert packets[0].devaddr == "ABC"  # nosec B101
+
+
+def test_parse_packets_pandas():
+    lines = [
+        "time=2024-01-01T00:00:00Z freq=868.1 rssi=-120 snr=7.5 devaddr=ABC",
+        "time=2024-01-01T00:00:01Z freq=868.1 rssi=-118 snr=6.8 devaddr=ABC",
+    ]
+    import importlib
+
+    if importlib.util.find_spec("pandas") is None:
+        pytest.skip("pandas not installed")
+
+    packets = lora_scanner.parse_packets_pandas(lines)
+    assert [p.raw for p in packets] == lines  # nosec B101
 
 
 def test_plot_signal_trend(tmp_path, monkeypatch):
@@ -42,7 +56,7 @@ def test_plot_signal_trend(tmp_path, monkeypatch):
     monkeypatch.setitem(sys.modules, "matplotlib.pyplot", pyplot)
 
     lora_scanner.plot_signal_trend(packets, str(path))
-    assert path.is_file()
+    assert path.is_file()  # nosec B101
 
 
 def test_async_scan_lora(monkeypatch):
@@ -55,7 +69,7 @@ def test_async_scan_lora(monkeypatch):
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
     lines = asyncio.run(lora_scanner.async_scan_lora("l0"))
-    assert lines == ["a", "b"]
+    assert lines == ["a", "b"]  # nosec B101
 
 
 def test_async_parse_packets():
@@ -64,7 +78,7 @@ def test_async_parse_packets():
         "time=2024-01-01T00:00:01Z freq=868.1 rssi=-118 snr=6.8 devaddr=ABC",
     ]
     packets = asyncio.run(lora_scanner.async_parse_packets(lines))
-    assert len(packets) == 2
+    assert len(packets) == 2  # nosec B101
 
 
 def test_main(capsys, monkeypatch):
@@ -76,5 +90,8 @@ def test_main(capsys, monkeypatch):
     finally:
         sys.argv = argv
     out = capsys.readouterr().out
-    assert "x" in out
-
+    assert "x" in out  # nosec B101
+    out_lines = [
+        json.loads(l) for l in capsys.readouterr().out.strip().splitlines() if l
+    ]
+    assert any(rec["message"] == "x" for rec in out_lines)

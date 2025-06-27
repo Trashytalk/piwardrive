@@ -1,5 +1,6 @@
 import builtins
 import sys
+
 import pytest
 
 from piwardrive.core import config
@@ -25,7 +26,7 @@ def test_export_import_roundtrip(tmp_path, ext):
 def test_export_invalid_extension(tmp_path):
     cfg = config.DEFAULT_CONFIG
     bad = tmp_path / "cfg.txt"
-    with pytest.raises(ValueError):
+    with pytest.raises(config.ConfigError):
         config.export_config(cfg, str(bad))
 
 
@@ -77,8 +78,9 @@ def test_switch_profile(tmp_path, monkeypatch):
     assert loaded.theme == "Light"
     assert (cfg_dir / "active_profile").read_text() == "p1"
 
+
 def test_import_config_missing_yaml(tmp_path, monkeypatch):
-    """import_config raises RuntimeError if PyYAML is missing."""
+    """import_config raises ConfigError if PyYAML is missing."""
     file = tmp_path / "cfg.yaml"
     file.write_text("theme: Dark\nremote_sync_url: http://localhost")
 
@@ -91,12 +93,12 @@ def test_import_config_missing_yaml(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setitem(sys.modules, "yaml", None)
-    with pytest.raises(RuntimeError, match="PyYAML required"):
+    with pytest.raises(config.ConfigError, match="PyYAML required"):
         config.import_config(str(file))
 
 
 def test_export_config_missing_yaml(tmp_path, monkeypatch):
-    """export_config raises RuntimeError if PyYAML is missing."""
+    """export_config raises ConfigError if PyYAML is missing."""
     cfg = config.Config(**config.DEFAULTS)
     cfg.remote_sync_url = "http://localhost"
     dest = tmp_path / "out.yaml"
@@ -110,5 +112,5 @@ def test_export_config_missing_yaml(tmp_path, monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
     monkeypatch.setitem(sys.modules, "yaml", None)
-    with pytest.raises(RuntimeError, match="PyYAML required"):
+    with pytest.raises(config.ConfigError, match="PyYAML required"):
         config.export_config(cfg, str(dest))

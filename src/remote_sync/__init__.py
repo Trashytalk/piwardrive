@@ -71,8 +71,11 @@ def _load_sync_state(path: str) -> int:
 
 
 def _save_sync_state(path: str, row_id: int) -> None:
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump(row_id, fh)
+    try:
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(row_id, fh)
+    except OSError as exc:  # pragma: no cover - write errors
+        logger.exception("Failed to write %s: %s", path, exc)
 
 
 async def sync_new_records(
