@@ -43,16 +43,14 @@ import tempfile
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from collections.abc import Sequence, Mapping
 from typing import Any, Tuple
-
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
-    from persistence import (DashboardSettings, load_ap_cache,  # type: ignore
-                             load_dashboard_settings, load_recent_health,
-                             save_dashboard_settings)
+    from persistence import load_ap_cache  # type: ignore
+    from persistence import (DashboardSettings, load_dashboard_settings,
+                             load_recent_health, save_dashboard_settings)
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
@@ -69,6 +67,8 @@ try:  # allow tests to provide a simplified utils module
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import utils as _utils
 
+from typing import Awaitable, Callable
+
 import config
 import psutil
 import vehicle_sensors
@@ -78,15 +78,15 @@ from piwardrive import export, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 
-from typing import Awaitable, Callable
 
-
-async def _default_fetch_metrics_async(*_a: Any, **_k: Any) -> tuple[list[Any], list[Any], int]:
+async def _default_fetch_metrics_async(
+    *_a: Any, **_k: Any
+) -> tuple[list[Any], list[Any], int]:
     return [], [], 0
 
 
-fetch_metrics_async: Callable[..., Awaitable[tuple[list[Any], list[Any], int]]] = getattr(
-    _utils, "fetch_metrics_async", _default_fetch_metrics_async
+fetch_metrics_async: Callable[..., Awaitable[tuple[list[Any], list[Any], int]]] = (
+    getattr(_utils, "fetch_metrics_async", _default_fetch_metrics_async)
 )
 get_avg_rssi = getattr(_utils, "get_avg_rssi", lambda *_a, **_k: None)
 get_cpu_temp = getattr(_utils, "get_cpu_temp", lambda *_a, **_k: None)
@@ -210,6 +210,7 @@ async def list_widgets(_auth: None = Depends(_check_auth)) -> dict:
     """Return available dashboard widget class names."""
     widgets_mod = importlib.import_module("piwardrive.widgets")
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
+
 
 # Alias without the "/api" prefix for mounting under ``/api``
 
@@ -564,16 +565,19 @@ async def ws_aps(websocket: WebSocket) -> None:
     error_count = 0
     try:
         while True:
-            records = load_ap_cache()
+            start = time.perf_counter()
+            records = load_ap_cache(last_time)
             if inspect.isawaitable(records):
                 records = await records
-            new = [r for r in records if r.get("last_time", 0) > last_time]
+            load_time = time.perf_counter() - start
+            new = records
             if new:
                 last_time = max(r["last_time"] for r in new)
             data = {
                 "seq": seq,
                 "timestamp": time.time(),
                 "aps": new,
+                "load_time": load_time,
                 "errors": error_count,
             }
             try:
@@ -599,16 +603,19 @@ async def sse_aps(request: Request) -> StreamingResponse:
         while True:
             if await request.is_disconnected():
                 break
-            records = load_ap_cache()
+            start = time.perf_counter()
+            records = load_ap_cache(last_time)
             if inspect.isawaitable(records):
                 records = await records
-            new = [r for r in records if r.get("last_time", 0) > last_time]
+            load_time = time.perf_counter() - start
+            new = records
             if new:
                 last_time = max(r["last_time"] for r in new)
             data = {
                 "seq": seq,
                 "timestamp": time.time(),
                 "aps": new,
+                "load_time": load_time,
                 "errors": error_count,
             }
             yield f"data: {json.dumps(data)}\n\n"
@@ -695,4 +702,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     finally:
         from utils import shutdown_async_loop
+
         shutdown_async_loop()
