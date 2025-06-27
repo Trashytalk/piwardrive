@@ -28,6 +28,7 @@ PiWardrive's primary interface is a React-based web dashboard served by
    geofencing
    status_service
    remote_sync
+   sigint_workflow
    aggregation_service
    architecture
    function_flows
