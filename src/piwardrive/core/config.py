@@ -3,11 +3,9 @@
 import json
 import os
 from dataclasses import asdict, dataclass, field
-
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -37,6 +35,8 @@ COMPRESS_OFFLINE_TILES = True
 ROUTE_PREFETCH_INTERVAL = 3600  # seconds
 ROUTE_PREFETCH_LOOKAHEAD = 5
 REMOTE_SYNC_INTERVAL = 60  # minutes
+HANDSHAKE_CACHE_SECONDS_DEFAULT = 10.0
+LOG_TAIL_CACHE_SECONDS_DEFAULT = 1.0
 
 # Cloud upload defaults
 CLOUD_BUCKET = ""
@@ -115,6 +115,8 @@ class Config:
     remote_sync_timeout: int = 5
     remote_sync_retries: int = 3
     remote_sync_interval: int = REMOTE_SYNC_INTERVAL
+    handshake_cache_seconds: float = HANDSHAKE_CACHE_SECONDS_DEFAULT
+    log_tail_cache_seconds: float = LOG_TAIL_CACHE_SECONDS_DEFAULT
     wigle_api_name: str = ""
     wigle_api_key: str = ""
     gps_movement_threshold: float = 1.0
@@ -183,6 +185,8 @@ class FileConfigModel(BaseModel):
     remote_sync_timeout: Optional[int] = Field(default=None, ge=1)
     remote_sync_retries: Optional[int] = Field(default=None, ge=1)
     remote_sync_interval: Optional[int] = Field(default=None, ge=1)
+    handshake_cache_seconds: Optional[float] = Field(default=None, ge=0)
+    log_tail_cache_seconds: Optional[float] = Field(default=None, ge=0)
     wigle_api_name: Optional[str] = None
     wigle_api_key: Optional[str] = None
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
@@ -206,6 +210,12 @@ class ConfigModel(FileConfigModel):
     map_auto_prefetch: bool = DEFAULTS["map_auto_prefetch"]
     map_follow_gps: bool = DEFAULTS["map_follow_gps"]
     map_show_wigle: bool = DEFAULTS["map_show_wigle"]
+    handshake_cache_seconds: float = Field(
+        default=DEFAULTS["handshake_cache_seconds"], ge=0
+    )
+    log_tail_cache_seconds: float = Field(
+        default=DEFAULTS["log_tail_cache_seconds"], ge=0
+    )
 
     theme: Theme
 

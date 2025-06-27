@@ -94,3 +94,12 @@ Tile Prefetch and Maintenance
 These options appear in the Settings form and can also be set via
 ``PW_TILE_MAINTENANCE_INTERVAL`` and ``PW_ROUTE_PREFETCH_INTERVAL``
 environment variables.
+
+Cache Tuning
+------------
+
+``handshake_cache_seconds``
+    How long to cache BetterCAP handshake counts before re-scanning.
+
+``log_tail_cache_seconds``
+    Duration to cache tailed log lines before checking for updates.

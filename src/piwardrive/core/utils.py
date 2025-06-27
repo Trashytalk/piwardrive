@@ -2,21 +2,23 @@
 
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
-from . import fastjson
 import asyncio
-from contextlib import asynccontextmanager
+import glob
 import logging
+import mmap
 import os
 import subprocess
-from pathlib import Path
-from piwardrive.gpsd_client import client as gps_client
-import time
 import threading
-import mmap
-import glob
-
+import time
+from contextlib import asynccontextmanager
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
+
+from piwardrive import config as pw_config
+from piwardrive.gpsd_client import client as gps_client
+
+from . import fastjson
 
 try:  # pragma: no cover - optional dependency
     from piwardrive.sigint_suite.models import BluetoothDevice
@@ -32,6 +34,7 @@ except Exception:
 if _RealApp is not None:
     App = _RealApp
 else:
+
     class _AppStub:
         @staticmethod
         def get_running_app() -> None:
@@ -42,11 +45,13 @@ from enum import IntEnum
 
 import psutil
 import requests  # type: ignore
+
 try:
     import requests_cache
 except Exception:  # pragma: no cover - optional dependency
     requests_cache = None  # type: ignore
 import aiohttp
+
 from piwardrive import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
@@ -82,16 +87,20 @@ _SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
 _SAFE_REQUEST_CACHE_LOCK = threading.Lock()
 
 # Cache for BetterCAP handshake counts
-HANDSHAKE_CACHE_SECONDS = 10.0  # default TTL in seconds
-_HANDSHAKE_CACHE: dict[str, tuple[float, int]] = {}
+HANDSHAKE_CACHE_SECONDS = pw_config.DEFAULT_CONFIG.handshake_cache_seconds
+_HANDSHAKE_CACHE: dict[str, tuple[float, float, int]] = {}
 _HANDSHAKE_CACHE_LOCK = threading.Lock()
+
+# Cache for tail_file results
+TAIL_FILE_CACHE_SECONDS = pw_config.DEFAULT_CONFIG.log_tail_cache_seconds
+_TAIL_FILE_CACHE: dict[str, tuple[float, float, list[str]]] = {}
+_TAIL_FILE_CACHE_LOCK = threading.Lock()
 
 
 if requests_cache is not None:
-    HTTP_SESSION = requests_cache.CachedSession(
-        expire_after=SAFE_REQUEST_CACHE_SECONDS
-    )
+    HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
 else:  # pragma: no cover - fallback without requests_cache
+
     class _DummySession:
         def get(self, *args: Any, **kwargs: Any) -> Any:
             return requests.get(*args, **kwargs)
@@ -312,8 +321,9 @@ def safe_request(
     except requests.Timeout as exc:
         report_error(f"Request timeout for {url}: {exc}")
     except requests.HTTPError as exc:
-        status = exc.response.status_code if getattr(
-            exc, "response", None) else "Unknown"
+        status = (
+            exc.response.status_code if getattr(exc, "response", None) else "Unknown"
+        )
         report_error(f"HTTP {status} error for {url}: {exc}")
     except requests.RequestException as exc:
         report_error(f"Request exception for {url}: {exc}")
@@ -377,7 +387,7 @@ def get_mem_usage() -> float | None:
     return pct
 
 
-def get_disk_usage(path: str = '/mnt/ssd') -> float | None:
+def get_disk_usage(path: str = "/mnt/ssd") -> float | None:
     """Return disk usage percentage for given path."""
     now = time.time()
     cache = _DISK_USAGE_CACHE.get(path)
@@ -425,19 +435,22 @@ def get_network_throughput(iface: str | None = None) -> tuple[float, float]:
     return rx_kbps, tx_kbps
 
 
-def get_smart_status(mount_point: str = '/mnt/ssd') -> str | None:
+def get_smart_status(mount_point: str = "/mnt/ssd") -> str | None:
     """Return SMART health status for the device mounted at ``mount_point``."""
     try:
         dev = next(
-            (p.device for p in psutil.disk_partitions(all=False)
-             if p.mountpoint == mount_point),
+            (
+                p.device
+                for p in psutil.disk_partitions(all=False)
+                if p.mountpoint == mount_point
+            ),
             None,
         )
         if not dev:
             return None
         try:
             proc = subprocess.run(
-                ['smartctl', '-H', dev],
+                ["smartctl", "-H", dev],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -458,7 +471,7 @@ def _parse_smartctl_output(output: str) -> str | None:
     return output.strip().splitlines()[-1] if output else None
 
 
-def find_latest_file(directory: str, pattern: str = '*') -> str | None:
+def find_latest_file(directory: str, pattern: str = "*") -> str | None:
     """Return the newest file matching ``pattern`` under ``directory``."""
     dir_path = Path(directory)
     files = list(dir_path.glob(pattern))
@@ -469,10 +482,22 @@ def find_latest_file(directory: str, pattern: str = '*') -> str | None:
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
     """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
+    now = time.time()
     try:
-        with open(path, "rb") as f, mmap.mmap(
-            f.fileno(), 0, access=mmap.ACCESS_READ
-        ) as mm:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        mtime = 0.0
+    with _TAIL_FILE_CACHE_LOCK:
+        cached = _TAIL_FILE_CACHE.get(path)
+        if cached:
+            ts, cached_mtime, data = cached
+            if now - ts <= TAIL_FILE_CACHE_SECONDS and cached_mtime == mtime:
+                return data[-lines:]
+    try:
+        with (
+            open(path, "rb") as f,
+            mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm,
+        ):
             pos = mm.size()
             for _ in range(lines + 1):
                 new_pos = mm.rfind(b"\n", 0, pos)
@@ -482,40 +507,18 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
                 pos = new_pos
             start = 0 if pos < 0 else pos + 1
             text = mm[start:]
-            return text.decode("utf-8", errors="ignore").splitlines()[-lines:]
+            result = text.decode("utf-8", errors="ignore").splitlines()
     except Exception:
-        return []
+        result = []
+    with _TAIL_FILE_CACHE_LOCK:
+        _TAIL_FILE_CACHE[path] = (now, mtime, result)
+    return result[-lines:]
 
 
 async def async_tail_file(path: str, lines: int = 50) -> list[str]:
     """Asynchronously return the last ``lines`` from ``path``."""
-    try:
-        import aiofiles  # type: ignore
-    except Exception:
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, lambda: tail_file(path, lines))
-
-    try:
-        async with aiofiles.open(path, "rb") as f:
-            fd = f.fileno()
-            try:
-                with mmap.mmap(fd, 0, access=mmap.ACCESS_READ) as mm:
-                    pos = mm.size()
-                    for _ in range(lines + 1):
-                        new_pos = mm.rfind(b"\n", 0, pos)
-                        if new_pos == -1:
-                            pos = -1
-                            break
-                        pos = new_pos
-                    start = 0 if pos < 0 else pos + 1
-                    data = mm[start:]
-                    return data.decode("utf-8", errors="ignore").splitlines()[-lines:]
-            except Exception:
-                await f.seek(0)
-                data = await f.read()
-                return data.decode("utf-8", errors="ignore").splitlines()[-lines:]
-    except Exception:
-        return []
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, lambda: tail_file(path, lines))
 
 
 def _run_systemctl(service: str, action: str) -> tuple[bool, str, str]:
@@ -582,8 +585,8 @@ def _run_service_cmd_sync(
 @asynccontextmanager
 async def message_bus() -> Any:
     """Yield a connected ``dbus-fast`` ``MessageBus`` instance."""
-    from dbus_fast.aio import MessageBus
     from dbus_fast import BusType
+    from dbus_fast.aio import MessageBus
 
     bus = MessageBus(bus_type=BusType.SYSTEM)
     await bus.connect()
@@ -635,13 +638,9 @@ async def _run_service_cmd_async(
 
             unit_path = await manager.call_get_unit(svc_name)
             uintro = await bus.introspect("org.freedesktop.systemd1", unit_path)
-            unit = bus.get_proxy_object(
-                "org.freedesktop.systemd1", unit_path, uintro
-            )
+            unit = bus.get_proxy_object("org.freedesktop.systemd1", unit_path, uintro)
             props = unit.get_interface("org.freedesktop.DBus.Properties")
-            state = await props.call_get(
-                "org.freedesktop.systemd1.Unit", "ActiveState"
-            )
+            state = await props.call_get("org.freedesktop.systemd1.Unit", "ActiveState")
             return True, str(state), ""
 
     async def _retry() -> tuple[bool, str, str]:
@@ -660,9 +659,7 @@ async def _run_service_cmd_async(
     try:
         return await _retry()
     except Exception as exc:  # pragma: no cover - DBus failures
-        logging.exception(
-            "Service command '%s %s' failed: %s", service, action, exc
-        )
+        logging.exception("Service command '%s %s' failed: %s", service, action, exc)
         return False, "", str(exc)
 
 
@@ -709,9 +706,7 @@ async def service_status_async(
 
 def service_status(service: str, attempts: int = 1, delay: float = 0) -> bool:
     """Check a service's status using the asynchronous helper."""
-    fut = run_async_task(
-        service_status_async(service, attempts=attempts, delay=delay)
-    )
+    fut = run_async_task(service_status_async(service, attempts=attempts, delay=delay))
     return fut.result()
 
 
@@ -777,6 +772,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
     timeout = aiohttp.ClientTimeout(total=5)
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
+
         async def _fetch(url: str) -> dict | None:
             try:
                 async with session.get(url) as resp:
@@ -843,7 +839,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
 
 
 async def fetch_metrics_async(
-    log_folder: str = '/mnt/ssd/kismet_logs',
+    log_folder: str = "/mnt/ssd/kismet_logs",
 ) -> tuple[list, list, int]:
     """Fetch Kismet devices and BetterCAP handshake count concurrently."""
     if network_scanning_disabled():
@@ -856,7 +852,7 @@ async def fetch_metrics_async(
 
 
 def count_bettercap_handshakes(
-    log_folder: str = '/mnt/ssd/kismet_logs',
+    log_folder: str = "/mnt/ssd/kismet_logs",
     *,
     cache_seconds: float = HANDSHAKE_CACHE_SECONDS,
 ) -> int:
@@ -865,17 +861,25 @@ def count_bettercap_handshakes(
     with _HANDSHAKE_CACHE_LOCK:
         cached = _HANDSHAKE_CACHE.get(log_folder)
         if cache_seconds and cached:
-            ts, count = cached
-            if now - ts <= cache_seconds:
+            ts, mtime, count = cached
+            try:
+                cur_mtime = os.path.getmtime(log_folder)
+            except OSError:
+                cur_mtime = 0.0
+            if now - ts <= cache_seconds and mtime >= cur_mtime:
                 return count
     try:
-        pattern = os.path.join(log_folder, '*_bettercap', '**', '*.pcap')
+        pattern = os.path.join(log_folder, "*_bettercap", "**", "*.pcap")
         files = glob.glob(pattern, recursive=True)
         count = len(files)
     except OSError:
         count = 0
+    try:
+        folder_mtime = os.path.getmtime(log_folder)
+    except OSError:
+        folder_mtime = 0.0
     with _HANDSHAKE_CACHE_LOCK:
-        _HANDSHAKE_CACHE[log_folder] = (now, count)
+        _HANDSHAKE_CACHE[log_folder] = (now, folder_mtime, count)
     return count
 
 
@@ -925,7 +929,7 @@ def get_avg_rssi(aps: Iterable[dict[str, Any]]) -> float | None:
     try:
         vals = []
         for ap in aps:
-            val = ap.get('signal_dbm')
+            val = ap.get("signal_dbm")
             if val is not None:
                 vals.append(float(val))
         return sum(vals) / len(vals) if vals else None
@@ -948,9 +952,9 @@ def get_recent_bssids(limit: int = 5) -> list[str]:
     try:
         aps, _ = fetch_kismet_devices()
         # sort by last_time (epoch) descending
-        sorted_aps = sorted(aps, key=lambda ap: ap.get('last_time', 0), reverse=True)
+        sorted_aps = sorted(aps, key=lambda ap: ap.get("last_time", 0), reverse=True)
         # extract up to `limit` BSSIDs
-        return [ap.get('bssid', 'N/A') for ap in sorted_aps[:limit]]
+        return [ap.get("bssid", "N/A") for ap in sorted_aps[:limit]]
     except Exception:
         return []
 
@@ -1014,7 +1018,7 @@ def _point_in_polygon_py(
     for i in range(n):
         lat1, lon1 = polygon[i]
         lat2, lon2 = polygon[(i + 1) % n]
-        if ((lon1 > lon) != (lon2 > lon)):
+        if (lon1 > lon) != (lon2 > lon):
             intersect = (lat2 - lat1) * (lon - lon1) / (lon2 - lon1 + 1e-12) + lat1
             if lat < intersect:
                 inside = not inside
@@ -1022,11 +1026,10 @@ def _point_in_polygon_py(
 
 
 try:  # pragma: no cover - optional geometry C extension for speed
-    from cgeom import (
-        haversine_distance as _haversine_distance_c,  # type: ignore
-        polygon_area as _polygon_area_c,  # type: ignore
-        point_in_polygon as _point_in_polygon_c,  # type: ignore
-    )
+    from cgeom import \
+        haversine_distance as _haversine_distance_c  # type: ignore
+    from cgeom import point_in_polygon as _point_in_polygon_c  # type: ignore
+    from cgeom import polygon_area as _polygon_area_c  # type: ignore
 except Exception:  # pragma: no cover - extension not built
     _haversine_distance_c = None
     _polygon_area_c = None
@@ -1057,8 +1060,8 @@ def _parse_coord_text(text: str) -> list[tuple[float, float]]:
 
 def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
-    import zipfile
     import xml.etree.ElementTree as ET
+    import zipfile
 
     def _parse(root: ET.Element) -> list[dict[str, Any]]:
         ns = {"kml": root.tag.split("}")[0].strip("{")}
@@ -1072,11 +1075,13 @@ def load_kml(path: str) -> list[dict[str, Any]]:
             if placemark.find("kml:Point", ns) is not None:
                 feats.append({"name": name, "type": "Point", "coordinates": coords[0]})
             elif placemark.find("kml:LineString", ns) is not None:
-                feats.append({
-                    "name": name,
-                    "type": "LineString",
-                    "coordinates": coords,
-                })
+                feats.append(
+                    {
+                        "name": name,
+                        "type": "LineString",
+                        "coordinates": coords,
+                    }
+                )
             elif placemark.find("kml:Polygon", ns) is not None:
                 feats.append({"name": name, "type": "Polygon", "coordinates": coords})
         return feats
