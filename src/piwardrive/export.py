@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
+
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
 
@@ -200,19 +201,30 @@ def export_shp(
             writer.save(base)
         return
 
+    base = path[:-4] if path.lower().endswith(".shp") else path
+    if getattr(shapefile, "__version__", "2").startswith("1."):
+        writer = shapefile.Writer(base)
+        writer.shapeType = shapefile.POINT
+    else:
+        writer = shapefile.Writer(base, shapefile.POINT)
+    fieldnames = fields or list(first.keys())
+    for name in fieldnames:
+        if name in {"lat", "lon"}:
+            continue
+        writer.field(name[:10], "C")
+
+    def _write(rec: Mapping[str, Any]) -> None:
+        lat = rec.get("lat")
+        lon = rec.get("lon")
+        if lat is None or lon is None:
+            return
+        writer.point(lon, lat)
+        record = [rec.get(name) for name in fieldnames if name not in {"lat", "lon"}]
+        writer.record(*record)
 
     _write(first)
     for rec in it:
         _write(rec)
-    if hasattr(writer, "close"):
-        writer.close()
-    else:  # pyshp < 2
-        writer.save(base)
-
-
-EXPORTERS: dict[
-    str, Callable[[Iterable[Mapping[str, Any]], str, Sequence[str] | None], None]
-=======
     try:
         if hasattr(writer, "close"):
             writer.close()
@@ -223,7 +235,7 @@ EXPORTERS: dict[
 
 
 EXPORTERS: dict[
-    str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]
+    str, Callable[[Iterable[Mapping[str, Any]], str, Sequence[str] | None], None]
 ] = {
     "csv": export_csv,
     "json": export_json,
