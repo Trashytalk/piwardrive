@@ -57,7 +57,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     orig.map_poll_bt = 30
     orig.map_show_bt = True
     orig.ui_font_size = 18
-    orig.offline_tile_path = "/tmp/off.mbtiles"
+    orig.offline_tile_path = str(tmp_path / "off.mbtiles")
     orig.disable_scanning = True
     orig.map_auto_prefetch = True
     orig.map_cluster_capacity = 12
@@ -71,7 +71,7 @@ def test_save_and_load_roundtrip(tmp_path: Path) -> None:
     assert loaded.map_poll_gps_max == 20
     assert loaded.map_poll_bt == 30
     assert loaded.map_show_bt is True
-    assert loaded.offline_tile_path == "/tmp/off.mbtiles"
+    assert loaded.offline_tile_path == str(tmp_path / "off.mbtiles")
     assert loaded.disable_scanning is True
     assert loaded.map_auto_prefetch is True
     assert loaded.ui_font_size == 18

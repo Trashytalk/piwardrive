@@ -28,7 +28,7 @@ def start_server(tmp_path):
 
 def request_json(port, path, method='GET'):
     req = urllib.request.Request(f'http://127.0.0.1:{port}{path}', method=method)
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req) as resp:  # nosec B310
         return json.loads(resp.read())
 
 

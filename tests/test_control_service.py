@@ -23,7 +23,7 @@ def _load_control_service() -> Callable[[Any, str, str], Any]:
     assert func_node is not None
     mod = ast.Module(body=[func_node], type_ignores=[])
     namespace = {'subprocess': subprocess, 'utils': utils}
-    exec(compile(mod, '<control_service>', 'exec'), namespace)
+    exec(compile(mod, '<control_service>', 'exec'), namespace)  # nosec B102
     return cast(Callable[[Any, str, str], Any], namespace['control_service'])
 
 
