@@ -7,7 +7,7 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import Iterable, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 import aiosqlite
 from fastapi import FastAPI, UploadFile
@@ -56,7 +56,9 @@ async def _get_conn() -> aiosqlite.Connection:
     return _DB_CONN
 
 
-async def _merge_records(records: Iterable[Tuple]) -> None:
+async def _merge_records(
+    records: Iterable[Tuple[str, float | None, float, float, float]],
+) -> None:
     conn = await _get_conn()
     await conn.executemany(
         """INSERT OR IGNORE INTO health_records
@@ -92,7 +94,7 @@ async def _process_upload(path: str) -> None:
 
 
 @app.post("/upload")
-async def upload(file: UploadFile) -> dict:  # noqa: V103 - FastAPI route
+async def upload(file: UploadFile) -> Dict[str, str]:  # noqa: V103 - FastAPI route
     """Save ``file`` and merge its contents into the aggregation database."""
     # Called by FastAPI as a route handler.
     dest = os.path.join(UPLOAD_DIR, file.filename)
@@ -116,7 +118,7 @@ async def upload(file: UploadFile) -> dict:  # noqa: V103 - FastAPI route
 
 
 @app.get("/stats")
-async def stats() -> dict:  # noqa: V103 - FastAPI route
+async def stats() -> Dict[str, float]:  # noqa: V103 - FastAPI route
     """Return averaged system metrics from all records."""
     # Called by FastAPI as a route handler.
     conn = await _get_conn()
@@ -130,7 +132,8 @@ async def stats() -> dict:  # noqa: V103 - FastAPI route
 
 
 @app.get("/overlay")
-async def overlay(bins: int = 100) -> dict:  # noqa: V103 - FastAPI route
+async def overlay(bins: int = 100) -> Dict[str, List[Tuple[float, float, int]]]:
+    # noqa: V103 - FastAPI route
     """Return heatmap points derived from all uploaded access points."""
     # Called by FastAPI as a route handler.
     conn = await _get_conn()
