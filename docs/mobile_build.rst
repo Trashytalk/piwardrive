@@ -1,39 +1,7 @@
 Mobile Builds
 =============
-.. note::
-   Please read the legal notice in the project `README.md` before using PiWardrive.
 
-
-This guide explains how to package PiWardrive for Android and iOS.
-
-Prerequisites
--------------
-
-* **Android**: Python 3.10 or later, Java JDK 17, Android SDK/NDK and
-  ``buildozer`` (``pip install buildozer``).
-
-Android
--------
-
-Use the helper script to build the debug APK::
-
-    ./scripts/build_android.sh
-
-The first run downloads the Android toolchain and may take time. The
-APK is placed under ``bin/``. Adjust ``buildozer.spec`` to change the
-package name or permissions.
-
-iOS
----
-
-To generate an Xcode project run::
-
-    ./scripts/build_ios.sh
-
-Open the created project in Xcode to build and sign the app.
-
-Mobile-specific Adjustments
----------------------------
-
-System service management and some diagnostics rely on Linux-only
-utilities. When running on Android those features are disabled.
+PiWardrive previously included configuration files to build Android and
+iOS apps using Buildozer and ``kivy-ios``. These files and helper
+scripts have been removed so mobile builds are no longer officially
+supported.
