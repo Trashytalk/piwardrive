@@ -6,9 +6,11 @@ import logging
 import os
 import tempfile
 import time
-import xml.etree.ElementTree as ET  # nosec B405
+import xml.etree.ElementTree as ET
 import zipfile
 from typing import Any, Callable, Iterable, Mapping, Sequence
+
+from .errors import ExportError
 
 try:  # Optional dependency for shapefile export
     import shapefile  # type: ignore
@@ -183,7 +185,7 @@ def export_shp(
 ) -> None:
     """Write ``rows`` to ``path`` in Shapefile format."""
     if shapefile is None:
-        raise RuntimeError("pyshp is required for shapefile export")
+        raise ExportError("pyshp is required for shapefile export")
     rows = list(rows)
     base = path[:-4] if path.lower().endswith(".shp") else path
     if getattr(shapefile, "__version__", "2").startswith("1."):
@@ -242,7 +244,7 @@ def export_records(
     try:
         exporter = EXPORTERS[fmt]
     except KeyError as exc:
-        raise ValueError(f"Unsupported format: {fmt}") from exc
+        raise ExportError(f"Unsupported format: {fmt}") from exc
     exporter(records, path, fields)
 
 

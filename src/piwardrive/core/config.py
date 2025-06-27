@@ -3,13 +3,13 @@
 import json
 import os
 from dataclasses import asdict, dataclass, field
-
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-
 from pydantic import BaseModel, Field, ValidationError, field_validator
+
+from ..errors import ConfigError
 
 
 class Theme(str, Enum):
@@ -215,7 +215,7 @@ class ConfigModel(FileConfigModel):
         try:
             return Theme(value)
         except Exception as exc:  # pragma: no cover - should raise
-            raise ValueError(f"Invalid theme: {value}") from exc
+            raise ConfigError(f"Invalid theme: {value}") from exc
 
 
 def _parse_env_value(raw: str, default: Any) -> Any:
@@ -344,11 +344,11 @@ def export_config(config: Config, path: str) -> None:
         try:
             import yaml  # type: ignore
         except Exception as exc:  # pragma: no cover - optional dep
-            raise RuntimeError("PyYAML required for YAML export") from exc
+            raise ConfigError("PyYAML required for YAML export") from exc
         with open(path, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, sort_keys=False)
     else:
-        raise ValueError(f"Unsupported export format: {ext}")
+        raise ConfigError(f"Unsupported export format: {ext}")
 
 
 def import_config(path: str) -> Config:
@@ -361,10 +361,10 @@ def import_config(path: str) -> Config:
             try:
                 import yaml  # type: ignore
             except Exception as exc:  # pragma: no cover - optional dep
-                raise RuntimeError("PyYAML required for YAML import") from exc
+                raise ConfigError("PyYAML required for YAML import") from exc
             data = yaml.safe_load(f) or {}
         else:
-            raise ValueError(f"Unsupported config format: {ext}")
+            raise ConfigError(f"Unsupported config format: {ext}")
     FileConfigModel(**data)
     merged = {**DEFAULTS, **data}
     return Config(**merged)

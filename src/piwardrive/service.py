@@ -9,8 +9,15 @@ import typing
 from dataclasses import asdict
 
 try:  # pragma: no cover - optional FastAPI dependency
-    from fastapi import (Body, Depends, FastAPI, HTTPException, Request,
-                         WebSocket, WebSocketDisconnect)
+    from fastapi import (
+        Body,
+        Depends,
+        FastAPI,
+        HTTPException,
+        Request,
+        WebSocket,
+        WebSocketDisconnect,
+    )
     from fastapi.responses import Response, StreamingResponse
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
@@ -50,9 +57,14 @@ from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
-    from persistence import (DashboardSettings, _db_path, get_table_counts,
-                             load_dashboard_settings, load_recent_health,
-                             save_dashboard_settings)
+    from persistence import (
+        DashboardSettings,
+        _db_path,
+        get_table_counts,
+        load_dashboard_settings,
+        load_recent_health,
+        save_dashboard_settings,
+    )
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
@@ -64,6 +76,7 @@ except Exception:  # pragma: no cover - fall back to real module
         DashboardSettings,
     )
 
+from piwardrive.errors import GeofenceError
 from piwardrive.security import sanitize_path, verify_password
 
 try:  # allow tests to provide a simplified utils module
@@ -157,8 +170,8 @@ def _load_geofences() -> list:
             return data
     except FileNotFoundError:
         return []
-    except Exception:
-        return []
+    except Exception as exc:
+        raise GeofenceError("Failed to load geofences") from exc
     return []
 
 
@@ -169,6 +182,7 @@ def _save_geofences(polys: list) -> None:
             json.dump(polys, fh, indent=2)
     except OSError as exc:
         logging.exception("Failed to save geofences: %s", exc)
+        raise GeofenceError("Failed to save geofences") from exc
 
 
 def _check_auth(credentials: HTTPBasicCredentials = Depends(security)) -> None:
