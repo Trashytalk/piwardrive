@@ -215,3 +215,17 @@ def test_import_export_profile(tmp_path: Path) -> None:
     exported = tmp_path / "exp.json"
     config.export_profile(name, str(exported))
     assert exported.is_file()
+
+
+def test_import_export_delete_profile(tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    src = tmp_path / "profile.json"
+    src.write_text('{"theme": "Dark"}')
+    name = config.import_profile(str(src))
+    path = Path(config.PROFILES_DIR) / f"{name}.json"
+    assert path.is_file()
+    exported = tmp_path / "export.json"
+    config.export_profile(name, str(exported))
+    assert exported.is_file()
+    config.delete_profile(name)
+    assert not path.exists()
