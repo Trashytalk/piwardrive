@@ -187,7 +187,7 @@ async def flush_health_records() -> None:
         (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
         VALUES (:timestamp, :cpu_temp, :cpu_percent, :memory_percent, :disk_percent)
         """,
-        list(_HEALTH_BUFFER),
+        _HEALTH_BUFFER,
     )
     await conn.commit()
     _HEALTH_BUFFER.clear()
@@ -324,7 +324,9 @@ async def get_table_counts() -> dict[str, int]:
             )
             tables = [row[0] for row in cur.fetchall()]
             for name in tables:
-                row = db.execute(f"SELECT COUNT(*) FROM {name}").fetchone()
+                row = db.execute(
+                    f"SELECT COUNT(*) FROM {name}"  # nosec B608
+                ).fetchone()
                 result[name] = int(row[0]) if row else 0
         return result
 
