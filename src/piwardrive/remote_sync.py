@@ -1,27 +1,59 @@
-"""Backward compatibility wrapper for ``remote_sync`` package."""
+"""Backward compatibility wrapper around the :mod:`remote_sync` package."""
 
 from __future__ import annotations
 
 import sqlite3
+from typing import Tuple
 
 import remote_sync as _impl
 
+# Re-export commonly used modules to keep older imports working.
 asyncio = _impl.asyncio
 logging = _impl.logging
 os = _impl.os
 aiohttp = _impl.aiohttp
 tempfile = _impl.tempfile
 json = _impl.json
+
+# Public logger instance used by the implementation.
 logger = _impl.logger
 
-_make_range_db = _impl._make_range_db
-_load_sync_state = _impl._load_sync_state
-_save_sync_state = _impl._save_sync_state
+
+def _make_range_db(src: str, start: int, end: int) -> str:
+    """Return path to a temporary DB containing rows ``start``..``end``."""
+
+    return _impl._make_range_db(src, start, end)
 
 
-async def sync_database_to_server(*args, **kwargs):
+def _load_sync_state(path: str) -> int:
+    """Return the last synced row id recorded in ``path``."""
+
+    return _impl._load_sync_state(path)
+
+
+def _save_sync_state(path: str, row_id: int) -> None:
+    """Persist ``row_id`` to ``path``."""
+
+    _impl._save_sync_state(path, row_id)
+
+
+async def sync_database_to_server(
+    db_path: str,
+    url: str,
+    *,
+    timeout: int = 30,
+    retries: int = 3,
+    row_range: Tuple[int, int] | None = None,
+) -> None:
     """Delegate to :func:`remote_sync.sync_database_to_server`."""
-    return await _impl.sync_database_to_server(*args, **kwargs)
+
+    await _impl.sync_database_to_server(
+        db_path,
+        url,
+        timeout=timeout,
+        retries=retries,
+        row_range=row_range,
+    )
 
 
 async def sync_new_records(
