@@ -12,11 +12,7 @@ check for ``None`` to gracefully handle setups without these sensors.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
-
-if TYPE_CHECKING:  # pragma: no cover - type checking only
-    import dbus as dbus_type
-    from mpu6050 import mpu6050 as mpu6050_type
+from typing import Any, Dict, Optional
 
 try:  # pragma: no cover - optional DBus dependency
     import dbus
