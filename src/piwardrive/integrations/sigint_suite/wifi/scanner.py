@@ -11,8 +11,7 @@ from typing import Dict, Iterable, List, Optional, Union
 
 from piwardrive import orientation_sensors
 from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
-from piwardrive.sigint_suite.hooks import (apply_post_processors,
-                                           register_post_processor)
+from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
 from piwardrive.sigint_suite.models import WifiNetwork
 
 logger = logging.getLogger(__name__)

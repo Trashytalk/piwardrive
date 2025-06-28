@@ -14,8 +14,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import (Any, Callable, Coroutine, Iterable, Sequence, TypedDict,
-                    TypeVar)
+from typing import Any, Callable, Coroutine, Iterable, Sequence, TypedDict, TypeVar
 
 from piwardrive import config as pw_config
 from piwardrive.gpsd_client import client as gps_client

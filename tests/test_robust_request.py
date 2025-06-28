@@ -37,7 +37,9 @@ def test_orientation_widget_update(monkeypatch):
     widget = object.__new__(ow.OrientationWidget)
     widget.label = ow.MDLabel()
 
-    monkeypatch.setattr(ow.orientation_sensors, "get_orientation_dbus", lambda: "right-up")
+    monkeypatch.setattr(
+        ow.orientation_sensors, "get_orientation_dbus", lambda: "right-up"
+    )
     monkeypatch.setattr(ow.orientation_sensors, "orientation_to_angle", lambda _: 90.0)
     ow.OrientationWidget.update(widget)
 
