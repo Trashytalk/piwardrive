@@ -190,7 +190,9 @@ app = FastAPI()
 F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
 
-def _wrap_route(method: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
+def _wrap_route(
+    method: typing.Callable[..., typing.Any], *args: typing.Any, **kwargs: typing.Any
+) -> typing.Callable[[F], F]:
     return typing.cast(typing.Callable[[F], F], method(*args, **kwargs))
 
 
@@ -212,6 +214,7 @@ def DELETE(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
 
 def WEBSOCKET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
     return _wrap_route(app.websocket, *args, **kwargs)
+
 
 # Allowed log file paths for the /logs endpoint
 ALLOWED_LOG_PATHS = [
@@ -271,7 +274,7 @@ async def _collect_widget_metrics() -> dict[str, Any]:
     rx, tx = get_network_throughput()
     batt_percent = batt_plugged = None
     try:
-        batt = psutil.sensors_battery()
+        batt = await asyncio.to_thread(psutil.sensors_battery)
         if batt is not None:
             batt_percent = batt.percent
             batt_plugged = batt.power_plugged
@@ -290,9 +293,9 @@ async def _collect_widget_metrics() -> dict[str, Any]:
         "tx_kbps": tx,
         "battery_percent": batt_percent,
         "battery_plugged": batt_plugged,
-        "vehicle_speed": vehicle_sensors.read_speed_obd(),
-        "vehicle_rpm": vehicle_sensors.read_rpm_obd(),
-        "engine_load": vehicle_sensors.read_engine_load_obd(),
+        "vehicle_speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
+        "vehicle_rpm": await asyncio.to_thread(vehicle_sensors.read_rpm_obd),
+        "engine_load": await asyncio.to_thread(vehicle_sensors.read_engine_load_obd),
     }
 
 
@@ -307,7 +310,9 @@ async def list_widgets(_auth: None = Depends(_check_auth)) -> dict[str, list[str
 
 
 @GET("/widgets")
-async def list_widgets_alias(_auth: None = Depends(_check_auth)) -> dict[str, list[str]]:
+async def list_widgets_alias(
+    _auth: None = Depends(_check_auth),
+) -> dict[str, list[str]]:
     return await list_widgets(_auth)
 
 
@@ -330,7 +335,7 @@ async def get_cpu(_auth: None = Depends(_check_auth)) -> dict[str, Any]:
     """Return CPU temperature and usage percentage."""
     return {
         "temp": get_cpu_temp(),
-        "percent": psutil.cpu_percent(interval=None),
+        "percent": await asyncio.to_thread(psutil.cpu_percent, interval=None),
     }
 
 
@@ -376,9 +381,9 @@ async def get_orientation_endpoint(
 async def get_vehicle_endpoint(_auth: None = Depends(_check_auth)) -> dict[str, Any]:
     """Return vehicle metrics from OBD-II sensors."""
     return {
-        "speed": vehicle_sensors.read_speed_obd(),
-        "rpm": vehicle_sensors.read_rpm_obd(),
-        "engine_load": vehicle_sensors.read_engine_load_obd(),
+        "speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
+        "rpm": await asyncio.to_thread(vehicle_sensors.read_rpm_obd),
+        "engine_load": await asyncio.to_thread(vehicle_sensors.read_engine_load_obd),
     }
 
 
@@ -532,7 +537,9 @@ async def update_dashboard_settings_endpoint(
 
 
 @GET("/geofences")
-async def list_geofences_endpoint(_auth: None = Depends(_check_auth)) -> list[dict[str, Any]]:
+async def list_geofences_endpoint(
+    _auth: None = Depends(_check_auth),
+) -> list[dict[str, Any]]:
     """Return saved geofence polygons."""
     return _load_geofences()
 
@@ -593,7 +600,9 @@ async def remove_geofence_endpoint(
 
 
 @POST("/sync")
-async def sync_records(limit: int = 100, _auth: None = Depends(_check_auth)) -> dict[str, Any]:
+async def sync_records(
+    limit: int = 100, _auth: None = Depends(_check_auth)
+) -> dict[str, Any]:
     """Upload recent health records to the configured sync endpoint."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):
