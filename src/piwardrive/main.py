@@ -1,4 +1,5 @@
 """Application entry point providing helpers used by scripts and tests."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,13 +10,17 @@ from dataclasses import asdict, fields
 from typing import Any, Callable
 
 from piwardrive import diagnostics, exception_handler, remote_sync, utils
-from piwardrive.config import (CONFIG_PATH, Config, config_mtime, load_config,
-                               save_config)
+from piwardrive.config import (
+    CONFIG_PATH,
+    Config,
+    config_mtime,
+    load_config,
+    save_config,
+)
 from piwardrive.config_watcher import watch_config
 from piwardrive.di import Container
 from piwardrive.logconfig import setup_logging
-from piwardrive.persistence import (AppState, _db_path, load_app_state,
-                                    save_app_state)
+from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
 from piwardrive.scheduler import PollScheduler
 from piwardrive.security import hash_password
 
@@ -81,7 +86,7 @@ class PiWardriveApp:
             diagnostics.start_profiling()
         self._config_stamp = config_mtime()
         self._updating_config = False
-        self._config_observer = watch_config(
+        self._config_observer: Any = watch_config(
             CONFIG_PATH, lambda: self._reload_config_event(0)
         )
 
@@ -144,9 +149,7 @@ class PiWardriveApp:
             utils.report_error(f"Failed to export logs: {exc}")
             return ""
 
-    async def export_log_bundle(
-        self, path: str | None = None, lines: int = 200
-    ) -> str:
+    async def export_log_bundle(self, path: str | None = None, lines: int = 200) -> str:
         """Write the last ``lines`` from each configured log to ``path``."""
         import zipfile
 

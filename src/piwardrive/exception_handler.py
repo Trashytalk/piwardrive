@@ -17,9 +17,9 @@ try:  # pragma: no cover - FastAPI is an optional dependency
     from fastapi import FastAPI, Request
     from fastapi.responses import JSONResponse
 except Exception:  # pragma: no cover - allow running without FastAPI
-    FastAPI = None  # type: ignore[assignment]
-    Request = None  # type: ignore[assignment]
-    JSONResponse = None  # type: ignore[assignment]
+    FastAPI = None  # type: ignore[misc, assignment]
+    Request = None  # type: ignore[misc, assignment]
+    JSONResponse = None  # type: ignore[misc, assignment]
 
 _installed = False
 

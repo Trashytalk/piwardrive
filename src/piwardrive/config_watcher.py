@@ -31,7 +31,7 @@ class _ConfigHandler(FileSystemEventHandler):
             self._callback()
 
 
-def watch_config(path: str, callback: Callable[[], None]) -> object:
+def watch_config(path: str, callback: Callable[[], None]) -> Any:
     """Start watching ``path`` and invoke ``callback`` on changes."""
     observer = _Observer()
     handler = _ConfigHandler(path, callback)

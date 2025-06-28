@@ -7,9 +7,6 @@ import logging
 import os
 import typing
 from dataclasses import asdict
-
-logger = logging.getLogger(__name__)
-
 from typing import TYPE_CHECKING
 
 try:  # pragma: no cover - optional FastAPI dependency
@@ -25,7 +22,7 @@ try:  # pragma: no cover - optional FastAPI dependency
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
-    FastAPI = type(
+    FastAPI = type(  # type: ignore[misc, assignment]
         "FastAPI",
         (),
         {
@@ -34,20 +31,32 @@ except Exception:
             "delete": lambda *a, **k: (lambda f: f),
             "websocket": lambda *a, **k: (lambda f: f),
         },
-    )
+    )  # type: ignore[misc, assignment]
 
     def _noop(*_a: typing.Any, **_k: typing.Any) -> None:
         return None
 
-    Depends = _noop
-    HTTPException = type("HTTPException", (Exception,), {})
-    WebSocket = object
-    WebSocketDisconnect = Exception
-    Body = _noop
-    Request = object
-    StreamingResponse = Response = object
-    HTTPBasic = type("HTTPBasic", (), {"__init__": lambda self, **k: None})
-    HTTPBasicCredentials = type("HTTPBasicCredentials", (), {})
+    Depends = _noop  # type: ignore[misc, assignment]
+    HTTPException = type(  # type: ignore[misc]
+        "HTTPException",
+        (Exception,),
+        {},
+    )  # type: ignore[misc, assignment]
+    WebSocket = object  # type: ignore[misc, assignment]
+    WebSocketDisconnect = Exception  # type: ignore[misc, assignment]
+    Body = _noop  # type: ignore[misc, assignment]
+    Request = object  # type: ignore[misc, assignment]
+    StreamingResponse = Response = object  # type: ignore[misc, assignment]
+    HTTPBasic = type(  # type: ignore[misc]
+        "HTTPBasic",
+        (),
+        {"__init__": lambda self, **k: None},
+    )  # type: ignore[misc, assignment]
+    HTTPBasicCredentials = type(  # type: ignore[misc]
+        "HTTPBasicCredentials",
+        (),
+        {},
+    )  # type: ignore[misc, assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from fastapi import (
@@ -61,6 +70,7 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
     )
     from fastapi.responses import Response, StreamingResponse
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
 import asyncio
 import importlib
 import json
@@ -68,13 +78,13 @@ import tempfile
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Tuple
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
+    from persistence import load_ap_cache  # type: ignore
     from persistence import (
-        load_ap_cache,
         DashboardSettings,
         _db_path,
         get_table_counts,
@@ -266,7 +276,7 @@ async def _collect_widget_metrics() -> dict[str, Any]:
             batt_percent = batt.percent
             batt_plugged = batt.power_plugged
     except Exception:  # pragma: no cover - optional dependency
-        pass
+        logging.debug("battery info unavailable", exc_info=True)
 
     return {
         "cpu_temp": get_cpu_temp(),
@@ -639,7 +649,7 @@ async def export_access_points(
 
         records.extend(load_sigint_data("wifi"))
     except Exception:
-        pass
+        logging.debug("sigint integration failed", exc_info=True)
     return await _export_layer(records, fmt.lower(), "aps")
 
 
