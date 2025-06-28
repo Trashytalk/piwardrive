@@ -14,12 +14,12 @@ import json
 from typing import Any
 
 try:  # pragma: no cover - optional dependency
-    import orjson as _json  # type: ignore
+    import orjson as _json
 except Exception:  # pragma: no cover - orjson missing
     try:
-        import ujson as _json  # type: ignore
+        import ujson as _json
     except Exception:  # pragma: no cover - fallback
-        _json = json  # type: ignore
+        _json = json
 
 
 def loads(data: bytes | str) -> Any:

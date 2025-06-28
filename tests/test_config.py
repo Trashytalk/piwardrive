@@ -34,17 +34,10 @@ def test_load_config_defaults_when_missing(tmp_path: Path) -> None:
     assert data.disable_scanning == config.DEFAULT_CONFIG.disable_scanning
     assert data.map_auto_prefetch == config.DEFAULT_CONFIG.map_auto_prefetch
     assert data.ui_font_size == config.DEFAULT_CONFIG.ui_font_size
+    assert data.map_cluster_capacity == config.DEFAULT_CONFIG.map_cluster_capacity
+    assert data.route_prefetch_interval == config.DEFAULT_CONFIG.route_prefetch_interval
     assert (
-        data.map_cluster_capacity
-        == config.DEFAULT_CONFIG.map_cluster_capacity
-    )
-    assert (
-        data.route_prefetch_interval
-        == config.DEFAULT_CONFIG.route_prefetch_interval
-    )
-    assert (
-        data.route_prefetch_lookahead
-        == config.DEFAULT_CONFIG.route_prefetch_lookahead
+        data.route_prefetch_lookahead == config.DEFAULT_CONFIG.route_prefetch_lookahead
     )
 
 
@@ -230,3 +223,44 @@ def test_import_export_delete_profile(tmp_path: Path) -> None:
     assert exported.is_file()
     config.delete_profile(name)
     assert not path.exists()
+
+
+def test_import_profile_custom_name(tmp_path: Path) -> None:
+    """import_profile stores data under the provided name."""
+    setup_temp_config(tmp_path)
+    src = tmp_path / "profile.json"
+    src.write_text('{"theme": "Dark"}')
+    import piwardrive.core.config as core
+
+    # keep core config in sync with the wrapper for this test
+    core.CONFIG_DIR = config.CONFIG_DIR
+    core.CONFIG_PATH = config.CONFIG_PATH
+    core.PROFILES_DIR = config.PROFILES_DIR
+    core.ACTIVE_PROFILE_FILE = config.ACTIVE_PROFILE_FILE
+
+    name = config.import_profile(str(src), name="custom")
+    assert name == "custom"
+    stored = Path(config.PROFILES_DIR) / "custom.json"
+    assert stored.is_file()
+    data = json.loads(stored.read_text())
+    assert data["theme"] == "Dark"
+
+
+def test_export_profile_content(tmp_path: Path) -> None:
+    """export_profile writes the profile data verbatim."""
+    setup_temp_config(tmp_path)
+    import piwardrive.core.config as core
+
+    # keep core config in sync with the wrapper for this test
+    core.CONFIG_DIR = config.CONFIG_DIR
+    core.CONFIG_PATH = config.CONFIG_PATH
+    core.PROFILES_DIR = config.PROFILES_DIR
+    core.ACTIVE_PROFILE_FILE = config.ACTIVE_PROFILE_FILE
+
+    cfg = config.Config(theme="Green")
+    config.save_config(cfg, profile="p1")
+    dest = tmp_path / "out.json"
+    config.export_profile("p1", str(dest))
+    assert dest.is_file()
+    exported = json.loads(dest.read_text())
+    assert exported["theme"] == "Green"

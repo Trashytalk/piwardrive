@@ -354,7 +354,7 @@ def export_config(config: Config, path: str) -> None:
             json.dump(data, f, indent=2)
     elif ext in {".yaml", ".yml"}:
         try:
-            import yaml  # type: ignore
+            import yaml
         except Exception as exc:  # pragma: no cover - optional dep
             raise ConfigError("PyYAML required for YAML export") from exc
         with open(path, "w", encoding="utf-8") as f:
@@ -371,7 +371,7 @@ def import_config(path: str) -> Config:
             data = json.load(f)
         elif ext in {".yaml", ".yml"}:
             try:
-                import yaml  # type: ignore
+                import yaml
             except Exception as exc:  # pragma: no cover - optional dep
                 raise ConfigError("PyYAML required for YAML import") from exc
             data = yaml.safe_load(f) or {}
@@ -431,6 +431,8 @@ class AppConfig:
     remote_sync_timeout: int = DEFAULTS["remote_sync_timeout"]
     remote_sync_retries: int = DEFAULTS["remote_sync_retries"]
     remote_sync_interval: int = DEFAULTS["remote_sync_interval"]
+    handshake_cache_seconds: float = DEFAULTS["handshake_cache_seconds"]
+    log_tail_cache_seconds: float = DEFAULTS["log_tail_cache_seconds"]
     wigle_api_name: str = DEFAULTS["wigle_api_name"]
     wigle_api_key: str = DEFAULTS["wigle_api_key"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]

@@ -20,7 +20,10 @@ class PollScheduler:
         self._durations: Dict[str, float] = {}
 
     def schedule(
-        self, name: str, callback: Callable[[float], Any], interval: float
+        self,
+        name: str,
+        callback: Callable[[float], Awaitable[Any] | Any],
+        interval: float,
     ) -> None:
         """Register ``callback`` to run every ``interval`` seconds."""
         self.cancel(name)

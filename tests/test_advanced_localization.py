@@ -21,11 +21,24 @@ def test_kalman_1d_sample_values() -> None:
     assert np.allclose(filtered, expected, atol=1e-6)
 
 
+def test_kalman_1d_constant_series() -> None:
+    data = [5.0] * 5
+    filtered = _kalman_1d(data, 0.0001, 0.01)
+    assert np.allclose(filtered, data)
+
+
 def test_apply_kalman_filter_changes_values() -> None:
     cfg = Config()
     df = pd.DataFrame({"lat": [1.0, 2.0, 3.0], "lon": [3.0, 2.0, 1.0], "gpstime": [0, 1, 2]})
     filtered = apply_kalman_filter(df, cfg)
     assert not np.allclose(filtered["lat"], df["lat"]) or not np.allclose(filtered["lon"], df["lon"])
+
+
+def test_apply_kalman_filter_noop_when_disabled() -> None:
+    cfg = Config(kalman_enable=False)
+    df = pd.DataFrame({"lat": [1.0, 2.0], "lon": [1.0, 2.0], "gpstime": [0, 1]})
+    result = apply_kalman_filter(df, cfg)
+    assert result is df
 
 
 def test_remove_outliers_drops_points() -> None:

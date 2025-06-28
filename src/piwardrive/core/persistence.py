@@ -159,18 +159,19 @@ async def _init_db(conn: aiosqlite.Connection) -> None:
     cur = await conn.execute("SELECT version FROM schema_version")
     row = await cur.fetchone()
     current = row["version"] if row else 0
+    exists = row is not None
 
     while current < LATEST_VERSION:
         migration = _MIGRATIONS[current]
         await migration(conn)
         current += 1
-        if row is None:
+        if exists:
+            await conn.execute("UPDATE schema_version SET version = ?", (current,))
+        else:
             await conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?)", (current,)
             )
-            row = {"version": current}  # type: ignore[assignment]
-        else:
-            await conn.execute("UPDATE schema_version SET version = ?", (current,))
+            exists = True
 
     await conn.commit()
 

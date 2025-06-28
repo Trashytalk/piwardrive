@@ -10,10 +10,11 @@ import os
 import subprocess
 import threading
 import time
+import functools
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar
+from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar, TypedDict
 
 from piwardrive import config as pw_config
 from piwardrive.gpsd_client import client as gps_client
@@ -23,13 +24,13 @@ from . import fastjson
 try:  # pragma: no cover - optional dependency
     from piwardrive.sigint_suite.models import BluetoothDevice
 except Exception:  # pragma: no cover - fallback when sigint_suite is missing
-    BluetoothDevice = dict  # type: ignore[misc]
+    BluetoothDevice = dict[str, Any]
 from concurrent.futures import Future
 
 try:  # pragma: no cover - allow running without Kivy
     from kivy.app import App as _RealApp
 except Exception:
-    _RealApp = None  # type: ignore
+    _RealApp = None
 
 if _RealApp is not None:
     App = _RealApp
@@ -44,25 +45,38 @@ else:
 from enum import IntEnum
 
 import psutil
-import requests  # type: ignore
+import requests
 
 try:
     import requests_cache
 except Exception:  # pragma: no cover - optional dependency
-    requests_cache = None  # type: ignore
+    requests_cache = None
 import aiohttp
 
 from piwardrive import persistence
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
-_GPSD_CACHE: dict[str, Any] = {
+
+
+class _GPSDEntry(TypedDict):
+    timestamp: float
+    accuracy: float | None
+    fix: str
+
+
+_GPSD_CACHE: _GPSDEntry = {
     "timestamp": 0.0,
     "accuracy": None,
     "fix": "Unknown",
 }
 
 # Track previous network counters for throughput calculations
-_NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
+class _NetIOEntry(TypedDict):
+    timestamp: float
+    counters: psutil._common.snetio
+
+
+_NET_IO_CACHE: dict[str | None, _NetIOEntry] = {
     None: {
         "timestamp": time.time(),
         "counters": psutil.net_io_counters(),
@@ -72,17 +86,27 @@ _NET_IO_CACHE: dict[str | None, dict[str, Any]] = {
 _NET_IO_CACHE_LOCK = threading.Lock()
 # Cache for frequently polled system metrics
 MEM_USAGE_CACHE_SECONDS = 2.0
-_MEM_USAGE_CACHE: dict[str, Any] = {"timestamp": 0.0, "percent": None}
+class _MemUsageEntry(TypedDict):
+    timestamp: float
+    percent: float | None
+
+
+_MEM_USAGE_CACHE: _MemUsageEntry = {"timestamp": 0.0, "percent": None}
 
 DISK_USAGE_CACHE_SECONDS = 2.0
-_DISK_USAGE_CACHE: dict[str, dict[str, Any]] = {}
+class _DiskUsageEntry(TypedDict):
+    timestamp: float
+    percent: float | None
+
+
+_DISK_USAGE_CACHE: dict[str, _DiskUsageEntry] = {}
 
 
 # Cache for HTTP requests issued via :func:`safe_request`
 # Default TTL in seconds and maximum cache size
 SAFE_REQUEST_CACHE_SECONDS = 10.0
 SAFE_REQUEST_CACHE_MAX_SIZE = 128
-_SAFE_REQUEST_CACHE: dict[str, tuple[float, Any]] = {}
+_SAFE_REQUEST_CACHE: dict[str, tuple[float, requests.Response | Any]] = {}
 
 _SAFE_REQUEST_CACHE_LOCK = threading.Lock()
 
@@ -95,6 +119,10 @@ _HANDSHAKE_CACHE_LOCK = threading.Lock()
 TAIL_FILE_CACHE_SECONDS = pw_config.DEFAULT_CONFIG.log_tail_cache_seconds
 _TAIL_FILE_CACHE: dict[str, tuple[float, float, list[str]]] = {}
 _TAIL_FILE_CACHE_LOCK = threading.Lock()
+
+# Cache for service endpoint data
+KISMET_CACHE_SECONDS = 2.0
+WIGLE_CACHE_SECONDS = 30.0
 
 
 if requests_cache is not None:
@@ -124,6 +152,31 @@ def _prune_safe_request_cache(now: float) -> None:
         limit = len(_SAFE_REQUEST_CACHE) - SAFE_REQUEST_CACHE_MAX_SIZE
         for url, _ in sorted_items[:limit]:
             _SAFE_REQUEST_CACHE.pop(url, None)
+
+
+def async_ttl_cache(ttl_getter: float | Callable[[], float]):
+    """Return decorator caching async function results for ``ttl`` seconds."""
+
+    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+        cache: dict[tuple[Any, ...], tuple[float, T]] = {}
+        lock = asyncio.Lock()
+
+        @functools.wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> T:
+            ttl = ttl_getter() if callable(ttl_getter) else ttl_getter
+            key = (args, tuple(sorted(kwargs.items())))
+            async with lock:
+                entry = cache.get(key)
+                if entry and time.time() - entry[0] <= ttl:
+                    return entry[1]
+            result = await func(*args, **kwargs)
+            async with lock:
+                cache[key] = (time.time(), result)
+            return result
+
+        return wrapper
+
+    return decorator
 
 
 class ErrorCode(IntEnum):
@@ -611,7 +664,7 @@ async def _run_service_cmd_async(
     svc_name = f"{service}.service"
 
     try:
-        import dbus_fast.aio  # type: ignore  # noqa: F401
+        import dbus_fast.aio  # noqa: F401
     except Exception:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
@@ -717,7 +770,7 @@ def scan_bt_devices() -> list[BluetoothDevice]:
     if network_scanning_disabled():
         return []
     try:
-        import dbus  # type: ignore
+        import dbus
 
         bus = dbus.SystemBus()
         obj = bus.get_object("org.bluez", "/")
@@ -762,6 +815,7 @@ def fetch_kismet_devices() -> tuple[list, list]:
     return fut.result()
 
 
+@async_ttl_cache(lambda: KISMET_CACHE_SECONDS)
 async def fetch_kismet_devices_async() -> tuple[list, list]:
     """Asynchronously fetch Kismet device data using ``aiohttp``."""
     if network_scanning_disabled():
@@ -885,7 +939,7 @@ def count_bettercap_handshakes(
     return count
 
 
-def _get_cached_gps_data(force_refresh: bool = False) -> dict[str, Any] | None:
+def _get_cached_gps_data(force_refresh: bool = False) -> _GPSDEntry | None:
     """Return cached GPSD data or refresh if stale."""
     if not force_refresh and _GPSD_CACHE["accuracy"] is not None:
         age = time.time() - _GPSD_CACHE["timestamp"]
@@ -1029,9 +1083,9 @@ def _point_in_polygon_py(
 
 try:  # pragma: no cover - optional geometry C extension for speed
     from cgeom import \
-        haversine_distance as _haversine_distance_c  # type: ignore
-    from cgeom import point_in_polygon as _point_in_polygon_c  # type: ignore
-    from cgeom import polygon_area as _polygon_area_c  # type: ignore
+        haversine_distance as _haversine_distance_c
+    from cgeom import point_in_polygon as _point_in_polygon_c
+    from cgeom import polygon_area as _polygon_area_c
 except Exception:  # pragma: no cover - extension not built
     _haversine_distance_c = None
     _polygon_area_c = None
@@ -1042,7 +1096,7 @@ polygon_area = _polygon_area_c or _polygon_area_py
 point_in_polygon = _point_in_polygon_c or _point_in_polygon_py
 
 try:  # pragma: no cover - optional C extension for speed
-    from ckml import parse_coords as _parse_coords  # type: ignore
+    from ckml import parse_coords as _parse_coords
 except Exception:  # pragma: no cover - fallback to Python
     _parse_coords = None
 

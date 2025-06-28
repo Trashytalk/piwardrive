@@ -8,6 +8,7 @@ from dataclasses import asdict
 from typing import Any
 
 import piwardrive.config as cfg
+from piwardrive.core.config import _parse_env_value
 
 try:
     import httpx
@@ -18,7 +19,7 @@ except Exception:  # pragma: no cover - optional dependency
 def _parse_value(raw: str, default: Any) -> Any:
     """Return ``raw`` converted to the type of ``default``."""
     try:
-        return cfg._parse_env_value(raw, default)  # type: ignore[attr-defined]
+        return _parse_env_value(raw, default)
     except Exception:
         return raw
 

@@ -1,23 +1,28 @@
 """Vendor lookup helpers using the IEEE OUI registry."""
 
+from __future__ import annotations
+
 import csv
 import logging
 import os
 import time
 from functools import lru_cache
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional, NoReturn
+
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from requests import Response
 
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import HTTP_SESSION, robust_request
 except Exception:  # pragma: no cover - minimal fallback
     try:
-        import requests  # type: ignore
+        import requests
     except Exception:  # pragma: no cover - missing dependency
-        requests = None  # type: ignore
+        requests = None
     if requests is not None:
         HTTP_SESSION = requests.Session()
 
-        def robust_request(url: str):
+        def robust_request(url: str) -> "Response":
             last_exc = None
             for _ in range(3):
                 try:
@@ -32,19 +37,19 @@ except Exception:  # pragma: no cover - minimal fallback
     else:
 
         class _DummySession:
-            def get(self, *_a, **_k) -> None:  # pragma: no cover - simple stub
+            def get(self, *_a: object, **_k: object) -> NoReturn:  # pragma: no cover - simple stub
                 raise RuntimeError("HTTP session unavailable")
 
         HTTP_SESSION = _DummySession()
 
-        def robust_request(_url: str):  # pragma: no cover - simple stub
+        def robust_request(_url: str) -> NoReturn:  # pragma: no cover - simple stub
             raise RuntimeError("HTTP session unavailable")
 
 else:  # pragma: no cover - optional dependency available
     try:
-        import requests  # type: ignore
+        import requests
     except Exception:  # pragma: no cover - missing dependency
-        requests = None  # type: ignore
+        requests = None
     if requests is not None:
         HTTP_SESSION = requests.Session()
 
@@ -126,7 +131,7 @@ def _default_map() -> Dict[str, str]:
 
 def lookup_vendor(
     bssid: str, oui_map: Optional[Dict[str, str]] = None
-) -> Optional[str]:
+) -> str | None:
     """Return vendor name for ``bssid`` if known."""
     if not bssid:
         return None
@@ -139,7 +144,7 @@ def lookup_vendor(
 
 
 @lru_cache(maxsize=1024)
-def cached_lookup_vendor(bssid: str) -> Optional[str]:
+def cached_lookup_vendor(bssid: str) -> str | None:
     """LRU cached wrapper for :func:`lookup_vendor`."""
     return lookup_vendor(bssid)
 

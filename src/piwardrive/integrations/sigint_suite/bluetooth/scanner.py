@@ -11,7 +11,7 @@ from piwardrive.sigint_suite.models import BluetoothDevice
 logger = logging.getLogger(__name__)
 
 _proc: asyncio.subprocess.Process | None = None
-_reader_task: asyncio.Task | None = None
+_reader_task: asyncio.Task[None] | None = None
 _devices: Dict[str, str] = {}
 
 
@@ -96,7 +96,7 @@ async def async_scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
         else int(os.getenv("BLUETOOTH_SCAN_TIMEOUT", "10"))
     )
     try:
-        from bleak import BleakScanner  # type: ignore
+        from bleak import BleakScanner
 
         found = await BleakScanner.discover(timeout=timeout)
         return [
