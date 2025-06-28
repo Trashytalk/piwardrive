@@ -7,8 +7,15 @@ import os
 import sqlite3
 import time
 from concurrent.futures import Future
-from typing import (TYPE_CHECKING, Any, Callable, Coroutine, Optional, TypeVar,
-                    cast)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Coroutine,
+    Optional,
+    TypeVar,
+    cast,
+)
 
 from piwardrive.scheduler import PollScheduler
 
@@ -48,7 +55,7 @@ else:
 
         _FileSystemEventHandler = object  # type: ignore
 
-    from typing import Any, cast
+    from typing import Any
 
     FileSystemEventHandler = _FileSystemEventHandler
     Observer = cast(Any, _Observer)

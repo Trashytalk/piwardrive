@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import importlib
 
 SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
