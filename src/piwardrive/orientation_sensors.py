@@ -18,6 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     import dbus as dbus_type  # noqa: F401
     from mpu6050 import mpu6050 as mpu6050_type  # noqa: F401
 
+
 try:  # pragma: no cover - optional DBus dependency
     import dbus
 except Exception:  # pragma: no cover - missing dependency
