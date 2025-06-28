@@ -105,6 +105,16 @@ def test_load_config_schema_violation(tmp_path: Path) -> None:
     assert asdict(data) == asdict(config.DEFAULT_CONFIG)
 
 
+def test_load_config_invalid_json_monkeypatch(monkeypatch: Any, tmp_path: Path) -> None:
+    cfg_file = tmp_path / "config.json"
+    cfg_file.write_text("{invalid}")
+    monkeypatch.setattr(config, "CONFIG_PATH", str(cfg_file))
+    import piwardrive.core.config as core
+    monkeypatch.setattr(core, "CONFIG_PATH", str(cfg_file))
+    data = config.load_config()
+    assert asdict(data) == asdict(config.DEFAULT_CONFIG)
+
+
 def test_save_config_validation_error(tmp_path: Path) -> None:
     setup_temp_config(tmp_path)
     cfg = config.Config(map_poll_gps=0)
