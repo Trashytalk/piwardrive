@@ -7,7 +7,7 @@ import logging
 import os
 import time
 from functools import lru_cache
-from typing import TYPE_CHECKING, Dict, Optional, NoReturn
+from typing import TYPE_CHECKING, Dict, NoReturn, Optional
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from requests import Response
@@ -37,7 +37,9 @@ except Exception:  # pragma: no cover - minimal fallback
     else:
 
         class _DummySession:
-            def get(self, *_a: object, **_k: object) -> NoReturn:  # pragma: no cover - simple stub
+            def get(
+                self, *_a: object, **_k: object
+            ) -> NoReturn:  # pragma: no cover - simple stub
                 raise RuntimeError("HTTP session unavailable")
 
         HTTP_SESSION = _DummySession()
@@ -129,9 +131,7 @@ def _default_map() -> Dict[str, str]:
     return load_oui_map()
 
 
-def lookup_vendor(
-    bssid: str, oui_map: Optional[Dict[str, str]] = None
-) -> str | None:
+def lookup_vendor(bssid: str, oui_map: Optional[Dict[str, str]] = None) -> str | None:
     """Return vendor name for ``bssid`` if known."""
     if not bssid:
         return None

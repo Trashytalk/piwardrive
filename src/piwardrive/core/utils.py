@@ -3,6 +3,7 @@
 # pylint: disable=broad-exception-caught,unspecified-encoding,subprocess-run-check
 
 import asyncio
+import functools
 import glob
 import logging
 import mmap
@@ -10,11 +11,11 @@ import os
 import subprocess
 import threading
 import time
-import functools
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Coroutine, Iterable, Sequence, TypeVar, TypedDict
+from typing import (Any, Callable, Coroutine, Iterable, Sequence, TypedDict,
+                    TypeVar)
 
 from piwardrive import config as pw_config
 from piwardrive.gpsd_client import client as gps_client
@@ -70,6 +71,7 @@ _GPSD_CACHE: _GPSDEntry = {
     "fix": "Unknown",
 }
 
+
 # Track previous network counters for throughput calculations
 class _NetIOEntry(TypedDict):
     timestamp: float
@@ -86,6 +88,8 @@ _NET_IO_CACHE: dict[str | None, _NetIOEntry] = {
 _NET_IO_CACHE_LOCK = threading.Lock()
 # Cache for frequently polled system metrics
 MEM_USAGE_CACHE_SECONDS = 2.0
+
+
 class _MemUsageEntry(TypedDict):
     timestamp: float
     percent: float | None
@@ -94,6 +98,8 @@ class _MemUsageEntry(TypedDict):
 _MEM_USAGE_CACHE: _MemUsageEntry = {"timestamp": 0.0, "percent": None}
 
 DISK_USAGE_CACHE_SECONDS = 2.0
+
+
 class _DiskUsageEntry(TypedDict):
     timestamp: float
     percent: float | None
@@ -1082,8 +1088,7 @@ def _point_in_polygon_py(
 
 
 try:  # pragma: no cover - optional geometry C extension for speed
-    from cgeom import \
-        haversine_distance as _haversine_distance_c
+    from cgeom import haversine_distance as _haversine_distance_c
     from cgeom import point_in_polygon as _point_in_polygon_c
     from cgeom import polygon_area as _polygon_area_c
 except Exception:  # pragma: no cover - extension not built
@@ -1116,8 +1121,9 @@ def _parse_coord_text(text: str) -> list[tuple[float, float]]:
 
 def load_kml(path: str) -> list[dict[str, Any]]:
     """Parse a ``.kml`` or ``.kmz`` file and return a list of features."""
-    from defusedxml import ElementTree as ET
     import zipfile
+
+    from defusedxml import ElementTree as ET
 
     def _parse(root: ET.Element) -> list[dict[str, Any]]:
         ns = {"kml": root.tag.split("}")[0].strip("{")}

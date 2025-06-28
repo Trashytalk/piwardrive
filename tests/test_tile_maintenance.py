@@ -14,7 +14,9 @@ def _dummy_modules(monkeypatch):
         "psutil": SimpleNamespace(net_io_counters=lambda: SimpleNamespace()),
         "aiohttp": SimpleNamespace(),
         "requests": SimpleNamespace(RequestException=Exception),
-        "aiosqlite": SimpleNamespace(Connection=object, Row=object, connect=lambda p: None),
+        "aiosqlite": SimpleNamespace(
+            Connection=object, Row=object, connect=lambda p: None
+        ),
         "pydantic": SimpleNamespace(
             BaseModel=object,
             Field=lambda *a, **k: None,
@@ -25,6 +27,7 @@ def _dummy_modules(monkeypatch):
     for name, mod in modules.items():
         monkeypatch.setitem(sys.modules, name, mod)
     yield
+
 
 from piwardrive import tile_maintenance  # noqa: E402
 from piwardrive.scheduler import PollScheduler  # noqa: E402
@@ -58,10 +61,13 @@ def test_tile_maintenance_runs(tmp_path: Path, monkeypatch):
     class DummyConn:
         def __init__(self, path):
             called["path"] = path
+
         def __enter__(self):
             return self
+
         def __exit__(self, exc_type, exc, tb):
             pass
+
         def execute(self, sql):
             called["sql"] = sql
 
@@ -86,4 +92,3 @@ def test_tile_maintenance_runs(tmp_path: Path, monkeypatch):
     assert not old.exists()
     assert recent.exists()
     assert called.get("sql") == "VACUUM"
-

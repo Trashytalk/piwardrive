@@ -1,8 +1,8 @@
 """Simple localization helper."""
+
 import json
 import os
 from functools import lru_cache
-
 
 _current = os.getenv("PW_LANG", "en")
 

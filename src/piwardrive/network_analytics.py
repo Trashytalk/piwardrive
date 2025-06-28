@@ -8,7 +8,7 @@ from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 
 
 def find_suspicious_aps(
-    records: Iterable[Mapping[str, Any]]
+    records: Iterable[Mapping[str, Any]],
 ) -> List[Mapping[str, Any]]:
     """Return Wi-Fi access points that may be suspicious.
 

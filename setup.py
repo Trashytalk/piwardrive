@@ -1,4 +1,5 @@
 """Entry point for setup module."""
+
 from pathlib import Path
 
 from setuptools import Extension, find_packages, setup
@@ -18,10 +19,7 @@ def load_project_config():
 config = load_project_config()
 project = config.get("project", {})
 package_cfg = (
-    config.get("tool", {})
-    .get("setuptools", {})
-    .get("packages", {})
-    .get("find", {})
+    config.get("tool", {}).get("setuptools", {}).get("packages", {}).get("find", {})
 )
 
 
@@ -34,8 +32,9 @@ setup(
     ),
     long_description_content_type="text/markdown",
     python_requires=project.get("requires-python", ">=3.10"),
-    packages=find_packages(where="src", exclude=(
-        "tests*", "docs*", "benchmarks*", "examples*")),
+    packages=find_packages(
+        where="src", exclude=("tests*", "docs*", "benchmarks*", "examples*")
+    ),
     package_dir={"": "src"},
     package_data={"piwardrive": ["py.typed", "web_gui/*"]},
     ext_modules=[

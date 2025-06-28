@@ -29,5 +29,3 @@ def test_sigint_plugin_error(tmp_path, monkeypatch):
     importlib.import_module("piwardrive.sigint_suite")
 
     assert not hasattr(sys.modules["piwardrive.sigint_suite"], "bad")
-
-

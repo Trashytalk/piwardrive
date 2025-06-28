@@ -5,6 +5,7 @@ and exposed through :mod:`sigint_suite` on demand. Each plugin should provide a
 ``scan()`` function returning structured results such as ``WifiNetwork`` or
 ``BluetoothDevice`` records.
 """
+
 from __future__ import annotations
 
 import logging

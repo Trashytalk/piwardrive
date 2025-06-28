@@ -11,7 +11,9 @@ from .base import DashboardWidget
 class CPUTempGraphWidget(DashboardWidget):
     """Display CPU temperature history using a line graph."""
 
-    def __init__(self, update_interval: int = 5, max_points: int = 60, **kwargs: Any) -> None:
+    def __init__(
+        self, update_interval: int = 5, max_points: int = 60, **kwargs: Any
+    ) -> None:
         """Initialize graph components and schedule updates."""
         super().__init__(**kwargs)
         self.update_interval = update_interval

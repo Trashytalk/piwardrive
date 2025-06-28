@@ -14,7 +14,7 @@ from sklearn.cluster import DBSCAN
 logger = setup_logger()
 
 # Load configuration from JSON
-with open('calibration_config.json') as config_file:
+with open("calibration_config.json") as config_file:
     config = json.load(config_file)
 
 # ─────────────────────────────────────────────────────────────
@@ -34,6 +34,7 @@ def load_kismet_data(kismet_db_path):
     data = pd.read_sql_query(query, conn)
     conn.close()
     return data
+
 
 # ─────────────────────────────────────────────────────────────
 # Apply a 1D Kalman filter to latitude and longitude to reduce GPS jitter
@@ -56,38 +57,39 @@ def apply_kalman_filter(df):
         P[0] = 1.0
 
         for k in range(1, n):
-            xhatminus[k] = xhat[k-1]
-            Pminus[k] = P[k-1] + q
+            xhatminus[k] = xhat[k - 1]
+            Pminus[k] = P[k - 1] + q
             K[k] = Pminus[k] / (Pminus[k] + r)
             xhat[k] = xhatminus[k] + K[k] * (series.iloc[k] - xhatminus[k])
             P[k] = (1 - K[k]) * Pminus[k]
 
         return pd.Series(xhat, index=series.index)
 
-    df['lat'] = kalman_1d(
-        df['lat'],
+    df["lat"] = kalman_1d(
+        df["lat"],
         config["kalman_process_variance"],
         config["kalman_measurement_variance"],
     )
-    df['lon'] = kalman_1d(
-        df['lon'],
+    df["lon"] = kalman_1d(
+        df["lon"],
         config["kalman_process_variance"],
         config["kalman_measurement_variance"],
     )
     return df
+
 
 # ─────────────────────────────────────────────────────────────
 # Remove GPS/RSSI outliers using DBSCAN clustering
 
 
 def remove_outliers(df):
-    coords = df[['lat', 'lon']]
-    db = DBSCAN(
-        eps=config["dbscan_eps"],
-        min_samples=config["dbscan_min_samples"]
-    ).fit(coords)
-    df['cluster'] = db.labels_
-    return df[df['cluster'] != -1]
+    coords = df[["lat", "lon"]]
+    db = DBSCAN(eps=config["dbscan_eps"], min_samples=config["dbscan_min_samples"]).fit(
+        coords
+    )
+    df["cluster"] = db.labels_
+    return df[df["cluster"] != -1]
+
 
 # ─────────────────────────────────────────────────────────────
 # Convert RSSI value to estimated distance using path-loss model
@@ -98,18 +100,20 @@ def rssi_to_distance(rssi):
     n = config["path_loss_exponent"]
     return 10 ** ((A - rssi) / (10 * n))
 
+
 # ─────────────────────────────────────────────────────────────
 # Estimate AP location using weighted RSSI centroid method
 
 
 def estimate_ap_location_centroid(ap_data):
     weight_power = config["centroid_rssi_weight_power"]
-    weights = ap_data['signal'].apply(
+    weights = ap_data["signal"].apply(
         lambda rssi: max(0.01, 1 / ((100 - rssi) ** weight_power))
     )
-    lat = np.average(ap_data['lat'], weights=weights)
-    lon = np.average(ap_data['lon'], weights=weights)
+    lat = np.average(ap_data["lat"], weights=weights)
+    lon = np.average(ap_data["lon"], weights=weights)
     return lat, lon
+
 
 # ─────────────────────────────────────────────────────────────
 # Process all APs in dataset and estimate their coordinates
@@ -117,15 +121,15 @@ def estimate_ap_location_centroid(ap_data):
 
 def localize_aps(df):
     ap_coords = {}
-    map_center = [df['lat'].mean(), df['lon'].mean()]
+    map_center = [df["lat"].mean(), df["lon"].mean()]
     m = Map(location=map_center, zoom_start=config["map_zoom_start"])
 
-    for mac in df['macaddr'].unique():
-        ap_data = df[df['macaddr'] == mac]
+    for mac in df["macaddr"].unique():
+        ap_data = df[df["macaddr"] == mac]
         if len(ap_data) < config["min_points_for_confidence"]:
             continue
 
-        ap_data = ap_data.sort_values('gpstime')
+        ap_data = ap_data.sort_values("gpstime")
         ap_data = apply_kalman_filter(ap_data)
         ap_data = remove_outliers(ap_data)
 
@@ -134,10 +138,11 @@ def localize_aps(df):
 
         lat, lon = estimate_ap_location_centroid(ap_data)
         ap_coords[mac] = (lat, lon)
-        Marker([lat, lon], popup=ap_data['ssid'].iloc[0]).add_to(m)
+        Marker([lat, lon], popup=ap_data["ssid"].iloc[0]).add_to(m)
 
-    m.save('output/ap_locations.html')
+    m.save("output/ap_locations.html")
     return ap_coords
+
 
 # ─────────────────────────────────────────────────────────────
 # Load the fingerprint dataset if enabled in config
@@ -146,9 +151,10 @@ def localize_aps(df):
 def load_fingerprint_dataset():
     if not config.get("fingerprint_enabled", False):
         return None
-    fp_meta = json.load(open('fingerprints/rssi_fingerprint_index.json'))
+    fp_meta = json.load(open("fingerprints/rssi_fingerprint_index.json"))
     fp_file = f"fingerprints/{fp_meta['default_environment']}"
     return pd.read_csv(fp_file)
+
 
 # ─────────────────────────────────────────────────────────────
 # Main pipeline execution
@@ -156,7 +162,7 @@ def load_fingerprint_dataset():
 
 def main():
     logger.info("[*] Loading Kismet data...")
-    data = load_kismet_data('kismet_logs/Kismet-latest.kismet')
+    data = load_kismet_data("kismet_logs/Kismet-latest.kismet")
 
     logger.info("[*] Loading fingerprint dataset...")
     load_fingerprint_dataset()
@@ -169,5 +175,5 @@ def main():
         logger.info(f"{mac}: {coords}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -19,13 +19,9 @@ import psutil
 
 from piwardrive import cloud_export, config, r_integration, utils
 from piwardrive.interfaces import DataCollector, SelfTestCollector
-from piwardrive.persistence import (
-    HealthRecord,
-    load_recent_health,
-    purge_old_health,
-    save_health_record,
-    vacuum,
-)
+from piwardrive.persistence import (HealthRecord, load_recent_health,
+                                    purge_old_health, save_health_record,
+                                    vacuum)
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
 

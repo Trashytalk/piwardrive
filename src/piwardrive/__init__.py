@@ -1,4 +1,3 @@
-
 """PiWardrive package initializer."""
 
 import sys

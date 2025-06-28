@@ -33,6 +33,7 @@ class HealthStatusWidget(DashboardWidget):
             monitor = None
             try:
                 from piwardrive import main
+
                 monitor = getattr(main, "GLOBAL_HEALTH_MONITOR", None)
             except Exception:
                 monitor = None
@@ -43,10 +44,9 @@ class HealthStatusWidget(DashboardWidget):
             disk = data["system"]["disk_percent"]
             net = _("ok") if data["network_ok"] else _("down")
             services = " ".join(
-                f"{name}:{_('ok') if ok else _('down')}" for name, ok in data["services"].items()
+                f"{name}:{_('ok') if ok else _('down')}"
+                for name, ok in data["services"].items()
             )
-            self.label.text = (
-                f"{_('net')}:{net} {_('ssd')}:{disk:.0f}% {services}"
-            )
+            self.label.text = f"{_('net')}:{net} {_('ssd')}:{disk:.0f}% {services}"
         except Exception as exc:
             logging.exception("HealthStatusWidget update failed: %s", exc)

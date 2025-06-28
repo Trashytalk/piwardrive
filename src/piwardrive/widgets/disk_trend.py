@@ -11,7 +11,9 @@ from .base import DashboardWidget
 class DiskUsageTrendWidget(DashboardWidget):
     """Plot SSD disk usage percentage over time."""
 
-    def __init__(self, update_interval: int = 5, max_points: int = 60, **kwargs: Any) -> None:
+    def __init__(
+        self, update_interval: int = 5, max_points: int = 60, **kwargs: Any
+    ) -> None:
         """Create disk usage graph and schedule periodic updates."""
         super().__init__(**kwargs)
         self.update_interval = update_interval

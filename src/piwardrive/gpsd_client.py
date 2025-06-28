@@ -8,6 +8,7 @@ from typing import Any, cast
 gpsd: Any
 try:
     import gpsd as _gpsd
+
     gpsd = _gpsd
 except Exception as exc:  # pragma: no cover - optional dependency
     gpsd = None

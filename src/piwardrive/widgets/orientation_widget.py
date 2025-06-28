@@ -38,8 +38,8 @@ class OrientationWidget(DashboardWidget):
                 self.label.text = f"{_('orientation')}: {orient}{suffix}"
                 return
             data = orientation_sensors.read_mpu6050()
-            if data and 'accelerometer' in data:
-                acc = data['accelerometer']
+            if data and "accelerometer" in data:
+                acc = data["accelerometer"]
                 self.label.text = (
                     f"accel: x={acc.get('x', 0):.1f} "
                     f"y={acc.get('y', 0):.1f} z={acc.get('z', 0):.1f}"

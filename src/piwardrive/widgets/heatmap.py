@@ -50,7 +50,9 @@ class HeatmapWidget(DashboardWidget):
                 save_png(hist, self._tmp.name)
                 self.image.source = self._tmp.name
                 self.image.reload()
-                self.label.text = _("heatmap") + f" (cells {len(hist)}x{len(hist[0]) if hist else 0})"
+                self.label.text = (
+                    _("heatmap") + f" (cells {len(hist)}x{len(hist[0]) if hist else 0})"
+                )
             except Exception as exc:
                 logging.exception("HeatmapWidget update failed: %s", exc)
 

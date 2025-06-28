@@ -40,9 +40,7 @@ def parse_tower_output(output: str) -> List[TowerRecord]:
             tower_id, rssi = parts[:2]
             lat = float(parts[2]) if len(parts) > 2 and parts[2] else None
             lon = float(parts[3]) if len(parts) > 3 and parts[3] else None
-            records.append(
-                TowerRecord(tower_id=tower_id, rssi=rssi, lat=lat, lon=lon)
-            )
+            records.append(TowerRecord(tower_id=tower_id, rssi=rssi, lat=lat, lon=lon))
     return records
 
 

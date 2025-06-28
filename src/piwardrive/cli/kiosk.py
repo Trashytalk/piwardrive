@@ -1,4 +1,5 @@
 """Command line utility to start PiWardrive in browser kiosk mode."""
+
 from __future__ import annotations
 
 import argparse

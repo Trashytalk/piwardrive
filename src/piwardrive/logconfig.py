@@ -1,4 +1,5 @@
 """Module logconfig."""
+
 import json
 import logging
 import os
@@ -12,7 +13,6 @@ DEFAULT_LOG_PATH = os.path.join(CONFIG_DIR, "app.log")
 
 
 class JsonFormatter(logging.Formatter):
-
     """Format log records as JSON strings."""
 
     def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]

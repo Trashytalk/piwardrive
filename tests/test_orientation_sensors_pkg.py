@@ -49,7 +49,9 @@ def test_get_orientation_dbus_success_pkg(monkeypatch):
     def interface(_obj, _name):
         return DummyIface()
 
-    dummy_dbus = types.SimpleNamespace(SystemBus=lambda: DummyBus(), Interface=interface)
+    dummy_dbus = types.SimpleNamespace(
+        SystemBus=lambda: DummyBus(), Interface=interface
+    )
     monkeypatch.setattr(osens, "dbus", dummy_dbus)
     assert osens.get_orientation_dbus() == "right-up"
 

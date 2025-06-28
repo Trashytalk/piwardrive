@@ -16,6 +16,7 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
 
     # isolate hooks for this test
     import piwardrive.sigint_suite.hooks as hooks
+
     hooks._POST_PROCESSORS["wifi"] = []
 
     def add_custom(records):
@@ -31,4 +32,5 @@ Cell 01 - Address: AA:BB:CC:DD:EE:FF
     # restore default hooks
     hooks._POST_PROCESSORS["wifi"] = []
     from piwardrive.sigint_suite.wifi.scanner import _vendor_hook
+
     register_post_processor("wifi", _vendor_hook)

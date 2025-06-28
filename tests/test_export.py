@@ -64,13 +64,10 @@ def test_export_records_formats(tmp_path) -> None:
     shp_path = tmp_path / "data.shp"
     exp.export_records(recs, str(shp_path), "shp")
     import shapefile
+
     r = shapefile.Reader(str(shp_path))
     assert r.numRecords == 1
     assert r.shapes()[0].points[0] == [2.0, 1.0]
-
-
-
-
 
 
 def test_estimate_location_from_rssi() -> None:
@@ -99,5 +96,6 @@ def test_export_map_kml(tmp_path) -> None:
     kmz = tmp_path / "map.kmz"
     exp.export_map_kml(track, aps, bts, str(kmz))
     import zipfile
+
     with zipfile.ZipFile(kmz) as zf:
         assert "doc.kml" in zf.namelist()

@@ -1,4 +1,5 @@
 """Module scanner."""
+
 import asyncio
 import logging
 import os
@@ -65,9 +66,7 @@ async def async_scan_imsis(
     cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
     args = shlex.split(cmd_str)
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
     )
     logger.debug("Executing: %s", " ".join(args))
     try:
@@ -127,10 +126,12 @@ def main() -> None:  # pragma: no cover - CLI helper
                 rec.get("rssi", ""),
             ]
             if rec.get("lat") is not None and rec.get("lon") is not None:
-                fields.extend([
-                    str(rec.get("lat")),
-                    str(rec.get("lon")),
-                ])
+                fields.extend(
+                    [
+                        str(rec.get("lat")),
+                        str(rec.get("lon")),
+                    ]
+                )
             print(" ".join(fields))
 
 

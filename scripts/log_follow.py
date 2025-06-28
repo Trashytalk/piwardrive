@@ -1,4 +1,5 @@
 """Module log_follow."""
+
 import argparse
 import logging
 import os

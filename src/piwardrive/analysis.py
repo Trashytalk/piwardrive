@@ -76,6 +76,7 @@ def plot_cpu_temp(
             return
 
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 

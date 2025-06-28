@@ -54,7 +54,13 @@ def test_fetch_wigle_networks(monkeypatch, add_dummy_module):
     nets = asyncio.run(wi.fetch_wigle_networks("u", "k", 1.0, 2.0))
 
     assert nets == [
-        {"bssid": "AA:BB:CC", "ssid": "Net", "encryption": "WPA2", "lat": 1.0, "lon": 2.0}
+        {
+            "bssid": "AA:BB:CC",
+            "ssid": "Net",
+            "encryption": "WPA2",
+            "lat": 1.0,
+            "lon": 2.0,
+        }
     ]
 
 

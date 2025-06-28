@@ -3,17 +3,25 @@ import sys
 from types import SimpleNamespace
 
 # minimal Kivy stub for testing without the real dependency
-sys.modules["kivy.app"] = SimpleNamespace(App=type("App", (), {"get_running_app": staticmethod(lambda: None)}))
+sys.modules["kivy.app"] = SimpleNamespace(
+    App=type("App", (), {"get_running_app": staticmethod(lambda: None)})
+)
+
 
 # lightweight scheduler and utils modules for import
 def _haversine(a, b):
     import math
+
     lat1, lon1 = map(math.radians, a)
     lat2, lon2 = map(math.radians, b)
     dphi = lat2 - lat1
     dl = lon2 - lon1
-    aa = math.sin(dphi / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dl / 2) ** 2
+    aa = (
+        math.sin(dphi / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dl / 2) ** 2
+    )
     return 6371000 * 2 * math.atan2(math.sqrt(aa), math.sqrt(1 - aa))
+
 
 sys.modules["scheduler"] = SimpleNamespace(PollScheduler=object)
 sys.modules["utils"] = SimpleNamespace(haversine_distance=_haversine)

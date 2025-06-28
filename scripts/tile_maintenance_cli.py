@@ -1,4 +1,5 @@
 """Lightweight command line interface for tile cache maintenance."""
+
 import argparse
 from types import SimpleNamespace
 
@@ -6,18 +7,21 @@ from types import SimpleNamespace
 def purge_old_tiles(folder: str, days: int) -> None:
     """Lazy wrapper around :func:`tile_maintenance.purge_old_tiles`."""
     from piwardrive.map import tile_maintenance as tm  # heavy import deferred
+
     tm.purge_old_tiles(folder, days)
 
 
 def enforce_cache_limit(folder: str, limit: int) -> None:
     """Lazy wrapper around :func:`tile_maintenance.enforce_cache_limit`."""
     from piwardrive.map import tile_maintenance as tm
+
     tm.enforce_cache_limit(folder, limit)
 
 
 def vacuum_mbtiles(path: str) -> None:
     """Lazy wrapper around :func:`tile_maintenance.vacuum_mbtiles`."""
     from piwardrive.map import tile_maintenance as tm
+
     tm.vacuum_mbtiles(path)
 
 

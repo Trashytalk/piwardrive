@@ -1,4 +1,5 @@
 """Module sigint_integration."""
+
 import json
 import os
 from typing import Any, List, Mapping

@@ -1,15 +1,15 @@
 """Sphinx configuration for building the project documentation."""
 
-project = 'PiWardrive'
-author = 'TRASHYTALK'
+project = "PiWardrive"
+author = "TRASHYTALK"
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.graphviz',
-    'sphinxcontrib.mermaid',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.graphviz",
+    "sphinxcontrib.mermaid",
 ]
-html_theme = 'alabaster'
+html_theme = "alabaster"
 
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(".."))

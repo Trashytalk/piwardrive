@@ -1,4 +1,5 @@
 """Module scan_all."""
+
 import argparse
 import os
 

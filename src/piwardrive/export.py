@@ -1,15 +1,17 @@
 """Helpers for exporting data in various formats."""
+
 import csv
 import json
 import os
 import tempfile
-import zipfile
-import xml.etree.ElementTree as ET
-from typing import Any, Iterable, Mapping, Sequence, Callable
 import time
+import xml.etree.ElementTree as ET
+import zipfile
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 try:  # Optional dependency for shapefile export
     import shapefile
+
     # ``shapefile.Reader`` returns points as ``_Array`` which does not compare
     # equal to a plain list.  Some tests expect list equality, so patch the
     # ``__eq__`` method to compare based on list content.
@@ -193,7 +195,9 @@ def export_shp(
         writer.save(base)
 
 
-EXPORTERS: dict[str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]] = {
+EXPORTERS: dict[
+    str, Callable[[Sequence[Mapping[str, Any]], str, Sequence[str] | None], None]
+] = {
     "csv": export_csv,
     "json": export_json,
     "gpx": export_gpx,

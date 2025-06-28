@@ -1,4 +1,5 @@
 """Module bench_geom."""
+
 import logging
 import timeit
 

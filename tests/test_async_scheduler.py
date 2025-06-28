@@ -40,6 +40,7 @@ def test_poll_scheduler_accepts_async_widget(monkeypatch: Any) -> None:
 
     class Widget:
         update_interval = 1.0
+
         async def update(self) -> None:
             pass
 

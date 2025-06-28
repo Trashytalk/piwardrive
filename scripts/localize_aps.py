@@ -39,9 +39,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--config", default="localization_config.json", help="Config JSON path"
     )
-    parser.add_argument(
-        "--output", default="ap_locations.html", help="Output HTML map"
-    )
+    parser.add_argument("--output", default="ap_locations.html", help="Output HTML map")
     args = parser.parse_args(argv)
 
     setup_logging(stdout=True)

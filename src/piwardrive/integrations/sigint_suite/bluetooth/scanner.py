@@ -1,4 +1,5 @@
 """Module scanner."""
+
 import asyncio
 import contextlib
 import logging
@@ -31,7 +32,7 @@ async def _reader() -> None:
                 continue
             if idx + 1 < len(parts):
                 addr = parts[idx + 1]
-                name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
+                name = " ".join(parts[idx + 2 :]) if idx + 2 < len(parts) else addr
                 _devices[addr] = name
 
 
@@ -100,8 +101,7 @@ async def async_scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
 
         found = await BleakScanner.discover(timeout=timeout)
         return [
-            {"address": dev.address, "name": dev.name or dev.address}
-            for dev in found
+            {"address": dev.address, "name": dev.name or dev.address} for dev in found
         ]
     except Exception:
         pass
@@ -130,7 +130,7 @@ def _scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
             continue
         if idx + 1 < len(parts):
             addr = parts[idx + 1]
-            name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
+            name = " ".join(parts[idx + 2 :]) if idx + 2 < len(parts) else addr
             devices[addr] = name
 
     return [{"address": a, "name": n} for a, n in devices.items()]
@@ -160,7 +160,7 @@ async def _async_scan_bluetoothctl(timeout: int) -> List[Dict[str, str]]:
                 continue
             if idx + 1 < len(parts):
                 addr = parts[idx + 1]
-                name = " ".join(parts[idx + 2:]) if idx + 2 < len(parts) else addr
+                name = " ".join(parts[idx + 2 :]) if idx + 2 < len(parts) else addr
                 devices[addr] = name
     return [BluetoothDevice(address=a, name=n) for a, n in devices.items()]
 

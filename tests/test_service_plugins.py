@@ -22,6 +22,7 @@ def test_plugins_endpoint(tmp_path, monkeypatch, add_dummy_module):
     monkeypatch.setenv("HOME", str(tmp_path))
 
     import piwardrive.widgets as widgets
+
     importlib.reload(widgets)
     importlib.reload(service)
 

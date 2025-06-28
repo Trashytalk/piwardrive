@@ -13,16 +13,14 @@ def test_kiosk_cli_launches_browser(tmp_path):
     server_script.write_text(
         (
             "#!/bin/sh\n"
-            "echo server_started >> \"%s\"\n"
+            'echo server_started >> "%s"\n'
             "trap 'exit 0' TERM\n"
             "while true; do sleep 0.1; done\n"
         )
         % log
     )
     browser_script = bin_dir / "chromium-browser"
-    browser_script.write_text(
-        "#!/bin/sh\necho browser_called >> \"%s\"\n" % log
-    )
+    browser_script.write_text('#!/bin/sh\necho browser_called >> "%s"\n' % log)
     for p in (server_script, browser_script):
         p.chmod(0o755)
 

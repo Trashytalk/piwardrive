@@ -15,4 +15,3 @@ class DashboardWidget(BoxLayout):
 
     def on_size(self, *_args: Any) -> None:  # pragma: no cover - no GUI
         pass
-

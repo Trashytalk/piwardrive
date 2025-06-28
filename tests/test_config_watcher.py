@@ -10,7 +10,7 @@ def test_watch_config_triggers(tmp_path):
     observer = watch_config(str(path), lambda: triggered.append("x"))
     try:
         time.sleep(0.1)
-        path.write_text("{\"a\": 1}")
+        path.write_text('{"a": 1}')
         for _ in range(20):
             if triggered:
                 break

@@ -89,6 +89,7 @@ def test_vacuum(tmp_path: Path) -> None:
     rows = asyncio.run(persistence.load_recent_health(10))
     assert rows == []
 
+
 def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
     loop1 = asyncio.new_event_loop()
@@ -114,5 +115,3 @@ def test_schema_version(tmp_path: Path) -> None:
     cur = asyncio.run(conn.execute("SELECT version FROM schema_version"))
     row = asyncio.run(cur.fetchone())
     assert row["version"] == persistence.LATEST_VERSION
-
-

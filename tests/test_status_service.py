@@ -16,6 +16,7 @@ def test_get_status_async(monkeypatch, add_dummy_module):
     )
     service = importlib.import_module("service")
     records = [HealthRecord("t", 1.0, 2.0, 3.0, 4.0)]
+
     async def fake_load(limit=5):
         return records
 

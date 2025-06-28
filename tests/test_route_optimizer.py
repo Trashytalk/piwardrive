@@ -18,7 +18,9 @@ def test_suggest_route_unvisited_cells() -> None:
     route = route_optimizer.suggest_route(
         points, cell_size=0.001, steps=2, search_radius=1
     )
-    visited = {(math.floor(lat / 0.001), math.floor(lon / 0.001)) for lat, lon in points}
+    visited = {
+        (math.floor(lat / 0.001), math.floor(lon / 0.001)) for lat, lon in points
+    }
     assert len(route) <= 2
     for lat, lon in route:
         cell = (math.floor(lat / 0.001), math.floor(lon / 0.001))
