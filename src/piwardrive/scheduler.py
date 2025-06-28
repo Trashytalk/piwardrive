@@ -46,9 +46,9 @@ class PollScheduler:
                     logging.exception("Scheduled task %s failed: %s", name, exc)
                 finally:
                     self._durations[name] = time.perf_counter() - start
-                    next_run = time.time() + interval
+                    next_run += interval
                     self._next_runs[name] = next_run
-                await asyncio.sleep(interval)
+                await asyncio.sleep(max(0, next_run - time.time()))
 
         self._next_runs[name] = time.time() + interval
         self._durations[name] = float("nan")
@@ -125,9 +125,9 @@ class AsyncScheduler:
                     logging.exception("AsyncScheduler task %s failed: %s", name, exc)
                 finally:
                     self._durations[name] = time.perf_counter() - start
-                    next_run = time.time() + interval
+                    next_run += interval
                     self._next_runs[name] = next_run
-                await asyncio.sleep(interval)
+                await asyncio.sleep(max(0, next_run - time.time()))
 
         self._next_runs[name] = time.time() + interval
         self._durations[name] = float("nan")
