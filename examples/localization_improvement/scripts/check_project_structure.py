@@ -5,19 +5,15 @@ import os
 
 def check_structure():
     required_files = [
-        'calibration_config.json',
-        'main_localization.py',
-        'logger.py',
-        'requirements.txt',
-        'README.md',
-        'CALIBRATION.md'
+        "calibration_config.json",
+        "main_localization.py",
+        "logger.py",
+        "requirements.txt",
+        "README.md",
+        "CALIBRATION.md",
     ]
 
-    required_dirs = [
-        'kismet_logs',
-        'output',
-        'logs'
-    ]
+    required_dirs = ["kismet_logs", "output", "logs"]
 
     missing_files = [f for f in required_files if not os.path.isfile(f)]
     missing_dirs = [d for d in required_dirs if not os.path.isdir(d)]

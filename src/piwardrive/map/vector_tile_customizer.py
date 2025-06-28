@@ -25,9 +25,7 @@ def apply_style(
             json.loads(style_json)  # validate
 
     with sqlite3.connect(path) as db:
-        db.execute(
-            "CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT)"
-        )
+        db.execute("CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT)")
         for key, value in (
             ("name", name),
             ("description", description),
@@ -74,7 +72,7 @@ def build_mbtiles(folder: str, output: str) -> None:
                     y_i = int(y)
                 except ValueError:
                     continue
-                tile_row = (2 ** z_i - 1) - y_i  # TMS
+                tile_row = (2**z_i - 1) - y_i  # TMS
                 with open(os.path.join(root, f), "rb") as fh:
                     data = fh.read()
                 db.execute(

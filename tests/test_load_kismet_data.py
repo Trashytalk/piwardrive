@@ -18,15 +18,9 @@ def create_kismet_db(path: Path) -> None:
         conn.execute(
             "INSERT INTO devices VALUES (1, 'aa:bb:cc', 'test', 'infrastructure')"
         )
-        conn.execute(
-            "INSERT INTO devices VALUES (2, 'dd:ee:ff', 'skip', 'client')"
-        )
-        conn.execute(
-            "INSERT INTO packets VALUES (1, 10.0, 20.0, -30, 1000)"
-        )
-        conn.execute(
-            "INSERT INTO packets VALUES (2, 1.0, 2.0, -40, 2000)"
-        )
+        conn.execute("INSERT INTO devices VALUES (2, 'dd:ee:ff', 'skip', 'client')")
+        conn.execute("INSERT INTO packets VALUES (1, 10.0, 20.0, -30, 1000)")
+        conn.execute("INSERT INTO packets VALUES (2, 1.0, 2.0, -40, 2000)")
         conn.commit()
 
 

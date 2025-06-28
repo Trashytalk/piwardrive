@@ -15,17 +15,17 @@ from ..errors import ConfigError
 class Theme(str, Enum):
     """Available UI themes."""
 
-    Dark = "Dark"
-    Light = "Light"
-    Green = "Green"
-    Red = "Red"
+    Dark = "Dark"  # noqa: V107
+    Light = "Light"  # noqa: V107
+    Green = "Green"  # noqa: V107
+    Red = "Red"  # noqa: V107
 
 
 CONFIG_DIR = str(Path.home() / ".config" / "piwardrive")
 CONFIG_PATH = str(Path(CONFIG_DIR) / "config.json")
 PROFILES_DIR = str(Path(CONFIG_DIR) / "profiles")
 ACTIVE_PROFILE_FILE = str(Path(CONFIG_DIR) / "active_profile")
-REPORTS_DIR = str(Path(CONFIG_DIR) / "reports")
+REPORTS_DIR = str(Path(CONFIG_DIR) / "reports")  # noqa: V107
 HEALTH_EXPORT_DIR = str(Path(CONFIG_DIR) / "health_exports")
 HEALTH_EXPORT_INTERVAL = 6  # hours
 COMPRESS_HEALTH_EXPORTS = True
@@ -53,7 +53,7 @@ def get_config_path(profile: Optional[str] = None) -> str:
     return _profile_path(profile) if profile else CONFIG_PATH
 
 
-def config_mtime(profile: Optional[str] = None) -> Optional[float]:
+def config_mtime(profile: Optional[str] = None) -> Optional[float]:  # noqa: V103
     """Return modification time for the active config file if it exists."""
     path = get_config_path(profile)
     try:
@@ -66,28 +66,28 @@ def config_mtime(profile: Optional[str] = None) -> Optional[float]:
 class Config:
     """Persistent application configuration."""
 
-    theme: str = "Dark"
-    map_poll_gps: int = 10
-    map_poll_gps_max: int = 30
-    map_poll_aps: int = 60
-    map_poll_bt: int = 60
-    map_poll_wigle: int = 0
-    map_show_gps: bool = True
-    map_follow_gps: bool = True
-    map_show_aps: bool = True
-    map_show_bt: bool = False
-    map_show_wigle: bool = False
-    map_show_heatmap: bool = False
-    map_cluster_aps: bool = False
-    map_cluster_capacity: int = 8
-    map_use_offline: bool = False
-    map_auto_prefetch: bool = False
-    disable_scanning: bool = False
-    kismet_logdir: str = "/mnt/ssd/kismet_logs"
-    bettercap_caplet: str = "/usr/local/etc/bettercap/alfa.cap"
-    dashboard_layout: List[Any] = field(default_factory=list)
-    debug_mode: bool = False
-    offline_tile_path: str = "/mnt/ssd/tiles/offline.mbtiles"
+    theme: str = "Dark"  # noqa: V107
+    map_poll_gps: int = 10  # noqa: V107
+    map_poll_gps_max: int = 30  # noqa: V107
+    map_poll_aps: int = 60  # noqa: V107
+    map_poll_bt: int = 60  # noqa: V107
+    map_poll_wigle: int = 0  # noqa: V107
+    map_show_gps: bool = True  # noqa: V107
+    map_follow_gps: bool = True  # noqa: V107
+    map_show_aps: bool = True  # noqa: V107
+    map_show_bt: bool = False  # noqa: V107
+    map_show_wigle: bool = False  # noqa: V107
+    map_show_heatmap: bool = False  # noqa: V107
+    map_cluster_aps: bool = False  # noqa: V107
+    map_cluster_capacity: int = 8  # noqa: V107
+    map_use_offline: bool = False  # noqa: V107
+    map_auto_prefetch: bool = False  # noqa: V107
+    disable_scanning: bool = False  # noqa: V107
+    kismet_logdir: str = "/mnt/ssd/kismet_logs"  # noqa: V107
+    bettercap_caplet: str = "/usr/local/etc/bettercap/alfa.cap"  # noqa: V107
+    dashboard_layout: List[Any] = field(default_factory=list)  # noqa: V107
+    debug_mode: bool = False  # noqa: V107
+    offline_tile_path: str = "/mnt/ssd/tiles/offline.mbtiles"  # noqa: V107
     log_paths: List[str] = field(
         default_factory=lambda: [
             "/var/log/syslog",
@@ -95,36 +95,36 @@ class Config:
             "/var/log/bettercap.log",
         ]
     )
-    health_poll_interval: int = 10
-    log_rotate_interval: int = 3600
-    log_rotate_archives: int = 3
-    cleanup_rotated_logs: bool = True
-    health_export_interval: int = HEALTH_EXPORT_INTERVAL
-    health_export_dir: str = HEALTH_EXPORT_DIR
-    compress_health_exports: bool = COMPRESS_HEALTH_EXPORTS
-    health_export_retention: int = HEALTH_EXPORT_RETENTION
-    tile_maintenance_interval: int = TILE_MAINTENANCE_INTERVAL
-    tile_max_age_days: int = TILE_MAX_AGE_DAYS
-    tile_cache_limit_mb: int = TILE_CACHE_LIMIT_MB
-    compress_offline_tiles: bool = COMPRESS_OFFLINE_TILES
-    route_prefetch_interval: int = ROUTE_PREFETCH_INTERVAL
-    route_prefetch_lookahead: int = ROUTE_PREFETCH_LOOKAHEAD
-    widget_battery_status: bool = False
-    ui_font_size: int = 16
-    admin_password_hash: str = ""
-    remote_sync_url: str = ""
-    remote_sync_token: str = ""
-    remote_sync_timeout: int = 5
-    remote_sync_retries: int = 3
-    remote_sync_interval: int = REMOTE_SYNC_INTERVAL
-    handshake_cache_seconds: float = HANDSHAKE_CACHE_SECONDS_DEFAULT
-    log_tail_cache_seconds: float = LOG_TAIL_CACHE_SECONDS_DEFAULT
-    wigle_api_name: str = ""
-    wigle_api_key: str = ""
-    gps_movement_threshold: float = 1.0
-    cloud_bucket: str = CLOUD_BUCKET
-    cloud_prefix: str = CLOUD_PREFIX
-    cloud_profile: str = CLOUD_PROFILE
+    health_poll_interval: int = 10  # noqa: V107
+    log_rotate_interval: int = 3600  # noqa: V107
+    log_rotate_archives: int = 3  # noqa: V107
+    cleanup_rotated_logs: bool = True  # noqa: V107
+    health_export_interval: int = HEALTH_EXPORT_INTERVAL  # noqa: V107
+    health_export_dir: str = HEALTH_EXPORT_DIR  # noqa: V107
+    compress_health_exports: bool = COMPRESS_HEALTH_EXPORTS  # noqa: V107
+    health_export_retention: int = HEALTH_EXPORT_RETENTION  # noqa: V107
+    tile_maintenance_interval: int = TILE_MAINTENANCE_INTERVAL  # noqa: V107
+    tile_max_age_days: int = TILE_MAX_AGE_DAYS  # noqa: V107
+    tile_cache_limit_mb: int = TILE_CACHE_LIMIT_MB  # noqa: V107
+    compress_offline_tiles: bool = COMPRESS_OFFLINE_TILES  # noqa: V107
+    route_prefetch_interval: int = ROUTE_PREFETCH_INTERVAL  # noqa: V107
+    route_prefetch_lookahead: int = ROUTE_PREFETCH_LOOKAHEAD  # noqa: V107
+    widget_battery_status: bool = False  # noqa: V107
+    ui_font_size: int = 16  # noqa: V107
+    admin_password_hash: str = ""  # noqa: V107
+    remote_sync_url: str = ""  # noqa: V107
+    remote_sync_token: str = ""  # noqa: V107
+    remote_sync_timeout: int = 5  # noqa: V107
+    remote_sync_retries: int = 3  # noqa: V107
+    remote_sync_interval: int = REMOTE_SYNC_INTERVAL  # noqa: V107
+    handshake_cache_seconds: float = HANDSHAKE_CACHE_SECONDS_DEFAULT  # noqa: V107
+    log_tail_cache_seconds: float = LOG_TAIL_CACHE_SECONDS_DEFAULT  # noqa: V107
+    wigle_api_name: str = ""  # noqa: V107
+    wigle_api_key: str = ""  # noqa: V107
+    gps_movement_threshold: float = 1.0  # noqa: V107
+    cloud_bucket: str = CLOUD_BUCKET  # noqa: V107
+    cloud_prefix: str = CLOUD_PREFIX  # noqa: V107
+    cloud_profile: str = CLOUD_PROFILE  # noqa: V107
 
 
 DEFAULT_CONFIG = Config()

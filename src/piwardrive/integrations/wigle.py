@@ -5,7 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any, Dict, List
 
-from piwardrive.core.utils import async_ttl_cache, WIGLE_CACHE_SECONDS
+from piwardrive.core.utils import WIGLE_CACHE_SECONDS, async_ttl_cache
 
 try:  # pragma: no cover - optional dependency
     import aiohttp

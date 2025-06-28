@@ -21,9 +21,8 @@ def _bearing(p1: tuple[float, float], p2: tuple[float, float]) -> float:
     lat2, lon2 = map(math.radians, p2)
     dlon = lon2 - lon1
     x = math.sin(dlon) * math.cos(lat2)
-    y = (
-        math.cos(lat1) * math.sin(lat2)
-        - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
+    y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(
+        dlon
     )
     return (math.degrees(math.atan2(x, y)) + 360) % 360
 
@@ -38,8 +37,7 @@ def _destination(
     lon1 = math.radians(origin[1])
     br = math.radians(bearing)
     lat2 = math.asin(
-        math.sin(lat1) * math.cos(ang)
-        + math.cos(lat1) * math.sin(ang) * math.cos(br)
+        math.sin(lat1) * math.cos(ang) + math.cos(lat1) * math.sin(ang) * math.cos(br)
     )
     lon2 = lon1 + math.atan2(
         math.sin(br) * math.sin(ang) * math.cos(lat1),
@@ -63,9 +61,7 @@ class RoutePrefetcher:
         self._map_screen = map_screen
         self._lookahead = lookahead
         self._delta = delta
-        scheduler.schedule(
-            "route_prefetch", lambda _dt: self._run(), interval
-        )
+        scheduler.schedule("route_prefetch", lambda _dt: self._run(), interval)
 
     # --------------------------------------------------------------
     def _predict_points(self) -> list[tuple[float, float]]:
@@ -104,9 +100,10 @@ class RoutePrefetcher:
             mv = getattr(self._map_screen.ids, "mapview", None)
             zoom = getattr(mv, "zoom", 16)
             app = App.get_running_app()
-            folder = os.path.dirname(
-                getattr(app, "offline_tile_path", "")
-            ) or "/mnt/ssd/tiles"
+            folder = (
+                os.path.dirname(getattr(app, "offline_tile_path", ""))
+                or "/mnt/ssd/tiles"
+            )
             self._map_screen.prefetch_tiles(bbox, zoom=zoom, folder=folder)
         except Exception as exc:  # pragma: no cover - unexpected errors
             logger.exception("RoutePrefetcher failed: %s", exc)

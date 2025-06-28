@@ -51,4 +51,3 @@ def test_scan_bluetooth_fallback(monkeypatch):
     devices = scan_bluetooth(timeout=1)
     assert {"address": "AA:BB:CC:DD:EE:FF", "name": "Foo"} in devices
     assert {"address": "11:22:33:44:55:66", "name": "Bar"} in devices
-

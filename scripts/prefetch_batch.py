@@ -1,4 +1,5 @@
 """Module prefetch_batch."""
+
 import argparse
 import logging
 
@@ -45,9 +46,7 @@ def main(argv: list[str] | None = None) -> None:
         default="/mnt/ssd/tiles",
         help="destination folder",
     )
-    parser.add_argument(
-        "--concurrency", type=int, help="number of concurrent requests"
-    )
+    parser.add_argument("--concurrency", type=int, help="number of concurrent requests")
     args = parser.parse_args(argv)
 
     setup_logging(stdout=True)

@@ -21,9 +21,7 @@ class LoRaScanWidget(DashboardWidget):
         """Create label widget and show initial count."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(
-            text=f"{_('lora_devices')}: 0", halign="center"
-        )
+        self.label = MDLabel(text=f"{_('lora_devices')}: 0", halign="center")
         self.card.add_widget(self.label)
         self.add_widget(self.card)
         self.update()

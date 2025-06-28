@@ -1,4 +1,5 @@
 """Module hooks."""
+
 from collections import defaultdict
 from typing import Any, Callable, Dict, List
 

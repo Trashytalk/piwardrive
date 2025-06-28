@@ -60,26 +60,31 @@ def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
         def get(self, *a, **k):
             def decorator(func):
                 return func
+
             return decorator
 
         def post(self, *a, **k):
             def decorator(func):
                 return func
+
             return decorator
 
         def put(self, *a, **k):
             def decorator(func):
                 return func
+
             return decorator
 
         def delete(self, *a, **k):
             def decorator(func):
                 return func
+
             return decorator
 
         def websocket(self, *a, **k):
             def decorator(func):
                 return func
+
             return decorator
 
     fastapi_mod.FastAPI = _FastAPI
@@ -198,7 +203,6 @@ def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
 
     # Ensure test helpers do not shadow real modules
     sys.modules.pop("persistence", None)
-
 
 
 @pytest.mark.parametrize("module", MODULES)

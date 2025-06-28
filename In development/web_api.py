@@ -1,3 +1,5 @@
+"""Minimal web API for local development."""
+
 import json
 import sqlite3
 import subprocess

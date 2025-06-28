@@ -21,9 +21,7 @@ class GPSStatusWidget(DashboardWidget):
         """Create label widget and request the first update."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(
-            text=f"{_('gps')}: {_('not_available')}", halign="center"
-        )
+        self.label = MDLabel(text=f"{_('gps')}: {_('not_available')}", halign="center")
         self.card.add_widget(self.label)
         self.add_widget(self.card)
         self.update()

@@ -50,19 +50,21 @@ def test_tile_maintenance_cli(monkeypatch):
     monkeypatch.setattr(cli.tile_maintenance, "enforce_cache_limit", fake_limit)
     monkeypatch.setattr(cli.tile_maintenance, "vacuum_mbtiles", fake_vacuum)
 
-    cli.main([
-        "--purge",
-        "--limit",
-        "--vacuum",
-        "--offline",
-        "db.mbtiles",
-        "--folder",
-        "cache",
-        "--max-age-days",
-        "1",
-        "--limit-mb",
-        "2",
-    ])
+    cli.main(
+        [
+            "--purge",
+            "--limit",
+            "--vacuum",
+            "--offline",
+            "db.mbtiles",
+            "--folder",
+            "cache",
+            "--max-age-days",
+            "1",
+            "--limit-mb",
+            "2",
+        ]
+    )
 
     assert called["purge"] == ("cache", 1)
     assert called["limit"] == ("cache", 2)

@@ -1,4 +1,5 @@
 """Launch the web UI and open Chromium in kiosk mode."""
+
 from __future__ import annotations
 
 import os

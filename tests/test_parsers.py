@@ -9,8 +9,22 @@ def test_parse_imsi_output():
     output = "12345,310,260,-50\n67890,311,480,-60"
     recs = parse_imsi_output(output)
     assert [r.model_dump() for r in recs] == [
-        {"imsi": "12345", "mcc": "310", "mnc": "260", "rssi": "-50", "lat": None, "lon": None},
-        {"imsi": "67890", "mcc": "311", "mnc": "480", "rssi": "-60", "lat": None, "lon": None},
+        {
+            "imsi": "12345",
+            "mcc": "310",
+            "mnc": "260",
+            "rssi": "-50",
+            "lat": None,
+            "lon": None,
+        },
+        {
+            "imsi": "67890",
+            "mcc": "311",
+            "mnc": "480",
+            "rssi": "-60",
+            "lat": None,
+            "lon": None,
+        },
     ]
 
 

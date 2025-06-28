@@ -25,8 +25,10 @@ class Clock:
     @staticmethod
     def create_trigger(callback, timeout=0, interval=True):
         """Return a callable that proxies to ``callback``."""
+
         def trigger(*args, **kwargs):
             return callback(*args, **kwargs)
+
         return trigger
 
     @staticmethod
@@ -37,6 +39,8 @@ class Clock:
 
 def mainthread(func):
     """Return ``func`` unchanged for tests."""
+
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
+
     return wrapper

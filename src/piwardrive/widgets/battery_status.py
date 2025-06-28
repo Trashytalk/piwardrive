@@ -37,8 +37,6 @@ class BatteryStatusWidget(DashboardWidget):
                 self.label.text = f"{_('battery')}: {_('not_available')}"
             else:
                 status = _("charging") if batt.power_plugged else _("discharging")
-                self.label.text = (
-                    f"{_('battery')}: {batt.percent:.0f}% {status}"
-                )
+                self.label.text = f"{_('battery')}: {batt.percent:.0f}% {status}"
         except Exception as exc:  # pragma: no cover - UI update
             logging.exception("BatteryStatusWidget update failed: %s", exc)

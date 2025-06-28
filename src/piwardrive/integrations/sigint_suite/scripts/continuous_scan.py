@@ -1,4 +1,5 @@
 """Module continuous_scan."""
+
 import argparse
 import os
 

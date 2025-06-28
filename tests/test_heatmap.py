@@ -21,7 +21,7 @@ def test_histogram_points():
     hist = [[0, 1], [2, 0]]
     pts = heatmap.histogram_points(hist, (0.0, 1.0), (0.0, 1.0))
     assert len(pts) == 2
-    values = {(round(lat,1), round(lon,1), cnt) for lat, lon, cnt in pts}
+    values = {(round(lat, 1), round(lon, 1), cnt) for lat, lon, cnt in pts}
     assert (0.75, 0.25, 2) in values or (0.25, 0.75, 1) in values
 
 

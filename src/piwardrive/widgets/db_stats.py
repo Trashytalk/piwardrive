@@ -15,11 +15,13 @@ from .base import DashboardWidget
 try:  # pragma: no cover - optional dependency
     from piwardrive.persistence import _db_path, get_table_counts
 except Exception:  # pragma: no cover - fallbacks for tests without deps
+
     async def get_table_counts() -> dict[str, int]:
         return {}
 
     def _db_path() -> str:
         return ""
+
 
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import run_async_task

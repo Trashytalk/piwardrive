@@ -10,17 +10,13 @@ from dataclasses import asdict, fields
 from typing import Any, Callable
 
 from piwardrive import diagnostics, exception_handler, remote_sync, utils
-from piwardrive.config import (
-    CONFIG_PATH,
-    Config,
-    config_mtime,
-    load_config,
-    save_config,
-)
+from piwardrive.config import (CONFIG_PATH, Config, config_mtime, load_config,
+                               save_config)
 from piwardrive.config_watcher import watch_config
 from piwardrive.di import Container
 from piwardrive.logconfig import setup_logging
-from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
+from piwardrive.persistence import (AppState, _db_path, load_app_state,
+                                    save_app_state)
 from piwardrive.scheduler import PollScheduler
 from piwardrive.security import hash_password
 

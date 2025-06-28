@@ -1,4 +1,5 @@
 """Widget graphing network throughput."""
+
 from typing import Any
 
 import psutil
@@ -11,7 +12,9 @@ from .base import DashboardWidget
 class NetworkThroughputWidget(DashboardWidget):
     """Graph of bytes received and sent per second."""
 
-    def __init__(self, update_interval: int = 1, max_points: int = 60, **kwargs: Any) -> None:
+    def __init__(
+        self, update_interval: int = 1, max_points: int = 60, **kwargs: Any
+    ) -> None:
         """Set up throughput graphs and schedule polling."""
         super().__init__(**kwargs)
         self.update_interval = update_interval

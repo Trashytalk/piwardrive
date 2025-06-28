@@ -23,9 +23,7 @@ def scan_towers(
     cmd_str = str(cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan"))
     args = shlex.split(cmd_str)
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
     )
     try:
         output = subprocess.check_output(
@@ -58,9 +56,7 @@ async def async_scan_towers(
     cmd_str = str(cmd or os.getenv("TOWER_SCAN_CMD", "tower-scan"))
     args = shlex.split(cmd_str)
     timeout = (
-        timeout
-        if timeout is not None
-        else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
+        timeout if timeout is not None else int(os.getenv("TOWER_SCAN_TIMEOUT", "10"))
     )
     logger.debug("Executing: %s", " ".join(args))
     try:

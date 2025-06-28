@@ -12,7 +12,7 @@ check for ``None`` to gracefully handle setups without these sensors.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     import dbus as dbus_type
@@ -75,8 +75,10 @@ def reset_orientation_map() -> None:
 
 
 def update_orientation_map(
-    new_map: Dict[str, float], *, clear: bool = False,
-    mapping: Optional[Dict[str, float]] = None
+    new_map: Dict[str, float],
+    *,
+    clear: bool = False,
+    mapping: Optional[Dict[str, float]] = None,
 ) -> Dict[str, float]:
     """Update an orientation mapping.
 

@@ -44,6 +44,7 @@ def test_scan_imsis_custom_hook(monkeypatch):
         lambda: None,
     )
     import piwardrive.sigint_suite.hooks as hooks
+
     hooks._POST_PROCESSORS["imsi"] = []
 
     def add_op(records):

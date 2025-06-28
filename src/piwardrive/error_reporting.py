@@ -3,6 +3,7 @@ import logging
 try:
     from kivy.app import App
 except Exception:  # pragma: no cover - allow running without Kivy
+
     class _App:
         @staticmethod
         def get_running_app() -> None:

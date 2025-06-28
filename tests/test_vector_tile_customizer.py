@@ -12,7 +12,7 @@ def test_apply_style(tmp_path: Path) -> None:
         db.execute("CREATE TABLE metadata (name TEXT, value TEXT)")
 
     style_file = tmp_path / "style.json"
-    style_file.write_text("{\"version\":8}")
+    style_file.write_text('{"version":8}')
 
     vtc.apply_style(str(db_path), style_path=str(style_file), name="N", description="D")
 
@@ -36,5 +36,4 @@ def test_build_mbtiles(tmp_path: Path) -> None:
         row = db.execute(
             "SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles"
         ).fetchone()
-    assert row == (1, 2, (2 ** 1 - 1) - 3, b"data")
-
+    assert row == (1, 2, (2**1 - 1) - 3, b"data")

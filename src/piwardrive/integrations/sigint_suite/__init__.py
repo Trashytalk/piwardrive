@@ -1,4 +1,5 @@
 """Common initialization for sigint_suite."""
+
 import logging
 import os
 from typing import Any

@@ -50,7 +50,9 @@ def prepare(monkeypatch, calls, should_fail=False):
     monkeypatch.setattr(rs.os.path, "exists", lambda p: True)
     monkeypatch.setattr("builtins.open", lambda *_a, **_k: io.BytesIO(b"x"))
     monkeypatch.setattr(rs.aiohttp, "ClientTimeout", lambda *a, **k: None)
-    monkeypatch.setattr(rs.aiohttp, "ClientSession", lambda *a, **k: DummySession(calls, should_fail))
+    monkeypatch.setattr(
+        rs.aiohttp, "ClientSession", lambda *a, **k: DummySession(calls, should_fail)
+    )
 
 
 async def run_sync(monkeypatch, retries=2, should_fail=False):
@@ -60,6 +62,7 @@ async def run_sync(monkeypatch, retries=2, should_fail=False):
 
     async def fake_sleep(d):
         sleeps.append(d)
+
     monkeypatch.setattr(rs.asyncio, "sleep", fake_sleep)
 
     await rs.sync_database_to_server("db", "http://remote", retries=retries)
@@ -88,8 +91,10 @@ def test_sync_database_failure(monkeypatch):
             raise rs.aiohttp.ClientError("boom")
 
     monkeypatch.setattr(rs.aiohttp, "ClientSession", lambda *a, **_k: FailSession())
+
     async def fake_sleep(_):
         pass
+
     monkeypatch.setattr(rs.asyncio, "sleep", fake_sleep)
 
     with pytest.raises(rs.aiohttp.ClientError):
@@ -126,18 +131,23 @@ def test_sync_new_records(monkeypatch, tmp_path):
 
     monkeypatch.setattr(rs, "sync_database_to_server", fake_sync)
 
-    count = asyncio.run(rs.sync_new_records(str(db_path), "http://x", state_file=str(state_file)))
+    count = asyncio.run(
+        rs.sync_new_records(str(db_path), "http://x", state_file=str(state_file))
+    )
     assert count == 2
     assert calls[-1] == (1, 2)
     with open(state_file) as fh:
         assert int(json.load(fh)) == 2
 
     import sqlite3
+
     with sqlite3.connect(db_path) as db:
         db.execute("INSERT INTO health_records VALUES ('t3', 3, 4, 5, 6)")
         db.commit()
 
-    count = asyncio.run(rs.sync_new_records(str(db_path), "http://x", state_file=str(state_file)))
+    count = asyncio.run(
+        rs.sync_new_records(str(db_path), "http://x", state_file=str(state_file))
+    )
     assert count == 1
     assert calls[-1] == (3, 3)
     with open(state_file) as fh:

@@ -8,18 +8,19 @@ from typing import Any
 def _load_widget(add_dummy_module):
     add_dummy_module("kivy.metrics", dp=lambda x: x)
     add_dummy_module(
-        "kivymd.uix.label", MDLabel=type("MDLabel", (), {"__init__": lambda self, **kw: None, "text": ""})
+        "kivymd.uix.label",
+        MDLabel=type("MDLabel", (), {"__init__": lambda self, **kw: None, "text": ""}),
     )
     add_dummy_module(
         "kivymd.uix.card",
-        MDCard=type("MDCard", (), {"__init__": lambda self, **kw: None, "add_widget": lambda self, w: None}),
+        MDCard=type(
+            "MDCard",
+            (),
+            {"__init__": lambda self, **kw: None, "add_widget": lambda self, w: None},
+        ),
     )
-    add_dummy_module(
-        "kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {})
-    )
-    add_dummy_module(
-        "kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {})
-    )
+    add_dummy_module("kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {}))
+    add_dummy_module("kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {}))
     return importlib.import_module("piwardrive.widgets.db_stats")
 
 

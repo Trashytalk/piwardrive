@@ -1,4 +1,5 @@
 """Command line utility for viewing or updating PiWardrive configuration."""
+
 from __future__ import annotations
 
 import argparse

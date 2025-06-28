@@ -1,4 +1,5 @@
 """Widget displaying analyzed health metrics with a plot."""
+
 import logging
 import tempfile
 from typing import Any

@@ -1,4 +1,5 @@
 """Module paths."""
+
 import os
 
 """Common path constants for sigint_suite modules."""

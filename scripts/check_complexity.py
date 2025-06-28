@@ -1,11 +1,12 @@
 """Module check_complexity."""
+
 import logging
 import subprocess
 import sys
 
 try:
     result = subprocess.run(
-        ['radon', 'cc', '-n', 'D', '-s', '.'],
+        ["radon", "cc", "-n", "D", "-s", "."],
         capture_output=True,
         text=True,
         check=True,

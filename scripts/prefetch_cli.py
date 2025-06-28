@@ -1,4 +1,5 @@
 """Module prefetch_cli."""
+
 import argparse
 import logging
 

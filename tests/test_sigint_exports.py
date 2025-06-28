@@ -30,10 +30,10 @@ def test_all_contains_export_yaml():
 
     assert "export_yaml" in ex.__all__
 
+
 def test_export_json(tmp_path):
     records = [{"a": 1}, {"a": 2}]
     out = tmp_path / "data.json"
     export_json(records, str(out))
     data = json.load(open(out))
     assert data == records
-

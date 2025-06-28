@@ -11,11 +11,13 @@ from typing import Any, Dict, Iterable, Optional
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import format_error, report_error
 except Exception:  # pragma: no cover - minimal fallbacks when deps missing
+
     def format_error(code: int, message: str) -> str:
         return message
 
     def report_error(message: str) -> None:
         print(message)
+
 
 from .base import DashboardWidget
 
@@ -103,9 +105,7 @@ def load_plugin(mod_name: str, path: Path) -> Optional[type]:
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
     except Exception as exc:  # pragma: no cover - import errors
-        report_error(
-            format_error(401, f"Failed to load plugin {path.name}: {exc}")
-        )
+        report_error(format_error(401, f"Failed to load plugin {path.name}: {exc}"))
         return None
     for name, obj in vars(module).items():
         if (

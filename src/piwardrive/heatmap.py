@@ -8,7 +8,9 @@ Coord = Tuple[float, float]
 
 
 def histogram(
-    coords: Iterable[Coord], *, bins: int | Tuple[int, int] = 100,
+    coords: Iterable[Coord],
+    *,
+    bins: int | Tuple[int, int] = 100,
     bounds: Sequence[float] | None = None,
 ) -> Tuple[List[List[int]], Tuple[float, float], Tuple[float, float]]:
     """Return a 2D histogram for latitude/longitude pairs.
@@ -82,6 +84,7 @@ def save_png(hist: Sequence[Sequence[int]], path: str) -> None:
     """Render ``hist`` to ``path`` using matplotlib if available."""
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except Exception:  # pragma: no cover - optional dependency

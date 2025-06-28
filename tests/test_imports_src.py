@@ -12,6 +12,7 @@ MODULES = [
     if p.name != "__init__.py"
 ]
 
+
 @pytest.mark.parametrize("module", MODULES)
 def test_import_package_modules(module: str, monkeypatch: pytest.MonkeyPatch) -> None:
     _setup_dummy_modules(monkeypatch)

@@ -31,8 +31,8 @@ class ServiceStatusWidget(DashboardWidget):
     def update(self) -> None:
         """Poll service status and update the label."""
         try:
-            kis = service_status('kismet')
-            btc = service_status('bettercap')
+            kis = service_status("kismet")
+            btc = service_status("bettercap")
             self.label.text = (
                 f"{_('kismet')}: { _('ok') if kis else _('down') } | "
                 f"{_('bettercap')}: { _('ok') if btc else _('down') }"

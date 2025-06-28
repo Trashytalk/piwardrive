@@ -4,10 +4,10 @@ import asyncio
 import logging
 import time
 
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
-from service import app
 from piwardrive.scheduler import PollScheduler
+from service import app
 
 
 async def long_running_task(client: AsyncClient, delay: float) -> None:

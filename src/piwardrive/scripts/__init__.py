@@ -1,4 +1,5 @@
 """Compatibility package for CLI scripts."""
+
 import os
 import sys
 
@@ -12,9 +13,7 @@ import sys
 # navigating four directories upwards from this file to reach the repository
 # root and then appending ``scripts``.
 PACKAGE_DIR = os.path.dirname(__file__)
-SCRIPTS_DIR = os.path.normpath(
-    os.path.join(PACKAGE_DIR, "..", "..", "..", "scripts")
-)
+SCRIPTS_DIR = os.path.normpath(os.path.join(PACKAGE_DIR, "..", "..", "..", "scripts"))
 for _p in (PACKAGE_DIR, SCRIPTS_DIR):
     if _p not in sys.path:
         sys.path.insert(0, _p)

@@ -29,7 +29,7 @@ class StorageUsageWidget(DashboardWidget):
     def update(self) -> None:
         """Refresh storage usage value."""
         try:
-            pct = get_disk_usage('/mnt/ssd')
+            pct = get_disk_usage("/mnt/ssd")
             if pct is not None:
                 self.label.text = f"{_('ssd')}: {pct:.0f}%"
             else:
