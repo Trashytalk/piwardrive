@@ -71,11 +71,17 @@ def test_async_scan_bluetoothctl(monkeypatch):
         class P:
             async def communicate(self):
                 return (BT_OUTPUT.encode(), b"")
+
         return P()
+
     monkeypatch.setattr("asyncio.create_subprocess_exec", fake_proc)
     devices = asyncio.run(_async_scan_bluetoothctl(2))
     assert [d.model_dump() for d in devices] == [
         {"address": "AA:BB:CC:DD:EE:FF", "name": "DeviceOne", "lat": None, "lon": None},
-        {"address": "11:22:33:44:55:66", "name": "Another Device", "lat": None, "lon": None},
+        {
+            "address": "11:22:33:44:55:66",
+            "name": "Another Device",
+            "lat": None,
+            "lon": None,
+        },
     ]
-
