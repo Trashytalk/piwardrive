@@ -7,24 +7,21 @@ from piwardrive.localization import _
 from piwardrive.simpleui import Card as MDCard
 from piwardrive.simpleui import Label as MDLabel
 from piwardrive.simpleui import dp
-from piwardrive.utils import (fetch_kismet_devices_async, get_avg_rssi,
-                              run_async_task)
+from piwardrive.utils import fetch_kismet_devices_async, get_avg_rssi, run_async_task
 
 from .base import DashboardWidget
 
 
 class SignalStrengthWidget(DashboardWidget):
     """Display average RSSI from Kismet devices."""
-    
+
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize label widget and queue the first RSSI poll."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(
-            text=f"{_('rssi')}: {_('not_available')}", halign="center"
-        )
+        self.label = MDLabel(text=f"{_('rssi')}: {_('not_available')}", halign="center")
         self.card.add_widget(self.label)
         self.add_widget(self.card)
         self.update()

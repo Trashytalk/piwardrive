@@ -3,7 +3,7 @@ from __future__ import annotations
 """Filesystem watcher for configuration changes."""
 
 import os
-from typing import Callable
+from typing import Any, Callable
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -26,7 +26,7 @@ class _ConfigHandler(FileSystemEventHandler):
             self._callback()
 
 
-def watch_config(path: str, callback: Callable[[], None]) -> Observer:
+def watch_config(path: str, callback: Callable[[], None]) -> Any:
     """Start watching ``path`` and invoke ``callback`` on changes."""
     observer = Observer()
     handler = _ConfigHandler(path, callback)
