@@ -46,6 +46,20 @@ def test_apply_env_overrides_invalid_theme(monkeypatch):
     assert result["theme"] == "Blueish"
 
 
+def test_apply_env_overrides_theme(monkeypatch):
+    base = {"theme": "Light"}
+    monkeypatch.setenv("PW_THEME", "Green")
+    result = config._apply_env_overrides(base)
+    assert result["theme"] == config.Theme.Green
+
+
+def test_apply_env_overrides_remote_sync_url(monkeypatch):
+    base = {"remote_sync_url": "http://old"}
+    monkeypatch.setenv("PW_REMOTE_SYNC_URL", "http://example.com")
+    result = config._apply_env_overrides(base)
+    assert result["remote_sync_url"] == "http://example.com"
+
+
 @pytest.mark.parametrize(
     "raw,default,expected",
     [
