@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+import builtins
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -264,3 +265,39 @@ def test_export_profile_content(tmp_path: Path) -> None:
     assert dest.is_file()
     exported = json.loads(dest.read_text())
     assert exported["theme"] == "Green"
+
+
+def test_import_config_missing_yaml(tmp_path: Path, monkeypatch) -> None:
+    """import_config raises ConfigError if PyYAML is missing."""
+    file = tmp_path / "cfg.yaml"
+    file.write_text("theme: Light\nremote_sync_url: http://localhost")
+
+    orig_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "yaml":
+            raise ModuleNotFoundError
+        return orig_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    monkeypatch.setitem(sys.modules, "yaml", None)
+    with pytest.raises(config.ConfigError, match="PyYAML required"):
+        config.import_config(str(file))
+
+
+def test_export_config_missing_yaml(tmp_path: Path, monkeypatch) -> None:
+    """export_config raises ConfigError if PyYAML is missing."""
+    cfg = config.Config(theme="Dark")
+    dest = tmp_path / "out.yaml"
+
+    orig_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "yaml":
+            raise ModuleNotFoundError
+        return orig_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    monkeypatch.setitem(sys.modules, "yaml", None)
+    with pytest.raises(config.ConfigError, match="PyYAML required"):
+        config.export_config(cfg, str(dest))
