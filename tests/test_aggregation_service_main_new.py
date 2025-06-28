@@ -2,6 +2,7 @@ import asyncio
 from unittest.mock import AsyncMock
 import importlib
 
+
 def test_main_starts_uvicorn(monkeypatch):
     server_mock = AsyncMock()
     monkeypatch.setattr("uvicorn.Config", lambda *a, **k: object())

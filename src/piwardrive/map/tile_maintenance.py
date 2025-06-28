@@ -17,6 +17,7 @@ from typing import (
     cast,
 )
 
+
 from piwardrive.scheduler import PollScheduler
 
 T = TypeVar("T")
@@ -47,8 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
     from watchdog.observers import Observer
 else:
     try:
-        from watchdog.events import \
-            FileSystemEventHandler as _FileSystemEventHandler
+        from watchdog.events import FileSystemEventHandler as _FileSystemEventHandler
         from watchdog.observers import Observer as _Observer
     except Exception:  # pragma: no cover - watchdog optional for tests
         from typing import Any as _Observer  # type: ignore
