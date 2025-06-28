@@ -808,6 +808,7 @@ async def main() -> None:
     config = uvicorn.Config(app, host="127.0.0.1", port=8000)
     server = uvicorn.Server(config)
     await server.serve()
+    vehicle_sensors.close_obd()
 
 
 if __name__ == "__main__":
@@ -816,4 +817,5 @@ if __name__ == "__main__":
     finally:
         from utils import shutdown_async_loop
 
+        vehicle_sensors.close_obd()
         shutdown_async_loop()
