@@ -31,6 +31,7 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    geofencing
    status_service
    service_prefetch
+   logging
    remote_sync
    sigint_workflow
    aggregation_service

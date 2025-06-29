@@ -59,7 +59,7 @@ graph LR
 
 ## Data Handling
 - Multi-format exports (GPX/KML/CSV/JSON/GeoJSON/Shapefile)
-- Diagnostics and log rotation
+- Diagnostics and log rotation. See `docs/logging.rst` for log levels and file locations.
 - Remote database sync (`remote_sync.py`) with a central aggregation service
   for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
