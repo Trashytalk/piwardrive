@@ -8,8 +8,12 @@ import os
 from typing import Any
 
 try:  # pragma: no cover - optional dependency
-    from kivy.app import App
+    from kivy.app import App as KivyApp
 except Exception:
+    KivyApp = None  # type: ignore[assignment]
+
+App = KivyApp
+
 
     class App:  # type: ignore[no-redef]
         @staticmethod
@@ -115,8 +119,11 @@ class RoutePrefetcher:
             )
             mv = getattr(self._map_screen.ids, "mapview", None)
             zoom = getattr(mv, "zoom", 16)
-            path = self._offline_tile_path or ""
-            folder = os.path.dirname(path) or "/mnt/ssd/tiles"
+            app = KivyApp.get_running_app() if KivyApp is not None else None
+            folder = (
+                os.path.dirname(getattr(app, "offline_tile_path", ""))
+                or "/mnt/ssd/tiles"
+            )
             self._map_screen.prefetch_tiles(bbox, zoom=zoom, folder=folder)
         except Exception as exc:  # pragma: no cover - unexpected errors
             logger.exception("RoutePrefetcher failed: %s", exc)

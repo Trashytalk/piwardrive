@@ -36,6 +36,13 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover - fallback when sigint_suite is missing
     BluetoothDevice = dict[str, Any]
 from concurrent.futures import Future
+
+try:  # pragma: no cover - optional dependency
+    from kivy.app import App as KivyApp
+except Exception:
+    KivyApp = None  # type: ignore[assignment]
+
+App = KivyApp
 from enum import IntEnum
 
 import psutil
@@ -216,12 +223,17 @@ ERROR_PREFIX = "E"
 
 def network_scanning_disabled() -> bool:
     """Return ``True`` if scanning is globally disabled."""
-    disabled = os.getenv("PW_DISABLE_SCANNING", "0").lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
+    app = App.get_running_app() if App is not None else None
+    if app is not None:
+        disabled = bool(getattr(app, "disable_scanning", False))
+    else:
+        disabled = os.getenv("PW_DISABLE_SCANNING", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+
     if disabled:
         logging.debug("Network scanning disabled")
     return disabled
@@ -272,6 +284,12 @@ def report_error(message: str) -> None:
     ``message`` should include a numeric error code prefix like ``[E001]``.
     """
     logging.error(message)
+    try:
+        app = App.get_running_app() if App is not None else None
+        if app and hasattr(app, "show_alert"):
+            app.show_alert("Error", message)
+    except Exception as exc:  # pragma: no cover - app may not be running
+        logging.exception("Failed to display error alert: %s", exc)
 
 
 T = TypeVar("T")
