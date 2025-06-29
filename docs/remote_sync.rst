@@ -93,3 +93,24 @@ Example::
         )
     )
 
+Command Line Helper
+-------------------
+
+PiWardrive also provides ``scripts/serviceSync.js`` for headless systems. The
+Node script can upload the database and check service status in one command.
+It accepts the following options:
+
+``--db``
+    Path to the SQLite database to upload.
+``--url``
+    Destination URL that receives the file via HTTP ``POST``.
+``--services``
+    One or more systemd service names to query with ``systemctl``.
+
+Example invocation::
+
+    node scripts/serviceSync.js \
+        --db ~/.config/piwardrive/health.db \
+        --url http://10.0.0.2:9000/ \
+        --services piwardrive piwardrive-webui
+
