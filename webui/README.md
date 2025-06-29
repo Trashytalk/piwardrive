@@ -133,11 +133,11 @@ The command runs `piwardrive-webui` in the background and then opens Chromium in
 
 ## 8. Serving the Build Elsewhere
 
-`piwardrive.webui_server` reads the `PW_WEBUI_DIST` environment variable to locate the build directory. You can copy `webui/dist` to another location or web server and point the variable there when starting the API:
+`piwardrive.webui_server` and the Node server both read the `PW_WEBUI_DIST` environment variable to locate the build directory. You can copy `webui/dist` to another location or web server and point the variable there when starting the API:
 
 ```bash
 export PW_WEBUI_DIST=/var/www/piwardrive
-python -m piwardrive.webui_server
+npm start  # or: python -m piwardrive.webui_server
 ```
 
 Any static web server can host the contents of `webui/dist` as long as the API is reachable.
