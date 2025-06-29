@@ -13,7 +13,8 @@ Run the server with::
     python -m piwardrive.aggregation_service
 
 By default data is stored under ``~/piwardrive-aggregation``.  Set the
-``PW_AGG_DIR`` environment variable to change the location.
+``PW_AGG_DIR`` environment variable to change the location. Set
+``PW_AGG_PORT`` to change the listening port (defaults to ``9100``).
 
 Installation
 ------------
