@@ -74,6 +74,21 @@ Run the container exposing port 8000::
 Set ``PW_API_PASSWORD_HASH`` and ``PORT`` as needed when running ``docker run``.
 
 
+tmux or screen
+~~~~~~~~~~~~~~
+
+Running the service from a terminal multiplexer allows it to stay active after
+disconnecting from SSH. Launch a detached session and start PiWardrive with::
+
+    tmux new -s piwardrive -d 'piwardrive-service'
+
+The same can be accomplished using ``screen``::
+
+    screen -dmS piwardrive piwardrive-service
+
+Reconnect later with ``tmux attach -t piwardrive`` or ``screen -r piwardrive``.
+
+
 Editing service.py
 ~~~~~~~~~~~~~~~~~~
 The API endpoints for PiWardrive live in ``src/piwardrive/service.py``.  Routes
