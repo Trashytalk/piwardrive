@@ -1,0 +1,7 @@
+{
+    "use_dbus": true,
+    "use_mpu6050": true,
+    "mpu6050_address": 104,
+    "orientation_map_file": "orientation_map.json",
+    "update_interval": 5
+}

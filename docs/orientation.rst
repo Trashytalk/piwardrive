@@ -53,7 +53,9 @@ Running ``calibrate_orientation.py``
 0°, 90°, 180° and 270°.  The resulting mapping is written to
 ``orientation_map.json`` and can be applied with
 :func:`orientation_sensors.update_orientation_map`.  See
-``examples/orientation_map.json`` for a typical mapping.
+``examples/orientation_map.json`` for a typical mapping. ``examples/orientation_sensors.json``
+illustrates common sensor settings like enabling DBus, selecting the
+MPU‑6050 address and referencing the mapping file.
 
 Use the command installed with the package or execute the script from the
 repository root::
