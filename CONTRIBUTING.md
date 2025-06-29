@@ -11,6 +11,10 @@ pip install -r requirements-dev.txt
 pre-commit install
 ```
 
+Some tests rely on additional scientific packages such as `numpy`, `pandas`
+and `scikit-learn`. Install them via `pip install .[tests]` (or
+`pip install -r requirements.txt`) if you plan to run the full suite.
+
 ## Running checks
 
 Use the following convenience targets during development:
