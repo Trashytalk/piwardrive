@@ -77,4 +77,9 @@ Several helper scripts are installed alongside the React dashboard and optional 
 
         piwardrive-maintain-tiles --purge --max-age-days 7
 
+``export-shp``
+    Write saved access points to a Shapefile::
+
+        export-shp aps.shp
+
 See ``--help`` on each command for additional options.
