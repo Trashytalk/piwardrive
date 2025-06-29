@@ -49,6 +49,11 @@ Run maintenance without the GUI using the ``piwardrive-maintain-tiles`` command.
 
    piwardrive-maintain-tiles --purge --limit --vacuum --offline /path/offline.mbtiles
 
+``scripts/cleanup_cache.py`` offers a compact helper for deleting tiles
+older than a given age without enforcing the size limit::
+
+   python scripts/cleanup_cache.py --max-age-days 60
+
 Cache Maintenance
 -----------------
 
