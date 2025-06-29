@@ -33,7 +33,8 @@ def create_app() -> FastAPI:
 def main() -> None:
     import uvicorn
 
-    port = int(os.getenv("PW_WEBUI_PORT", 8000))
+    port_env = os.environ.get("PW_WEBUI_PORT")
+    port = int(port_env) if port_env else 8000
     uvicorn.run(create_app(), host="127.0.0.1", port=port)
 
 
