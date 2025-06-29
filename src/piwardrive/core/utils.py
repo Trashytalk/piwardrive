@@ -15,15 +15,15 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
+    Awaitable,
     Callable,
     Coroutine,
     Iterable,
     Sequence,
     TypedDict,
     TypeVar,
-    Awaitable,
-    TYPE_CHECKING,
 )
 
 from piwardrive import config as pw_config
@@ -233,6 +233,7 @@ def network_scanning_disabled() -> bool:
             "yes",
             "on",
         }
+
     if disabled:
         logging.debug("Network scanning disabled")
     return disabled
@@ -1175,7 +1176,6 @@ def load_kml(path: str) -> list[dict[str, Any]]:
 
 
 __all__ = [
-    "App",
     "ErrorCode",
     "network_scanning_disabled",
     "shutdown_async_loop",

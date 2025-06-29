@@ -5,6 +5,7 @@ import re
 from typing import Any, List
 
 from piwardrive.simpleui import DropdownMenu, Label, ScrollView
+from piwardrive.utils import tail_file
 
 try:  # pragma: no cover - optional dependency
     from piwardrive.simpleui import App as SimpleApp  # type: ignore
@@ -37,7 +38,7 @@ class LogViewer(ScrollView):
         self.bind(filter_regex=self._compile_filter)
         self.bind(error_regex=self._compile_error)
         self.log_paths = [self.log_path]
-        self._menu: MDDropdownMenu | None = None
+        self._menu: DropdownMenu | None = None
 
     def _compile_filter(self, *_args: Any) -> None:
         self._filter_re = re.compile(self.filter_regex) if self.filter_regex else None
@@ -79,10 +80,7 @@ class LogViewer(ScrollView):
         """Display a dropdown menu to select ``log_path``."""
         app = App.get_running_app() if App is not None else None
         paths = getattr(app, "log_paths", self.log_paths)
-        try:  # pragma: no cover - prefer real KivyMD menu if available
-            from kivymd.uix.menu import MDDropdownMenu  # type: ignore
-        except Exception:  # pragma: no cover - fallback stub
-            from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
+        MDDropdownMenu = DropdownMenu
         items = [
             {
                 "text": os.path.basename(p),

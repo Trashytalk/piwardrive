@@ -7,6 +7,7 @@ except Exception:  # pragma: no cover - optional dependency
 
 App = KivyApp
 
+
 ERROR_PREFIX = "E"
 
 
@@ -16,7 +17,7 @@ def format_error(code: int, message: str) -> str:
 
 
 def report_error(message: str) -> None:
-    """Log the error and display an alert via the running app if possible."""
+    """Log the error."""
     logging.error(message)
     try:
         app = App.get_running_app() if App is not None else None
@@ -26,4 +27,5 @@ def report_error(message: str) -> None:
         logging.exception("Failed to display error alert: %s", exc)
 
 
-__all__ = ["App", "ERROR_PREFIX", "format_error", "report_error"]
+
+__all__ = ["ERROR_PREFIX", "format_error", "report_error"]

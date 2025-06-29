@@ -14,6 +14,19 @@ except Exception:
 
 App = KivyApp
 
+
+    class App:  # type: ignore[no-redef]
+        @staticmethod
+        def get_running_app() -> None:
+            return None
+          
+
+    class App:  # type: ignore[no-redef]
+        @staticmethod
+        def get_running_app() -> None:
+            return None
+
+          
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
 
@@ -62,10 +75,12 @@ class RoutePrefetcher:
         interval: int = 3600,
         lookahead: int = 5,
         delta: float = 0.01,
+        offline_tile_path: str | None = None,
     ) -> None:
         self._map_screen = map_screen
         self._lookahead = lookahead
         self._delta = delta
+        self._offline_tile_path = offline_tile_path
         scheduler.schedule("route_prefetch", lambda _dt: self._run(), interval)
 
     # --------------------------------------------------------------
