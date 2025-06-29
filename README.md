@@ -428,8 +428,9 @@ officially supported.
 Settings persist in `~/.config/piwardrive/config.json`. Profiles under
 `~/.config/piwardrive/profiles` can store alternate configurations and may be
 selected via the `PW_PROFILE_NAME` environment variable. Environment variables
-prefixed with `PW_` override any option. See `docs/configuration.rst` and
-`docs/environment.rst` for a full list.
+prefixed with `PW_` override any option. See `docs/configuration.rst` and the
+[Configuration Overrides](docs/environment.rst#configuration-overrides) section
+for a full list.
 
 ## Additional Documentation
 
