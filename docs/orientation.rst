@@ -100,3 +100,19 @@ Load this mapping in your application and activate it with
 
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
+
+Running ``check_orientation_sensors.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``check-orientation-sensors`` command prints the current orientation and
+raw accelerometer/gyroscope readings in JSON format. Use the installed command
+or run the script from the repository root::
+
+    python scripts/check_orientation_sensors.py
+
+A typical result when ``iio-sensor-proxy`` is available looks like::
+
+    {"orientation": "right-up", "angle": 90.0, "accelerometer": null, "gyroscope": null}
+
+When DBus is not available but an MPU-6050 is connected the accelerometer and
+gyroscope data are returned instead.
+
