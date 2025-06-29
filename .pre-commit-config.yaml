@@ -37,6 +37,7 @@ repos:
       - id: npm-test
         name: npm test
         entry: bash -c 'cd webui && npm test'
+        language: system
       - id: npm-lint
         name: npm lint
         entry: bash -c "cd webui && npm run lint"
