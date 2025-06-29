@@ -11,6 +11,7 @@ this location. Health monitor metrics are stored as
 The same file stores ``AppState`` which remembers the last active screen and
 the start time of the previous session. When PiWardrive launches these values
 are restored so the React dashboard picks up where it left off.
+
 Database connections are
 cached so repeated calls do not reinitialise the schema, reducing disk I/O.
 The connection is placed into write-ahead logging mode using

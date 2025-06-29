@@ -4,6 +4,43 @@ from __future__ import annotations
 
 from typing import Iterable, List, Sequence, Tuple
 
+
+def _get_bins(bins: int | Tuple[int, int]) -> Tuple[int, int]:
+    """Return latitude/longitude bin counts."""
+    return (bins, bins) if isinstance(bins, int) else bins
+
+
+def _derive_bounds(pts: list[Coord]) -> Tuple[float, float, float, float]:
+    lats = [p[0] for p in pts]
+    lons = [p[1] for p in pts]
+    return min(lats), min(lons), max(lats), max(lons)
+
+
+def _fill_histogram(
+    pts: Iterable[Coord],
+    bins_lat: int,
+    bins_lon: int,
+    min_lat: float,
+    max_lat: float,
+    min_lon: float,
+    max_lon: float,
+) -> list[list[int]]:
+    hist = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
+    if max_lat == min_lat or max_lon == min_lon:
+        return hist
+
+    lat_span = max_lat - min_lat
+    lon_span = max_lon - min_lon
+    for lat, lon in pts:
+        if not (min_lat <= lat <= max_lat and min_lon <= lon <= max_lon):
+            continue
+        i = int((lat - min_lat) / lat_span * bins_lat)
+        j = int((lon - min_lon) / lon_span * bins_lon)
+        i = min(i, bins_lat - 1)
+        j = min(j, bins_lon - 1)
+        hist[i][j] += 1
+    return hist
+
 Coord = Tuple[float, float]
 
 
@@ -19,39 +56,19 @@ def histogram(
     minimum/maximum coordinates are derived from ``coords``.
     """
     pts = [(float(lat), float(lon)) for lat, lon in coords]
-    if isinstance(bins, int):
-        bins_lat = bins_lon = bins
-    else:
-        bins_lat, bins_lon = bins
+    bins_lat, bins_lon = _get_bins(bins)
 
     if bounds is None:
         if not pts:
             empty = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
             return empty, (0.0, 0.0), (0.0, 0.0)
-        lats = [p[0] for p in pts]
-        lons = [p[1] for p in pts]
-        min_lat = min(lats)
-        max_lat = max(lats)
-        min_lon = min(lons)
-        max_lon = max(lons)
+        min_lat, min_lon, max_lat, max_lon = _derive_bounds(pts)
     else:
         min_lat, min_lon, max_lat, max_lon = map(float, bounds)
 
-    hist = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
-    if max_lat == min_lat or max_lon == min_lon:
-        return hist, (min_lat, max_lat), (min_lon, max_lon)
-
-    for lat, lon in pts:
-        if not (min_lat <= lat <= max_lat and min_lon <= lon <= max_lon):
-            continue
-        i = int((lat - min_lat) / (max_lat - min_lat) * bins_lat)
-        j = int((lon - min_lon) / (max_lon - min_lon) * bins_lon)
-        if i == bins_lat:
-            i -= 1
-        if j == bins_lon:
-            j -= 1
-        hist[i][j] += 1
-
+    hist = _fill_histogram(
+        pts, bins_lat, bins_lon, min_lat, max_lat, min_lon, max_lon
+    )
     return hist, (min_lat, max_lat), (min_lon, max_lon)
 
 
@@ -100,19 +117,9 @@ def save_png(hist: Sequence[Sequence[int]], path: str) -> None:
     plt.close()
 
 
-def density_map(
-    coords: Iterable[Coord],
-    *,
-    bins: int | Tuple[int, int] = 100,
-    bounds: Sequence[float] | None = None,
-    radius: int = 1,
-) -> Tuple[List[List[int]], Tuple[float, float], Tuple[float, float]]:
-    """Return a density map expanding counts to neighbouring cells."""
-    hist, lat_range, lon_range = histogram(coords, bins=bins, bounds=bounds)
+def _spread_density(hist: Sequence[Sequence[int]], radius: int) -> List[List[int]]:
     bins_lat = len(hist)
     bins_lon = len(hist[0]) if hist else 0
-    if bins_lat == 0 or bins_lon == 0:
-        return hist, lat_range, lon_range
     density = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
     for i, row in enumerate(hist):
         for j, count in enumerate(row):
@@ -124,6 +131,20 @@ def density_map(
                     jj = j + dj
                     if 0 <= ii < bins_lat and 0 <= jj < bins_lon:
                         density[ii][jj] += count
+    return density
+
+def density_map(
+    coords: Iterable[Coord],
+    *,
+    bins: int | Tuple[int, int] = 100,
+    bounds: Sequence[float] | None = None,
+    radius: int = 1,
+) -> Tuple[List[List[int]], Tuple[float, float], Tuple[float, float]]:
+    """Return a density map expanding counts to neighbouring cells."""
+    hist, lat_range, lon_range = histogram(coords, bins=bins, bounds=bounds)
+    if not hist or not hist[0]:
+        return hist, lat_range, lon_range
+    density = _spread_density(hist, radius)
     return density, lat_range, lon_range
 
 

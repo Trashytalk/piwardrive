@@ -29,19 +29,19 @@ graph LR
 - Import from `piwardrive` directly when running tools or tests.
 
 ## Data Inputs
+
 - Kismet
 - Bettercap
 - GPSD
 - SDR
 - Orientation sensors (gyroscope, accelerometer, OBD‑II adapter)
-  - ``dbus`` + ``iio-sensor-proxy`` or an external MPU‑6050 are optional;
+  - `dbus` + `iio-sensor-proxy` or an external MPU‑6050 are optional;
     the app falls back gracefully when absent
   - Wi-Fi scans record the current antenna heading along with RSSI when
     orientation data is available
 
-
-
 ## U/I Features
+
 - Service controls for Kismet and BetterCAP
 - Interactive map with offline tile prefetch and rotation
 - Predictive route tile caching
@@ -56,15 +56,15 @@ graph LR
 - Plugin widgets dynamically loaded in the web UI
 - Offline-capable PWA frontend
 
-
 ## Data Handling
+
 - Multi-format exports (GPX/KML/CSV/JSON/GeoJSON/Shapefile)
 - Diagnostics and log rotation. See `docs/logging.rst` for log levels and file locations.
 - Remote database sync (`remote_sync.py`) with a central aggregation service
   for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
 - CLI SIGINT tools under `src/piwardrive/sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
-  
+
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
 ### Scanning and Logging
@@ -108,19 +108,21 @@ sequenceDiagram
     Clock-->>Scheduler: event handle
 ```
 
-Schedulers expose basic metrics via ``get_metrics()`` including the next
+Schedulers expose basic metrics via `get_metrics()` including the next
 scheduled run time and duration of the last callback execution. These values
 aid troubleshooting periodic jobs during development.
 
 ## Quick Start
 
 ### Hardware
+
 - Raspberry Pi 5 with 7" touchscreen
 - SSD mounted at `/mnt/ssd`
 - GPS dongle on `/dev/ttyACM0`
 - External Wi-Fi adapter (monitor mode)
 
 ### Software
+
 - Raspberry Pi OS Bookworm or Bullseye
 - Python 3.10+
 - System packages: `kismet`, `gpsd`, `bettercap`, `evtest`, `git`, `build-essential`, `cmake`
@@ -138,7 +140,6 @@ sudo apt update
 sudo apt install -y r-base r-base-dev
 
 ```
-
 
 #### Quickstart Script
 
@@ -159,27 +160,31 @@ source gui-env/bin/activate
    sudo apt update && sudo apt install -y \
        git build-essential cmake kismet bettercap gpsd evtest python3-venv
    ```
+
 3. Clone the repository and switch into the project directory:
 
    ```bash
    git clone git@github.com:Trashytalk/piwardrive.git
    cd piwardrive
    ```
+
 4. Create and activate the virtual environment:
 
    ```bash
    python3 -m venv gui-env
    source gui-env/bin/activate
    ```
+
 5. Install Python dependencies and the project itself:
 
    ```bash
    pip install -r requirements.txt
    pip install .
    ```
+
 6. (Optional) mount an external SSD by editing `/etc/fstab`::
 
-   /dev/sda1  /mnt/ssd  ext4  defaults,nofail  0  2
+   /dev/sda1 /mnt/ssd ext4 defaults,nofail 0 2
 
 7. Enable `kismet`, `bettercap` and `gpsd` to start on boot:
 
@@ -187,10 +192,12 @@ source gui-env/bin/activate
    sudo systemctl enable kismet bettercap gpsd
 8. (Optional) copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it to run the API and dashboard on boot:
 
+
    ```bash
    sudo cp examples/piwardrive-webui.service /etc/systemd/system/
    sudo systemctl enable --now piwardrive-webui.service
    ```
+
 9. Start the application manually if the service is not enabled:
 
    ```bash
@@ -213,6 +220,7 @@ Activate the virtual environment and run `pip install <package>` for any that ap
 Follow these steps to configure the Python and React development environment.
 
 1. **Enter your project directory**
+
    ```bash
    cd ~/piwardrive
    ```
@@ -230,24 +238,28 @@ Follow these steps to configure the Python and React development environment.
 
 > PiWardrive's frontend and tests rely on **Node.js 18+**. Verify the tools
 > are installed and meet the version requirement:
+>
 > ```bash
 > node --version
 > npm --version
 > ```
 
 3. **Create and activate a Python venv**
+
    ```bash
    python3 -m venv venv
    source venv/bin/activate
    ```
 
 4. **Upgrade pip/setuptools and install Python deps**
+
    ```bash
    pip install --upgrade pip setuptools wheel meson ninja
    pip install -r requirements.txt
    ```
 
 5. **Build the React frontend**
+
    ```bash
    cd webui
    npm install         # only on first run or when package.json changes
@@ -256,16 +268,19 @@ Follow these steps to configure the Python and React development environment.
    ```
 
 6. **Install the package in editable mode**
+
    ```bash
    pip install --editable .
    ```
 
 7. **Start the ASGI server**
+
    ```bash
    uvicorn piwardrive.webui_server:app --reload
    ```
 
 8. **Verify**
+
    ```bash
    # Visit the React UI
    http://127.0.0.1:8000/
@@ -289,8 +304,8 @@ npm start  # starts the Node server
 # or use the Python version
 # python -m piwardrive.webui_server
 ```
-To autostart the dashboard on boot copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service`.
 
+To autostart the dashboard on boot copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service`.
 
 Alternatively serve `webui/dist` with any webserver while running
 `piwardrive-service` for the API. During development you can run
@@ -303,10 +318,11 @@ Launch Chromium in kiosk mode with the helper command:
 ```bash
 piwardrive-kiosk
 ```
+
 The command runs `piwardrive-webui` in the background and opens Chromium with
 `--kiosk` pointing to the dashboard. Chromium must run inside a graphical
-environment. Ensure an X server is available and ``$DISPLAY`` is set.
-Headless setups can use ``Xvfb``.
+environment. Ensure an X server is available and `$DISPLAY` is set.
+Headless setups can use `Xvfb`.
 
 Combine the web UI service with the example `kiosk.service` unit to
 launch the browser automatically on boot.
@@ -347,10 +363,10 @@ configuration and compiled assets persist between container restarts.
 
 #### Automated Aspects
 
-* **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
-* **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
-* **Configuration Reloads** – a filesystem watcher detects updates to `config.json` and applies them along with any `PW_` overrides without restarting.
-* **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup. The `/plugins` API route lists any discovered classes so you can verify custom widgets were detected.
+- **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
+- **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
+- **Configuration Reloads** – a filesystem watcher detects updates to `config.json` and applies them along with any `PW_` overrides without restarting.
+- **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup. The `/plugins` API route lists any discovered classes so you can verify custom widgets were detected.
 
 #### Manual Steps
 
@@ -361,11 +377,11 @@ configuration and compiled assets persist between container restarts.
 * **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
 * **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
 * **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
+
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
-* **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
-* **Configuration Wizard** – run `python -m piwardrive.setup_wizard` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
-
+- **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
+- **Configuration Wizard** – run `python -m piwardrive.setup_wizard` to interactively create profiles or edit `~/.config/piwardrive/config.json` by hand.
 
 ### Example systemd unit
 
@@ -388,12 +404,14 @@ WantedBy=multi-user.target
 ## Kiosk Setup on Pi OS Lite
 
 1. **Install prerequisites**
+
    ```bash
    sudo apt update
    sudo apt install -y xserver-xorg xinit matchbox-window-manager chromium-browser
    ```
 
 2. **Create `~/kiosk.sh`**
+
    ```bash
    #!/bin/sh
    xset -dpms
@@ -403,6 +421,7 @@ WantedBy=multi-user.target
    ```
 
 3. **Create `~/.xsession`**
+
    ```bash
    exec sh /home/pi/kiosk.sh
    ```
@@ -413,6 +432,7 @@ WantedBy=multi-user.target
    `~/.xsession` and in turn launches Chromium in kiosk mode.
 
 5. **(Optional) `piwardrive-webui.service`**
+
    ```ini
    [Unit]
    Description=PiWardrive Backend
@@ -430,6 +450,7 @@ WantedBy=multi-user.target
    ```
 
 6. **Enable services and reboot**
+
    ```bash
    sudo systemctl enable kiosk.service
    sudo systemctl enable piwardrive-webui.service  # optional
@@ -467,6 +488,9 @@ Install the development dependencies and run the tests:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+# Some tests rely on additional scientific libraries such as `numpy`.
+# Install them with the optional `tests` extras if needed:
+# pip install .[tests]
 pre-commit run --all-files
 pytest
 ```

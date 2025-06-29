@@ -15,15 +15,15 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
+    Awaitable,
     Callable,
     Coroutine,
     Iterable,
     Sequence,
     TypedDict,
     TypeVar,
-    Awaitable,
-    TYPE_CHECKING,
 )
 
 from piwardrive import config as pw_config
@@ -36,22 +36,6 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover - fallback when sigint_suite is missing
     BluetoothDevice = dict[str, Any]
 from concurrent.futures import Future
-
-try:  # pragma: no cover - allow running without Kivy
-    from kivy.app import App as _RealApp
-except Exception:
-    _RealApp = None
-
-if _RealApp is not None:
-    App = _RealApp
-else:
-
-    class _AppStub:
-        @staticmethod
-        def get_running_app() -> None:
-            return None
-
-    App = _AppStub
 from enum import IntEnum
 
 import psutil
@@ -232,16 +216,12 @@ ERROR_PREFIX = "E"
 
 def network_scanning_disabled() -> bool:
     """Return ``True`` if scanning is globally disabled."""
-    app = App.get_running_app()
-    if app is not None:
-        disabled = bool(getattr(app, "disable_scanning", False))
-    else:
-        disabled = os.getenv("PW_DISABLE_SCANNING", "0").lower() in {
-            "1",
-            "true",
-            "yes",
-            "on",
-        }
+    disabled = os.getenv("PW_DISABLE_SCANNING", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
     if disabled:
         logging.debug("Network scanning disabled")
     return disabled
@@ -292,12 +272,6 @@ def report_error(message: str) -> None:
     ``message`` should include a numeric error code prefix like ``[E001]``.
     """
     logging.error(message)
-    try:
-        app = App.get_running_app()
-        if app and hasattr(app, "show_alert"):
-            app.show_alert("Error", message)
-    except Exception as exc:  # pragma: no cover - app may not be running
-        logging.exception("Failed to display error alert: %s", exc)
 
 
 T = TypeVar("T")
@@ -1184,7 +1158,6 @@ def load_kml(path: str) -> list[dict[str, Any]]:
 
 
 __all__ = [
-    "App",
     "ErrorCode",
     "network_scanning_disabled",
     "shutdown_async_loop",
