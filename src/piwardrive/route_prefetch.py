@@ -7,7 +7,14 @@ import math
 import os
 from typing import Any
 
-from kivy.app import App
+try:  # pragma: no cover - optional dependency
+    from kivy.app import App
+except Exception:
+
+    class App:  # type: ignore[no-redef]
+        @staticmethod
+        def get_running_app() -> None:
+            return None
 
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
