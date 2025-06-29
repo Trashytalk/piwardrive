@@ -26,6 +26,9 @@ Enable the unit with::
 
     sudo systemctl enable --now piwardrive-aggregation.service
 
+The unit installed by the script matches ``examples/piwardrive-aggregation.service``
+which you can also copy manually into ``/etc/systemd/system/``.
+
 Endpoints
 ---------
 

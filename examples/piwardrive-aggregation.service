@@ -1,0 +1,13 @@
+[Unit]
+Description=PiWardrive Aggregation Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/piwardrive
+ExecStart=/home/pi/piwardrive/agg-env/bin/python -m piwardrive.aggregation_service
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
