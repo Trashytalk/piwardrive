@@ -56,3 +56,21 @@ SIGINT suite scanners and persist their results.
        Scanners-->>Scheduler: results
        Scheduler->>Persistence: save results
 
+SIGINT scan data flow
+---------------------
+
+The ``PollScheduler.register_widget`` diagram shows how periodic tasks are
+registered.  Building on that, the flowchart below summarizes how those
+scheduled scans forward wireless metadata to the persistence layer.
+
+.. mermaid::
+
+   flowchart LR
+       S[PollScheduler]
+       S --> WiFi[scan_wifi]
+       S --> BT[scan_bluetooth]
+       S --> IMSI[scan_imsi]
+       WiFi --> P[Persistence]
+       BT --> P
+       IMSI --> P
+

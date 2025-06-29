@@ -141,3 +141,36 @@ Plugins are reloaded automatically when the directory timestamp changes, but
 calling ``clear_plugin_cache()`` ensures immediate discovery during
 development.
 
+## Workflow
+
+The relationship between the command-line tools, optional plugins and the
+exports is illustrated below. Scans start with one of the CLI entry points
+(``wifi-scan``, ``bluetooth-scan`` and friends). Each tool invokes the
+corresponding scanner module, optionally passing the collected records through
+any registered plugins or hooks. Results are then written to JSON/CSV/YAML
+files or stored in a SQLite database. Databases can be uploaded with
+``remote_sync.sync_database_to_server`` so that the
+:mod:`aggregation_service <piwardrive.aggregation_service>` can merge them with
+other units.
+
+```mermaid
+flowchart TD
+    subgraph CLI Tools
+        A[wifi-scan]
+        B[bluetooth-scan]
+        C[imsi-scan]
+        D[band-scan]
+        E[scan-all]
+    end
+    CLI Tools --> F[Scanner modules]
+    F --> G{Plugins / hooks?}
+    G -->|yes| H[Custom logic]
+    G -->|no| I[Records]
+    H --> I
+    I --> J{Export}
+    J --> K[JSON/CSV/YAML]
+    J --> L[SQLite DB]
+    L --> M[remote_sync.sync_database_to_server]
+    M --> N[Aggregation service]
+```
+

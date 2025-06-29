@@ -75,6 +75,22 @@ python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypas
 
 Assign the resulting value to the environment variable before launching `piwardrive.webui_server`.
 
+## PW_API_PASSWORD_HASH and PORT
+
+`server/index.js` reads two environment variables:
+
+- `PW_API_PASSWORD_HASH` enables HTTP basic auth. Generate the hash as shown above and export it before starting the server.
+- `PORT` sets the listening port (default `8000`).
+
+Example:
+
+```bash
+PW_API_PASSWORD_HASH=$MY_HASH PORT=9000 node server/index.js
+# or with npm
+PW_API_PASSWORD_HASH=$MY_HASH PORT=9000 npm start
+```
+
+
 ## 6. Development Mode
 
 While working on the frontend you can run the Vite development server instead of rebuilding on every change:
