@@ -77,4 +77,13 @@ Several helper scripts are installed alongside the React dashboard and optional 
 
         piwardrive-maintain-tiles --purge --max-age-days 7
 
+``health-stats``
+    Compute average CPU temperature, usage and other metrics from recent
+    records::
+
+        health-stats --limit 20
+
+    The command prints JSON with ``temp_avg``, ``cpu_avg``, ``mem_avg`` and
+    ``disk_avg`` values.
+
 See ``--help`` on each command for additional options.
