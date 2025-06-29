@@ -21,11 +21,6 @@ except Exception:
     # core utils couldn't be imported; define minimal stubs so optional
     # features can be patched in tests without import errors.
 
-    # pragma: no cover - placeholder
-    def _stub(*_args: object, **_kwargs: object) -> None:
-        """Placeholder for optional functionality."""
-        raise NotImplementedError
-
     if not TYPE_CHECKING:
         # The following stubs match the names used by the builtin widgets. They
         # are replaced by monkeypatching in the unit tests when the real
