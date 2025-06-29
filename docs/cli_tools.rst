@@ -77,4 +77,9 @@ Several helper scripts are installed alongside the React dashboard and optional 
 
         piwardrive-maintain-tiles --purge --max-age-days 7
 
+``export-gpx``
+    Convert records in CSV or JSON format to a GPX file::
+
+        export-gpx data.json out.gpx
+
 See ``--help`` on each command for additional options.
