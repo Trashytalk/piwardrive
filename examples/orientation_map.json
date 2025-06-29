@@ -1,0 +1,11 @@
+{
+    "normal": 0.0,
+    "bottom-up": 180.0,
+    "right-up": 90.0,
+    "left-up": 270.0,
+    "portrait": 0.0,
+    "portrait-upside-down": 180.0,
+    "landscape-left": 90.0,
+    "landscape-right": 270.0,
+    "upside-down": 180.0
+}

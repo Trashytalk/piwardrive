@@ -49,7 +49,8 @@ string into a numeric angle using this mapping.
 ``calibrate-orientation`` guides you through positioning the device at
 0°, 90°, 180° and 270°.  The resulting mapping is written to
 ``orientation_map.json`` and can be applied with
-:func:`orientation_sensors.update_orientation_map`.
+:func:`orientation_sensors.update_orientation_map`.  See
+``examples/orientation_map.json`` for a typical mapping.
 
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
