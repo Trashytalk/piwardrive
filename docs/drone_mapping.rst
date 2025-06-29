@@ -29,3 +29,22 @@ Replay a saved track with ``uav-track-playback``:
    uav-track-playback uav_track.json --interval 0.5
 
 Each coordinate is printed to stdout and can be piped into other tools.
+
+Cleaning and Segmenting Tracks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Before replaying data captured from other devices it is useful to remove
+duplicate points and break long gaps into separate segments.  `gpsbabel`
+can clean a GPX file and produce a new track that is easier to replay::
+
+   gpsbabel -i gpx -f raw_track.gpx -x clean -x track,pack,segment \
+            -o gpx -F clean_track.gpx
+
+The resulting ``clean_track.gpx`` can then be converted to the JSON format
+required by ``uav-track-playback``:
+
+.. code-block:: bash
+
+   gpsbabel -i gpx -f clean_track.gpx -o geojson -F - | \
+       jq '.features[0].geometry.coordinates' > uav_track.json
+
+Run ``uav-track-playback uav_track.json`` to replay the cleaned segments.
