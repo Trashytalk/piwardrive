@@ -124,7 +124,30 @@ def test_read_mpu6050_success(add_dummy_module) -> None:
         _reload()
 
 
-def test_reset_orientation_map_env(monkeypatch, tmp_path) -> None:
+def test_read_mpu6050_env(monkeypatch, add_dummy_module) -> None:
+    class DummySensor:
+        def __init__(self, address: int) -> None:
+            self.address = address
+
+        def get_accel_data(self) -> dict:
+            return {"addr": self.address}
+
+        def get_gyro_data(self) -> dict:
+            return {"addr": self.address}
+
+    add_dummy_module("mpu6050", mpu6050=lambda addr: DummySensor(addr))
+    monkeypatch.setenv("PW_MPU6050_ADDR", "0x69")
+    _reload()
+    try:
+        assert osens.read_mpu6050() == {  # nosec B101
+            "accelerometer": {"addr": 0x69},
+            "gyroscope": {"addr": 0x69},
+        }
+    finally:
+        monkeypatch.delenv("PW_MPU6050_ADDR", raising=False)
+        _reload()
+
+        def test_reset_orientation_map_env(monkeypatch, tmp_path) -> None:
     file_path = tmp_path / "omap.json"
     file_path.write_text('{"normal": 1, "flip": 45}')
     monkeypatch.setenv("PW_ORIENTATION_MAP_FILE", str(file_path))

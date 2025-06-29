@@ -122,9 +122,20 @@ def get_orientation_dbus() -> Optional[str]:
 
 
 def read_mpu6050(address: int = 0x68) -> Optional[Dict[str, Any]]:
-    """Return raw accelerometer and gyroscope data from ``mpu6050`` sensor."""
+    r"""Return raw accelerometer and gyroscope data from ``mpu6050`` sensor.
+
+    The I\ :sup:`2`\ C address can be overridden via ``PW_MPU6050_ADDR``.
+    """
     if mpu6050 is None:
         return None
+
+    env_addr = os.getenv("PW_MPU6050_ADDR")
+    if env_addr:
+        try:
+            address = int(env_addr, 0)
+        except ValueError:
+            logger.error("Invalid PW_MPU6050_ADDR: %s", env_addr)
+
     try:
         sensor = mpu6050(address)
         return {

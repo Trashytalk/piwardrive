@@ -75,3 +75,21 @@ def test_read_mpu6050_success_pkg(monkeypatch):
     monkeypatch.setattr(osens, "mpu6050", lambda addr: DummySensor(addr))
     data = osens.read_mpu6050()
     assert data == {"accelerometer": {"x": 1}, "gyroscope": {"y": 2}}
+
+
+def test_read_mpu6050_env_pkg(monkeypatch):
+    class DummySensor:
+        def __init__(self, address):
+            self.address = address
+
+        def get_accel_data(self):
+            return {"addr": self.address}
+
+        def get_gyro_data(self):
+            return {"addr": self.address}
+
+    monkeypatch.setattr(osens, "mpu6050", lambda addr: DummySensor(addr))
+    monkeypatch.setenv("PW_MPU6050_ADDR", "105")
+    data = osens.read_mpu6050()
+    monkeypatch.delenv("PW_MPU6050_ADDR", raising=False)
+    assert data == {"accelerometer": {"addr": 105}, "gyroscope": {"addr": 105}}

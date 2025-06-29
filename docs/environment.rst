@@ -42,6 +42,9 @@ General
 ``PW_GPS_MOVEMENT_THRESHOLD``
     Minimum speed in m/s before fast GPS polling is used.
 
+``PW_MPU6050_ADDR``
+    I\ :sup:`2`\ C address for :func:`orientation_sensors.read_mpu6050` (default ``0x68``).
+
 ``PW_REMOTE_SYNC_URL``
     Upload endpoint for automatic database sync.
 
