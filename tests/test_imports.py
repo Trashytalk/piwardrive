@@ -16,36 +16,6 @@ MODULES = [
 def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     root = Path(__file__).resolve().parents[1]
     monkeypatch.syspath_prepend(str(root))
-    kivy_pkg = ModuleType("kivy")
-    base = ModuleType("kivy.base")
-    base.ExceptionHandler = object
-    base.ExceptionManager = type(
-        "ExceptionManager",
-        (),
-        {"PASS": "PASS", "add_handler": staticmethod(lambda *a, **k: None)},
-    )
-    factory = ModuleType("kivy.factory")
-    factory.Factory = object
-    lang = ModuleType("kivy.lang")
-    lang.Builder = object
-    props = ModuleType("kivy.properties")
-    props.BooleanProperty = lambda *a, **k: None
-    props.NumericProperty = lambda *a, **k: None
-    props.StringProperty = lambda *a, **k: None
-    props.ListProperty = lambda *a, **k: None
-    app_mod = ModuleType("kivy.app")
-    app_mod.App = type("App", (), {"get_running_app": staticmethod(lambda: None)})
-    for name, mod in {
-        "kivy.base": base,
-        "kivy.factory": factory,
-        "kivy.lang": lang,
-        "kivy.properties": props,
-        "kivy.app": app_mod,
-    }.items():
-        monkeypatch.setitem(sys.modules, name, mod)
-        setattr(kivy_pkg, name.split(".")[1], mod)
-    monkeypatch.setitem(sys.modules, "kivy", kivy_pkg)
-
     km_pkg = ModuleType("kivymd")
     km_app = ModuleType("kivymd.app")
     km_app.MDApp = type("MDApp", (), {})

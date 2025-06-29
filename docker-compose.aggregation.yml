@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  aggregation:
+    build: .
+    command: python -m piwardrive.aggregation_service
+    ports:
+      - "9100:9100"
+    volumes:
+      - ./aggregation-data:/root/piwardrive-aggregation
+  sync-receiver:
+    build: .
+    command: python sync_receiver.py
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./sync-data:/root/piwardrive-sync

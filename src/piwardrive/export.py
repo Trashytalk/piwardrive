@@ -42,25 +42,26 @@ def filter_records(
     max_age: float | None = None,
 ) -> list[dict[str, Any]]:
     """Return records matching optional SSID, encryption, signal or age filters."""
-    result: list[dict[str, Any]] = []
     now = time.time()
-    for rec in records:
+
+    def _matches(rec: Mapping[str, Any]) -> bool:
         if ssid and ssid not in (rec.get("ssid") or ""):
-            continue
+            return False
         if encryption and encryption != rec.get("encryption"):
-            continue
+            return False
         if oui and not (rec.get("bssid") or "").startswith(oui):
-            continue
+            return False
         if min_signal is not None:
             sig = rec.get("signal_dbm")
             if sig is None or float(sig) < min_signal:
-                continue
+                return False
         if max_age is not None:
             ts = rec.get("last_time")
             if ts is None or now - float(ts) > max_age:
-                continue
-        result.append(dict(rec))
-    return result
+                return False
+        return True
+
+    return [dict(r) for r in records if _matches(r)]
 
 
 def export_csv(
@@ -165,30 +166,38 @@ def export_shp(
     """Write ``rows`` to ``path`` in Shapefile format."""
     if shapefile is None:
         raise RuntimeError("pyshp is required for shapefile export")
+
     rows = list(rows)
     base = path[:-4] if path.lower().endswith(".shp") else path
-    if getattr(shapefile, "__version__", "2").startswith("1."):
-        writer = shapefile.Writer(base)
-        writer.shapeType = shapefile.POINT
-    else:
-        writer = shapefile.Writer(base, shapefile.POINT)
-    fieldnames = fields or (list(rows[0].keys()) if rows else [])
-    for name in fieldnames:
-        if name in {"lat", "lon"}:
-            continue
-        writer.field(name[:10], "C")
-    for rec in rows:
-        lat = rec.get("lat")
-        lon = rec.get("lon")
-        if lat is None or lon is None:
-            continue
-        writer.point(lon, lat)
-        record = []
-        for name in fieldnames:
+
+    def _create_writer() -> shapefile.Writer:
+        if getattr(shapefile, "__version__", "2").startswith("1."):
+            w = shapefile.Writer(base)
+            w.shapeType = shapefile.POINT
+        else:
+            w = shapefile.Writer(base, shapefile.POINT)
+        return w
+
+    def _add_fields(writer: shapefile.Writer, names: Sequence[str]) -> None:
+        for name in names:
             if name in {"lat", "lon"}:
                 continue
-            record.append(rec.get(name))
-        writer.record(*record)
+            writer.field(name[:10], "C")
+
+    def _add_records(writer: shapefile.Writer, names: Sequence[str]) -> None:
+        for rec in rows:
+            lat = rec.get("lat")
+            lon = rec.get("lon")
+            if lat is None or lon is None:
+                continue
+            writer.point(lon, lat)
+            values = [rec.get(n) for n in names if n not in {"lat", "lon"}]
+            writer.record(*values)
+
+    writer = _create_writer()
+    fieldnames = fields or (list(rows[0].keys()) if rows else [])
+    _add_fields(writer, fieldnames)
+    _add_records(writer, fieldnames)
     if hasattr(writer, "close"):
         writer.close()
     else:  # pyshp < 2
@@ -259,6 +268,26 @@ def export_map_kml(
     root = ET.Element("kml", xmlns="http://www.opengis.net/kml/2.2")
     doc = ET.SubElement(root, "Document")
 
+    def _add_point(lat: float, lon: float, name: str | None) -> None:
+        pm = ET.SubElement(doc, "Placemark")
+        if name:
+            ET.SubElement(pm, "name").text = str(name)
+        pt = ET.SubElement(pm, "Point")
+        ET.SubElement(pt, "coordinates").text = f"{lon},{lat}"
+
+    def _add_records(records: Sequence[Mapping[str, Any]], key1: str, key2: str | None = None, *, compute: bool = False) -> None:
+        for rec in records:
+            lat = rec.get("lat")
+            lon = rec.get("lon")
+            if (lat is None or lon is None) and compute:
+                loc = estimate_location_from_rssi(rec.get("observations", []))
+                if loc is not None:
+                    lat, lon = loc
+            if lat is None or lon is None:
+                continue
+            name = rec.get(key1) or (rec.get(key2) if key2 else None)
+            _add_point(lat, lon, name)
+
     if track:
         pm = ET.SubElement(doc, "Placemark")
         ET.SubElement(pm, "name").text = "Track"
@@ -266,39 +295,17 @@ def export_map_kml(
         coords = " ".join(f"{lon},{lat}" for lat, lon in track)
         ET.SubElement(line, "coordinates").text = coords
 
-    for rec in aps:
-        lat = rec.get("lat")
-        lon = rec.get("lon")
-        if (lat is None or lon is None) and compute_position:
-            loc = estimate_location_from_rssi(rec.get("observations", []))
-            if loc is not None:
-                lat, lon = loc
-        if lat is None or lon is None:
-            continue
-        pm = ET.SubElement(doc, "Placemark")
-        name = rec.get("ssid") or rec.get("bssid")
-        if name:
-            ET.SubElement(pm, "name").text = str(name)
-        pt = ET.SubElement(pm, "Point")
-        ET.SubElement(pt, "coordinates").text = f"{lon},{lat}"
+    _add_records(aps, "ssid", "bssid", compute=compute_position)
+    _add_records(bts, "name", "address")
 
-    for rec in bts:
-        lat = rec.get("lat")
-        lon = rec.get("lon")
-        if lat is None or lon is None:
-            continue
-        pm = ET.SubElement(doc, "Placemark")
-        name = rec.get("name") or rec.get("address")
-        if name:
-            ET.SubElement(pm, "name").text = str(name)
-        pt = ET.SubElement(pm, "Point")
-        ET.SubElement(pt, "coordinates").text = f"{lon},{lat}"
-
-    if path.lower().endswith(".kmz"):
+    def _write_kmz() -> None:
         with tempfile.TemporaryDirectory() as tmp:
             kml_path = os.path.join(tmp, "doc.kml")
             ET.ElementTree(root).write(kml_path, encoding="utf-8", xml_declaration=True)
             with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
                 zf.write(kml_path, "doc.kml")
+
+    if path.lower().endswith(".kmz"):
+        _write_kmz()
     else:
         ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)

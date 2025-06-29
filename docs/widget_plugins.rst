@@ -31,3 +31,33 @@ By default plugins are loaded from ``~/.config/piwardrive/plugins``. Set
 ``PIWARDIVE_PLUGIN_DIR`` to override this location before importing
 :mod:`widgets`. The value must point to a directory containing your plugin
 modules and takes precedence over the default path.
+
+Examples
+--------
+
+A simple widget showing an API request lives in
+``examples/plugins/weather_widget.py``. It queries the Open-Meteo service for
+London's current temperature and displays the result.
+Packaging for pip
+-----------------
+
+Plugins can also be distributed as a standard Python package and installed with
+``pip``.  Define an entry point under ``piwardrive.widgets`` so the loader can
+discover your widget class without copying files manually.
+
+Example project layout::
+
+    mywidget/
+    ├── pyproject.toml
+    └── mywidget
+        ├── __init__.py
+        └── plugin.py
+
+The ``pyproject.toml`` should declare the entry point group::
+
+    [project.entry-points."piwardrive.widgets"]
+    speed = "mywidget.plugin:SpeedWidget"
+
+Installing the package with ``pip install .`` registers ``SpeedWidget`` and it
+becomes available from :mod:`widgets` just like plugins placed in the local
+directory.

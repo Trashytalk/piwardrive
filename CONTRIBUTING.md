@@ -11,6 +11,10 @@ pip install -r requirements-dev.txt
 pre-commit install
 ```
 
+Some tests rely on additional scientific packages such as `numpy`, `pandas`
+and `scikit-learn`. Install them via `pip install .[tests]` (or
+`pip install -r requirements.txt`) if you plan to run the full suite.
+
 ## Running checks
 
 Use the following convenience targets during development:
@@ -19,5 +23,8 @@ Use the following convenience targets during development:
 - `make test` — run the Python test suite with pytest.
 - `make docs` — build the Sphinx documentation in `docs/_build/html`.
 - `make coverage` — generate combined Python and Node test coverage reports.
+
+During development you can automatically restart the backend service when files
+change by running `scripts/watch_service.py` (requires the `watchgod` package).
 
 Contributions should pass these checks before you submit a pull request.

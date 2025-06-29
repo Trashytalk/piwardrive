@@ -39,6 +39,7 @@ test('serves contents from PW_HEALTH_FILE', async () => {
 });
 
 test('lists available widgets', async () => {
+
   const app = createServer();
   const server = app.listen(0);
   const url = `http://127.0.0.1:${server.address().port}/api/widgets`;

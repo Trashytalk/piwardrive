@@ -55,6 +55,8 @@ npm run build
 
 The compiled assets appear in `webui/dist`. They include a service worker so the interface works offline after the first visit.
 
+Vite also emits source map files alongside the compiled scripts. Open your browser's developer tools and enable source maps to debug the original React code when using a production build.
+
 ## 5. Start the API and Dashboard
 
 Return to the repository root and run the bundled server. It serves the API under `/api` and the static files generated above at the site root:
@@ -81,6 +83,7 @@ python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypas
 ```
 
 Assign the resulting value to the environment variable before launching `piwardrive.webui_server`.
+Set `PW_WEBUI_PORT` if you need the server to listen on a different port.
 
 ## PW_API_PASSWORD_HASH and PORT
 
@@ -109,7 +112,6 @@ Example:
 PW_HEALTH_FILE=/var/log/piwardrive/health.json npm start
 ```
 
-
 ## 6. Development Mode
 
 While working on the frontend you can run the Vite development server instead of rebuilding on every change. The script name is `vite`:
@@ -133,11 +135,11 @@ The command runs `piwardrive-webui` in the background and then opens Chromium in
 
 ## 8. Serving the Build Elsewhere
 
-`piwardrive.webui_server` reads the `PW_WEBUI_DIST` environment variable to locate the build directory. You can copy `webui/dist` to another location or web server and point the variable there when starting the API:
+`piwardrive.webui_server` and the Node server both read the `PW_WEBUI_DIST` environment variable to locate the build directory. You can copy `webui/dist` to another location or web server and point the variable there when starting the API:
 
 ```bash
 export PW_WEBUI_DIST=/var/www/piwardrive
-python -m piwardrive.webui_server
+npm start  # or: python -m piwardrive.webui_server
 ```
 
 Any static web server can host the contents of `webui/dist` as long as the API is reachable.
@@ -159,10 +161,17 @@ Once these steps are complete you have a functioning browser based dashboard. Us
 `exportUtils.js` mirrors the Python helpers for exporting collected records. It can filter result sets and save them to various geospatial formats.
 
 ```javascript
-import { filterRecords, exportRecords, exportMapKml } from './src/exportUtils.js';
+import {
+  filterRecords,
+  exportRecords,
+  exportMapKml,
+} from './src/exportUtils.js';
 
 const records = [{ ssid: 'AP', bssid: 'AA', lat: 1, lon: 2 }];
-const track = [[1, 2], [3, 4]];
+const track = [
+  [1, 2],
+  [3, 4],
+];
 
 const filtered = filterRecords(records, { encryption: 'OPEN' });
 await exportRecords(filtered, 'out.csv', 'csv');
@@ -181,4 +190,3 @@ import { selfTest, rotateLog } from './src/diagnostics.js';
 const report = selfTest();
 rotateLog('/var/log/piwardrive.log');
 ```
-
