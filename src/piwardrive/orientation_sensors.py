@@ -9,8 +9,6 @@ external MPU‑6050 sensor using the optional ``mpu6050`` package.  Again,
 check for ``None`` to gracefully handle setups without these sensors.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Dict, Optional
 
