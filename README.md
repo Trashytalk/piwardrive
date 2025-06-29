@@ -480,6 +480,7 @@ prefixed with `PW_` override any option. See `docs/configuration.rst` and the
 [Configuration Overrides](docs/environment.rst#configuration-overrides) section
 for a full list. A JSON schema describing all fields is provided at
 `docs/config_schema.json`.
+Password hashing guidelines are covered in [docs/security.rst](docs/security.rst).
 
 ## Additional Documentation
 
