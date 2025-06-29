@@ -27,6 +27,9 @@ and install the helper library::
    sudo apt install python3-smbus
    pip install mpu6050
 
+Refer to :doc:`hardware_setup` for wiring diagrams of the sensor and a
+typical GPS module.
+
 Orientation Map
 ~~~~~~~~~~~~~~~
 Orientation strings returned by the helpers are mapped to rotation angles using

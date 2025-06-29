@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 import requests  # type: ignore
 
-from .error_reporting import App, format_error, report_error
+from .error_reporting import format_error, report_error
 
-__all__ = ["App", "format_error", "report_error"]
+__all__ = ["format_error", "report_error"]
 
 try:  # pragma: no cover - optional dependencies may be missing
     from .core.utils import *  # type: ignore  # noqa: F401,F403

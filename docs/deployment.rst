@@ -3,9 +3,15 @@ Deployment
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
+6. (Optional) build the React web UI and install `examples/piwardrive-webui.service` to start the API and dashboard on boot::
 
-This document outlines options for packaging PiWardrive so it can run on a dedicated device or inside a container.
-
+       cd webui
+       npm install
+       npm run build
+       sudo cp ../examples/piwardrive-webui.service /etc/systemd/system/
+       sudo systemctl enable --now piwardrive-webui.service
+7. (Optional) copy `examples/kiosk.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable kiosk.service` so Chromium launches automatically after boot.
+8. Power down, remove the card and duplicate it with `dd` or other imaging tools to deploy multiple devices.
 SD Card Image
 ~~~~~~~~~~~~~
 
@@ -24,17 +30,16 @@ SD Card Image
        pip install -r requirements.txt
 
 4. Enable ``kismet``, ``bettercap`` and ``gpsd`` so they start on boot (``systemctl enable <svc>``).
+   See :ref:`wireless-tools` for example configuration files.
 5. Grant your user permission to manage systemd units over DBus by creating a ``polkit`` rule allowing ``org.freedesktop.systemd1.manage-units``.
-6. (Optional) copy ``examples/piwardrive.service`` into ``/etc/systemd/system/``
-   and enable it with ``sudo systemctl enable --now piwardrive.service`` to
-   autostart ``piwardrive-service``.
-7. (Optional) compile the React web UI and serve it with ``piwardrive.webui_server``::
+6. (Optional) build the React web UI and install `examples/piwardrive-webui.service` to start the API and dashboard on boot::
 
        cd webui
        npm install
        npm run build
-       python -m piwardrive.webui_server
-Copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service` to run the dashboard on boot.
+       sudo cp ../examples/piwardrive-webui.service /etc/systemd/system/
+       sudo systemctl enable --now piwardrive-webui.service
+7. (Optional) copy `examples/kiosk.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable kiosk.service` so Chromium launches automatically on boot.
 8. Power down, remove the card and duplicate it with ``dd`` or other imaging tools to deploy multiple devices.
 
 Docker Container
@@ -42,7 +47,7 @@ Docker Container
 
 1. Start from ``python:3.10-bullseye`` and install the same system packages with ``apt``.
 2. Copy the project into ``/app`` and run ``pip install -r requirements.txt``.
-3. Set ``WORKDIR /app`` and define ``CMD ["piwardrive-service"]``.
+3. Set ``WORKDIR /app`` and define ``CMD ["piwardrive-webui"]``.
 4. Map the host's USB devices (Wi‑Fi adapter, GPS dongle) into the container when running ``docker run``.
 5. Persist ``~/.config/piwardrive`` with a volume so logs and configuration survive container restarts.
 6. After building the image with ``docker build``, tag it and push to your registry::

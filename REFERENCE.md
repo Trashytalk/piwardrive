@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `piwardrive
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. Kivy/KivyMD remains available for touchscreen deployments but the web UI is now the default. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy Kivy interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -52,9 +52,7 @@ cd ~/piwardrive
 source gui-env/bin/activate
 piwardrive
 ```
-The UI renders directly to the framebuffer without X. Use the top tabs to switch between Map, Stats, Split, Console, Settings and Dashboard screens. Widgets can be dragged on the Dashboard and their layout is persisted.
-
-## Widgets and Plugins
+Open the dashboard at ``http://localhost:8000`` in a browser after starting ``piwardrive-webui``.
 
 Dashboard widgets display metrics such as CPU temperature, handshake counts and service status. Custom widgets may be placed in `~/.config/piwardrive/plugins` and are discovered automatically at startup. Each widget subclasses `widgets.base.DashboardWidget` and implements an `update()` method. A built-in battery widget is available when the hardware exposes charge information.
 See `docs/widget_plugins.rst` for the expected directory structure.
@@ -67,23 +65,24 @@ The `diagnostics` module gathers system metrics and rotates logs according to th
 
 Running `piwardrive-service` starts a FastAPI server on `0.0.0.0:8000`. The `/status` endpoint returns recent health records and `/logs` tails the configured log file (`app.log` by default). Set `PW_API_PASSWORD_HASH` to require HTTP basic authentication. The optional React frontend under `webui/` consumes this API and can be built with `npm run build`.
 
-
 ## GPS and Bluetooth Polling
 
 The application polls `gpsd` at a configurable interval, increasing the delay when movement stops to conserve power. Bluetooth scanning is also optional and can be toggled or scheduled via configuration variables.
 
 ## Mobile Builds
 
-PiWardrive no longer distributes helper scripts or configuration for building mobile packages. Previous Buildozer and `kivy-ios` setups have been removed.
+PiWardrive no longer distributes helper scripts or configuration for building mobile packages. The former Kivy-based tooling has been removed.
 
 ## Building the CKML Extension
 
 The project includes small C extensions `ckml` and `cgeom`. Build them with:
+
 ```bash
 pip install build
 python -m build
 pip install dist/*.whl
 ```
+
 See `docs/ckml_build.rst` for troubleshooting compiler issues.
 
 ## R Integration
@@ -109,8 +108,7 @@ The `docs/` directory contains mermaid diagrams showing scanning, logging and di
 
 ## SIGINT Suite
 
-Under `src/piwardrive/sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `src/piwardrive/sigint_suite/scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `src/piwardrive/sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python ``bleak`` library are installed (`./src/piwardrive/sigint_suite/scripts/setup_all.sh` can install them).
-
+Under `src/piwardrive/sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `src/piwardrive/sigint_suite/scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `src/piwardrive/sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python `bleak` library are installed (`./src/piwardrive/sigint_suite/scripts/setup_all.sh` can install them).
 
 ## Environment Variables
 
@@ -193,16 +191,16 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 
 Several entry points are installed with the package:
 
-- ``piwardrive-prefetch`` – Download map tiles for a bounding box without starting the GUI. Example::
+- `piwardrive-prefetch` – Download map tiles for a bounding box without starting the GUI. Example::
 
-    piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
+  piwardrive-prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
 
-- ``piwardrive-prefetch-batch`` – Prefetch tiles for multiple bounding boxes from a file.
+- `piwardrive-prefetch-batch` – Prefetch tiles for multiple bounding boxes from a file.
 
-- ``service-status`` – Print the systemd state of ``gpsd``, ``kismet`` and ``bettercap``.
-- ``piwardrive-service`` – Launch the FastAPI status server (equivalent to ``python -m piwardrive.service``).
+- `service-status` – Print the systemd state of `gpsd`, `kismet` and `bettercap`.
+- `piwardrive-service` – Launch the FastAPI status server (equivalent to `python -m piwardrive.service`).
 
-Use ``--help`` on each command for additional options.
+Use `--help` on each command for additional options.
 
 ## Security
 
@@ -210,16 +208,15 @@ Password helpers in :mod:`security` derive a PBKDF2-HMAC-SHA256 hash with a rand
 
     python -c "import security,sys; print(security.hash_password(sys.argv[1]))" mypass
 
-Store the resulting hash in ``config.json`` or ``PW_ADMIN_PASSWORD_HASH`` and avoid committing plaintext secrets. ``verify_password`` recomputes the hash and returns ``True`` only on success.
-
+Store the resulting hash in `config.json` or `PW_ADMIN_PASSWORD_HASH` and avoid committing plaintext secrets. `verify_password` recomputes the hash and returns `True` only on success.
 
 ## Additional Features
 
 New modules extend PiWardrive with optional capabilities:
 
 - `remote_sync` – upload the SQLite database to a remote server using
-  ``remote_sync.sync_database_to_server``.  Configure ``remote_sync_url``,
-  ``remote_sync_timeout``, ``remote_sync_retries`` and ``remote_sync_interval`` in ``config.json``.
+  `remote_sync.sync_database_to_server`. Configure `remote_sync_url`,
+  `remote_sync_timeout`, `remote_sync_retries` and `remote_sync_interval` in `config.json`.
 - `vector_tiles` – load offline vector map tiles from MBTiles files.
 - `vector_tile_customizer` – build and style MBTiles for offline use.
 - `network_analytics` – heuristics to flag suspicious Wi‑Fi access points, such
@@ -232,7 +229,7 @@ New modules extend PiWardrive with optional capabilities:
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
 - `vehicle_sensors` – read speed, RPM and engine load from an OBD‑II adapter.
 - `orientation_sensors` – track device orientation via DBus
-  (``iio-sensor-proxy``) or an MPU‑6050 sensor. Functions return ``None`` when
+  (`iio-sensor-proxy`) or an MPU‑6050 sensor. Functions return `None` when
   the optional dependencies are missing.
 - `setup_wizard` – interactive configuration for external services.
 
