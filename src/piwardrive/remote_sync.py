@@ -15,6 +15,9 @@ aiohttp = _impl.aiohttp
 tempfile = _impl.tempfile
 json = _impl.json
 
+enable_metrics = _impl.enable_metrics
+get_metrics = _impl.get_metrics
+
 # Public logger instance used by the implementation.
 logger = _impl.logger
 
