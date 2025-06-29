@@ -7,7 +7,12 @@ import logging
 import os
 import time
 from functools import lru_cache
-from typing import TYPE_CHECKING, Dict, NoReturn, Optional
+from typing import TYPE_CHECKING, Any, Dict, NoReturn, Optional, cast
+
+try:
+    import requests
+except Exception:  # pragma: no cover - missing dependency
+    requests = cast(Any, None)
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from requests import Response
@@ -15,10 +20,6 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
 try:  # pragma: no cover - optional dependency
     from piwardrive.utils import HTTP_SESSION, robust_request
 except Exception:  # pragma: no cover - minimal fallback
-    try:
-        import requests
-    except Exception:  # pragma: no cover - missing dependency
-        requests = None
     if requests is not None:
         HTTP_SESSION = requests.Session()
 
@@ -44,14 +45,10 @@ except Exception:  # pragma: no cover - minimal fallback
 
         HTTP_SESSION = _DummySession()
 
-        def robust_request(_url: str) -> NoReturn:  # pragma: no cover - simple stub
+        def robust_request(url: str) -> "Response":  # pragma: no cover - simple stub
             raise RuntimeError("HTTP session unavailable")
 
 else:  # pragma: no cover - optional dependency available
-    try:
-        import requests
-    except Exception:  # pragma: no cover - missing dependency
-        requests = None
     if requests is not None:
         HTTP_SESSION = requests.Session()
 
