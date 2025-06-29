@@ -46,6 +46,7 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    cli_tools
    drone_mapping
    r_integration
+   grafana
     web_ui
     faq
     legal

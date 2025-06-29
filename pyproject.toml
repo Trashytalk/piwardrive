@@ -56,6 +56,7 @@ export-log-bundle = "piwardrive.scripts.export_log_bundle:main"
 piwardrive-maintain-tiles = "piwardrive.scripts.tile_maintenance_cli:main"
 export-gpx = "piwardrive.scripts.export_gpx:main"
 export-shp = "piwardrive.scripts.export_shp:main"
+export-grafana = "piwardrive.scripts.export_grafana:main"
 
 [project.optional-dependencies]
 c-extensions = [
