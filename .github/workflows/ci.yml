@@ -34,6 +34,20 @@ jobs:
           npm ci
           npm run build
 
+      - name: Run frontend tests
+        working-directory: webui
+        run: npm run test
+
+      - name: Generate coverage badge
+        working-directory: webui
+        run: npm run badge
+
+      - name: Commit coverage badge
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'webui/badges/coverage.svg'
+          message: 'Update coverage badge'
+
       - name: Run pre-commit
         run: pre-commit run --all-files
 
