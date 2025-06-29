@@ -1,6 +1,8 @@
 # PiWardrive
 
 [![codecov](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg)](https://codecov.io/gh/TRASHYTALK/piwardrive)
+[![Backend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/TRASHYTALK/piwardrive)
+[![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/TRASHYTALK/piwardrive)
 
 PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
 
@@ -196,7 +198,6 @@ source gui-env/bin/activate
 
 8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
-
    ```bash
    sudo cp examples/piwardrive-webui.service /etc/systemd/system/
    sudo systemctl enable --now piwardrive-webui.service
@@ -207,6 +208,7 @@ source gui-env/bin/activate
    ```bash
    piwardrive-webui
    ```
+
 #### Optional Dependencies
 
 Some components rely on additional Python packages. Install them only if you need the corresponding feature:
