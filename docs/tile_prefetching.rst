@@ -7,16 +7,16 @@ The diagram below illustrates how PiWardrive predicts upcoming map tiles based o
 
 .. mermaid::
 
-   sequenceDiagram
-       participant MapScreen
-       participant RoutePrefetcher
-       participant Tiles
-       participant TileMaintainer
+    sequenceDiagram
+        participant MapScreen
+        participant RoutePrefetcher
+        participant Tiles
+        participant TileMaintainer
 
-       MapScreen->>MapScreen: store GPS in track_points
-       MapScreen->>RoutePrefetcher: _predict_points()
-       RoutePrefetcher-->>MapScreen: heading + destination
-       MapScreen->>Tiles: prefetch_tiles()
-       Tiles-->>MapScreen: tile images
-       MapScreen->>TileMaintainer: enforce_cache_limit()
+        MapScreen->>MapScreen: store GPS in map_screen.track_points
+        MapScreen->>RoutePrefetcher: _predict_points()
+        RoutePrefetcher-->>MapScreen: heading + destination
+        MapScreen->>Tiles: map_screen.prefetch_tiles()
+        Tiles-->>MapScreen: tile images
+        MapScreen->>TileMaintainer: enforce_cache_limit()
 
