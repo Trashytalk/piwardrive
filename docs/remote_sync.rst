@@ -114,3 +114,11 @@ Example invocation::
         --url http://10.0.0.2:9000/ \
         --services piwardrive piwardrive-webui
 
+Collecting Metrics
+------------------
+
+Set the environment variable ``PW_REMOTE_SYNC_METRICS=1`` or call
+``remote_sync.enable_metrics()`` to track upload statistics. When
+enabled, ``remote_sync.get_metrics()`` returns ``success_total`` and
+``failure_total`` counters along with the duration of the last sync.
+

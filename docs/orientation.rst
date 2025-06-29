@@ -53,7 +53,9 @@ Running ``calibrate_orientation.py``
 0°, 90°, 180° and 270°.  The resulting mapping is written to
 ``orientation_map.json`` and can be applied with
 :func:`orientation_sensors.update_orientation_map`.  See
-``examples/orientation_map.json`` for a typical mapping.
+``examples/orientation_map.json`` for a typical mapping. ``examples/orientation_sensors.json``
+illustrates common sensor settings like enabling DBus, selecting the
+MPU‑6050 address and referencing the mapping file.
 
 Use the command installed with the package or execute the script from the
 repository root::
@@ -100,3 +102,12 @@ Load this mapping in your application and activate it with
 
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
+
+Orientation Map Endpoint
+~~~~~~~~~~~~~~~~~~~~~~~~
+The Node-based web server exposes ``/api/orientation-map`` which simply
+returns the mapping produced by
+``orientation_sensors.clone_orientation_map()``.  This allows other
+services to retrieve the currently active orientation mapping via HTTP::
+
+   curl http://localhost:8000/api/orientation-map

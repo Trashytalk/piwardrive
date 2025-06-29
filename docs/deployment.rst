@@ -51,3 +51,35 @@ Docker Container
        docker push myuser/piwardrive:latest
 
 Both approaches produce a self-contained environment ready to capture Wi‑Fi and GPS data with minimal setup on new hardware.
+
+Web UI Container
+~~~~~~~~~~~~~~~~
+
+``Dockerfile.webui`` builds the React dashboard and launches ``server/index.js``. Build it with::
+
+    docker build -f Dockerfile.webui -t piwardrive-webui .
+
+Run the container exposing port 8000::
+
+    docker run --rm -p 8000:8000 piwardrive-webui
+
+Set ``PW_API_PASSWORD_HASH`` and ``PORT`` as needed when running ``docker run``.
+
+
+Editing service.py
+~~~~~~~~~~~~~~~~~~
+The API endpoints for PiWardrive live in ``src/piwardrive/service.py``.  Routes
+are registered with helper decorators like ``GET`` and ``POST`` which wrap
+the underlying FastAPI application.  Add your own async function and decorate
+it to expose a new endpoint.
+
+Example
+-------
+Adding a ``/hello`` route that returns a greeting::
+
+    @GET("/hello")
+    async def hello() -> dict[str, str]:
+        return {"message": "Hello world"}
+
+Restart ``piwardrive-service`` after saving the file so the new route is
+available.
