@@ -29,6 +29,13 @@ test('serves contents from PW_HEALTH_FILE', async () => {
   }
 });
 
+test('serves orientation map', async () => {
+  const prevPath = process.env.PYTHONPATH;
+  process.env.PYTHONPATH = path.join(__dirname, '..', 'src');
+  const app = createServer();
+  const server = app.listen(0);
+  const url = `http://127.0.0.1:${server.address().port}/api/orientation-map`;
+
 function loadWidgets() {
   const script = path.join(__dirname, '..', 'server', 'parse_widgets.py');
   const file = path.join(__dirname, '..', 'src', 'piwardrive', 'widgets', '__init__.py');
@@ -46,6 +53,19 @@ test('serves widget list', async () => {
     const res = await fetch(url);
     assert.equal(res.status, 200);
     const data = await res.json();
+    const { spawnSync } = require('child_process');
+    const script =
+      'import json, piwardrive.orientation_sensors as os; print(json.dumps(list(os.DEFAULT_ORIENTATION_MAP.keys())))';
+    const proc = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+    assert.equal(proc.status, 0, proc.stderr);
+    const keys = JSON.parse(proc.stdout);
+    for (const key of keys) {
+      assert.ok(Object.prototype.hasOwnProperty.call(data, key));
+    }
+  } finally {
+    server.close();
+    if (prevPath === undefined) delete process.env.PYTHONPATH;
+    else process.env.PYTHONPATH = prevPath;
     assert.deepStrictEqual(data.widgets, loadWidgets());
   } finally {
     server.close();
