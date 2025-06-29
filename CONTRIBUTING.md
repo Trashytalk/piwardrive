@@ -18,5 +18,6 @@ Use the following convenience targets during development:
 - `make lint` — run pre-commit on all files.
 - `make test` — run the Python test suite with pytest.
 - `make docs` — build the Sphinx documentation in `docs/_build/html`.
+- `make coverage` — generate combined Python and Node test coverage reports.
 
 Contributions should pass these checks before you submit a pull request.
