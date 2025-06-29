@@ -4,7 +4,15 @@ import os
 import re
 from typing import Any, List
 
-from piwardrive.simpleui import DropdownMenu, Label, ScrollView
+from piwardrive.simpleui import Label, ScrollView
+
+try:
+    from piwardrive.utils import tail_file
+except Exception:  # pragma: no cover - optional dependency
+
+    def tail_file(path: str, lines: int = 50) -> list[str]:
+        return []
+
 
 try:  # pragma: no cover - optional App stub for tests
     from piwardrive.simpleui import App as _SimpleApp  # type: ignore
@@ -17,7 +25,6 @@ except Exception:  # pragma: no cover - fallback when missing
 
 
 App = _SimpleApp
-from piwardrive.utils import tail_file
 
 
 class LogViewer(ScrollView):
@@ -42,7 +49,7 @@ class LogViewer(ScrollView):
         self.bind(filter_regex=self._compile_filter)
         self.bind(error_regex=self._compile_error)
         self.log_paths = [self.log_path]
-        self._menu: MDDropdownMenu | None = None
+        self._menu: Any | None = None
 
     def _compile_filter(self, *_args: Any) -> None:
         self._filter_re = re.compile(self.filter_regex) if self.filter_regex else None
@@ -84,10 +91,8 @@ class LogViewer(ScrollView):
         """Display a dropdown menu to select ``log_path``."""
         app = App.get_running_app()
         paths = getattr(app, "log_paths", self.log_paths)
-        try:  # pragma: no cover - prefer real KivyMD menu if available
-            from kivymd.uix.menu import MDDropdownMenu  # type: ignore
-        except Exception:  # pragma: no cover - fallback stub
-            from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
+        from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
+
         items = [
             {
                 "text": os.path.basename(p),

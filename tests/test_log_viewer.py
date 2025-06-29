@@ -4,8 +4,6 @@ import os
 import sys
 from types import ModuleType, SimpleNamespace
 
-import pytest
-
 modules = {
     "kivy": ModuleType("kivy"),
     "kivy.app": ModuleType("kivy.app"),
@@ -97,9 +95,21 @@ aiohttp_mod.ClientSession = object
 aiohttp_mod.ClientTimeout = lambda *a, **k: None
 aiohttp_mod.ClientError = Exception
 sys.modules["aiohttp"] = aiohttp_mod
-from typing import Any
+utils_mod = ModuleType("piwardrive.utils")
+from pathlib import Path  # noqa: E402
 
-from piwardrive.widgets.log_viewer import LogViewer
+utils_mod.tail_file = (
+    lambda path, lines=50: Path(path).read_text().splitlines()[-lines:]
+)
+sys.modules.pop("piwardrive.utils", None)
+sys.modules["piwardrive.utils"] = utils_mod
+from typing import Any  # noqa: E402
+
+import piwardrive.simpleui as simpleui  # noqa: E402
+
+sys.modules.pop("piwardrive.widgets.log_viewer", None)
+import piwardrive.widgets.log_viewer as log_viewer  # noqa: E402,F401
+from piwardrive.widgets.log_viewer import LogViewer  # noqa: E402
 
 
 def test_log_viewer_filter_regex(tmp_path: Any) -> None:
@@ -107,7 +117,7 @@ def test_log_viewer_filter_regex(tmp_path: Any) -> None:
     log.write_text("INFO ok\nERROR bad\nDEBUG meh\n")
     lv = LogViewer(log_path=str(log), max_lines=10, filter_regex="ERROR")
     lv._refresh(0)
-    assert lv.label.text.strip() == "ERROR bad"
+    assert lv.label.text.strip() == "ERROR bad"  # nosec B101
 
 
 def test_log_viewer_no_filter(tmp_path: Any) -> None:
@@ -115,17 +125,15 @@ def test_log_viewer_no_filter(tmp_path: Any) -> None:
     log.write_text("A\nB\n")
     lv = LogViewer(log_path=str(log), max_lines=10)
     lv._refresh(0)
-    assert lv.label.text.strip() == "A\nB"
+    assert lv.label.text.strip() == "A\nB"  # nosec B101
 
 
 def test_log_viewer_path_menu(monkeypatch: Any) -> None:
     app = SimpleNamespace(log_paths=["/a", "/b"])
-    monkeypatch.setattr(
-        "piwardrive.widgets.log_viewer.App.get_running_app", lambda: app
-    )
+    monkeypatch.setattr(log_viewer.App, "get_running_app", lambda: app)
     lv = LogViewer()
     lv.show_path_menu(None)
-    items = DummyMenu.kwargs["items"]
-    assert items[0]["text"] == "a"
+    items = simpleui.DropdownMenu.kwargs["items"]
+    assert items[0]["text"] == "a"  # nosec B101
     items[1]["on_release"]()
-    assert lv.log_path == "/b"
+    assert lv.log_path == "/b"  # nosec B101

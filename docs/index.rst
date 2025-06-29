@@ -40,7 +40,6 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    deployment
    workflows
    ckml_build
-   mobile_build
    cli_tools
    drone_mapping
    r_integration
