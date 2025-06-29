@@ -316,3 +316,32 @@ def test_sync_database_exponential_backoff(monkeypatch):
 
     assert calls == ["http://remote", "http://remote", "http://remote"]
     assert sleeps == [1.0, 2.0]
+
+
+def test_sync_metrics_success(monkeypatch):
+    rs.enable_metrics(True)
+    calls = []
+    prepare(monkeypatch, calls)
+    monkeypatch.setattr(rs.asyncio, "sleep", lambda _d: None)
+    asyncio.run(rs.sync_database_to_server("db", "http://remote", retries=1))
+    metrics = rs.get_metrics()
+    assert metrics["success_total"] >= 1
+    assert metrics["failure_total"] == 0
+    assert metrics["last_duration"] >= 0.0
+
+
+def test_sync_metrics_failure(monkeypatch):
+    rs.enable_metrics(True)
+    calls = []
+    prepare(monkeypatch, calls)
+
+    class FailSess(DummySession):
+        def post(self, url, data=None):
+            raise rs.aiohttp.ClientError("boom")
+
+    monkeypatch.setattr(rs.aiohttp, "ClientSession", lambda *a, **_k: FailSess(calls))
+    monkeypatch.setattr(rs.asyncio, "sleep", lambda _d: None)
+    with pytest.raises(rs.aiohttp.ClientError):
+        asyncio.run(rs.sync_database_to_server("db", "http://remote", retries=1))
+    metrics = rs.get_metrics()
+    assert metrics["failure_total"] >= 1

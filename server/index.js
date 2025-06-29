@@ -70,6 +70,21 @@ function createServer(opts = {}) {
     res.json({ widgets: parseWidgets() });
   });
 
+  app.get('/api/orientation-map', (req, res) => {
+    const script =
+      "import json, piwardrive.orientation_sensors as os; print(json.dumps(os.clone_orientation_map()))";
+    try {
+      const { spawnSync } = require('child_process');
+      const proc = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+      if (proc.status !== 0) {
+        throw new Error(proc.stderr.trim() || 'failed');
+      }
+      res.json(JSON.parse(proc.stdout));
+    } catch (err) {
+      res.status(500).json({ error: 'orientation map unavailable' });
+    }
+  });
+
   return app;
 }
 
