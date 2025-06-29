@@ -45,5 +45,9 @@ Docker Container
 3. Set ``WORKDIR /app`` and define ``CMD ["piwardrive-service"]``.
 4. Map the host's USB devices (Wi‑Fi adapter, GPS dongle) into the container when running ``docker run``.
 5. Persist ``~/.config/piwardrive`` with a volume so logs and configuration survive container restarts.
+6. After building the image with ``docker build``, tag it and push to your registry::
+
+       docker tag <IMAGE_ID> myuser/piwardrive:latest
+       docker push myuser/piwardrive:latest
 
 Both approaches produce a self-contained environment ready to capture Wi‑Fi and GPS data with minimal setup on new hardware.
