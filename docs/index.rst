@@ -19,6 +19,7 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    security
    environment
    widgets
+   widget_plugins
    diagnostics
    persistence
    gps_polling
