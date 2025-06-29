@@ -48,7 +48,8 @@ Client Configuration
 2. ``remote_sync_timeout`` and ``remote_sync_retries`` control how long PiWardrive
    waits for a response and how many times it retries on failure.
    ``remote_sync_interval`` schedules automatic uploads when greater than
-   ``0`` and represents the frequency in minutes.
+   ``0`` and represents the frequency in minutes.  See
+   ``examples/remote_sync.json`` for a snippet with common values.
 3. Restart PiWardrive or reload the configuration to apply the changes.
 
 Uploading Data

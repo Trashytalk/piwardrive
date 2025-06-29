@@ -22,9 +22,19 @@ repos:
       - id: bandit
   - repo: local
     hooks:
+      - id: check-locales
+        name: verify locale synchronization
+        entry: python scripts/check_locales_sync.py
+        language: system
+        types: [json]
       - id: pytest
         name: pytest
         entry: pytest
         language: system
         types: [python]
         args: ["-q"]
+      - id: npm-lint
+        name: npm lint
+        entry: bash -c "cd webui && npm run lint"
+        language: system
+        pass_filenames: false

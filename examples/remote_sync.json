@@ -1,0 +1,7 @@
+{
+    "remote_sync_url": "http://10.0.0.2:9000/",
+    "remote_sync_token": "",
+    "remote_sync_timeout": 10,
+    "remote_sync_retries": 5,
+    "remote_sync_interval": 60
+}
