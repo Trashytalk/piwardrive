@@ -52,7 +52,8 @@ Running ``calibrate_orientation.py``
 ``calibrate-orientation`` guides you through positioning the device at
 0°, 90°, 180° and 270°.  The resulting mapping is written to
 ``orientation_map.json`` and can be applied with
-:func:`orientation_sensors.update_orientation_map`.
+:func:`orientation_sensors.update_orientation_map`.  See
+``examples/orientation_map.json`` for a typical mapping.
 
 Use the command installed with the package or execute the script from the
 repository root::
