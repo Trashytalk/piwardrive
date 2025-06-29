@@ -12,6 +12,11 @@ Run the server with::
 
     python -m piwardrive.aggregation_service
 
+``docker-compose.aggregation.yml`` launches the aggregation service together
+with a simple sync receiver. Start both with::
+
+    docker compose -f docker-compose.aggregation.yml up
+
 By default data is stored under ``~/piwardrive-aggregation``.  Set the
 ``PW_AGG_DIR`` environment variable to change the location.
 
