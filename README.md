@@ -139,7 +139,16 @@ sudo apt install -y r-base r-base-dev
 
 ```
 
-You can run `scripts/quickstart.sh` to install system packages and create the virtual environment automatically.
+
+#### Quickstart Script
+
+You can run `scripts/quickstart.sh` from the project root to install system
+packages and create the virtual environment automatically:
+
+```bash
+scripts/quickstart.sh
+source gui-env/bin/activate
+```
 
 #### Step-by-Step Setup
 
