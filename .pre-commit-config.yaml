@@ -33,3 +33,8 @@ repos:
         language: system
         types: [python]
         args: ["-q"]
+      - id: npm-lint
+        name: npm lint
+        entry: bash -c "cd webui && npm run lint"
+        language: system
+        pass_filenames: false
