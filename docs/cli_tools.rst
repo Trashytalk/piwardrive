@@ -77,9 +77,14 @@ Several helper scripts are installed alongside the React dashboard. They can be 
 
         piwardrive-maintain-tiles --purge --max-age-days 7
 
-``export-shp``
-    Write saved access points to a Shapefile::
+``health-stats``
+    Compute average CPU temperature, usage and other metrics from recent
+    records::
 
-        export-shp aps.shp
+        health-stats --limit 20
+
+    The command prints JSON with ``temp_avg``, ``cpu_avg``, ``mem_avg`` and
+    ``disk_avg`` values.
+
 
 See ``--help`` on each command for additional options.
