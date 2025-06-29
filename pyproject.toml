@@ -18,6 +18,18 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [{name = "PiWardrive contributors"}]
+keywords = ["war-driving", "wireless", "raspberry pi", "mapping"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Utilities",
+]
 
 [project.scripts]
 piwardrive-service = "piwardrive.service:main"
@@ -38,6 +50,12 @@ calibrate-orientation = "piwardrive.scripts.calibrate_orientation:main"
 piwardrive-kiosk = "piwardrive.cli.kiosk:main"
 export-log-bundle = "piwardrive.scripts.export_log_bundle:main"
 piwardrive-maintain-tiles = "piwardrive.scripts.tile_maintenance_cli:main"
+
+[project.optional-dependencies]
+c-extensions = [
+    "orjson",
+    "ujson",
+]
 
 
 
