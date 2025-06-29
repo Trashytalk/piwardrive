@@ -57,6 +57,34 @@ General
 ``PW_REMOTE_SYNC_INTERVAL``
     How often to upload the database in minutes. ``0`` disables scheduling.
 
+Remote Sync Variables
+---------------------
+
+The variables above control automatic uploads of the health database.  Their
+defaults are summarised below.  See :doc:`remote_sync` for a full setup guide.
+
+.. list-table:: ``PW_REMOTE_SYNC_*`` variables
+   :header-rows: 1
+
+   * - Variable
+     - Purpose
+     - Default
+   * - ``PW_REMOTE_SYNC_URL``
+     - Upload endpoint for automatic database sync
+     - ``""``
+   * - ``PW_REMOTE_SYNC_TOKEN``
+     - Bearer token sent with uploads when defined
+     - ``""``
+   * - ``PW_REMOTE_SYNC_TIMEOUT``
+     - Timeout in seconds for ``sync_database_to_server``
+     - ``5``
+   * - ``PW_REMOTE_SYNC_RETRIES``
+     - Number of attempts made when uploads fail
+     - ``3``
+   * - ``PW_REMOTE_SYNC_INTERVAL``
+     - How often to upload the database in minutes
+     - ``60``
+
 Configuration Overrides
 -----------------------
 
