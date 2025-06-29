@@ -71,7 +71,7 @@ Run the container exposing port 8000::
 
     docker run --rm -p 8000:8000 piwardrive-webui
 
-Set ``PW_API_PASSWORD_HASH`` and ``PORT`` as needed when running ``docker run``.
+Set ``PW_API_PASSWORD_HASH``, ``PW_CORS_ORIGINS`` and ``PORT`` as needed when running ``docker run``.
 
 
 tmux or screen
