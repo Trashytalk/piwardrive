@@ -100,3 +100,12 @@ Load this mapping in your application and activate it with
 
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
+
+Orientation Map Endpoint
+~~~~~~~~~~~~~~~~~~~~~~~~
+The Node-based web server exposes ``/api/orientation-map`` which simply
+returns the mapping produced by
+``orientation_sensors.clone_orientation_map()``.  This allows other
+services to retrieve the currently active orientation mapping via HTTP::
+
+   curl http://localhost:8000/api/orientation-map
