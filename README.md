@@ -196,17 +196,17 @@ source gui-env/bin/activate
 
 8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
+
    ```bash
-   sudo cp examples/piwardrive.service /etc/systemd/system/
-   sudo systemctl enable --now piwardrive.service
+   sudo cp examples/piwardrive-webui.service /etc/systemd/system/
+   sudo systemctl enable --now piwardrive-webui.service
    ```
 
 9. Start the application manually if the service is not enabled:
 
    ```bash
-   piwardrive-service
+   piwardrive-webui
    ```
-
 #### Optional Dependencies
 
 Some components rely on additional Python packages. Install them only if you need the corresponding feature:
@@ -399,7 +399,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/piwardrive
-ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-service
+ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-webui
 Restart=on-failure
 
 [Install]
@@ -447,7 +447,7 @@ WantedBy=multi-user.target
    Type=simple
    User=pi
    WorkingDirectory=/home/pi/piwardrive
-   ExecStart=/home/pi/piwardrive/venv/bin/uvicorn piwardrive.webui_server:app --reload
+   ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-webui
    Restart=on-failure
 
    [Install]
@@ -458,12 +458,12 @@ WantedBy=multi-user.target
 
    ```bash
    sudo systemctl enable kiosk.service
-   sudo systemctl enable piwardrive.service  # optional
+   sudo systemctl enable piwardrive-webui.service  # optional
    sudo reboot
    ```
 
 7. **Verification**
-   After reboot, Chromium should launch automatically in full-screen kiosk mode displaying the PiWardrive dashboard. If it does not, check the service logs with `journalctl -u kiosk.service` and `journalctl -u piwardrive.service`.
+   After reboot, Chromium should launch automatically in full-screen kiosk mode displaying the PiWardrive dashboard. If it does not, check the service logs with `journalctl -u kiosk.service` and `journalctl -u piwardrive-webui.service`.
 
 ## Mobile Builds
 
@@ -493,6 +493,9 @@ Install the development dependencies and run the tests:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+# Some tests rely on additional scientific libraries such as `numpy`.
+# Install them with the optional `tests` extras if needed:
+# pip install .[tests]
 pre-commit run --all-files
 pytest
 ```

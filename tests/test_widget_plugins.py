@@ -5,9 +5,8 @@ import sys
 from pathlib import Path
 
 
-def _setup_kivy(add_dummy_module):
-    add_dummy_module("kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {}))
-    add_dummy_module("kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {}))
+def _setup_env() -> None:
+    pass
 
 
 def _build_c_plugin(plugin_dir: Path) -> None:
@@ -70,8 +69,8 @@ def _build_c_plugin(plugin_dir: Path) -> None:
     )
 
 
-def test_plugin_discovery(tmp_path, monkeypatch, add_dummy_module):
-    _setup_kivy(add_dummy_module)
+def test_plugin_discovery(tmp_path, monkeypatch):
+    _setup_env()
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
     plugin_file = plugin_dir / "my_widget.py"
@@ -88,8 +87,8 @@ def test_plugin_discovery(tmp_path, monkeypatch, add_dummy_module):
     assert "ExtraWidget" in widgets.__all__
 
 
-def test_cython_pyo3_plugin(tmp_path, monkeypatch, add_dummy_module):
-    _setup_kivy(add_dummy_module)
+def test_cython_pyo3_plugin(tmp_path, monkeypatch):
+    _setup_env()
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
     _build_c_plugin(plugin_dir)
@@ -101,8 +100,8 @@ def test_cython_pyo3_plugin(tmp_path, monkeypatch, add_dummy_module):
     assert "CWidget" in widgets.__all__
 
 
-def test_load_error(tmp_path, monkeypatch, add_dummy_module):
-    _setup_kivy(add_dummy_module)
+def test_load_error(tmp_path, monkeypatch):
+    _setup_env()
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
     broken = plugin_dir / "broken.so"
