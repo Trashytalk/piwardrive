@@ -1,10 +1,9 @@
 """Tests for the log viewer widget."""
 
+import logging
 import os
 import sys
 from types import ModuleType, SimpleNamespace
-
-import pytest
 
 modules = {
     "kivy": ModuleType("kivy"),
@@ -16,6 +15,7 @@ modules = {
     "kivy.uix.behaviors": ModuleType("kivy.uix.behaviors"),
     "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
     "kivymd.uix.menu": ModuleType("kivymd.uix.menu"),
+    "piwardrive.utils": ModuleType("piwardrive.utils"),
 }
 
 
@@ -83,6 +83,10 @@ modules["kivy.uix.scrollview"].ScrollView = _ScrollView
 modules["kivy.uix.behaviors"].DragBehavior = type("DragBehavior", (), {})
 modules["kivymd.uix.boxlayout"].MDBoxLayout = object
 modules["kivymd.uix.menu"].MDDropdownMenu = DummyMenu
+modules["piwardrive.utils"].tail_file = (
+    lambda path, n: open(path).read().splitlines()[-n:]
+)
+modules["piwardrive.utils"].report_error = lambda msg: logging.error(msg)
 modules["kivy"].__path__ = []
 modules["kivy"].app = modules["kivy.app"]
 modules["kivy"].clock = modules["kivy.clock"]
@@ -122,6 +126,10 @@ def test_log_viewer_path_menu(monkeypatch: Any) -> None:
     app = SimpleNamespace(log_paths=["/a", "/b"])
     monkeypatch.setattr(
         "piwardrive.widgets.log_viewer.App.get_running_app", lambda: app
+    )
+    monkeypatch.setattr(
+        "piwardrive.widgets.log_viewer.DropdownMenu",
+        DummyMenu,
     )
     lv = LogViewer()
     lv.show_path_menu(None)
