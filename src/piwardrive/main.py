@@ -175,17 +175,6 @@ class PiWardriveApp:
             utils.report_error(f"Failed to export log bundle: {exc}")
             return ""
 
-    def _auto_save(self, key: str, value: Any) -> None:
-        """Update ``config_data`` and persist to disk."""
-        if self._updating_config:
-            return
-        if hasattr(self.config_data, key):
-            setattr(self.config_data, key, value)
-            try:
-                save_config(self.config_data)
-            except OSError as exc:  # pragma: no cover - write errors
-                logging.exception("Failed to auto-save config: %s", exc)
-
     def _reload_config_event(self, _dt: float) -> None:
         """Reload settings if ``config.json`` changed."""
         stamp = config_mtime()

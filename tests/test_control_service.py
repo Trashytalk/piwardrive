@@ -11,7 +11,9 @@ from piwardrive import security, utils
 
 
 def _load_control_service() -> Callable[[Any, str, str], Any]:
-    src = open(os.path.join(os.path.dirname(__file__), "..", "main.py")).read()
+    src = open(
+        os.path.join(os.path.dirname(__file__), "..", "src", "piwardrive", "main.py")
+    ).read()
     mod = ast.parse(src)
     func_node = None
     for node in mod.body:
@@ -22,7 +24,7 @@ def _load_control_service() -> Callable[[Any, str, str], Any]:
                     break
     assert func_node is not None
     mod = ast.Module(body=[func_node], type_ignores=[])
-    namespace = {"subprocess": subprocess, "utils": utils}
+    namespace = {"subprocess": subprocess, "utils": utils, "os": os}
     exec(compile(mod, "<control_service>", "exec"), namespace)  # nosec B102
     return cast(Callable[[Any, str, str], Any], namespace["control_service"])
 
@@ -36,7 +38,10 @@ def test_control_service_reports_error(monkeypatch: Any, add_dummy_module) -> No
     )
     monkeypatch.setenv("PW_ADMIN_PASSWORD", "x")
     func = _load_control_service()
-    dummy = SimpleNamespace(_run_service_cmd=lambda *_a, **_k: (False, "", "oops"))
+    dummy = SimpleNamespace(
+        _run_service_cmd=lambda *_a, **_k: (False, "", "oops"),
+        config_data=SimpleNamespace(admin_password_hash=""),
+    )
     with mock.patch.object(utils, "report_error") as rep:
 
         func(dummy, "svc", "start")
