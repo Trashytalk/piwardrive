@@ -12,13 +12,13 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          cache: 'pip'
+          python-version: "3.12"
+          cache: "pip"
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: webui/package-lock.json
 
       - name: Install dependencies
@@ -45,8 +45,8 @@ jobs:
       - name: Commit coverage badge
         uses: EndBug/add-and-commit@v9
         with:
-          add: 'webui/badges/coverage.svg'
-          message: 'Update coverage badge'
+          add: "webui/badges/coverage.svg"
+          message: "Update coverage badge"
 
       - name: Run pre-commit
         run: pre-commit run --all-files
@@ -59,5 +59,5 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
+          files: coverage.xml,webui/coverage/lcov.info
           fail_ci_if_error: true
