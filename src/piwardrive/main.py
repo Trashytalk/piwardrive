@@ -90,7 +90,6 @@ class PiWardriveApp:
             CONFIG_PATH, lambda: self._reload_config_event(0)
         )
 
-
     async def export_logs(self, path: str | None = None, lines: int = 200) -> str:
         """Write the last ``lines`` from ``app.log`` to ``path`` and return it."""
         from logconfig import DEFAULT_LOG_PATH

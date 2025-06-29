@@ -2,6 +2,7 @@
   "name": "piwardrive-web",
   "version": "0.1.0",
   "private": true,
+  "types": "../server/server.d.ts",
   "scripts": {
     "vite": "vite",
     "dev": "nodemon ../server/index.js",
@@ -42,7 +43,7 @@
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.33.2",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
     "nodemon": "^3.0.3"
   },
   "eslintConfig": {

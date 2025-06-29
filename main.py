@@ -13,4 +13,3 @@ from piwardrive.main import PiWardriveApp  # noqa: E402
 
 
 __all__ = ["PiWardriveApp"]
-
