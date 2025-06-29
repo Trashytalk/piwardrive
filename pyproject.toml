@@ -52,6 +52,7 @@ check-orientation-sensors = "piwardrive.scripts.check_orientation_sensors:main"
 piwardrive-kiosk = "piwardrive.cli.kiosk:main"
 export-log-bundle = "piwardrive.scripts.export_log_bundle:main"
 piwardrive-maintain-tiles = "piwardrive.scripts.tile_maintenance_cli:main"
+export-shp = "piwardrive.scripts.export_shp:main"
 
 [project.optional-dependencies]
 c-extensions = [
