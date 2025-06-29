@@ -215,3 +215,104 @@ def test_make_range_db(tmp_path):
             assert [r[0] for r in rows] == ["b2", "b3"]
     finally:
         os.unlink(path)
+
+
+def test_make_range_db_empty_range(tmp_path):
+    db_path = tmp_path / "orig.db"
+    import sqlite3
+
+    with sqlite3.connect(db_path) as db:
+        db.execute(
+            """CREATE TABLE health_records (
+                timestamp TEXT PRIMARY KEY,
+                cpu_temp REAL,
+                cpu_percent REAL,
+                memory_percent REAL,
+                disk_percent REAL
+            )"""
+        )
+        db.execute(
+            """CREATE TABLE ap_cache (
+                bssid TEXT,
+                ssid TEXT,
+                encryption TEXT,
+                lat REAL,
+                lon REAL,
+                last_time INTEGER
+            )"""
+        )
+        for i in range(1, 4):
+            db.execute(
+                "INSERT INTO health_records VALUES (?, ?, ?, ?, ?)",
+                (f"t{i}", i, i, i, i),
+            )
+            db.execute(
+                "INSERT INTO ap_cache VALUES (?, ?, ?, ?, ?, ?)",
+                (f"b{i}", f"s{i}", "wpa", i * 0.1, i * 0.2, i),
+            )
+        db.commit()
+
+    path = rs._make_range_db(str(db_path), 5, 4)
+    import os
+
+    try:
+        with sqlite3.connect(path) as db:
+            rows = db.execute(
+                "SELECT COUNT(*) FROM health_records"
+            ).fetchone()
+            assert rows[0] == 0
+            rows = db.execute("SELECT COUNT(*) FROM ap_cache").fetchone()
+            assert rows[0] == 0
+    finally:
+        os.unlink(path)
+
+
+def test_sync_database_timeout(monkeypatch):
+    calls = []
+    prepare(monkeypatch, calls)
+    timeouts = []
+
+    def fake_timeout(*, total):
+        timeouts.append(total)
+        return None
+
+    monkeypatch.setattr(rs.aiohttp, "ClientTimeout", fake_timeout)
+    sleeps = []
+
+    async def fake_sleep(d):
+        sleeps.append(d)
+
+    monkeypatch.setattr(rs.asyncio, "sleep", fake_sleep)
+
+    asyncio.run(rs.sync_database_to_server("db", "http://remote", timeout=15))
+    assert timeouts == [15]
+    assert calls == ["http://remote"]
+    assert sleeps == []
+
+
+def test_sync_database_exponential_backoff(monkeypatch):
+    calls = []
+    prepare(monkeypatch, calls)
+
+    class FailTwiceSession(DummySession):
+        def post(self, url, data=None):
+            self.calls.append(url)
+            if len(self.calls) <= 2:
+                raise rs.aiohttp.ClientError("fail")
+            return DummyResp()
+
+    monkeypatch.setattr(
+        rs.aiohttp, "ClientSession", lambda *a, **k: FailTwiceSession(calls)
+    )
+
+    sleeps = []
+
+    async def fake_sleep(d):
+        sleeps.append(d)
+
+    monkeypatch.setattr(rs.asyncio, "sleep", fake_sleep)
+
+    asyncio.run(rs.sync_database_to_server("db", "http://remote", retries=3))
+
+    assert calls == ["http://remote", "http://remote", "http://remote"]
+    assert sleeps == [1.0, 2.0]
