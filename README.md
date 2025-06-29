@@ -328,6 +328,16 @@ docker build -t piwardrive .
 docker run --device=/dev/ttyUSB0 --rm piwardrive
 ```
 
+To run the dashboard and API via Docker Compose, first build the
+React frontend with `npm run build` and then launch the stack:
+
+```bash
+docker compose up
+```
+
+The compose file mounts `~/.config/piwardrive` and `webui/dist` so your
+configuration and compiled assets persist between container restarts.
+
 ### Automated vs Manual Tasks
 
 #### Automated Aspects
@@ -435,8 +445,9 @@ officially supported.
 Settings persist in `~/.config/piwardrive/config.json`. Profiles under
 `~/.config/piwardrive/profiles` can store alternate configurations and may be
 selected via the `PW_PROFILE_NAME` environment variable. Environment variables
-prefixed with `PW_` override any option. See `docs/configuration.rst` and
-`docs/environment.rst` for a full list.
+prefixed with `PW_` override any option. See `docs/configuration.rst` and the
+[Configuration Overrides](docs/environment.rst#configuration-overrides) section
+for a full list.
 
 ## Additional Documentation
 

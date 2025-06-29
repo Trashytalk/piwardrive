@@ -10,12 +10,14 @@ except Exception:  # pragma: no cover - fallback stub
     from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
 from piwardrive.simpleui import Label, ScrollView
 try:  # pragma: no cover - optional App stub for tests
-    from piwardrive.simpleui import App  # type: ignore
+    from piwardrive.simpleui import App as _SimpleApp  # type: ignore
 except Exception:  # pragma: no cover - fallback when missing
-    class App:
+    class _SimpleApp:  # type: ignore[no-redef]
         @staticmethod
         def get_running_app() -> None:
             return None
+
+App = _SimpleApp
 from piwardrive.utils import tail_file
 
 

@@ -8,6 +8,8 @@ PiWardrive Documentation
 PiWardrive's primary interface is a React-based web dashboard served by
 :doc:`status_service`.
 
+See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
+
 
 .. toctree::
    :maxdepth: 1
@@ -17,6 +19,7 @@ PiWardrive's primary interface is a React-based web dashboard served by
    security
    environment
    widgets
+   widget_plugins
    diagnostics
    persistence
    gps_polling

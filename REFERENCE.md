@@ -57,6 +57,7 @@ The UI renders directly to the framebuffer without X. Use the top tabs to switch
 ## Widgets and Plugins
 
 Dashboard widgets display metrics such as CPU temperature, handshake counts and service status. Custom widgets may be placed in `~/.config/piwardrive/plugins` and are discovered automatically at startup. Each widget subclasses `widgets.base.DashboardWidget` and implements an `update()` method. A built-in battery widget is available when the hardware exposes charge information.
+See `docs/widget_plugins.rst` for the expected directory structure.
 
 ## Diagnostics and Persistence
 

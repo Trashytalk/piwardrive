@@ -5,3 +5,6 @@ services:
     ports:
       - "8000:8000"
     command: piwardrive-webui
+    volumes:
+      - ~/.config/piwardrive:/root/.config/piwardrive
+      - ./webui/dist:/app/webui/dist
