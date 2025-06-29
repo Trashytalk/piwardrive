@@ -321,6 +321,16 @@ docker build -t piwardrive .
 docker run --device=/dev/ttyUSB0 --rm piwardrive
 ```
 
+To run the dashboard and API via Docker Compose, first build the
+React frontend with `npm run build` and then launch the stack:
+
+```bash
+docker compose up
+```
+
+The compose file mounts `~/.config/piwardrive` and `webui/dist` so your
+configuration and compiled assets persist between container restarts.
+
 ### Automated vs Manual Tasks
 
 #### Automated Aspects
