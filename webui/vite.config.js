@@ -42,6 +42,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    globals: true
+    globals: true,
+    coverage: {
+      reporter: ['text', 'lcov', 'json-summary']
+    }
   }
 });
