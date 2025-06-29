@@ -65,6 +65,13 @@ npm start  # launches the Node server
 # python -m piwardrive.webui_server  # alternative Python version
 ```
 
+During development you can use nodemon to automatically restart the
+server when files change:
+
+```bash
+npm run dev
+```
+
 Open a browser and navigate to `http://localhost:8000`. You should see the dashboard showing live system metrics. The server listens on all interfaces so other devices on the network may connect using the Pi's IP address.
 
 Set `PW_API_PASSWORD_HASH` if you want to require HTTP basic authentication. Generate the hash with:
@@ -105,11 +112,11 @@ PW_HEALTH_FILE=/var/log/piwardrive/health.json npm start
 
 ## 6. Development Mode
 
-While working on the frontend you can run the Vite development server instead of rebuilding on every change:
+While working on the frontend you can run the Vite development server instead of rebuilding on every change. The script name is `vite`:
 
 ```bash
 cd webui
-npm run dev
+npm run vite
 ```
 
 The dev server watches the source files and automatically reloads the page. API requests are proxied to `http://localhost:8000`, so keep the Python backend running in another terminal. Visit the port printed by Vite (usually `http://localhost:5173`).
