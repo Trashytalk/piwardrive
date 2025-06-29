@@ -3,7 +3,7 @@ CLI Tools
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
-Several helper scripts are installed alongside the React dashboard and optional touch interface. They can be invoked directly from the command line after installing the project:
+Several helper scripts are installed alongside the React dashboard. They can be invoked directly from the command line after installing the project:
 
 ``piwardrive-prefetch``
     Prefetch map tiles for an area without launching the interface::
@@ -85,5 +85,6 @@ Several helper scripts are installed alongside the React dashboard and optional 
 
     The command prints JSON with ``temp_avg``, ``cpu_avg``, ``mem_avg`` and
     ``disk_avg`` values.
+
 
 See ``--help`` on each command for additional options.

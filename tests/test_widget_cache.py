@@ -16,14 +16,6 @@ def test_widget_plugin_cache(tmp_path, monkeypatch):
     )
 
     monkeypatch.setenv("HOME", str(tmp_path))
-    mods = {
-        "kivy.uix.behaviors": ModuleType("kivy.uix.behaviors"),
-        "kivymd.uix.boxlayout": ModuleType("kivymd.uix.boxlayout"),
-    }
-    mods["kivy.uix.behaviors"].DragBehavior = type("DragBehavior", (), {})
-    mods["kivymd.uix.boxlayout"].MDBoxLayout = type("MDBoxLayout", (), {})
-    for n, m in mods.items():
-        sys.modules[n] = m
     sys.modules.pop("piwardrive.widgets", None)
     widgets = importlib.import_module("piwardrive.widgets")
 

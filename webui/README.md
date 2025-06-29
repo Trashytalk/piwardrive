@@ -81,6 +81,7 @@ python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypas
 ```
 
 Assign the resulting value to the environment variable before launching `piwardrive.webui_server`.
+Set `PW_WEBUI_PORT` if you need the server to listen on a different port.
 
 ## PW_API_PASSWORD_HASH and PORT
 
@@ -109,7 +110,6 @@ Example:
 PW_HEALTH_FILE=/var/log/piwardrive/health.json npm start
 ```
 
-
 ## 6. Development Mode
 
 While working on the frontend you can run the Vite development server instead of rebuilding on every change. The script name is `vite`:
@@ -133,7 +133,7 @@ The command runs `piwardrive-webui` in the background and then opens Chromium in
 
 ## 8. Serving the Build Elsewhere
 
-`piwardrive.webui_server` reads the `PW_WEBUI_DIST` environment variable to locate the build directory. You can copy `webui/dist` to another location or web server and point the variable there when starting the API:
+`piwardrive.webui_server` reads the `PW_WEBUI_DIST` environment variable to locate the build directory. It also checks `PW_WEBUI_PORT` to override the default port (`8000`). You can copy `webui/dist` to another location or web server and point the variable there when starting the API:
 
 ```bash
 export PW_WEBUI_DIST=/var/www/piwardrive
@@ -159,10 +159,17 @@ Once these steps are complete you have a functioning browser based dashboard. Us
 `exportUtils.js` mirrors the Python helpers for exporting collected records. It can filter result sets and save them to various geospatial formats.
 
 ```javascript
-import { filterRecords, exportRecords, exportMapKml } from './src/exportUtils.js';
+import {
+  filterRecords,
+  exportRecords,
+  exportMapKml,
+} from './src/exportUtils.js';
 
 const records = [{ ssid: 'AP', bssid: 'AA', lat: 1, lon: 2 }];
-const track = [[1, 2], [3, 4]];
+const track = [
+  [1, 2],
+  [3, 4],
+];
 
 const filtered = filterRecords(records, { encryption: 'OPEN' });
 await exportRecords(filtered, 'out.csv', 'csv');
@@ -181,4 +188,3 @@ import { selfTest, rotateLog } from './src/diagnostics.js';
 const report = selfTest();
 rotateLog('/var/log/piwardrive.log');
 ```
-
