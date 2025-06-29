@@ -30,6 +30,12 @@ function::
 
    piwardrive-vacuum
 
+Delete old health monitor rows with ``persistence.purge_old_health``. The
+``prune-db`` command wraps this helper and accepts the retention period in
+days::
+
+   prune-db 30
+
 Schema Migrations
 -----------------
 
