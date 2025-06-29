@@ -23,3 +23,11 @@ Example structure::
 The plugin directory timestamp is cached so repeated imports do not hit the
 filesystem. Call :func:`widgets.clear_plugin_cache` after adding or removing
 files to refresh the cache.
+
+Environment Variable
+--------------------
+
+By default plugins are loaded from ``~/.config/piwardrive/plugins``. Set
+``PIWARDIVE_PLUGIN_DIR`` to override this location before importing
+:mod:`widgets`. The value must point to a directory containing your plugin
+modules and takes precedence over the default path.
