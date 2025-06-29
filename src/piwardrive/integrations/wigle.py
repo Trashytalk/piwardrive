@@ -9,7 +9,9 @@ from piwardrive.core.utils import WIGLE_CACHE_SECONDS, async_ttl_cache
 
 try:  # pragma: no cover - optional dependency
     import aiohttp
-except Exception:  # pragma: no cover - aiohttp not installed
+    if not hasattr(aiohttp, "BasicAuth"):
+        raise ImportError("incomplete aiohttp")
+except Exception:  # pragma: no cover - aiohttp not installed or incomplete
     aiohttp = SimpleNamespace(
         BasicAuth=lambda *_a, **_k: None,
         ClientTimeout=lambda *_a, **_k: None,

@@ -4,8 +4,18 @@ import os
 import re
 from typing import Any, List
 
-from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
+try:  # pragma: no cover - prefer real KivyMD menu if available
+    from kivymd.uix.menu import MDDropdownMenu
+except Exception:  # pragma: no cover - fallback stub
+    from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
 from piwardrive.simpleui import Label, ScrollView
+try:  # pragma: no cover - optional App stub for tests
+    from piwardrive.simpleui import App  # type: ignore
+except Exception:  # pragma: no cover - fallback when missing
+    class App:
+        @staticmethod
+        def get_running_app() -> None:
+            return None
 from piwardrive.utils import tail_file
 
 
