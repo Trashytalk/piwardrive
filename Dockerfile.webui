@@ -1,0 +1,18 @@
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install dependencies and build the React dashboard
+COPY webui/package.json webui/package-lock.json ./webui/
+RUN cd webui \
+    && npm ci \
+    && npm run build \
+    && cd .. \
+    && npm install express
+
+# Copy server and built assets
+COPY server ./server
+COPY webui/dist ./webui/dist
+
+EXPOSE 8000
+CMD ["node", "server/index.js"]
