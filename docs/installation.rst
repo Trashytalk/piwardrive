@@ -102,3 +102,20 @@ Troubleshooting
   - Ensure no other process is using the GPS device and that the ``gpsd`` service is running.
 * Touch screen input not recognized
   - Confirm the correct ``/dev/input/eventX`` device is specified and install ``evtest`` to verify events.
+
+Compilation Issues
+------------------
+
+* ``npm ERR! gyp`` or ``g++: command not found``
+  - ``node-gyp`` uses Python and a C++ compiler to build native modules. Install
+    ``build-essential`` and ``python3`` (plus ``python3-dev`` on Debian/Ubuntu).
+* ``npm ERR! not compatible with your version of Node``
+  - Ensure Node.js 18 or newer is installed. ``node --version`` should report
+    at least ``v18``.
+* ``fatal error: Python.h: No such file or directory`` when installing Python
+  packages
+  - Install the interpreter headers with ``python3-dev`` (or your distribution's
+    equivalent) and retry ``pip install``.
+* ``command 'gcc' failed with exit status 1``
+  - A compiler is missing. Install ``build-essential`` or the appropriate
+    development tools for your system.
