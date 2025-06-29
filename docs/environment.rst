@@ -207,6 +207,53 @@ All available overrides are summarised below.
    * - ``PW_WIGLE_API_NAME``
      - ``wigle_api_name``
 
+Using a ``.env`` File
+---------------------
+
+Environment variables can be collected in ``~/.config/piwardrive/.env`` so they
+do not need to be specified on the command line. Each line contains a
+``KEY=value`` pair. Blank lines and ``#`` comments are ignored. Source the file
+before launching PiWardrive or reference it via ``EnvironmentFile`` in a systemd
+service.
+
+Example ``.env``::
+
+   PW_ADMIN_PASSWORD_HASH=$pbkdf2-sha256$...
+   PW_DB_PATH=/mnt/ssd/piwardrive/app.db
+   PW_OFFLINE_TILE_PATH=/mnt/ssd/tiles/offline.mbtiles
+   PW_REMOTE_SYNC_URL=http://10.0.0.2:9000/
+   PW_REMOTE_SYNC_TOKEN=secret
+   PW_LOG_ROTATE_INTERVAL=86400
+   PW_LOG_ROTATE_ARCHIVES=7
+
+Typical Production Overrides
+---------------------------
+
+.. list-table:: Typical ``.env`` overrides
+   :header-rows: 1
+
+   * - Variable
+     - Purpose
+     - Example
+   * - ``PW_DB_PATH``
+     - Location of the SQLite database
+     - ``/mnt/ssd/piwardrive/app.db``
+   * - ``PW_OFFLINE_TILE_PATH``
+     - Path to offline map tiles
+     - ``/mnt/ssd/tiles/offline.mbtiles``
+   * - ``PW_REMOTE_SYNC_URL``
+     - Server receiving health uploads
+     - ``http://10.0.0.2:9000/``
+   * - ``PW_REMOTE_SYNC_TOKEN``
+     - Bearer token for ``PW_REMOTE_SYNC_URL``
+     - ``changeme``
+   * - ``PW_LOG_ROTATE_INTERVAL``
+     - Seconds between log rotations
+     - ``86400``
+   * - ``PW_LOG_ROTATE_ARCHIVES``
+     - Number of rotated logs to keep
+     - ``7``
+
 SIGINT Suite
 ------------
 
