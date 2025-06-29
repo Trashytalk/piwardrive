@@ -122,3 +122,13 @@ Set the environment variable ``PW_REMOTE_SYNC_METRICS=1`` or call
 enabled, ``remote_sync.get_metrics()`` returns ``success_total`` and
 ``failure_total`` counters along with the duration of the last sync.
 
+Troubleshooting
+---------------
+
+* ``asyncio.TimeoutError`` when uploading
+  - Increase ``remote_sync_timeout`` or verify the server is reachable.
+* ``401 Unauthorized`` or ``403 Forbidden`` responses
+  - Confirm ``remote_sync_token`` matches what the server expects.
+* ``ModuleNotFoundError: aiohttp``
+  - Install dependencies with ``pip install -r requirements.txt``.
+
