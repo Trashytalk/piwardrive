@@ -31,3 +31,10 @@ By default plugins are loaded from ``~/.config/piwardrive/plugins``. Set
 ``PIWARDIVE_PLUGIN_DIR`` to override this location before importing
 :mod:`widgets`. The value must point to a directory containing your plugin
 modules and takes precedence over the default path.
+
+Examples
+--------
+
+A simple widget showing an API request lives in
+``examples/plugins/weather_widget.py``. It queries the Open-Meteo service for
+London's current temperature and displays the result.
