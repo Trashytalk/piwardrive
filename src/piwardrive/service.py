@@ -7,6 +7,7 @@ import logging
 import os
 import typing
 from dataclasses import asdict
+from http import HTTPStatus
 from typing import TYPE_CHECKING
 
 try:  # pragma: no cover - optional FastAPI dependency
@@ -129,6 +130,16 @@ except Exception:  # pragma: no cover - fall back to real module
 
 
 logger = logging.getLogger(__name__)
+
+
+def error_json(code: int, message: str | None = None) -> dict[str, str]:
+    """Return standardized error dictionary."""
+    if message is None:
+        try:
+            message = HTTPStatus(code).phrase
+        except Exception:
+            message = str(code)
+    return {"code": int(code), "message": message}
 
 
 async def _default_fetch_metrics_async(
@@ -257,7 +268,7 @@ def _check_auth(credentials: HTTPBasicCredentials = SECURITY_DEP) -> None:
     if not pw_hash:
         return
     if not credentials or not verify_password(credentials.password, pw_hash):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
 
 
 AUTH_DEP = Depends(_check_auth)
@@ -309,8 +320,6 @@ async def list_widgets(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
     """Return available dashboard widget class names."""
     widgets_mod = importlib.import_module("piwardrive.widgets")
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
-
-
 
 
 @GET("/widget-metrics")
@@ -408,7 +417,7 @@ async def get_logs(
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
     if safe not in ALLOWED_LOG_PATHS:
-        raise HTTPException(status_code=400, detail="Invalid log path")
+        raise HTTPException(status_code=400, detail=error_json(400, "Invalid log path"))
     data = async_tail_file(safe, lines)
     if inspect.isawaitable(data):
         lines_out = await data
@@ -444,7 +453,7 @@ async def run_command(
     """Execute a shell command and return its output."""
     cmd = str(data.get("cmd", "")).strip()
     if not cmd:
-        raise HTTPException(status_code=400, detail="cmd required")
+        raise HTTPException(status_code=400, detail=error_json(400, "cmd required"))
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -454,7 +463,7 @@ async def run_command(
         out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
     except asyncio.TimeoutError:
         proc.kill()
-        return {"output": "", "error": "timeout"}
+        return error_json(408, "timeout")
     return {"output": out.decode()}
 
 
@@ -466,12 +475,14 @@ async def control_service_endpoint(
 ) -> dict[str, Any]:
     """Start or stop a systemd service."""
     if action not in {"start", "stop", "restart"}:
-        raise HTTPException(status_code=400, detail="Invalid action")
+        raise HTTPException(status_code=400, detail=error_json(400, "Invalid action"))
     result = run_service_cmd(name, action) or (False, "", "")
     success, _out, err = result
     if not success:
         msg = err.strip() if isinstance(err, str) else str(err)
-        raise HTTPException(status_code=500, detail=msg or "command failed")
+        raise HTTPException(
+            status_code=500, detail=error_json(500, msg or "command failed")
+        )
     return {"service": name, "action": action, "success": True}
 
 
@@ -500,14 +511,16 @@ async def update_config_endpoint(
     data = asdict(cfg)
     for key, value in updates.items():
         if key not in data:
-            raise HTTPException(status_code=400, detail=f"Unknown field: {key}")
+            raise HTTPException(
+                status_code=400, detail=error_json(400, f"Unknown field: {key}")
+            )
         data[key] = value
     if data.get("remote_sync_url", "") == "":
         data["remote_sync_url"] = None
     try:
         config.validate_config_data(data)
     except Exception as exc:  # pragma: no cover - validation tested separately
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=error_json(400, str(exc)))
     config.save_config(config.Config(**data))
     return data
 
@@ -577,7 +590,7 @@ async def update_geofence_endpoint(
                 poly["exit_message"] = updates["exit_message"]
             _save_geofences(polys)
             return poly
-    raise HTTPException(status_code=404, detail="Not found")
+    raise HTTPException(status_code=404, detail=error_json(404, "Not found"))
 
 
 @DELETE("/geofences/{name}")
@@ -589,7 +602,7 @@ async def remove_geofence_endpoint(name: str, _auth: None = AUTH_DEP) -> dict[st
             polys.pop(idx)
             _save_geofences(polys)
             return {"removed": True}
-    raise HTTPException(status_code=404, detail="Not found")
+    raise HTTPException(status_code=404, detail=error_json(404, "Not found"))
 
 
 @POST("/sync")
@@ -600,7 +613,7 @@ async def sync_records(limit: int = 100, _auth: None = AUTH_DEP) -> dict[str, An
         records = await records
     success = await upload_data([asdict(r) for r in records])
     if not success:
-        raise HTTPException(status_code=502, detail="Upload failed")
+        raise HTTPException(status_code=502, detail=error_json(502, "Upload failed"))
     return {"uploaded": len(records)}
 
 
