@@ -15,6 +15,12 @@ except Exception:
         @staticmethod
         def get_running_app() -> None:
             return None
+          
+
+    class App:  # type: ignore[no-redef]
+        @staticmethod
+        def get_running_app() -> None:
+            return None
 
           
 from piwardrive.scheduler import PollScheduler
