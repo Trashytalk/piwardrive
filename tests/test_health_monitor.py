@@ -13,7 +13,7 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules["aiohttp"] = aiohttp_mod
 from piwardrive import diagnostics  # noqa: E402
-from piwardrive.scheduler import PollScheduler
+from piwardrive.scheduler import PollScheduler  # noqa: E402
 
 
 class DummyScheduler:
@@ -27,7 +27,7 @@ class DummyScheduler:
             cb(0)
 
     def cancel(self, name: str) -> None:
-        pass
+        pass  # pragma: no cover - not used
 
 
 def test_health_monitor_polls_self_test() -> None:
