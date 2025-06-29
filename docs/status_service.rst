@@ -79,7 +79,7 @@ current orientation string, rotation angle and raw accelerometer/gyroscope data:
 This allows external dashboards to load widgets dynamically.
 
 ``/dashboard-settings`` loads and saves the drag-and-drop widget layout used by
-the React dashboard and optional touch interface. The POST body accepts ``layout`` which
+the React dashboard. The POST body accepts ``layout`` which
 is persisted to ``config.json``::
 
    curl http://localhost:8000/dashboard-settings

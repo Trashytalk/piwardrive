@@ -8,40 +8,14 @@ import pytest
 
 
 def load_scheduler(monkeypatch: Any):
-    clk_mod = ModuleType("kivy.clock")
-
-    class DummyClock:
-        def __init__(self) -> None:
-            self.callback: Any | None = None
-            self.interval: float | None = None
-
-        def schedule_interval(self, cb: Any, interval: float) -> Any:
-            self.callback = cb
-            self.interval = interval
-            return SimpleNamespace(callback=cb)
-
-        def unschedule(self, _ev: Any) -> None:
-            pass
-
-    clock = DummyClock()
-    clk_mod.Clock = clock  # type: ignore[assignment, attr-defined]
-    clk_mod.ClockEvent = object  # type: ignore[attr-defined]
-    app_mod = ModuleType("kivy.app")
-    app_mod.App = type(
-        "App",
-        (),
-        {"get_running_app": staticmethod(lambda: None)},
-    )  # type: ignore[assignment, attr-defined]
-    monkeypatch.setitem(sys.modules, "kivy.clock", clk_mod)
-    monkeypatch.setitem(sys.modules, "kivy.app", app_mod)
-    if "scheduler" in sys.modules:
-        monkeypatch.delitem(sys.modules, "scheduler")
-    sched = importlib.import_module("scheduler")
-    return sched, clock
+    if "piwardrive.scheduler" in sys.modules:
+        monkeypatch.delitem(sys.modules, "piwardrive.scheduler")
+    sched = importlib.import_module("piwardrive.scheduler")
+    return sched
 
 
 def test_poll_scheduler_accepts_async_widget(monkeypatch: Any) -> None:
-    sched, clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
 
     class Widget:
         update_interval = 1.0
@@ -59,13 +33,13 @@ def test_poll_scheduler_accepts_async_widget(monkeypatch: Any) -> None:
     monkeypatch.setattr(sched.utils, "run_async_task", fake_run_async)
     scheduler = sched.PollScheduler()
     scheduler.register_widget(w, name="w")
-    assert clock.callback is not None  # nosec B101
-    clock.callback(0)
+    asyncio.run(asyncio.sleep(0))
+    asyncio.run(scheduler.cancel("w")) if hasattr(scheduler, "cancel") else None
     assert "coro" in called  # nosec B101
 
 
 def test_poll_scheduler_handles_async_callback(monkeypatch: Any) -> None:
-    sched, clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
 
     called: list[str] = []
 
@@ -78,14 +52,14 @@ def test_poll_scheduler_handles_async_callback(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(sched.utils, "run_async_task", fake_run_async)
     scheduler = sched.PollScheduler()
-    scheduler.schedule("job", lambda dt: job(), 1)
-    assert clock.callback is not None  # nosec B101
-    clock.callback(0)
+    scheduler.schedule("job", lambda dt: job(), 0.1)
+    asyncio.run(asyncio.sleep(0))
+    asyncio.run(scheduler.cancel("job")) if hasattr(scheduler, "cancel") else None
     assert called == ["run", "job"]  # nosec B101
 
 
 def test_async_scheduler_runs_tasks(monkeypatch: Any) -> None:
-    sched, _clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
     async_calls: list[str] = []
 
     async def update() -> None:
@@ -111,7 +85,7 @@ def test_async_scheduler_runs_tasks(monkeypatch: Any) -> None:
 
 
 def test_async_scheduler_sleep_remaining_time(monkeypatch: Any) -> None:
-    sched, _clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
     sleep_calls: list[float] = []
     current_time = 0.0
 
@@ -144,7 +118,7 @@ def test_async_scheduler_sleep_remaining_time(monkeypatch: Any) -> None:
 
 
 def test_async_scheduler_cancel_all_waits(monkeypatch: Any) -> None:
-    sched, _clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
     finished: list[str] = []
 
     done = asyncio.Event()
@@ -175,7 +149,7 @@ def test_async_scheduler_cancel_all_waits(monkeypatch: Any) -> None:
 
 
 def test_async_scheduler_cancel_all_gathers_exceptions(monkeypatch: Any) -> None:
-    sched, _clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
     errors: list[Any] = []
 
     done = asyncio.Event()
@@ -209,7 +183,7 @@ def test_async_scheduler_cancel_all_gathers_exceptions(monkeypatch: Any) -> None
 
 
 def test_poll_scheduler_metrics(monkeypatch: Any) -> None:
-    sched, clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
 
     scheduler = sched.PollScheduler()
 
@@ -223,13 +197,13 @@ def test_poll_scheduler_metrics(monkeypatch: Any) -> None:
     assert (
         metrics["job"]["last_duration"] != metrics["job"]["last_duration"]
     )  # NaN  # nosec B101
-    clock.callback(0)
+    asyncio.run(asyncio.sleep(0))
     metrics = scheduler.get_metrics()
     assert metrics["job"]["last_duration"] >= 0  # nosec B101
 
 
 def test_async_scheduler_metrics(monkeypatch: Any) -> None:
-    sched, _clock = load_scheduler(monkeypatch)
+    sched = load_scheduler(monkeypatch)
     scheduler = sched.AsyncScheduler()
 
     async def cb() -> None:

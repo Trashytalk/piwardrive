@@ -23,10 +23,12 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    diagnostics
    persistence
    gps_polling
+   gps_clients
    tile_cache
    tile_prefetching
    vector_tile_customizer
    bluetooth
+   hardware_setup
    orientation
    geofencing
    status_service
