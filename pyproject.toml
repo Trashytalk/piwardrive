@@ -58,6 +58,12 @@ c-extensions = [
     "orjson",
     "ujson",
 ]
+tests = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "scipy",
+]
 
 
 

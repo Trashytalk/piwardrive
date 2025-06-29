@@ -471,6 +471,9 @@ Install the development dependencies and run the tests:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+# Some tests rely on additional scientific libraries such as `numpy`.
+# Install them with the optional `tests` extras if needed:
+# pip install .[tests]
 pre-commit run --all-files
 pytest
 ```
