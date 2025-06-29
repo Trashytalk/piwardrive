@@ -28,7 +28,8 @@ Log paths shown in the console screen can be customised via the ``log_paths``
 list.  Provide a JSON array in ``config.json`` or set ``PW_LOG_PATHS`` to a
 JSON encoded list to override the defaults.
 
-See :mod:`config` for defaults and helpers.
+See :mod:`config` for defaults and helpers. A machine-readable schema of all
+fields lives in :download:`config_schema.json <config_schema.json>`.
 
 Environment variables are parsed on startup. Any option in ``Config`` can be
 specified as ``PW_<OPTION>``. Boolean variables accept ``1`` or ``0`` while

@@ -1,0 +1,552 @@
+{
+  "$defs": {
+    "Theme": {
+      "description": "Available UI themes.",
+      "enum": [
+        "Dark",
+        "Light",
+        "Green",
+        "Red"
+      ],
+      "title": "Theme",
+      "type": "string"
+    }
+  },
+  "description": "Extended validation used by :func:`validate_config_data`.",
+  "properties": {
+    "theme": {
+      "$ref": "#/$defs/Theme"
+    },
+    "map_poll_gps": {
+      "exclusiveMinimum": 0,
+      "title": "Map Poll Gps",
+      "type": "integer"
+    },
+    "map_poll_gps_max": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Poll Gps Max"
+    },
+    "map_poll_aps": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Poll Aps"
+    },
+    "map_poll_wigle": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Map Poll Wigle",
+      "type": "integer"
+    },
+    "map_show_gps": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Show Gps"
+    },
+    "map_follow_gps": {
+      "default": true,
+      "title": "Map Follow Gps",
+      "type": "boolean"
+    },
+    "map_show_aps": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Show Aps"
+    },
+    "map_cluster_aps": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Cluster Aps"
+    },
+    "map_show_heatmap": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Show Heatmap"
+    },
+    "map_show_wigle": {
+      "default": false,
+      "title": "Map Show Wigle",
+      "type": "boolean"
+    },
+    "map_cluster_capacity": {
+      "default": 8,
+      "minimum": 1,
+      "title": "Map Cluster Capacity",
+      "type": "integer"
+    },
+    "map_use_offline": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Map Use Offline"
+    },
+    "map_auto_prefetch": {
+      "default": false,
+      "title": "Map Auto Prefetch",
+      "type": "boolean"
+    },
+    "disable_scanning": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Disable Scanning"
+    },
+    "kismet_logdir": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Kismet Logdir"
+    },
+    "bettercap_caplet": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bettercap Caplet"
+    },
+    "dashboard_layout": {
+      "items": {},
+      "title": "Dashboard Layout",
+      "type": "array"
+    },
+    "debug_mode": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Debug Mode"
+    },
+    "offline_tile_path": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Offline Tile Path"
+    },
+    "health_poll_interval": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Health Poll Interval"
+    },
+    "log_rotate_interval": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Log Rotate Interval"
+    },
+    "log_rotate_archives": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Log Rotate Archives"
+    },
+    "cleanup_rotated_logs": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cleanup Rotated Logs"
+    },
+    "reports_dir": {
+      "default": "/root/.config/piwardrive/reports",
+      "title": "Reports Dir",
+      "type": "string"
+    },
+    "health_export_interval": {
+      "default": 6,
+      "minimum": 1,
+      "title": "Health Export Interval",
+      "type": "integer"
+    },
+    "health_export_dir": {
+      "default": "/root/.config/piwardrive/health_exports",
+      "title": "Health Export Dir",
+      "type": "string"
+    },
+    "compress_health_exports": {
+      "default": true,
+      "title": "Compress Health Exports",
+      "type": "boolean"
+    },
+    "health_export_retention": {
+      "default": 7,
+      "minimum": 1,
+      "title": "Health Export Retention",
+      "type": "integer"
+    },
+    "tile_maintenance_interval": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tile Maintenance Interval"
+    },
+    "tile_max_age_days": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tile Max Age Days"
+    },
+    "tile_cache_limit_mb": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tile Cache Limit Mb"
+    },
+    "compress_offline_tiles": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Compress Offline Tiles"
+    },
+    "route_prefetch_interval": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Route Prefetch Interval"
+    },
+    "route_prefetch_lookahead": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Route Prefetch Lookahead"
+    },
+    "widget_battery_status": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Widget Battery Status"
+    },
+    "log_paths": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Log Paths",
+      "type": "array"
+    },
+    "ui_font_size": {
+      "default": 16,
+      "minimum": 1,
+      "title": "Ui Font Size",
+      "type": "integer"
+    },
+    "admin_password_hash": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": "",
+      "title": "Admin Password Hash"
+    },
+    "remote_sync_url": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Remote Sync Url"
+    },
+    "remote_sync_token": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Remote Sync Token"
+    },
+    "remote_sync_timeout": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Remote Sync Timeout"
+    },
+    "remote_sync_retries": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Remote Sync Retries"
+    },
+    "remote_sync_interval": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Remote Sync Interval"
+    },
+    "handshake_cache_seconds": {
+      "default": 10.0,
+      "minimum": 0,
+      "title": "Handshake Cache Seconds",
+      "type": "number"
+    },
+    "log_tail_cache_seconds": {
+      "default": 1.0,
+      "minimum": 0,
+      "title": "Log Tail Cache Seconds",
+      "type": "number"
+    },
+    "wigle_api_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Wigle Api Name"
+    },
+    "wigle_api_key": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Wigle Api Key"
+    },
+    "gps_movement_threshold": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Gps Movement Threshold"
+    },
+    "cloud_bucket": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cloud Bucket"
+    },
+    "cloud_prefix": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cloud Prefix"
+    },
+    "cloud_profile": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Cloud Profile"
+    }
+  },
+  "required": [
+    "theme",
+    "map_poll_gps"
+  ],
+  "title": "ConfigModel",
+  "type": "object"
+}
