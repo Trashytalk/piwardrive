@@ -33,7 +33,8 @@ def create_app() -> FastAPI:
 def main() -> None:
     import uvicorn
 
-    uvicorn.run(create_app(), host="127.0.0.1", port=8000)
+    port = int(os.getenv("PW_WEBUI_PORT", 8000))
+    uvicorn.run(create_app(), host="127.0.0.1", port=port)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution

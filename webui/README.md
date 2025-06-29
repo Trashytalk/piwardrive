@@ -55,6 +55,8 @@ npm run build
 
 The compiled assets appear in `webui/dist`. They include a service worker so the interface works offline after the first visit.
 
+Vite also emits source map files alongside the compiled scripts. Open your browser's developer tools and enable source maps to debug the original React code when using a production build.
+
 ## 5. Start the API and Dashboard
 
 Return to the repository root and run the bundled server. It serves the API under `/api` and the static files generated above at the site root:
@@ -81,6 +83,7 @@ python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypas
 ```
 
 Assign the resulting value to the environment variable before launching `piwardrive.webui_server`.
+Set `PW_WEBUI_PORT` if you need the server to listen on a different port.
 
 ## PW_API_PASSWORD_HASH and PORT
 
@@ -108,7 +111,6 @@ Example:
 ```bash
 PW_HEALTH_FILE=/var/log/piwardrive/health.json npm start
 ```
-
 
 ## 6. Development Mode
 
@@ -159,10 +161,17 @@ Once these steps are complete you have a functioning browser based dashboard. Us
 `exportUtils.js` mirrors the Python helpers for exporting collected records. It can filter result sets and save them to various geospatial formats.
 
 ```javascript
-import { filterRecords, exportRecords, exportMapKml } from './src/exportUtils.js';
+import {
+  filterRecords,
+  exportRecords,
+  exportMapKml,
+} from './src/exportUtils.js';
 
 const records = [{ ssid: 'AP', bssid: 'AA', lat: 1, lon: 2 }];
-const track = [[1, 2], [3, 4]];
+const track = [
+  [1, 2],
+  [3, 4],
+];
 
 const filtered = filterRecords(records, { encryption: 'OPEN' });
 await exportRecords(filtered, 'out.csv', 'csv');
@@ -181,4 +190,3 @@ import { selfTest, rotateLog } from './src/diagnostics.js';
 const report = selfTest();
 rotateLog('/var/log/piwardrive.log');
 ```
-

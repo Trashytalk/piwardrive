@@ -33,13 +33,22 @@ function basicAuth(req, res, next) {
 }
 
 function parseWidgets() {
-  const file = path.join(__dirname, '..', 'src', 'piwardrive', 'widgets', '__init__.py');
+  const file = path.join(
+    __dirname,
+    '..',
+    'src',
+    'piwardrive',
+    'widgets',
+    '__init__.py',
+  );
+  const script = path.join(__dirname, 'parse_widgets.py');
   try {
-    const text = fs.readFileSync(file, 'utf8');
-    const start = text.indexOf('__all__');
-    if (start === -1) return [];
-    const section = text.slice(start, text.indexOf(']', start));
-    return Array.from(section.matchAll(/"([^"]+)"/g)).map(m => m[1]);
+    const { spawnSync } = require('child_process');
+    const proc = spawnSync('python3', [script, file], { encoding: 'utf8' });
+    if (proc.status !== 0) {
+      throw new Error(proc.stderr.trim() || 'failed');
+    }
+    return JSON.parse(proc.stdout);
   } catch {
     return [];
   }

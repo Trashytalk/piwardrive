@@ -5,10 +5,7 @@ from fastapi.testclient import TestClient
 from piwardrive import service
 
 
-def test_plugins_endpoint(tmp_path, monkeypatch, add_dummy_module):
-    # Setup dummy Kivy modules so plugin import works
-    add_dummy_module("kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {}))
-    add_dummy_module("kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {}))
+def test_plugins_endpoint(tmp_path, monkeypatch):
 
     plugin_dir = tmp_path / ".config" / "piwardrive" / "plugins"
     plugin_dir.mkdir(parents=True)
