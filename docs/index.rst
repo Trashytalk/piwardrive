@@ -27,6 +27,7 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    tile_prefetching
    vector_tile_customizer
    bluetooth
+   hardware_setup
    orientation
    geofencing
    status_service
