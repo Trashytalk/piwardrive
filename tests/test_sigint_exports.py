@@ -3,8 +3,7 @@ import json
 import os
 import sys
 
-from piwardrive.sigint_suite.exports import (export_csv, export_json,
-                                             export_yaml)
+from piwardrive.sigint_suite.exports import export_csv, export_json, export_yaml
 
 
 def test_export_csv(tmp_path):

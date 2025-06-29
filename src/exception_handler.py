@@ -1,3 +1,5 @@
 """Compatibility wrapper for :mod:`piwardrive.exception_handler`."""
 
-from piwardrive.exception_handler import *  # noqa: F401,F403
+from piwardrive.exception_handler import install
+
+__all__ = ["install"]

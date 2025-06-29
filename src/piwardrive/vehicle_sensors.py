@@ -29,7 +29,11 @@ def _get_conn(port: Optional[str] = None) -> "obd.OBD | None":
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.error("Failed to connect to OBD: %s", exc)
             _OBD_CONN = None
-    return _OBD_CONN if _OBD_CONN and getattr(_OBD_CONN, "is_connected", lambda: True)() else None
+    return (
+        _OBD_CONN
+        if _OBD_CONN and getattr(_OBD_CONN, "is_connected", lambda: True)()
+        else None
+    )
 
 
 def close_obd() -> None:
@@ -42,6 +46,7 @@ def close_obd() -> None:
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.error("OBD close failed: %s", exc)
         _OBD_CONN = None
+
 
 def read_speed_obd(port: Optional[str] = None) -> float | None:
     """Return vehicle speed in km/h using an OBD-II adapter."""
