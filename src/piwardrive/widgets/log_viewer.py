@@ -4,18 +4,17 @@ import os
 import re
 from typing import Any, List
 
-try:  # pragma: no cover - prefer real KivyMD menu if available
-    from kivymd.uix.menu import MDDropdownMenu
-except Exception:  # pragma: no cover - fallback stub
-    from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
-from piwardrive.simpleui import Label, ScrollView
+from piwardrive.simpleui import DropdownMenu, Label, ScrollView
+
 try:  # pragma: no cover - optional App stub for tests
     from piwardrive.simpleui import App as _SimpleApp  # type: ignore
 except Exception:  # pragma: no cover - fallback when missing
+
     class _SimpleApp:  # type: ignore[no-redef]
         @staticmethod
         def get_running_app() -> None:
             return None
+
 
 App = _SimpleApp
 from piwardrive.utils import tail_file
@@ -83,13 +82,19 @@ class LogViewer(ScrollView):
 
     def show_path_menu(self, caller: Any) -> None:  # pragma: no cover - GUI
         """Display a dropdown menu to select ``log_path``."""
+        app = App.get_running_app()
+        paths = getattr(app, "log_paths", self.log_paths)
+        try:  # pragma: no cover - prefer real KivyMD menu if available
+            from kivymd.uix.menu import MDDropdownMenu  # type: ignore
+        except Exception:  # pragma: no cover - fallback stub
+            from piwardrive.simpleui import DropdownMenu as MDDropdownMenu
         items = [
             {
                 "text": os.path.basename(p),
                 "viewclass": "OneLineListItem",
                 "on_release": lambda p=p: self._select_path(p),
             }
-            for p in self.log_paths
+            for p in paths
         ]
         self._menu = MDDropdownMenu(caller=caller, items=items, width_mult=4)
         self._menu.open()

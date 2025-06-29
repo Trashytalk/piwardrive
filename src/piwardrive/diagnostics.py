@@ -240,7 +240,6 @@ class HealthMonitor:
         except RuntimeError:
             asyncio.set_event_loop(asyncio.new_event_loop())
         self._scheduler = scheduler
-        self._interval = interval
         self._collector: DataCollector = collector or SelfTestCollector()
         self.data: Dict[str, Any] | None = None
         self._event = "health_monitor"
