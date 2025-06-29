@@ -53,7 +53,9 @@ Running ``calibrate_orientation.py``
 0°, 90°, 180° and 270°.  The resulting mapping is written to
 ``orientation_map.json`` and can be applied with
 :func:`orientation_sensors.update_orientation_map`.  See
-``examples/orientation_map.json`` for a typical mapping.
+``examples/orientation_map.json`` for a typical mapping. ``examples/orientation_sensors.json``
+illustrates common sensor settings like enabling DBus, selecting the
+MPU‑6050 address and referencing the mapping file.
 
 Use the command installed with the package or execute the script from the
 repository root::
@@ -100,3 +102,52 @@ Load this mapping in your application and activate it with
 
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
+
+Running ``check_orientation_sensors.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``check-orientation-sensors`` command prints the current orientation and
+raw accelerometer/gyroscope readings in JSON format. Use the installed command
+or run the script from the repository root::
+
+    python scripts/check_orientation_sensors.py
+
+A typical result when ``iio-sensor-proxy`` is available looks like::
+
+    {"orientation": "right-up", "angle": 90.0, "accelerometer": null, "gyroscope": null}
+
+When DBus is not available but an MPU-6050 is connected the accelerometer and
+gyroscope data are returned instead.
+
+Custom Sensor Readers
+~~~~~~~~~~~~~~~~~~~~~
+If your hardware exposes orientation data through a different interface
+you can write your own helper function. It should return an orientation
+string such as ``landscape-left`` which is then converted into an angle via
+:func:`orientation_sensors.orientation_to_angle`.
+
+.. code-block:: python
+
+    from typing import Optional
+    from piwardrive import orientation_sensors
+
+    def read_my_sensor() -> Optional[str]:
+        """Return an orientation string from custom hardware."""
+        # Implement sensor access here
+        return "landscape-left"
+
+    angle = orientation_sensors.orientation_to_angle(read_my_sensor())
+
+When your sensor reports different labels, extend the mapping with
+:func:`orientation_sensors.update_orientation_map`::
+
+    orientation_sensors.update_orientation_map({"tilt-right": 90.0})
+    angle = orientation_sensors.orientation_to_angle("tilt-right")
+
+Orientation Map Endpoint
+~~~~~~~~~~~~~~~~~~~~~~~~
+The Node-based web server exposes ``/api/orientation-map`` which simply
+returns the mapping produced by
+``orientation_sensors.clone_orientation_map()``.  This allows other
+services to retrieve the currently active orientation mapping via HTTP::
+
+   curl http://localhost:8000/api/orientation-map

@@ -1,4 +1,4 @@
-.PHONY: lint test docs
+.PHONY: lint test docs coverage
 
 lint:
 	pre-commit run --all-files
@@ -8,3 +8,7 @@ test:
 
 docs:
 	sphinx-build -W -b html docs docs/_build/html
+
+coverage:
+	pytest --cov=src --cov-report=xml -q
+	cd webui && npm test

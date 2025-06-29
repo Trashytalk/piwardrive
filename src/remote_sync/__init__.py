@@ -8,10 +8,33 @@ import logging
 import os
 import sqlite3
 import tempfile
+import time
 
 import aiohttp
 
 logger = logging.getLogger(__name__)
+
+_METRICS_ENABLED = os.getenv("PW_REMOTE_SYNC_METRICS") not in {None, "", "0", "false", "False"}
+_SUCCESS_TOTAL = 0
+_FAILURE_TOTAL = 0
+_LAST_DURATION = float("nan")
+
+
+def enable_metrics(enabled: bool = True) -> None:
+    """Enable or disable runtime metrics."""
+    global _METRICS_ENABLED
+    _METRICS_ENABLED = enabled
+
+
+def get_metrics() -> dict[str, float | int]:
+    """Return sync metrics if enabled, otherwise an empty dict."""
+    if not _METRICS_ENABLED:
+        return {}
+    return {
+        "success_total": _SUCCESS_TOTAL,
+        "failure_total": _FAILURE_TOTAL,
+        "last_duration": _LAST_DURATION,
+    }
 
 
 def _make_range_db(src: str, start: int, end: int) -> str:
@@ -127,6 +150,8 @@ async def sync_database_to_server(
     Retries the transfer with exponential backoff if ``aiohttp`` raises an
     exception or an HTTP error status is returned.
     """
+    global _SUCCESS_TOTAL, _FAILURE_TOTAL, _LAST_DURATION
+
     if not os.path.exists(db_path):
         raise FileNotFoundError(db_path)
 
@@ -139,6 +164,7 @@ async def sync_database_to_server(
     else:
         path = db_path
 
+    start = time.perf_counter() if _METRICS_ENABLED else 0.0
     with open(path, "rb") as fh:
         for attempt in range(1, retries + 1):
             try:
@@ -152,12 +178,18 @@ async def sync_database_to_server(
                 logger.info("Database %s synced to %s", path, url)
                 if temp_path is not None:
                     os.unlink(temp_path)
+                if _METRICS_ENABLED:
+                    _SUCCESS_TOTAL += 1
+                    _LAST_DURATION = time.perf_counter() - start
                 return
             except Exception as exc:  # pragma: no cover - network errors
                 if attempt >= retries:
                     logger.error("Sync failed: %s", exc)
                     if temp_path is not None:
                         os.unlink(temp_path)
+                    if _METRICS_ENABLED:
+                        _FAILURE_TOTAL += 1
+                        _LAST_DURATION = time.perf_counter() - start
                     raise
                 await asyncio.sleep(delay)
                 delay *= 2
