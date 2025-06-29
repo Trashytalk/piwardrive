@@ -109,6 +109,16 @@ Example:
 PW_HEALTH_FILE=/var/log/piwardrive/health.json npm start
 ```
 
+## Simple Health Probe
+
+Use `scripts/check_server.js` to confirm the server is reachable. The
+script queries `/api/status` and exits with a non-zero status code when
+the response is not successful.
+
+```bash
+node scripts/check_server.js --url http://localhost:8000
+```
+
 
 ## 6. Development Mode
 
