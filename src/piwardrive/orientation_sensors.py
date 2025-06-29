@@ -9,7 +9,9 @@ external MPU‑6050 sensor using the optional ``mpu6050`` package.  Again,
 check for ``None`` to gracefully handle setups without these sensors.
 """
 
+import json
 import logging
+import os
 from typing import Any, Dict, Optional
 
 try:  # pragma: no cover - optional DBus dependency
@@ -63,8 +65,20 @@ def clone_orientation_map() -> Dict[str, float]:
 
 
 def reset_orientation_map() -> None:
-    """Restore :data:`_ORIENTATION_MAP` to the default values."""
+    """Restore :data:`_ORIENTATION_MAP` from ``PW_ORIENTATION_MAP_FILE`` if set."""
+
     _ORIENTATION_MAP.clear()
+    path = os.getenv("PW_ORIENTATION_MAP_FILE")
+    if path:
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            if isinstance(data, dict):
+                _ORIENTATION_MAP.update({k.lower(): float(v) for k, v in data.items()})
+                return
+        except Exception as exc:  # pragma: no cover - runtime errors
+            logger.error("Failed to load orientation map from %s: %s", path, exc)
+
     _ORIENTATION_MAP.update(DEFAULT_ORIENTATION_MAP)
 
 

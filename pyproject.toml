@@ -36,10 +36,12 @@ piwardrive-service = "piwardrive.service:main"
 piwardrive-webui = "piwardrive.webui_server:main"
 health-export = "piwardrive.scripts.health_export:main"
 health-import = "piwardrive.scripts.health_import:main"
+health-stats = "piwardrive.scripts.health_stats:main"
 piwardrive-prefetch = "piwardrive.scripts.prefetch_cli:main"
 service-status = "piwardrive.scripts.service_status:main"
 piwardrive-vacuum = "piwardrive.scripts.vacuum_db:main"
 piwardrive-migrate = "piwardrive.scripts.migrate_db:main"
+prune-db = "piwardrive.scripts.prune_db:main"
 uav-record = "piwardrive.scripts.uav_record:main"
 uav-track-playback = "piwardrive.scripts.uav_track_playback:main"
 piwardrive-mbtiles = "piwardrive.scripts.vector_tile_customizer_cli:main"
@@ -53,11 +55,18 @@ piwardrive-kiosk = "piwardrive.cli.kiosk:main"
 export-log-bundle = "piwardrive.scripts.export_log_bundle:main"
 piwardrive-maintain-tiles = "piwardrive.scripts.tile_maintenance_cli:main"
 export-gpx = "piwardrive.scripts.export_gpx:main"
+export-shp = "piwardrive.scripts.export_shp:main"
 
 [project.optional-dependencies]
 c-extensions = [
     "orjson",
     "ujson",
+]
+tests = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "scipy",
 ]
 
 

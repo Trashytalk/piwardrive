@@ -13,7 +13,8 @@ Run the server with::
     python -m piwardrive.aggregation_service
 
 By default data is stored under ``~/piwardrive-aggregation``.  Set the
-``PW_AGG_DIR`` environment variable to change the location.
+``PW_AGG_DIR`` environment variable to change the location. Set
+``PW_AGG_PORT`` to change the listening port (defaults to ``9100``).
 
 Installation
 ------------
@@ -40,3 +41,16 @@ Endpoints
 
 ``/overlay``
     Returns heatmap points derived from all reported access point locations.
+
+Container Image
+---------------
+
+``Dockerfile.aggregation`` builds a lightweight image running
+``piwardrive.aggregation_service``.  Build it with::
+
+   docker build -f Dockerfile.aggregation -t piwardrive-aggregation .
+
+Run the container exposing port 9100 and mounting a data directory::
+
+   docker run --rm -p 9100:9100 -v ~/agg-data:/data \
+      -e PW_AGG_DIR=/data piwardrive-aggregation

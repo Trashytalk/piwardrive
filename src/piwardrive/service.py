@@ -816,7 +816,8 @@ async def main() -> None:
 
     import uvicorn
 
-    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
+    port = int(os.getenv("PW_SERVICE_PORT", "8000"))
+    config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = uvicorn.Server(config)
     await server.serve()
     vehicle_sensors.close_obd()
