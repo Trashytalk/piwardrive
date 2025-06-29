@@ -103,6 +103,31 @@ Load this mapping in your application and activate it with
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
 
+Custom Sensor Readers
+~~~~~~~~~~~~~~~~~~~~~
+If your hardware exposes orientation data through a different interface
+you can write your own helper function. It should return an orientation
+string such as ``landscape-left`` which is then converted into an angle via
+:func:`orientation_sensors.orientation_to_angle`.
+
+.. code-block:: python
+
+    from typing import Optional
+    from piwardrive import orientation_sensors
+
+    def read_my_sensor() -> Optional[str]:
+        """Return an orientation string from custom hardware."""
+        # Implement sensor access here
+        return "landscape-left"
+
+    angle = orientation_sensors.orientation_to_angle(read_my_sensor())
+
+When your sensor reports different labels, extend the mapping with
+:func:`orientation_sensors.update_orientation_map`::
+
+    orientation_sensors.update_orientation_map({"tilt-right": 90.0})
+    angle = orientation_sensors.orientation_to_angle("tilt-right")
+
 Orientation Map Endpoint
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The Node-based web server exposes ``/api/orientation-map`` which simply
