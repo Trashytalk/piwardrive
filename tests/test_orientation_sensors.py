@@ -122,3 +122,29 @@ def test_read_mpu6050_success(add_dummy_module) -> None:
         }
     finally:
         _reload()
+
+
+def test_reset_orientation_map_env(monkeypatch, tmp_path) -> None:
+    file_path = tmp_path / "omap.json"
+    file_path.write_text('{"normal": 1, "flip": 45}')
+    monkeypatch.setenv("PW_ORIENTATION_MAP_FILE", str(file_path))
+    osens.reset_orientation_map()
+    try:
+        assert osens.orientation_to_angle("normal") == 1.0  # nosec B101
+        assert osens.orientation_to_angle("flip") == 45.0  # nosec B101
+        assert osens.orientation_to_angle("left-up") is None  # nosec B101
+    finally:
+        monkeypatch.delenv("PW_ORIENTATION_MAP_FILE", raising=False)
+        osens.reset_orientation_map()
+
+
+def test_reset_orientation_map_invalid(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("PW_ORIENTATION_MAP_FILE", str(tmp_path / "missing.json"))
+    osens.update_orientation_map({"flip": 45.0})
+    try:
+        osens.reset_orientation_map()
+        assert osens.orientation_to_angle("normal") == 0.0  # nosec B101
+        assert osens.orientation_to_angle("flip") is None  # nosec B101
+    finally:
+        monkeypatch.delenv("PW_ORIENTATION_MAP_FILE", raising=False)
+        osens.reset_orientation_map()
