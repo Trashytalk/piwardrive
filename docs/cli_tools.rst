@@ -77,6 +77,11 @@ Several helper scripts are installed alongside the React dashboard. They can be 
 
         piwardrive-maintain-tiles --purge --max-age-days 7
 
+``export-gpx``
+    Convert records in CSV or JSON format to a GPX file::
+
+        export-gpx data.json out.gpx
+        
 ``health-stats``
     Compute average CPU temperature, usage and other metrics from recent
     records::
