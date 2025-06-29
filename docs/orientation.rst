@@ -51,5 +51,11 @@ string into a numeric angle using this mapping.
 ``orientation_map.json`` and can be applied with
 :func:`orientation_sensors.update_orientation_map`.
 
+``export-orientation-map`` writes the values returned by
+:func:`orientation_sensors.clone_orientation_map` to ``orientation_map.json`` by
+default::
+
+   export-orientation-map my_map.json
+
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
