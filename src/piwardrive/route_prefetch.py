@@ -7,7 +7,12 @@ import math
 import os
 from typing import Any
 
-from kivy.app import App
+try:  # pragma: no cover - optional dependency
+    from kivy.app import App as KivyApp
+except Exception:
+    KivyApp = None  # type: ignore[assignment]
+
+App = KivyApp
 
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
@@ -99,7 +104,7 @@ class RoutePrefetcher:
             )
             mv = getattr(self._map_screen.ids, "mapview", None)
             zoom = getattr(mv, "zoom", 16)
-            app = App.get_running_app()
+            app = KivyApp.get_running_app() if KivyApp is not None else None
             folder = (
                 os.path.dirname(getattr(app, "offline_tile_path", ""))
                 or "/mnt/ssd/tiles"

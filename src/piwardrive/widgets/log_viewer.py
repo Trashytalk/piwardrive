@@ -6,17 +6,12 @@ from typing import Any, List
 
 from piwardrive.simpleui import DropdownMenu, Label, ScrollView
 
-try:  # pragma: no cover - optional App stub for tests
-    from piwardrive.simpleui import App as _SimpleApp  # type: ignore
+try:  # pragma: no cover - optional dependency
+    from piwardrive.simpleui import App as SimpleApp  # type: ignore
 except Exception:  # pragma: no cover - fallback when missing
+    SimpleApp = None  # type: ignore[assignment]
 
-    class _SimpleApp:  # type: ignore[no-redef]
-        @staticmethod
-        def get_running_app() -> None:
-            return None
-
-
-App = _SimpleApp
+App = SimpleApp
 from piwardrive.utils import tail_file
 
 
@@ -82,7 +77,7 @@ class LogViewer(ScrollView):
 
     def show_path_menu(self, caller: Any) -> None:  # pragma: no cover - GUI
         """Display a dropdown menu to select ``log_path``."""
-        app = App.get_running_app()
+        app = App.get_running_app() if App is not None else None
         paths = getattr(app, "log_paths", self.log_paths)
         try:  # pragma: no cover - prefer real KivyMD menu if available
             from kivymd.uix.menu import MDDropdownMenu  # type: ignore
