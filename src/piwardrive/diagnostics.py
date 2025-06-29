@@ -296,9 +296,10 @@ class HealthMonitor:
         if not records:
             return
 
-        os.makedirs(config.REPORTS_DIR, exist_ok=True)
+        cfg = config.AppConfig.load()
+        os.makedirs(cfg.reports_dir, exist_ok=True)
         date = datetime.now().strftime("%Y%m%d")
-        csv_path = os.path.join(config.REPORTS_DIR, f"health_{date}.csv")
+        csv_path = os.path.join(cfg.reports_dir, f"health_{date}.csv")
         with open(csv_path, "w", newline="", encoding="utf-8") as fh:
             writer = csv.DictWriter(
                 fh,
@@ -313,7 +314,7 @@ class HealthMonitor:
             writer.writeheader()
             writer.writerows(asdict(r) for r in records)
 
-        plot_path = os.path.join(config.REPORTS_DIR, f"health_{date}.png")
+        plot_path = os.path.join(cfg.reports_dir, f"health_{date}.png")
 
         try:
             result = await asyncio.to_thread(
@@ -323,7 +324,7 @@ class HealthMonitor:
             logging.exception("HealthMonitor summary failed: %s", exc)
             return
 
-        json_path = os.path.join(config.REPORTS_DIR, f"health_{date}.json")
+        json_path = os.path.join(cfg.reports_dir, f"health_{date}.json")
         with open(json_path, "w", encoding="utf-8") as fh:
             json.dump(result, fh)
 
@@ -331,14 +332,15 @@ class HealthMonitor:
         import piwardrive.scripts.health_export as health_export
 
         try:
-            os.makedirs(config.HEALTH_EXPORT_DIR, exist_ok=True)
+            cfg = config.AppConfig.load()
+            os.makedirs(cfg.health_export_dir, exist_ok=True)
             ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-            path = os.path.join(config.HEALTH_EXPORT_DIR, f"health_{ts}.json")
+            path = os.path.join(cfg.health_export_dir, f"health_{ts}.json")
             await asyncio.to_thread(
                 health_export.main,
                 [path, "--format", "json", "--limit", "10000"],
             )
-            if config.COMPRESS_HEALTH_EXPORTS:
+            if cfg.compress_health_exports:
                 with open(path, "rb") as fin, gzip.open(path + ".gz", "wb") as fout:
                     shutil.copyfileobj(fin, fout)
                 os.remove(path)
@@ -350,11 +352,12 @@ class HealthMonitor:
             logging.exception("HealthMonitor export failed: %s", exc)
 
     def _cleanup_exports(self) -> None:
-        if config.HEALTH_EXPORT_RETENTION <= 0:
+        cfg = config.AppConfig.load()
+        if cfg.health_export_retention <= 0:
             return
-        cutoff = datetime.now().timestamp() - config.HEALTH_EXPORT_RETENTION * 86400
-        for fname in os.listdir(config.HEALTH_EXPORT_DIR):
-            fpath = os.path.join(config.HEALTH_EXPORT_DIR, fname)
+        cutoff = datetime.now().timestamp() - cfg.health_export_retention * 86400
+        for fname in os.listdir(cfg.health_export_dir):
+            fpath = os.path.join(cfg.health_export_dir, fname)
             try:
                 if os.path.isfile(fpath) and os.path.getmtime(fpath) < cutoff:
                     os.remove(fpath)

@@ -1,15 +1,15 @@
 """Sphinx configuration for building the project documentation."""
 
-project = "PiWardrive"
-author = "TRASHYTALK"
+import os
+import sys
+
+project = os.getenv("PW_DOC_PROJECT", "PiWardrive")
+author = os.getenv("PW_DOC_AUTHOR", "TRASHYTALK")
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
     "sphinxcontrib.mermaid",
 ]
-html_theme = "alabaster"
-
-import os
-import sys
-
+html_theme = os.getenv("PW_DOC_THEME", "alabaster")
+html_title = project
 sys.path.insert(0, os.path.abspath(".."))
