@@ -4,6 +4,7 @@ types-ujson==5.10.0.20240511
 types-PyYAML==6.0.12.20240311
 types-requests==2.31.0.20240406
 pytest==8.4.0
+pytest-cov==6.2.1
 radon==6.0.1
 pydocstyle==6.3.0
 pre-commit==3.7.1
