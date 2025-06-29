@@ -20,3 +20,11 @@ from ``log_paths``. Adjust ``log_rotate_interval`` and ``log_rotate_archives`` i
 
 Passing ``stdout=True`` to ``setup_logging`` duplicates output to the console,
 which is useful during development or when running inside Docker.
+
+Rotating Logs Manually
+~~~~~~~~~~~~~~~~~~~~~
+Use ``scripts/rotate_logs.py`` to rotate the default log files without running PiWardrive::
+
+    python scripts/rotate_logs.py
+
+Specify paths as arguments or ``--max-files`` to choose how many archives to keep.
