@@ -55,6 +55,9 @@ Docker Container
        docker tag <IMAGE_ID> myuser/piwardrive:latest
        docker push myuser/piwardrive:latest
 
+``piwardrive-service`` listens on port ``8000`` by default. Override this by
+setting ``PW_SERVICE_PORT`` when launching the container.
+
 Both approaches produce a self-contained environment ready to capture Wi‑Fi and GPS data with minimal setup on new hardware.
 
 Web UI Container
