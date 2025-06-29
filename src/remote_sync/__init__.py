@@ -14,7 +14,13 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-_METRICS_ENABLED = os.getenv("PW_REMOTE_SYNC_METRICS") not in {None, "", "0", "false", "False"}
+_METRICS_ENABLED = os.getenv("PW_REMOTE_SYNC_METRICS") not in {
+    None,
+    "",
+    "0",
+    "false",
+    "False",
+}
 _SUCCESS_TOTAL = 0
 _FAILURE_TOTAL = 0
 _LAST_DURATION = float("nan")
