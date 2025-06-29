@@ -151,3 +151,13 @@ returns the mapping produced by
 services to retrieve the currently active orientation mapping via HTTP::
 
    curl http://localhost:8000/api/orientation-map
+
+PW_ORIENTATION_MAP_FILE
+~~~~~~~~~~~~~~~~~~~~~~~
+Set ``PW_ORIENTATION_MAP_FILE`` to load rotation angles from a JSON file
+when PiWardrive starts. The file should contain the mapping produced by
+``calibrate_orientation.py`` or a hand-crafted variant.  See
+``examples/orientation_map.json`` for a typical layout.  A common
+invocation looks like::
+
+   PW_ORIENTATION_MAP_FILE=/path/to/orientation_map.json python -m piwardrive.main
