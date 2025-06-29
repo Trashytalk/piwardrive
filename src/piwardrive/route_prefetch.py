@@ -16,6 +16,7 @@ except Exception:
         def get_running_app() -> None:
             return None
 
+          
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
 
@@ -64,10 +65,12 @@ class RoutePrefetcher:
         interval: int = 3600,
         lookahead: int = 5,
         delta: float = 0.01,
+        offline_tile_path: str | None = None,
     ) -> None:
         self._map_screen = map_screen
         self._lookahead = lookahead
         self._delta = delta
+        self._offline_tile_path = offline_tile_path
         scheduler.schedule("route_prefetch", lambda _dt: self._run(), interval)
 
     # --------------------------------------------------------------
@@ -106,11 +109,8 @@ class RoutePrefetcher:
             )
             mv = getattr(self._map_screen.ids, "mapview", None)
             zoom = getattr(mv, "zoom", 16)
-            app = App.get_running_app()
-            folder = (
-                os.path.dirname(getattr(app, "offline_tile_path", ""))
-                or "/mnt/ssd/tiles"
-            )
+            path = self._offline_tile_path or ""
+            folder = os.path.dirname(path) or "/mnt/ssd/tiles"
             self._map_screen.prefetch_tiles(bbox, zoom=zoom, folder=folder)
         except Exception as exc:  # pragma: no cover - unexpected errors
             logger.exception("RoutePrefetcher failed: %s", exc)

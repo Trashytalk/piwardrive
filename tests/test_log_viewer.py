@@ -1,5 +1,6 @@
 import os
 from types import SimpleNamespace
+
 from typing import Any
 
 from piwardrive.widgets.log_viewer import LogViewer
@@ -24,6 +25,7 @@ def test_log_viewer_no_filter(tmp_path: Any) -> None:
 def test_log_viewer_path_menu(monkeypatch: Any) -> None:
     app = SimpleNamespace(log_paths=["/a", "/b"])
     monkeypatch.setattr("piwardrive.widgets.log_viewer.App.get_running_app", lambda: app)
+
     lv = LogViewer()
     lv.show_path_menu(None)
     items = lv._menu.kwargs["items"]  # type: ignore[attr-defined]

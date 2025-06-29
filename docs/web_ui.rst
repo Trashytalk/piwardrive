@@ -85,6 +85,6 @@ The command launches ``piwardrive-webui`` in the background and then executes
 ``chromium-browser --kiosk http://localhost:8000`` (falling back to
 ``chromium`` when ``chromium-browser`` is unavailable).
 Copy ``examples/kiosk.service`` alongside ``piwardrive-webui.service`` to start
-Chromium automatically on boot, replacing the on-device Kivy interface with the
-browser dashboard.
+Chromium automatically on boot, displaying the browser dashboard in place of the
+deprecated Kivy GUI.
 An active X server is required; headless systems may use ``Xvfb``.
