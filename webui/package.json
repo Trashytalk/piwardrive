@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node ../server/index.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint src --ext .js,.jsx"
   },
   "dependencies": {
     "chart.js": "^4.5.0",
@@ -34,6 +35,22 @@
     "vite": "^5.0.0",
     "vite-plugin-pwa": "^0.20.0",
     "vitest": "^3.2.4",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.33.2"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "browser": true,
+      "es2021": true
+    },
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module",
+      "ecmaFeatures": {
+        "jsx": true
+      }
+    }
   }
 }
