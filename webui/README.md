@@ -55,6 +55,8 @@ npm run build
 
 The compiled assets appear in `webui/dist`. They include a service worker so the interface works offline after the first visit.
 
+Vite also emits source map files alongside the compiled scripts. Open your browser's developer tools and enable source maps to debug the original React code when using a production build.
+
 ## 5. Start the API and Dashboard
 
 Return to the repository root and run the bundled server. It serves the API under `/api` and the static files generated above at the site root:
