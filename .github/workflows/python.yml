@@ -1,0 +1,29 @@
+name: Python CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+          pip install pandas orjson pyprof2calltree
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+      - name: Run tests
+        run: pytest -q
