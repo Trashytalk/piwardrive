@@ -55,7 +55,8 @@ function parseWidgets() {
 }
 
 function createServer(opts = {}) {
-  const distDir = opts.distDir || path.join(__dirname, '..', 'webui', 'dist');
+  const distDir =
+    opts.distDir || process.env.PW_WEBUI_DIST || path.join(__dirname, '..', 'webui', 'dist');
   const healthFile = opts.healthFile || process.env.PW_HEALTH_FILE;
   const app = express();
 
