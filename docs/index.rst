@@ -17,6 +17,7 @@ PiWardrive's primary interface is a React-based web dashboard served by
    security
    environment
    widgets
+   widget_plugins
    diagnostics
    persistence
    gps_polling
