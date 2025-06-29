@@ -2,6 +2,7 @@
   "name": "piwardrive-web",
   "version": "0.1.0",
   "private": true,
+  "types": "../server/server.d.ts",
   "scripts": {
     "vite": "vite",
     "dev": "nodemon ../server/index.js",
