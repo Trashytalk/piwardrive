@@ -186,7 +186,8 @@ The application recognises numerous `PW_*` variables. Any option in `config.py` 
 
 `PW_PROFILE_CALLGRIND` – Callgrind output path when profiling.
 
-`PW_LANG` – Two-letter code selecting the interface language.
+`PW_LANG` – Two-letter code selecting the interface language. See
+`docs/localization.rst` for details on adding or updating translations.
 
 ## CLI Tools
 
