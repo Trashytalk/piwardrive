@@ -462,6 +462,7 @@ for a full list. A JSON schema describing all fields is provided at
 ## Additional Documentation
 
 Comprehensive guides and API references live in the `docs/` directory. Run `make html` there to build the Sphinx site. High level summaries are collected in [REFERENCE.md](REFERENCE.md).
+Detailed examples for each command line helper are available in [docs/cli_tools.rst](docs/cli_tools.rst).
 
 ## Contributing
 
