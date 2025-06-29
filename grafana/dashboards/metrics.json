@@ -1,0 +1,29 @@
+{
+  "title": "PiWardrive Metrics",
+  "uid": "pw-metrics",
+  "schemaVersion": 37,
+  "version": 1,
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU Temp",
+      "targets": [
+        {
+          "rawSql": "SELECT datetime(timestamp) as time, cpu_temp as value FROM health_metrics ORDER BY timestamp",
+          "format": "table"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage",
+      "targets": [
+        {
+          "rawSql": "SELECT datetime(timestamp) as time, cpu_percent as value FROM health_metrics ORDER BY timestamp",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}
