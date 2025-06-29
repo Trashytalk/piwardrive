@@ -13,3 +13,11 @@ extensions = [
 html_theme = os.getenv("PW_DOC_THEME", "alabaster")
 html_title = project
 sys.path.insert(0, os.path.abspath(".."))
+
+__all__ = [
+    "project",
+    "author",
+    "extensions",
+    "html_theme",
+    "html_title",
+]
