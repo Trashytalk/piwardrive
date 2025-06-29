@@ -90,41 +90,6 @@ class PiWardriveApp:
             CONFIG_PATH, lambda: self._reload_config_event(0)
         )
 
-    # ------------------------------------------------------------------
-    # Service control with feedback
-    def control_service(self, svc: str, action: str) -> None:
-        """Run a systemctl command for a given service with retries."""
-        import getpass as _getpass
-
-        from piwardrive.security import validate_service_name as _validate
-        from piwardrive.security import verify_password as _verify
-
-        cfg_hash = getattr(self.config_data, "admin_password_hash", "")
-        pw = os.getenv("PW_ADMIN_PASSWORD")
-        if not pw:
-            try:
-                pw = _getpass.getpass("Password: ")
-            except Exception:
-                pw = ""
-        if cfg_hash and not _verify(pw or "", cfg_hash):
-            utils.report_error("Unauthorized")
-            return
-        try:
-            _validate(svc)
-        except ValueError as exc:
-            utils.report_error(str(exc))
-            return
-        try:
-            success, _out, err = self._run_service_cmd(svc, action, attempts=3, delay=1)
-        except Exception as exc:  # pragma: no cover - subprocess failures
-            utils.report_error(f"Failed to {action} {svc}: {exc}")
-            return
-        if not success:
-            msg = err.strip() if isinstance(err, str) else err
-            utils.report_error(f"Failed to {action} {svc}: {msg or 'Unknown error'}")
-            return
-        if action in {"start", "restart"} and not utils.ensure_service_running(svc):
-            utils.report_error(f"{svc} failed to stay running after {action}")
 
     async def export_logs(self, path: str | None = None, lines: int = 200) -> str:
         """Write the last ``lines`` from ``app.log`` to ``path`` and return it."""
