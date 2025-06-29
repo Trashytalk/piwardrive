@@ -96,5 +96,6 @@ Load this mapping in your application and activate it with
         custom_map = json.load(fh)
     osens.update_orientation_map(custom_map, clear=True)
 
+
 Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.

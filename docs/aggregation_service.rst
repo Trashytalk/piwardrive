@@ -18,12 +18,16 @@ By default data is stored under ``~/piwardrive-aggregation``.  Set the
 Installation
 ------------
 
-Run ``scripts/install_aggregation_service.sh`` on the target server.  The
-script creates an ``agg-env`` virtual environment, installs the required Python
-packages and writes ``/etc/systemd/system/piwardrive-aggregation.service``.
+Run ``scripts/install_aggregation_service.sh`` from the repository root on the
+target server.  The helper creates an ``agg-env`` virtual environment,
+installs the required Python packages and writes
+``/etc/systemd/system/piwardrive-aggregation.service``.
 Enable the unit with::
 
     sudo systemctl enable --now piwardrive-aggregation.service
+
+The unit installed by the script matches ``examples/piwardrive-aggregation.service``
+which you can also copy manually into ``/etc/systemd/system/``.
 
 Endpoints
 ---------
