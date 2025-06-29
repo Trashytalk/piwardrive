@@ -111,6 +111,7 @@ def test_load_config_invalid_json_monkeypatch(monkeypatch: Any, tmp_path: Path) 
     cfg_file.write_text("{invalid}")
     monkeypatch.setattr(config, "CONFIG_PATH", str(cfg_file))
     import piwardrive.core.config as core
+
     monkeypatch.setattr(core, "CONFIG_PATH", str(cfg_file))
     data = config.load_config()
     assert asdict(data) == asdict(config.DEFAULT_CONFIG)

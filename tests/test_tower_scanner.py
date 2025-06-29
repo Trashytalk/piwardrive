@@ -3,7 +3,9 @@ import os
 import sys
 
 from piwardrive.sigint_suite.cellular.tower_scanner.scanner import (
-    async_scan_towers, scan_towers)
+    async_scan_towers,
+    scan_towers,
+)
 
 
 def test_scan_towers(monkeypatch):

@@ -1,11 +1,15 @@
 import numpy as np
 import pandas as pd
 
-from piwardrive.advanced_localization import (Config, _kalman_1d,
-                                              apply_kalman_filter,
-                                              estimate_ap_location_centroid,
-                                              localize_aps, remove_outliers,
-                                              rssi_to_distance)
+from piwardrive.advanced_localization import (
+    Config,
+    _kalman_1d,
+    apply_kalman_filter,
+    estimate_ap_location_centroid,
+    localize_aps,
+    remove_outliers,
+    rssi_to_distance,
+)
 
 
 def test_kalman_1d_empty() -> None:

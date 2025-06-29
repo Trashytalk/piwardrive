@@ -44,7 +44,7 @@ class DummyScheduler:
         cb(0)
 
     def cancel(self, name: str) -> None:
-        pass
+        pass  # pragma: no cover - not used
 
 
 def test_tile_maintenance_runs(tmp_path: Path, monkeypatch):

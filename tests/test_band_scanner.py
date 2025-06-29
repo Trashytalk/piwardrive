@@ -4,7 +4,9 @@ import sys
 import types
 
 from piwardrive.sigint_suite.cellular.band_scanner.scanner import (
-    async_scan_bands, scan_bands)
+    async_scan_bands,
+    scan_bands,
+)
 
 
 def test_scan_bands_parses_output(monkeypatch):

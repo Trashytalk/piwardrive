@@ -311,12 +311,6 @@ async def list_widgets(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
 
-# Alias without the "/api" prefix for mounting under ``/api``
-
-
-@GET("/widgets")
-async def list_widgets_alias(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
-    return await list_widgets(_auth)
 
 
 @GET("/widget-metrics")

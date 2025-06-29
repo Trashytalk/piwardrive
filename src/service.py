@@ -22,6 +22,7 @@ from typing import Any, Callable  # noqa: E402
 
 from piwardrive import orientation_sensors  # noqa: F401,E402
 from piwardrive import service as _p  # noqa: E402
+
 # Re-export everything from the real module
 from piwardrive.service import *  # noqa: F401,F403,E402
 
