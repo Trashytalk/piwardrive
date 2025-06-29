@@ -90,6 +90,18 @@ PW_API_PASSWORD_HASH=$MY_HASH PORT=9000 node server/index.js
 PW_API_PASSWORD_HASH=$MY_HASH PORT=9000 npm start
 ```
 
+## PW_HEALTH_FILE
+
+`server/index.js` also checks for `PW_HEALTH_FILE`. Set it to the path of a
+JSON file containing health records. The server reads this file whenever the
+`/api/status` route is requested and returns its contents.
+
+Example:
+
+```bash
+PW_HEALTH_FILE=/var/log/piwardrive/health.json npm start
+```
+
 
 ## 6. Development Mode
 
