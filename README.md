@@ -1,5 +1,7 @@
 # PiWardrive
 
+[![codecov](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg)](https://codecov.io/gh/TRASHYTALK/piwardrive)
+
 PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
 
 ```bash
@@ -190,7 +192,9 @@ source gui-env/bin/activate
 
    ```bash
    sudo systemctl enable kismet bettercap gpsd
-8. (Optional) copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it to run the API and dashboard on boot:
+   ```
+
+8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
 
    ```bash
@@ -325,7 +329,9 @@ environment. Ensure an X server is available and `$DISPLAY` is set.
 Headless setups can use `Xvfb`.
 
 Combine the web UI service with the example `kiosk.service` unit to
-launch the browser automatically on boot.
+launch the browser automatically on boot. This setup fully replaces the
+on-device Kivy GUI so the Pi's touch screen displays the React dashboard
+in full‑screen mode.
 
 ### Optional C Extensions
 
@@ -370,14 +376,13 @@ configuration and compiled assets persist between container restarts.
 
 #### Manual Steps
 
-* **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
-* **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
-* **Systemd Service Setup** – copy `examples/piwardrive-webui.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service` to launch the backend on boot.
-* **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
-* **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
-* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
-* **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
-
+- **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
+- **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
+- **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
+- **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
+- **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
+- **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
+- **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
 - **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
@@ -431,7 +436,7 @@ WantedBy=multi-user.target
    paths if PiWardrive lives elsewhere. The unit starts `startx` which runs
    `~/.xsession` and in turn launches Chromium in kiosk mode.
 
-5. **(Optional) `piwardrive-webui.service`**
+5. **(Optional) `piwardrive.service`**
 
    ```ini
    [Unit]
