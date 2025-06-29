@@ -78,6 +78,21 @@ enable SSH for remote access. A quality power supply is required when using
 external Wi‑Fi adapters and an SSD. Insufficient power may lead to USB errors or
 file system corruption.
 
+.. _wireless-tools:
+
+Kismet and BetterCAP
+--------------------
+
+Sample ``kismet.conf``::
+
+   suiduser=pi
+   log_prefix=/mnt/ssd/kismet_logs
+   source=wlan0:name=wlan0
+
+Run BetterCAP with a simple caplet::
+
+   sudo bettercap -iface wlan0 --caplet /usr/local/etc/bettercap/alfa.cap
+
 Troubleshooting
 ---------------
 
