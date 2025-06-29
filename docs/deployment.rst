@@ -30,6 +30,7 @@ SD Card Image
        pip install -r requirements.txt
 
 4. Enable ``kismet``, ``bettercap`` and ``gpsd`` so they start on boot (``systemctl enable <svc>``).
+   See :ref:`wireless-tools` for example configuration files.
 5. Grant your user permission to manage systemd units over DBus by creating a ``polkit`` rule allowing ``org.freedesktop.systemd1.manage-units``.
 6. (Optional) build the React web UI and install `examples/piwardrive-webui.service` to start the API and dashboard on boot::
 
