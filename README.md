@@ -190,21 +190,19 @@ source gui-env/bin/activate
 
    ```bash
    sudo systemctl enable kismet bettercap gpsd
-   ```
+8. (Optional) copy `examples/piwardrive-webui.service` into `/etc/systemd/system/` and enable it to run the API and dashboard on boot:
 
-8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
    ```bash
-   sudo cp examples/piwardrive.service /etc/systemd/system/
-   sudo systemctl enable --now piwardrive.service
+   sudo cp examples/piwardrive-webui.service /etc/systemd/system/
+   sudo systemctl enable --now piwardrive-webui.service
    ```
 
 9. Start the application manually if the service is not enabled:
 
    ```bash
-   piwardrive-service
+   piwardrive-webui
    ```
-
 #### Optional Dependencies
 
 Some components rely on additional Python packages. Install them only if you need the corresponding feature:
@@ -327,10 +325,7 @@ environment. Ensure an X server is available and `$DISPLAY` is set.
 Headless setups can use `Xvfb`.
 
 Combine the web UI service with the example `kiosk.service` unit to
-launch the browser automatically on boot. This setup fully replaces the
-legacy Kivy GUI so the Pi's touch screen displays the React dashboard in
-full‑screen mode. The Kivy interface is deprecated and no longer
-maintained.
+launch the browser automatically on boot.
 
 ### Optional C Extensions
 
@@ -375,13 +370,14 @@ configuration and compiled assets persist between container restarts.
 
 #### Manual Steps
 
-- **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
-- **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
-- **Systemd Service Setup** – copy `examples/piwardrive.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive.service` to launch the backend on boot.
-- **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
-- **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
-- **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
-- **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
+* **Installation** – run `scripts/quickstart.sh` or follow the manual steps to clone the repo, create a virtualenv and install dependencies.
+* **Launching the App** – activate the environment and start PiWardrive with `python -m piwardrive.main`.
+* **Systemd Service Setup** – copy `examples/piwardrive-webui.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable --now piwardrive-webui.service` to launch the backend on boot.
+* **Running the Status API** – start the FastAPI service manually with `piwardrive-service` to expose remote metrics.
+* **Browser Kiosk Mode** – build the React frontend (see above) and launch it with `piwardrive-kiosk` to start the server and open Chromium automatically.
+* **Map Tile Prefetch** – use `piwardrive-prefetch` to download map tiles without launching the dashboard.
+* **Syncing Data** – set `remote_sync_url` (and optionally `remote_sync_interval`)
+
   in `~/.config/piwardrive/config.json` and trigger uploads via `/sync` or call
   `remote_sync.sync_database_to_server` directly.
 - **Offline Vector Tile Customizer** – `piwardrive-mbtiles` builds and styles offline tile sets.
@@ -398,7 +394,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi/piwardrive
-ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-service
+ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-webui
 Restart=on-failure
 
 [Install]
@@ -435,7 +431,7 @@ WantedBy=multi-user.target
    paths if PiWardrive lives elsewhere. The unit starts `startx` which runs
    `~/.xsession` and in turn launches Chromium in kiosk mode.
 
-5. **(Optional) `piwardrive.service`**
+5. **(Optional) `piwardrive-webui.service`**
 
    ```ini
    [Unit]
@@ -446,7 +442,7 @@ WantedBy=multi-user.target
    Type=simple
    User=pi
    WorkingDirectory=/home/pi/piwardrive
-   ExecStart=/home/pi/piwardrive/venv/bin/uvicorn piwardrive.webui_server:app --reload
+   ExecStart=/home/pi/piwardrive/gui-env/bin/piwardrive-webui
    Restart=on-failure
 
    [Install]
@@ -457,12 +453,12 @@ WantedBy=multi-user.target
 
    ```bash
    sudo systemctl enable kiosk.service
-   sudo systemctl enable piwardrive.service  # optional
+   sudo systemctl enable piwardrive-webui.service  # optional
    sudo reboot
    ```
 
 7. **Verification**
-   After reboot, Chromium should launch automatically in full-screen kiosk mode displaying the PiWardrive dashboard. If it does not, check the service logs with `journalctl -u kiosk.service` and `journalctl -u piwardrive.service`.
+   After reboot, Chromium should launch automatically in full-screen kiosk mode displaying the PiWardrive dashboard. If it does not, check the service logs with `journalctl -u kiosk.service` and `journalctl -u piwardrive-webui.service`.
 
 ## Mobile Builds
 

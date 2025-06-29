@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `piwardrive
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The old Kivy/KivyMD GUI is deprecated and no longer maintained—the React web UI is the only supported interface. Start it with `python -m piwardrive.webui_server` after building the frontend. PiWardrive manages Wi‑Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy Kivy interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -52,10 +52,7 @@ cd ~/piwardrive
 source gui-env/bin/activate
 piwardrive
 ```
-
-The UI renders directly to the framebuffer without X. Use the top tabs to switch between Map, Stats, Split, Console, Settings and Dashboard screens. Widgets can be dragged on the Dashboard and their layout is persisted.
-
-## Widgets and Plugins
+Open the dashboard at ``http://localhost:8000`` in a browser after starting ``piwardrive-webui``.
 
 Dashboard widgets display metrics such as CPU temperature, handshake counts and service status. Custom widgets may be placed in `~/.config/piwardrive/plugins` and are discovered automatically at startup. Each widget subclasses `widgets.base.DashboardWidget` and implements an `update()` method. A built-in battery widget is available when the hardware exposes charge information.
 See `docs/widget_plugins.rst` for the expected directory structure.
