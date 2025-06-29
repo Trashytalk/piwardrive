@@ -3,7 +3,6 @@ from piwardrive.sigint_suite.wifi.scanner import _parse_iwlist_output, scan_wifi
 from piwardrive.sigint_suite.bluetooth.scanner import (
     _scan_bluetoothctl,
     _async_scan_bluetoothctl,
-    BluetoothDevice,
 )
 
 

@@ -30,7 +30,6 @@ def _dummy_modules(monkeypatch):
 
 
 from piwardrive import tile_maintenance  # noqa: E402
-from piwardrive.scheduler import PollScheduler  # noqa: E402
 
 
 class DummyScheduler:

@@ -2,9 +2,6 @@ import importlib
 import logging
 import os
 import sys
-import types
-
-from piwardrive.sigint_suite import paths
 
 
 def _reload_module(monkeypatch, tmp_path):

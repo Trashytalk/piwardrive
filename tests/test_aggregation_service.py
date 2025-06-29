@@ -1,7 +1,6 @@
 import importlib
 import os
 import sqlite3
-import sys
 
 from fastapi.testclient import TestClient
 

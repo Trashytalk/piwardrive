@@ -1,5 +1,4 @@
-import os
-import sys
+
 
 from piwardrive.sigint_suite.hooks import register_post_processor  # noqa: E402
 from piwardrive.sigint_suite.wifi.scanner import scan_wifi  # noqa: E402

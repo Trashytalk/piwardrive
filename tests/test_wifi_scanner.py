@@ -1,8 +1,4 @@
 import asyncio
-import os
-import sys
-
-import pytest
 
 from piwardrive.sigint_suite.wifi.scanner import async_scan_wifi, scan_wifi
 

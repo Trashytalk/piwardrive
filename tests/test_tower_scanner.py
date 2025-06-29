@@ -1,6 +1,4 @@
 import asyncio
-import os
-import sys
 
 from piwardrive.sigint_suite.cellular.tower_scanner.scanner import (
     async_scan_towers,

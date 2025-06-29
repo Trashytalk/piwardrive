@@ -1,6 +1,4 @@
 import builtins
-import os
-import sys
 from types import SimpleNamespace
 
 from piwardrive.sigint_suite.bluetooth import scan_bluetooth

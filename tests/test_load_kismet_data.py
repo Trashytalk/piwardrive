@@ -1,8 +1,6 @@
 import sqlite3
 from pathlib import Path
 
-import pandas as pd
-
 from piwardrive.advanced_localization import load_kismet_data
 
 

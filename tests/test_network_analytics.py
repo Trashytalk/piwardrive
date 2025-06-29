@@ -1,6 +1,3 @@
-import os
-import sys
-
 from piwardrive import network_analytics
 
 

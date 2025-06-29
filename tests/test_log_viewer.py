@@ -4,7 +4,6 @@ import os
 import sys
 from types import ModuleType, SimpleNamespace
 
-import pytest
 
 modules = {
     "kivy": ModuleType("kivy"),

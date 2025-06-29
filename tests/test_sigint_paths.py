@@ -1,5 +1,4 @@
 import importlib
-import os
 
 
 def test_export_dir_env_override(monkeypatch, tmp_path):
