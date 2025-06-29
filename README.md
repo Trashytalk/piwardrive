@@ -221,6 +221,13 @@ Follow these steps to configure the Python and React development environment.
      nodejs npm
    ```
 
+> PiWardrive's frontend and tests rely on **Node.js 18+**. Verify the tools
+> are installed and meet the version requirement:
+> ```bash
+> node --version
+> npm --version
+> ```
+
 3. **Create and activate a Python venv**
    ```bash
    python3 -m venv venv

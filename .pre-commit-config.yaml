@@ -33,6 +33,10 @@ repos:
         language: system
         types: [python]
         args: ["-q"]
+
+      - id: npm-test
+        name: npm test
+        entry: bash -c 'cd webui && npm test'
       - id: npm-lint
         name: npm lint
         entry: bash -c "cd webui && npm run lint"
