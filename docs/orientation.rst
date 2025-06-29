@@ -164,3 +164,8 @@ when PiWardrive starts. The file should contain the mapping produced by
 invocation looks like::
 
    PW_ORIENTATION_MAP_FILE=/path/to/orientation_map.json python -m piwardrive.main
+
+You can also point the variable to the example mapping bundled with the
+repository::
+
+   PW_ORIENTATION_MAP_FILE=examples/orientation_map.json python -m piwardrive.main
