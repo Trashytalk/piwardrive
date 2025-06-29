@@ -41,3 +41,14 @@ use the ``piwardrive-migrate`` command::
 
 Deleting ``app.db`` will recreate it with the latest schema, but the migration
 command is useful when upgrading an existing installation.
+
+Database Summary
+----------------
+
+Health monitor databases copied from remote devices can grow quickly. The
+``db-summary`` command prints row counts for important tables so you can gauge
+their size::
+
+   db-summary ~/piwardrive/health.db
+
+Pass ``--json`` to emit machine-readable output.
