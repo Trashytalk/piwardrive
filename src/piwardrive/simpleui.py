@@ -52,10 +52,12 @@ class BoxLayout:
 
 
 class ScrollView:
-    def __init__(self, **_kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.width: int = 0
         self.children: list[Any] = []
         self.scroll_y: float = 0.0
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def add_widget(self, widget: Any) -> None:
         self.children.append(widget)
@@ -82,6 +84,8 @@ class Image:
 class DropdownMenu:
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs: dict[str, Any] = kwargs
+        # Expose kwargs on the class for tests that inspect it
+        type(self).kwargs = kwargs
 
     def open(self) -> None:
         pass

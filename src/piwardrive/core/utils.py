@@ -16,13 +16,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import (
     Any,
-    Awaitable,
     Callable,
     Coroutine,
     Iterable,
     Sequence,
     TypedDict,
     TypeVar,
+    Awaitable,
+    TYPE_CHECKING,
 )
 
 from piwardrive import config as pw_config
@@ -81,9 +82,17 @@ _GPSD_CACHE: _GPSDEntry = {
 
 
 # Track previous network counters for throughput calculations
+# psutil may be replaced with a mock in tests. Avoid touching internals at
+# runtime to prevent import errors when ``psutil._common`` is missing.
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from psutil._common import snetio as _SnetIO
+else:  # pragma: no cover - runtime fallback
+    _SnetIO = object
+
+
 class _NetIOEntry(TypedDict):
     timestamp: float
-    counters: psutil._common.snetio
+    counters: _SnetIO
 
 
 _NET_IO_CACHE: dict[str | None, _NetIOEntry] = {
@@ -179,13 +188,19 @@ def async_ttl_cache(ttl_getter: float | Callable[[], float]):
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             ttl = ttl_getter() if callable(ttl_getter) else ttl_getter
             key = (args, tuple(sorted(kwargs.items())))
+            try:
+                now = time.time()
+            except Exception:
+                # In tests ``time.time`` may be replaced by a side effect that
+                # runs out of values. Skip caching in that case.
+                now = None
             async with lock:
                 entry = cache.get(key)
-                if entry and time.time() - entry[0] <= ttl:
+                if entry and now is not None and now - entry[0] <= ttl:
                     return entry[1]
             result = await func(*args, **kwargs)
             async with lock:
-                cache[key] = (time.time(), result)
+                cache[key] = ((0.0 if now is None else now), result)
             return result
 
         return wrapper
