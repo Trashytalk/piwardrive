@@ -1,11 +1,5 @@
-import os
 import sys
 from types import SimpleNamespace
-
-# minimal Kivy stub for testing without the real dependency
-sys.modules["kivy.app"] = SimpleNamespace(
-    App=type("App", (), {"get_running_app": staticmethod(lambda: None)})
-)
 
 
 # lightweight scheduler and utils modules for import
@@ -23,11 +17,7 @@ def _haversine(a, b):
     return 6371000 * 2 * math.atan2(math.sqrt(aa), math.sqrt(1 - aa))
 
 
-sys.modules["scheduler"] = SimpleNamespace(PollScheduler=object)
 sys.modules["utils"] = SimpleNamespace(haversine_distance=_haversine)
-
-import pytest
-
 from piwardrive import route_prefetch  # noqa: E402
 
 
@@ -59,12 +49,21 @@ class DummyMap:
 def test_route_prefetcher_runs(monkeypatch):
     sched = DummyScheduler()
     m = DummyMap()
-    monkeypatch.setattr(
-        route_prefetch.App,
-        "get_running_app",
-        lambda: SimpleNamespace(offline_tile_path="/tiles/off.mbtiles"),
+    monkeypatch.setitem(
+        sys.modules,
+        "piwardrive.utils",
+        SimpleNamespace(haversine_distance=_haversine),
     )
-    route_prefetch.RoutePrefetcher(sched, m, interval=1, lookahead=1)
+    import importlib
+
+    route_prefetch = importlib.import_module("piwardrive.route_prefetch")
+    route_prefetch.RoutePrefetcher(
+        sched,
+        m,
+        interval=1,
+        lookahead=1,
+        offline_tile_path="/tiles/off.mbtiles",
+    )
     assert ("route_prefetch", 1) in sched.scheduled
     assert m.called
     assert m.zoom == 16
@@ -75,12 +74,21 @@ def test_route_prefetcher_no_points(monkeypatch):
     sched = DummyScheduler()
     m = DummyMap()
     m.track_points = []
-    monkeypatch.setattr(
-        route_prefetch.App,
-        "get_running_app",
-        lambda: SimpleNamespace(offline_tile_path="/tiles/off.mbtiles"),
+    monkeypatch.setitem(
+        sys.modules,
+        "piwardrive.utils",
+        SimpleNamespace(haversine_distance=_haversine),
     )
-    route_prefetch.RoutePrefetcher(sched, m, interval=1, lookahead=1)
+    import importlib
+
+    route_prefetch = importlib.import_module("piwardrive.route_prefetch")
+    route_prefetch.RoutePrefetcher(
+        sched,
+        m,
+        interval=1,
+        lookahead=1,
+        offline_tile_path="/tiles/off.mbtiles",
+    )
     # callback executed but nothing prefetched
     assert ("route_prefetch", 1) in sched.scheduled
     assert not m.called
@@ -89,12 +97,21 @@ def test_route_prefetcher_no_points(monkeypatch):
 def test_predict_points(monkeypatch):
     sched = DummyScheduler()
     m = DummyMap()
-    monkeypatch.setattr(
-        route_prefetch.App,
-        "get_running_app",
-        lambda: SimpleNamespace(offline_tile_path="/tiles/off.mbtiles"),
+    monkeypatch.setitem(
+        sys.modules,
+        "piwardrive.utils",
+        SimpleNamespace(haversine_distance=_haversine),
     )
-    rp = route_prefetch.RoutePrefetcher(sched, m, interval=1, lookahead=1)
+    import importlib
+
+    route_prefetch = importlib.import_module("piwardrive.route_prefetch")
+    rp = route_prefetch.RoutePrefetcher(
+        sched,
+        m,
+        interval=1,
+        lookahead=1,
+        offline_tile_path="/tiles/off.mbtiles",
+    )
     pts = rp._predict_points()
     assert pts
     lat, lon = pts[0]

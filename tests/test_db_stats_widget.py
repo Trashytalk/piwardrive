@@ -5,27 +5,12 @@ import sys
 from typing import Any
 
 
-def _load_widget(add_dummy_module):
-    add_dummy_module("kivy.metrics", dp=lambda x: x)
-    add_dummy_module(
-        "kivymd.uix.label",
-        MDLabel=type("MDLabel", (), {"__init__": lambda self, **kw: None, "text": ""}),
-    )
-    add_dummy_module(
-        "kivymd.uix.card",
-        MDCard=type(
-            "MDCard",
-            (),
-            {"__init__": lambda self, **kw: None, "add_widget": lambda self, w: None},
-        ),
-    )
-    add_dummy_module("kivy.uix.behaviors", DragBehavior=type("DragBehavior", (), {}))
-    add_dummy_module("kivymd.uix.boxlayout", MDBoxLayout=type("MDBoxLayout", (), {}))
+def _load_widget():
     return importlib.import_module("piwardrive.widgets.db_stats")
 
 
-def test_widget_update(monkeypatch: Any, add_dummy_module) -> None:
-    ds = _load_widget(add_dummy_module)
+def test_widget_update(monkeypatch: Any) -> None:
+    ds = _load_widget()
     widget = object.__new__(ds.DBStatsWidget)
     widget.label = ds.MDLabel()  # type: ignore[attr-defined]
 

@@ -20,6 +20,7 @@ try:  # pragma: no cover - optional FastAPI dependency
         WebSocket,
         WebSocketDisconnect,
     )
+    from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
 except Exception:
@@ -31,6 +32,7 @@ except Exception:
             "post": lambda *a, **k: (lambda f: f),
             "delete": lambda *a, **k: (lambda f: f),
             "websocket": lambda *a, **k: (lambda f: f),
+            "add_middleware": lambda *a, **k: None,
         },
     )  # type: ignore[misc, assignment]
 
@@ -58,6 +60,7 @@ except Exception:
         (),
         {},
     )  # type: ignore[misc, assignment]
+    CORSMiddleware = object  # type: ignore[misc, assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from fastapi import (
@@ -71,6 +74,7 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
     )
     from fastapi.responses import Response, StreamingResponse
     from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.middleware.cors import CORSMiddleware
 
 import asyncio
 import importlib
@@ -199,6 +203,16 @@ security = HTTPBasic(auto_error=False)
 SECURITY_DEP = Depends(security)
 BODY = Body(...)
 app = FastAPI()
+cors_origins_env = os.getenv("PW_CORS_ORIGINS", "")
+cors_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
@@ -816,7 +830,8 @@ async def main() -> None:
 
     import uvicorn
 
-    config = uvicorn.Config(app, host="127.0.0.1", port=8000)
+    port = int(os.getenv("PW_SERVICE_PORT", "8000"))
+    config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = uvicorn.Server(config)
     await server.serve()
     vehicle_sensors.close_obd()
