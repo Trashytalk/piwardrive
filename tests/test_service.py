@@ -676,3 +676,25 @@ def test_lora_scan_endpoint(monkeypatch) -> None:
         resp = client.get("/lora-scan?iface=l0")
         assert resp.status_code == 200
         assert resp.json() == {"count": 2, "lines": ["a", "b"]}
+
+
+def test_auth_login_valid(monkeypatch) -> None:
+    pw_hash = security.hash_password("pw")
+
+    async def fake_get_user(username: str):
+        return persistence.User(username=username, password_hash=pw_hash)
+
+    monkeypatch.setattr(service, "get_user", fake_get_user)
+    monkeypatch.setattr("piwardrive.service.get_user", fake_get_user)
+    service.TOKENS.clear()
+    client = TestClient(service.app)
+    resp = client.post(
+        "/auth/login",
+        data={"username": "admin", "password": "pw"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["token_type"] == "bearer"
+    assert data["access_token"] in service.TOKENS
+
