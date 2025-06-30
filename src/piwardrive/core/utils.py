@@ -36,7 +36,6 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover - fallback when sigint_suite is missing
     BluetoothDevice = dict[str, Any]
 from concurrent.futures import Future
-
 from enum import IntEnum
 
 import psutil
@@ -683,6 +682,8 @@ async def _run_service_cmd_async(
     from piwardrive.security import validate_service_name
 
     validate_service_name(service)
+    if attempts <= 0:
+        raise ValueError("attempts must be >= 1")
     if action not in {"start", "stop", "restart", "is-active"}:
         raise ValueError(f"Invalid action: {action}")
 
