@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from typing import Callable, List, ParamSpec, Sequence, TypeVar
 
 from .logconfig import setup_logging
+from .core import config
+from .scheduler import PollScheduler
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -24,6 +26,12 @@ def _noop(func: Callable[P, R]) -> Callable[P, R]:
 profile: Callable[[Callable[P, R]], Callable[P, R]] = globals().get("profile", _noop)
 
 
+def _allowed() -> bool:
+    cfg = config.AppConfig.load()
+    rules = cfg.scan_rules.get("lora", {}) if hasattr(cfg, "scan_rules") else {}
+    return PollScheduler.check_rules(rules)
+
+
 PACKET_RE = re.compile(r"(\w+)=([\w.:-]+)")
 
 logger = logging.getLogger(__name__)
@@ -31,6 +39,8 @@ logger = logging.getLogger(__name__)
 
 def scan_lora(interface: str = "lora0") -> List[str]:
     """Invoke an external LoRa scanning tool and return raw lines."""
+    if not _allowed():
+        return []
     cmd = ["lora-scan", "--iface", interface]
     try:
         proc = subprocess.run(  # nosec B603
@@ -44,6 +54,8 @@ def scan_lora(interface: str = "lora0") -> List[str]:
 
 async def async_scan_lora(interface: str = "lora0") -> List[str]:
     """Asynchronously invoke the LoRa scanning tool and return raw lines."""
+    if not _allowed():
+        return []
     cmd = ["lora-scan", "--iface", interface]
     try:
         proc = await asyncio.create_subprocess_exec(

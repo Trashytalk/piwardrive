@@ -131,6 +131,7 @@ class Config:
     mysql_user: str = "piwardrive"  # noqa: V107
     mysql_password: str = ""  # noqa: V107
     mysql_db: str = "piwardrive"  # noqa: V107
+    scan_rules: Dict[str, Any] = field(default_factory=dict)  # noqa: V107
 
 
 DEFAULT_CONFIG = Config()
@@ -207,6 +208,7 @@ class FileConfigModel(BaseModel):
     mysql_user: Optional[str] = None
     mysql_password: Optional[str] = None
     mysql_db: Optional[str] = None
+    scan_rules: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ConfigModel(FileConfigModel):
@@ -236,6 +238,8 @@ class ConfigModel(FileConfigModel):
     mysql_user: str = DEFAULTS["mysql_user"]
     mysql_password: str = DEFAULTS["mysql_password"]
     mysql_db: str = DEFAULTS["mysql_db"]
+    scan_rules: Dict[str, Any] = field(default_factory=dict)
+    scan_rules: Dict[str, Any] = Field(default_factory=dict)
 
     theme: Theme
 

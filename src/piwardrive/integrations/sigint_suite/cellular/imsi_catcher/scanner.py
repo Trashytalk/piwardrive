@@ -7,12 +7,21 @@ import shlex
 import subprocess
 from typing import Any, Callable, List, Optional, cast
 
+from piwardrive.core import config
+from piwardrive.scheduler import PollScheduler
+
 from piwardrive.sigint_suite.cellular.parsers import parse_imsi_output
 from piwardrive.sigint_suite.gps import get_position
 from piwardrive.sigint_suite.hooks import apply_post_processors
 from piwardrive.sigint_suite.models import ImsiRecord
 
 logger = logging.getLogger(__name__)
+
+
+def _allowed() -> bool:
+    cfg = config.AppConfig.load()
+    rules = cfg.scan_rules.get("imsi", {}) if hasattr(cfg, "scan_rules") else {}
+    return PollScheduler.check_rules(rules)
 
 
 def scan_imsis(
@@ -22,6 +31,8 @@ def scan_imsis(
     timeout: Optional[int] = None,
 ) -> List[dict[str, Any]]:
     """Scan for IMSI numbers using an external command."""
+    if not _allowed():
+        return []
     cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
     args = shlex.split(cmd_str)
     timeout = (
@@ -63,6 +74,8 @@ async def async_scan_imsis(
     timeout: int | None = None,
 ) -> List[ImsiRecord]:
     """Asynchronously scan for IMSI numbers."""
+    if not _allowed():
+        return []
     cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
     args = shlex.split(cmd_str)
     timeout = (
