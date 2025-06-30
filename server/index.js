@@ -32,6 +32,9 @@ function basicAuth(req, res, next) {
   next();
 }
 
+let widgetCache = null;
+let widgetStamp = 0;
+
 function parseWidgets() {
   const file = path.join(
     __dirname,
@@ -42,15 +45,37 @@ function parseWidgets() {
     '__init__.py',
   );
   const script = path.join(__dirname, 'parse_widgets.py');
+
+  try {
+    const mtime = fs.statSync(file).mtimeMs;
+    if (widgetCache && widgetStamp === mtime) {
+      return widgetCache;
+    }
+  } catch {
+    // ignore stat errors and regenerate cache
+  }
+
   try {
     const { spawnSync } = require('child_process');
     const proc = spawnSync('python3', [script, file], { encoding: 'utf8' });
     if (proc.status !== 0) {
       throw new Error(proc.stderr.trim() || 'failed');
     }
-    return JSON.parse(proc.stdout);
+    const data = JSON.parse(proc.stdout);
+    if (!Array.isArray(data) || !data.every(w => typeof w === 'string')) {
+      throw new Error('invalid widget data');
+    }
+    widgetCache = data;
+    try {
+      widgetStamp = fs.statSync(file).mtimeMs;
+    } catch {
+      widgetStamp = 0;
+    }
+    return widgetCache;
   } catch {
-    return [];
+    widgetCache = [];
+    widgetStamp = 0;
+    return widgetCache;
   }
 }
 
