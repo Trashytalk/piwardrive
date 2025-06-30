@@ -61,11 +61,18 @@ Use the ``/sync`` endpoint exposed by ``piwardrive.service`` or call
     curl -X POST http://localhost:8000/sync
 
     # or in Python
-    import asyncio, remote_sync
-    asyncio.run(remote_sync.sync_database_to_server(
-        '~/.config/piwardrive/health.db',
-        'http://10.0.0.2:9000/'
-    ))
+    import asyncio
+    from remote_sync import sync_database_to_server
+
+    async def upload():
+        await sync_database_to_server(
+            db_path="/home/pi/piwardrive.db",
+            url="https://example.com/upload",
+            timeout=60,
+            retries=5,
+        )
+
+    asyncio.run(upload())
 
 The database will be uploaded to the server where it can be processed or backed
 up as needed.
@@ -82,16 +89,17 @@ many attempts are made before giving up.  The function raises
 Example::
 
     import asyncio
-    from piwardrive import remote_sync
+    from remote_sync import sync_database_to_server
 
-    asyncio.run(
-        remote_sync.sync_database_to_server(
-            "~/piwardrive/health.db",
-            "http://10.0.0.2:9000/",
-            timeout=10,
+    async def upload():
+        await sync_database_to_server(
+            db_path="/home/pi/piwardrive.db",
+            url="https://example.com/upload",
+            timeout=60,
             retries=5,
         )
-    )
+
+    asyncio.run(upload())
 
 Command Line Helper
 -------------------
