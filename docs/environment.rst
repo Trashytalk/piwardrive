@@ -306,7 +306,7 @@ SIGINT Suite
     Timeout in seconds for ``TOWER_SCAN_CMD`` (default ``10``).
 
 ``EXPORT_DIR``
-    Output directory for scripts under ``piwardrive/sigint_suite/scripts``.
+    Output directory for scripts under ``piwardrive/integrations/sigint_suite/scripts``.
 
 ``SIGINT_EXPORT_DIR``
     Directory searched by :func:`sigint_integration.load_sigint_data`.
