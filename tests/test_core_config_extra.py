@@ -60,6 +60,13 @@ def test_apply_env_overrides_remote_sync_url(monkeypatch):
     assert result["remote_sync_url"] == "http://example.com"
 
 
+def test_apply_env_overrides_mysql(monkeypatch):
+    base = {"mysql_host": "localhost"}
+    monkeypatch.setenv("PW_MYSQL_HOST", "db.example.com")
+    result = config._apply_env_overrides(base)
+    assert result["mysql_host"] == "db.example.com"
+
+
 @pytest.mark.parametrize(
     "raw,default,expected",
     [
