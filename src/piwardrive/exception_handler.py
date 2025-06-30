@@ -63,7 +63,7 @@ def install(app: FastAPI | None = None) -> None:
     if app is not None and FastAPI is not None:
 
         @app.exception_handler(Exception)  # type: ignore[arg-type]
-        async def _fastapi_handler(request: Request, exc: Exception):
+        async def _fastapi_handler(request: Request, exc: Exception) -> JSONResponse:
             logging.exception("Unhandled FastAPI exception", exc_info=exc)
             return JSONResponse(
                 status_code=500,

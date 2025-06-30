@@ -12,7 +12,8 @@ from pathlib import Path
 class _DBHandler(http.server.BaseHTTPRequestHandler):
     db_path: Path
 
-    def do_GET(self):  # pragma: no cover - simple HTTP handler
+    def do_GET(self) -> None:  # pragma: no cover - simple HTTP handler
+        conn = None
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cur = conn.execute(
