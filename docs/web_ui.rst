@@ -81,6 +81,13 @@ variable ``PW_API_PASSWORD_HASH`` to a password hash created with::
 
 to require a password. When the variable is not set, the endpoints are public.
 
+Some routes performing privileged actions, such as
+``/service/{name}`` and ``/service/{name}/{action}``, require a bearer token.
+Post valid credentials to ``/token`` and supply the returned token in an
+``Authorization: Bearer`` header for subsequent requests.
+The console screen now only displays logs and no longer runs arbitrary
+commands.
+
 Launching in Kiosk Mode
 -----------------------
 

@@ -288,10 +288,6 @@ class LoraScanResponse(typing.TypedDict):
     lines: list[str]
 
 
-class CommandResponse(typing.TypedDict):
-    output: str
-
-
 class ServiceControlResponse(typing.TypedDict):
     service: str
     action: str
@@ -728,27 +724,6 @@ async def lora_scan_endpoint(
     """Run ``lora-scan`` on ``iface`` and return output lines."""
     lines = await async_scan_lora(iface)
     return {"count": len(lines), "lines": lines}
-
-
-@POST("/command")
-async def run_command(
-    data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
-) -> CommandResponse:
-    """Execute a shell command and return its output."""
-    cmd = str(data.get("cmd", "")).strip()
-    if not cmd:
-        raise HTTPException(status_code=400, detail=error_json(400, "cmd required"))
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
-    )
-    try:
-        out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
-    except asyncio.TimeoutError:
-        proc.kill()
-        return error_json(408, "timeout")
-    return {"output": out.decode()}
 
 
 @POST("/service/{name}/{action}")
