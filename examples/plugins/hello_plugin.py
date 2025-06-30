@@ -2,9 +2,9 @@
 
 from datetime import datetime
 
-from kivy.metrics import dp
-from kivymd.uix.card import MDCard
-from kivymd.uix.label import MDLabel
+from piwardrive.simpleui import Card as MDCard
+from piwardrive.simpleui import Label as MDLabel
+from piwardrive.simpleui import dp
 
 from widgets.base import DashboardWidget
 

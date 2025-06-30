@@ -39,8 +39,6 @@ scikit-learn==1.5.0
 mpu6050
 
 # Additional GUI and scientific libraries
-kivy
-kivymd
 numpy
 folium
 dronekit
