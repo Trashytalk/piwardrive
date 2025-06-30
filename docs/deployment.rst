@@ -68,6 +68,11 @@ Web UI Container
 
     docker build -f Dockerfile.webui -t piwardrive-webui .
 
+Tag the image and push it to your registry so it can be deployed on other machines::
+
+    docker tag piwardrive-webui myuser/piwardrive-webui:latest
+    docker push myuser/piwardrive-webui:latest
+
 Run the container exposing port 8000::
 
     docker run --rm -p 8000:8000 piwardrive-webui
