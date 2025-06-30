@@ -1,0 +1,19 @@
+{
+  "title": "Wi-Fi Observations",
+  "uid": "pw-wifi",
+  "schemaVersion": 37,
+  "version": 1,
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "type": "table",
+      "title": "Access Points",
+      "targets": [
+        {
+          "rawSql": "SELECT datetime(last_time) as time, ssid, bssid, lat, lon FROM wifi_observations ORDER BY last_time",
+          "format": "table"
+        }
+      ]
+    }
+  ]
+}

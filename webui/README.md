@@ -86,6 +86,7 @@ Assign the resulting value to the environment variable before launching `piwardr
 Set `PW_WEBUI_PORT` if you need the Python server to listen on a different
 port. The default is `8000`.
 
+
 ## PW_API_PASSWORD_HASH and PORT
 
 `server/index.js` reads two environment variables:

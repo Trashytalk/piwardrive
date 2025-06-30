@@ -830,7 +830,12 @@ async def main() -> None:
 
     import uvicorn
 
-    port = int(os.getenv("PW_SERVICE_PORT", "8000"))
+    port_str = os.getenv("PW_SERVICE_PORT", "8000")
+    try:
+        port = int(port_str)
+    except ValueError:
+        logger.warning("invalid PW_SERVICE_PORT=%r, defaulting to 8000", port_str)
+        port = 8000
     config = uvicorn.Config(app, host="127.0.0.1", port=port)
     server = uvicorn.Server(config)
     await server.serve()
