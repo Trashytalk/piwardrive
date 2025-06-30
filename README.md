@@ -494,19 +494,19 @@ Detailed examples for each command line helper are available in [docs/cli_tools.
 
 ## Contributing
 
-Install the development dependencies and run the tests:
+Install the development dependencies (including the optional test extras) and
+run the test suite:
 
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-# Install frontend deps for lint and test hooks
-cd webui && npm install && cd ..
-# Some tests rely on additional scientific libraries such as `numpy`.
-# Install them with the optional `tests` extras if needed:
-# pip install .[tests]
+pip install .[tests]
 pre-commit run --all-files
 pytest
 ```
+
+You can also run `scripts/setup_dev_env.sh` to install these dependencies
+automatically before running the tests.
 
 `pre-commit` automatically installs packages listed in `requirements.txt`
 and `requirements-dev.txt`, so hooks and tests run consistently.
