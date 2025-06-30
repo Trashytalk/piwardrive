@@ -131,6 +131,11 @@ class Config:
     mysql_user: str = "piwardrive"  # noqa: V107
     mysql_password: str = ""  # noqa: V107
     mysql_db: str = "piwardrive"  # noqa: V107
+    influx_url: str = ""  # noqa: V107
+    influx_token: str = ""  # noqa: V107
+    influx_org: str = ""  # noqa: V107
+    influx_bucket: str = ""  # noqa: V107
+    postgres_dsn: str = ""  # noqa: V107
 
 
 DEFAULT_CONFIG = Config()
@@ -207,6 +212,11 @@ class FileConfigModel(BaseModel):
     mysql_user: Optional[str] = None
     mysql_password: Optional[str] = None
     mysql_db: Optional[str] = None
+    influx_url: Optional[str] = None
+    influx_token: Optional[str] = None
+    influx_org: Optional[str] = None
+    influx_bucket: Optional[str] = None
+    postgres_dsn: Optional[str] = None
 
 
 class ConfigModel(FileConfigModel):
@@ -236,6 +246,11 @@ class ConfigModel(FileConfigModel):
     mysql_user: str = DEFAULTS["mysql_user"]
     mysql_password: str = DEFAULTS["mysql_password"]
     mysql_db: str = DEFAULTS["mysql_db"]
+    influx_url: str = DEFAULTS["influx_url"]
+    influx_token: str = DEFAULTS["influx_token"]
+    influx_org: str = DEFAULTS["influx_org"]
+    influx_bucket: str = DEFAULTS["influx_bucket"]
+    postgres_dsn: str = DEFAULTS["postgres_dsn"]
 
     theme: Theme
 

@@ -232,6 +232,16 @@ All available overrides are summarised below.
      - ``wigle_api_key``
    * - ``PW_WIGLE_API_NAME``
      - ``wigle_api_name``
+   * - ``PW_INFLUX_URL``
+     - ``influx_url``
+   * - ``PW_INFLUX_TOKEN``
+     - ``influx_token``
+   * - ``PW_INFLUX_ORG``
+     - ``influx_org``
+   * - ``PW_INFLUX_BUCKET``
+     - ``influx_bucket``
+   * - ``PW_POSTGRES_DSN``
+     - ``postgres_dsn``
 
 Using a ``.env`` File
 ---------------------
