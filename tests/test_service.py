@@ -3,7 +3,7 @@ import json
 import os
 import sys
 import tempfile
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from types import ModuleType, SimpleNamespace
 from typing import Any
 from unittest import mock
@@ -17,6 +17,16 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules["aiohttp"] = aiohttp_mod
 utils_mod = ModuleType("utils")
+
+
+@dataclass
+class MetricsResult:
+    aps: list
+    clients: list
+    handshake_count: int
+
+
+utils_mod.MetricsResult = MetricsResult
 
 
 async def _dummy_async(*_a, **_k):
@@ -62,8 +72,8 @@ def test_status_endpoint_returns_recent_records() -> None:
 
 
 def test_widget_metrics_endpoint() -> None:
-    async def fake_fetch() -> tuple[list, list, int]:
-        return ([{"signal_dbm": -10}], [], 5)
+    async def fake_fetch() -> MetricsResult:
+        return MetricsResult([{"signal_dbm": -10}], [], 5)
 
     pw_hash = security.hash_password("pw")
     os.environ["PW_API_PASSWORD_HASH"] = pw_hash
@@ -214,8 +224,8 @@ def test_websocket_status_stream() -> None:
     async def fake_load(_: int = 5) -> list:
         return [rec]
 
-    async def fake_fetch() -> tuple[list, list, int]:
-        return ([{"signal_dbm": -10}], [], 5)
+    async def fake_fetch() -> MetricsResult:
+        return MetricsResult([{"signal_dbm": -10}], [], 5)
 
     with (
         mock.patch("service.load_recent_health", fake_load),
@@ -267,8 +277,8 @@ def test_sse_status_stream() -> None:
     async def fake_load(_: int = 5) -> list:
         return [rec]
 
-    async def fake_fetch() -> tuple[list, list, int]:
-        return ([{"signal_dbm": -10}], [], 5)
+    async def fake_fetch() -> MetricsResult:
+        return MetricsResult([{"signal_dbm": -10}], [], 5)
 
     with (
         mock.patch("service.load_recent_health", fake_load),
@@ -368,8 +378,8 @@ def test_websocket_timeout_closes_connection() -> None:
     async def fake_load(_: int = 5) -> list:
         return []
 
-    async def fake_fetch() -> tuple[list, list, int]:
-        return ([], [], 0)
+    async def fake_fetch() -> MetricsResult:
+        return MetricsResult([], [], 0)
 
     async def send_timeout(*_: any, **__: any) -> None:
         raise asyncio.TimeoutError
@@ -466,8 +476,8 @@ def test_dashboard_settings_endpoints() -> None:
 
 
 def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:
-    async def fake_fetch() -> tuple[list, list, int]:
-        return ([{"signal_dbm": -10}], [], 5)
+    async def fake_fetch() -> MetricsResult:
+        return MetricsResult([{"signal_dbm": -10}], [], 5)
 
     pw_hash = security.hash_password("pw")
     monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)
@@ -494,8 +504,8 @@ def test_widget_metrics_auth_missing_credentials(monkeypatch) -> None:
 
 
 def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
-    async def fake_fetch() -> tuple[list, list, int]:
-        return ([{"signal_dbm": -10}], [], 5)
+    async def fake_fetch() -> MetricsResult:
+        return MetricsResult([{"signal_dbm": -10}], [], 5)
 
     pw_hash = security.hash_password("pw")
     monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)

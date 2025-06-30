@@ -22,7 +22,6 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
-    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
     from fastapi.security import (
         HTTPBasic,
         HTTPBasicCredentials,
@@ -99,12 +98,12 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
     from fastapi.middleware.cors import CORSMiddleware
 
 import asyncio
+import functools
 import importlib
 import json
 import secrets
 import tempfile
 import time
-import functools
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Tuple
@@ -115,19 +114,19 @@ try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
-        User,
         FingerprintInfo,
+        User,
         _db_path,
         create_user,
         get_table_counts,
         get_user,
         get_user_by_token,
         load_dashboard_settings,
-        load_recent_health,
-        load_health_history,
         load_fingerprint_info,
-        save_fingerprint_info,
+        load_health_history,
+        load_recent_health,
         save_dashboard_settings,
+        save_fingerprint_info,
         save_user,
         update_user_token,
     )
@@ -178,9 +177,15 @@ except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
 
 try:  # allow tests to stub out analytics
-    from analytics.baseline import analyze_health_baseline, load_baseline_health  # type: ignore
+    from analytics.baseline import (  # type: ignore
+        analyze_health_baseline,
+        load_baseline_health,
+    )
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
+    from piwardrive.analytics.baseline import (
+        analyze_health_baseline,
+        load_baseline_health,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -196,14 +201,12 @@ def error_json(code: int, message: str | None = None) -> dict[str, str]:
     return {"code": str(int(code)), "message": message}
 
 
-async def _default_fetch_metrics_async(
-    *_a: Any, **_k: Any
-) -> tuple[list[Any], list[Any], int]:
-    return [], [], 0
+async def _default_fetch_metrics_async(*_a: Any, **_k: Any) -> "MetricsResult":
+    return _utils.MetricsResult([], [], 0)  # type: ignore[attr-defined]
 
 
-fetch_metrics_async: Callable[..., Awaitable[tuple[list[Any], list[Any], int]]] = (
-    getattr(_utils, "fetch_metrics_async", _default_fetch_metrics_async)
+fetch_metrics_async: Callable[..., Awaitable["MetricsResult"]] = getattr(
+    _utils, "fetch_metrics_async", _default_fetch_metrics_async
 )
 get_avg_rssi = getattr(_utils, "get_avg_rssi", lambda *_a, **_k: None)
 get_cpu_temp = getattr(_utils, "get_cpu_temp", lambda *_a, **_k: None)
@@ -415,7 +418,9 @@ async def baseline_analysis_endpoint(
 
 async def _collect_widget_metrics() -> dict[str, Any]:
     """Return basic metrics used by dashboard widgets."""
-    aps, _clients, handshakes = await fetch_metrics_async()
+    metrics = await fetch_metrics_async()
+    aps = metrics.aps
+    handshakes = metrics.handshake_count
     rx, tx = get_network_throughput()
     batt_percent = batt_plugged = None
     try:
