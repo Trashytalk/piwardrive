@@ -1,6 +1,7 @@
 """Security utilities for input validation and encryption."""
 
 import base64
+import binascii
 import hashlib
 import os
 import re
@@ -39,7 +40,7 @@ def verify_password(password: str, hashed: str) -> bool:
         salt, digest = data[:16], data[16:]
         check = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000)
         return secrets.compare_digest(check, digest)
-    except Exception:
+    except (binascii.Error, ValueError):
         return False
 
 

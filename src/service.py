@@ -44,7 +44,7 @@ _p.load_recent_health = _proxy("load_recent_health")  # type: ignore[attr-define
 
 try:  # pragma: no cover - optional dependency loading
     _service: ModuleType | None = importlib.import_module("piwardrive.service")
-except Exception:  # pragma: no cover - allow import without extras
+except ImportError:  # pragma: no cover - allow import without extras
     _service = None
 
 if _service is not None:

@@ -19,7 +19,7 @@ for node in tree.body:
     if value is not None:
         try:
             widgets = ast.literal_eval(value)
-        except Exception:
+        except (ValueError, SyntaxError):
             widgets = []
         break
 if not isinstance(widgets, list):
