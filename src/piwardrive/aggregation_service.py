@@ -18,7 +18,7 @@ from .persistence import HealthRecord
 DATA_DIR = os.path.expanduser(os.getenv("PW_AGG_DIR", "~/piwardrive-aggregation"))
 DB_PATH = os.path.join(DATA_DIR, "aggregation.db")
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
-PORT = int(os.getenv("PW_AGG_PORT", "9100"))
+DEFAULT_PORT = 9100
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -149,7 +149,8 @@ async def main() -> None:
     import uvicorn
 
     await _get_conn()
-    config = uvicorn.Config(app, host="0.0.0.0", port=PORT)  # nosec B104
+    port = int(os.getenv("PW_AGG_PORT", str(DEFAULT_PORT)))
+    config = uvicorn.Config(app, host="0.0.0.0", port=port)  # nosec B104
     server = uvicorn.Server(config)
     await server.serve()
 

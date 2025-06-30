@@ -61,3 +61,27 @@ The ``pyproject.toml`` should declare the entry point group::
 Installing the package with ``pip install .`` registers ``SpeedWidget`` and it
 becomes available from :mod:`widgets` just like plugins placed in the local
 directory.
+
+Packaging a Plugin as a Module
+------------------------------
+
+To publish a widget on PyPI or share it with others, structure your code like a
+standard Python package and include an entry point under
+``piwardrive.widgets``.  The loader imports any classes referenced here when the
+package is installed.
+
+Example layout::
+
+    myplugin/
+    ├── pyproject.toml
+    └── myplugin
+        ├── __init__.py
+        └── dashboard.py
+
+``pyproject.toml`` should map a name to your widget class::
+
+    [project.entry-points."piwardrive.widgets"]
+    dashboard = "myplugin.dashboard:DashboardWidget"
+
+Running ``pip install .`` installs the package and registers
+``DashboardWidget`` automatically.

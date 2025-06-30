@@ -1,6 +1,8 @@
 # PiWardrive
 
-[![codecov](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg)](https://codecov.io/gh/TRASHYTALK/piwardrive)
+[![Backend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=backend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=backend)
+[![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=frontend)
+
 
 PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
 
@@ -8,7 +10,7 @@ PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It mer
 python -m piwardrive.webui_server
 ```
 
-For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. A short [FAQ](docs/faq.rst) covers common issues.
+For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. Troubleshooting steps are summarized in the [FAQ](docs/faq.rst).
 
 ## Architecture Overview
 
@@ -209,6 +211,7 @@ source gui-env/bin/activate
    ```bash
    piwardrive-webui
    ```
+
 #### Optional Dependencies
 
 Some components rely on additional Python packages. Install them only if you need the corresponding feature:
@@ -496,6 +499,8 @@ Install the development dependencies and run the tests:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+# Install frontend deps for lint and test hooks
+cd webui && npm install && cd ..
 # Some tests rely on additional scientific libraries such as `numpy`.
 # Install them with the optional `tests` extras if needed:
 # pip install .[tests]

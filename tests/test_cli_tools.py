@@ -75,3 +75,41 @@ def test_config_cli_set_api(monkeypatch, capsys):
     monkeypatch.setattr(cli, "_api_update", fake_update)
     cli.main(["--url", "http://api", "set", "theme", "Light"])
     assert capsys.readouterr().out.strip() == json.dumps("Light")
+
+
+def test_config_cli_get_unknown_local(monkeypatch):
+    cli = _import_cli()
+    monkeypatch.setattr(cli.cfg, "load_config", lambda: cli.cfg.Config())
+    with pytest.raises(SystemExit):
+        cli.main(["get", "does_not_exist"])
+
+
+def test_config_cli_set_unknown_local(monkeypatch):
+    cli = _import_cli()
+    monkeypatch.setattr(cli.cfg, "load_config", lambda: cli.cfg.Config())
+    with pytest.raises(SystemExit):
+        cli.main(["set", "does_not_exist", "value"])
+
+
+def test_config_cli_get_unknown_api(monkeypatch):
+    cli = _import_cli()
+
+    async def fake_get(url):
+        assert url == "http://api"
+        return {"theme": "Dark"}
+
+    monkeypatch.setattr(cli, "_api_get", fake_get)
+    with pytest.raises(SystemExit):
+        cli.main(["--url", "http://api", "get", "does_not_exist"])
+
+
+def test_config_cli_set_unknown_api(monkeypatch):
+    cli = _import_cli()
+
+    async def fake_get(url):
+        assert url == "http://api"
+        return {"theme": "Dark"}
+
+    monkeypatch.setattr(cli, "_api_get", fake_get)
+    with pytest.raises(SystemExit):
+        cli.main(["--url", "http://api", "set", "does_not_exist", "1"])
