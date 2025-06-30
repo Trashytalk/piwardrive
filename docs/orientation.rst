@@ -159,9 +159,19 @@ PW_ORIENTATION_MAP_FILE
 ~~~~~~~~~~~~~~~~~~~~~~~
 Set ``PW_ORIENTATION_MAP_FILE`` to load rotation angles from a JSON file
 when PiWardrive starts. The file should contain the mapping produced by
-``calibrate_orientation.py`` or a hand-crafted variant.  See
-``examples/orientation_map.json`` for a typical layout.  A common
-invocation looks like::
+``calibrate_orientation.py`` or a hand-crafted variant. ``examples/orientation_map.json``
+shows a typical layout:
+
+.. code-block:: json
+
+   {
+       "normal": 0.0,
+       "bottom-up": 180.0,
+       "right-up": 90.0,
+       "left-up": 270.0
+   }
+
+Activate the map at runtime with::
 
    PW_ORIENTATION_MAP_FILE=/path/to/orientation_map.json python -m piwardrive.main
 
