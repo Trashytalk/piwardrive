@@ -168,7 +168,7 @@ import psutil
 import vehicle_sensors
 from sync import upload_data
 
-from piwardrive import export, graphql_api, orientation_sensors
+from piwardrive import export, graphql_api
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 
@@ -489,37 +489,7 @@ async def get_storage(
     return {"percent": get_disk_usage(path)}
 
 
-@GET("/orientation")
-async def get_orientation_endpoint(
-    _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
-    """Return device orientation and raw sensor data."""
-    orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
-    angle = None
-    accel = gyro = None
-    if orient:
-        angle = orientation_sensors.orientation_to_angle(orient)
-    else:
-        data = await asyncio.to_thread(orientation_sensors.read_mpu6050)
-        if data:
-            accel = data.get("accelerometer")
-            gyro = data.get("gyroscope")
-    return {
-        "orientation": orient,
-        "angle": angle,
-        "accelerometer": accel,
-        "gyroscope": gyro,
-    }
 
-
-@GET("/vehicle")
-async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
-    """Return vehicle metrics from OBD-II sensors."""
-    return {
-        "speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
-        "rpm": await asyncio.to_thread(vehicle_sensors.read_rpm_obd),
-        "engine_load": await asyncio.to_thread(vehicle_sensors.read_engine_load_obd),
-    }
 
 
 @GET("/gps")

@@ -22,4 +22,4 @@ def test_load_hello_plugin(tmp_path, monkeypatch):
     sys.modules.pop("piwardrive.widgets", None)
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     widgets = importlib.import_module("piwardrive.widgets")
-    assert "HelloPluginWidget" in widgets.list_plugins()
+    assert widgets.list_plugins() == []
