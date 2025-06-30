@@ -1,5 +1,6 @@
 import os
 import sys
+import pytest
 
 from piwardrive import heatmap
 
@@ -40,3 +41,15 @@ def test_coverage_map_binary():
     flat = [c for row in cov for c in row]
     assert all(v in (0, 1) for v in flat)
     assert sum(flat) > 1
+
+
+def test_histogram_invalid_bins():
+    with pytest.raises(ValueError):
+        heatmap.histogram([], bins=0)
+    with pytest.raises(ValueError):
+        heatmap.histogram([], bins=(1, 0))
+
+
+def test_density_map_invalid_radius():
+    with pytest.raises(ValueError):
+        heatmap.density_map([], radius=0)

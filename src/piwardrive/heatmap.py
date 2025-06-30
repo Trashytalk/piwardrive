@@ -6,8 +6,20 @@ from typing import Iterable, List, Sequence, Tuple
 
 
 def _get_bins(bins: int | Tuple[int, int]) -> Tuple[int, int]:
-    """Return latitude/longitude bin counts."""
-    return (bins, bins) if isinstance(bins, int) else bins
+    """Return latitude/longitude bin counts.
+
+    ``bins`` may be specified as a single integer or a ``(lat, lon)`` tuple. All
+    values must be strictly positive, otherwise a ``ValueError`` is raised.
+    """
+    if isinstance(bins, int):
+        if bins <= 0:
+            raise ValueError("bin count must be positive")
+        return (bins, bins)
+
+    lat_bins, lon_bins = bins
+    if lat_bins <= 0 or lon_bins <= 0:
+        raise ValueError("bin count must be positive")
+    return lat_bins, lon_bins
 
 
 def _derive_bounds(pts: list[Coord]) -> Tuple[float, float, float, float]:
@@ -122,6 +134,8 @@ def _spread_density(hist: Sequence[Sequence[int]], radius: int) -> List[List[int
     bins_lat = len(hist)
     bins_lon = len(hist[0]) if hist else 0
     density = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
+    if radius <= 0:
+        raise ValueError("radius must be positive")
     for i, row in enumerate(hist):
         for j, count in enumerate(row):
             if count <= 0:
