@@ -33,6 +33,10 @@ from piwardrive.utils import run_async_task
 _PROFILER: cProfile.Profile | None = None
 _LAST_NETWORK_OK: float | None = None
 
+DEFAULT_LOG_ARCHIVES = 3
+NETWORK_TEST_CACHE_SECONDS = 30.0
+HEALTH_MONITOR_INTERVAL = 10.0
+
 
 def _upload_to_cloud(path: str) -> None:
     """Upload ``path`` to configured cloud storage if enabled."""
@@ -64,7 +68,7 @@ def generate_system_report() -> Dict[str, Any]:
     return report
 
 
-def rotate_log(path: str, max_files: int = 3) -> None:
+def rotate_log(path: str, max_files: int = DEFAULT_LOG_ARCHIVES) -> None:
     """Rotate and gzip ``path`` keeping ``max_files`` archives."""
     if max_files < 1:
         raise ValueError(f"max_files must be >= 1, got {max_files}")
@@ -97,7 +101,7 @@ def rotate_log(path: str, max_files: int = 3) -> None:
     _upload_to_cloud(f"{tmp}.gz")
 
 
-async def rotate_log_async(path: str, max_files: int = 3) -> None:
+async def rotate_log_async(path: str, max_files: int = DEFAULT_LOG_ARCHIVES) -> None:
     """Asynchronously rotate and gzip ``path`` using ``aiofiles``."""
     if max_files < 1:
         raise ValueError(f"max_files must be >= 1, got {max_files}")
@@ -178,7 +182,9 @@ def get_profile_metrics() -> Dict[str, float] | None:
     return {"calls": len(stats), "cumtime": total}
 
 
-def run_network_test(host: str = "8.8.8.8", cache_seconds: float = 30.0) -> bool:
+def run_network_test(
+    host: str = "8.8.8.8", cache_seconds: float = NETWORK_TEST_CACHE_SECONDS
+) -> bool:
     """Ping ``host`` once and return True if reachable.
 
     If the previous successful check occurred within ``cache_seconds`` the
@@ -244,7 +250,7 @@ class HealthMonitor:
     def __init__(
         self,
         scheduler: "PollScheduler",
-        interval: float = 10.0,
+        interval: float = HEALTH_MONITOR_INTERVAL,
         collector: DataCollector | None = None,
         daily_summary: bool = False,
         mqtt_client: "MQTTClient | None" = None,

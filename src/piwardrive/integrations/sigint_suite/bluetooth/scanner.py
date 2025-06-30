@@ -14,6 +14,8 @@ from piwardrive.sigint_suite.models import BluetoothDevice
 
 logger = logging.getLogger(__name__)
 
+PROC_WAIT_TIMEOUT = 2.0
+
 _proc: asyncio.subprocess.Process | None = None
 _reader_task: asyncio.Task[None] | None = None
 _devices: Dict[str, str] = {}
@@ -79,7 +81,7 @@ async def stop_scanner() -> None:
             await _reader_task
     with contextlib.suppress(Exception):
         _proc.terminate()
-        await asyncio.wait_for(_proc.wait(), timeout=2.0)
+        await asyncio.wait_for(_proc.wait(), timeout=PROC_WAIT_TIMEOUT)
     _proc = None
     _reader_task = None
     _devices = {}

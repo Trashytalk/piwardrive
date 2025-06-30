@@ -9,6 +9,10 @@ import time
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, NoReturn, Optional, cast
 
+REQUEST_TIMEOUT = 5
+REQUEST_RETRY_DELAY = 1
+REQUEST_RETRY_ATTEMPTS = 3
+
 try:
     import requests
 except Exception:  # pragma: no cover - missing dependency
@@ -25,12 +29,12 @@ except Exception:  # pragma: no cover - minimal fallback
 
         def robust_request(url: str) -> "Response":
             last_exc = None
-            for _ in range(3):
+            for _ in range(REQUEST_RETRY_ATTEMPTS):
                 try:
-                    return requests.get(url, timeout=5)
+                    return requests.get(url, timeout=REQUEST_TIMEOUT)
                 except Exception as exc:  # pragma: no cover - simple retry
                     last_exc = exc
-                    time.sleep(1)
+                    time.sleep(REQUEST_RETRY_DELAY)
             if last_exc is not None:
                 raise last_exc
             raise RuntimeError("Unreachable")

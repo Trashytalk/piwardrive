@@ -13,6 +13,8 @@ from .utils import get_cpu_temp, get_disk_usage, run_async_task
 
 logger = logging.getLogger(__name__)
 
+WEBHOOK_TIMEOUT = 5
+
 
 class NotificationManager:
     """Send webhook notifications when thresholds are exceeded."""
@@ -52,7 +54,7 @@ class NotificationManager:
         async with httpx.AsyncClient() as client:
             for url in self.webhooks:
                 try:
-                    await client.post(url, json=payload, timeout=5)
+                    await client.post(url, json=payload, timeout=WEBHOOK_TIMEOUT)
                 except Exception as exc:  # pragma: no cover - network errors
                     logger.warning("notification to %s failed: %s", url, exc)
 

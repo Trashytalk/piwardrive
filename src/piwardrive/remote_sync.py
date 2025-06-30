@@ -6,6 +6,7 @@ import sqlite3
 from typing import Tuple
 
 import remote_sync as _impl
+from remote_sync import DEFAULT_RETRIES, DEFAULT_TIMEOUT
 
 # Re-export commonly used modules to keep older imports working.
 asyncio = _impl.asyncio
@@ -41,8 +42,8 @@ async def sync_database_to_server(
     db_path: str,
     url: str,
     *,
-    timeout: int = 30,
-    retries: int = 3,
+    timeout: int = DEFAULT_TIMEOUT,
+    retries: int = DEFAULT_RETRIES,
     row_range: Tuple[int, int] | None = None,
 ) -> None:
     """Delegate to :func:`remote_sync.sync_database_to_server`."""
@@ -60,8 +61,8 @@ async def sync_new_records(
     url: str,
     *,
     state_file: str | None = None,
-    timeout: int = 30,
-    retries: int = 3,
+    timeout: int = DEFAULT_TIMEOUT,
+    retries: int = DEFAULT_RETRIES,
 ) -> int:
     """Delegate to :func:`remote_sync.sync_new_records` using local wrapper."""
     if state_file is None:
