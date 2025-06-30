@@ -10,7 +10,7 @@ PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It mer
 python -m piwardrive.webui_server
 ```
 
-For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. A short [FAQ](docs/faq.rst) covers common issues.
+For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. Troubleshooting steps are summarized in the [FAQ](docs/faq.rst).
 
 ## Architecture Overview
 
