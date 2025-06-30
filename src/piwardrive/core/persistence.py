@@ -10,7 +10,13 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional
 
+import sqlite3
 import aiosqlite
+
+try:
+    from pysqlcipher3 import dbapi2 as sqlcipher
+except Exception:  # pragma: no cover - optional dependency
+    sqlcipher = None
 
 from piwardrive import config
 
@@ -26,6 +32,7 @@ def _db_path() -> str:
 _DB_CONN: aiosqlite.Connection | None = None
 _DB_LOOP: asyncio.AbstractEventLoop | None = None
 _DB_DIR: str | None = None
+_DB_KEY: str | None = None
 
 # Pending HealthRecord rows for bulk writes
 _HEALTH_BUFFER: list[dict[str, Any]] = []
@@ -123,23 +130,40 @@ _MIGRATIONS.append(_migration_3)
 
 async def _get_conn() -> aiosqlite.Connection:
     """Return a cached SQLite connection initialized with the proper schema."""
-    global _DB_CONN, _DB_LOOP, _DB_DIR
+    global _DB_CONN, _DB_LOOP, _DB_DIR, _DB_KEY
     loop = asyncio.get_running_loop()
     cur_dir = config.CONFIG_DIR
-    if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir:
+    key = os.getenv("PW_DB_KEY")
+    if (
+        _DB_CONN is None
+        or _DB_LOOP is not loop
+        or _DB_DIR != cur_dir
+        or _DB_KEY != key
+    ):
         if _DB_CONN is not None:
             try:
                 await _DB_CONN.close()
             except Exception:
                 logging.exception("Error closing previous DB connection")
+        if key:
+            if sqlcipher is None:
+                raise RuntimeError(
+                    "pysqlcipher3 must be installed to use PW_DB_KEY"
+                )
+            aiosqlite.core.sqlite3 = sqlcipher
+        else:
+            aiosqlite.core.sqlite3 = sqlite3
         path = _db_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         _DB_CONN = await aiosqlite.connect(path)
+        if key:
+            await _DB_CONN.execute("PRAGMA key = ?", (key,))
         await _DB_CONN.execute("PRAGMA journal_mode=WAL")
         _DB_CONN.row_factory = aiosqlite.Row
         await _init_db(_DB_CONN)
         _DB_LOOP = loop
         _DB_DIR = cur_dir
+        _DB_KEY = key
     return _DB_CONN
 
 
