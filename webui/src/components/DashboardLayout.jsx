@@ -11,11 +11,10 @@ import GPSStatus from './GPSStatus.jsx';
 import StorageUsage from './StorageUsage.jsx';
 import DiskUsageTrend from './DiskUsageTrend.jsx';
 import VehicleSpeed from './VehicleSpeed.jsx';
-import DBStats from './DBStats.jsx';
 import HealthStatus from './HealthStatus.jsx';
 import HealthAnalysis from './HealthAnalysis.jsx';
-import LoRaScan from './LoRaScan.jsx';
 import LogViewer from './LogViewer.jsx';
+import FingerprintSummary from './FingerprintSummary.jsx';
 
 const COMPONENTS = {
   BatteryStatusWidget: BatteryStatus,
@@ -25,15 +24,15 @@ const COMPONENTS = {
   NetworkThroughputWidget: NetworkThroughput,
   CPUTempGraphWidget: CPUTempGraph,
   LoRaScanWidget: LoRaScan,
-  DBStatsWidget: DBStats,
   GPSStatusWidget: GPSStatus,
   StorageUsageWidget: StorageUsage,
   DiskUsageTrendWidget: DiskUsageTrend,
   VehicleSpeedWidget: VehicleSpeed,
-  DBStatsWidget: DBStats,
   HealthStatusWidget: HealthStatus,
   HealthAnalysisWidget: HealthAnalysis,
   LogViewer: LogViewer,
+  DBStatsWidget: DBStats,
+  FingerprintSummaryWidget: FingerprintSummary,
 };
 
 export default function DashboardLayout({ metrics }) {
