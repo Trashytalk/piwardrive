@@ -2,12 +2,7 @@
   "$defs": {
     "Theme": {
       "description": "Available UI themes.",
-      "enum": [
-        "Dark",
-        "Light",
-        "Green",
-        "Red"
-      ],
+      "enum": ["Dark", "Light", "Green", "Red"],
       "title": "Theme",
       "type": "string"
     }
@@ -541,12 +536,45 @@
       ],
       "default": null,
       "title": "Cloud Profile"
+    },
+    "mysql_host": {
+      "default": "localhost",
+      "title": "Mysql Host",
+      "type": "string"
+    },
+    "mysql_port": {
+      "default": 3306,
+      "minimum": 1,
+      "title": "Mysql Port",
+      "type": "integer"
+    },
+    "mysql_user": {
+      "default": "piwardrive",
+      "title": "Mysql User",
+      "type": "string"
+    },
+    "mysql_password": {
+      "default": "",
+      "title": "Mysql Password",
+      "type": "string"
+    },
+    "mysql_db": {
+      "default": "piwardrive",
+      "title": "Mysql Db",
+      "type": "string"
+    },
+    "enable_graphql": {
+      "default": false,
+      "title": "Enable Graphql",
+      "type": "boolean"
+    },
+    "enable_mqtt": {
+      "default": false,
+      "title": "Enable Mqtt",
+      "type": "boolean"
     }
   },
-  "required": [
-    "theme",
-    "map_poll_gps"
-  ],
+  "required": ["theme", "map_poll_gps"],
   "title": "ConfigModel",
   "type": "object"
 }

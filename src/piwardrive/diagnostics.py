@@ -19,6 +19,7 @@ import psutil
 
 from piwardrive import cloud_export, config, r_integration, utils
 from piwardrive.interfaces import DataCollector, SelfTestCollector
+from piwardrive.mqtt import MQTTClient
 from piwardrive.persistence import (
     HealthRecord,
     load_recent_health,
@@ -234,6 +235,7 @@ class HealthMonitor:
         interval: float = 10.0,
         collector: DataCollector | None = None,
         daily_summary: bool = False,
+        mqtt_client: "MQTTClient | None" = None,
     ) -> None:
         try:
             asyncio.get_running_loop()
@@ -241,6 +243,7 @@ class HealthMonitor:
             asyncio.set_event_loop(asyncio.new_event_loop())
         self._scheduler = scheduler
         self._collector: DataCollector = collector or SelfTestCollector()
+        self._mqtt = mqtt_client
         self.data: Dict[str, Any] | None = None
         self._event = "health_monitor"
         scheduler.schedule(
@@ -278,6 +281,11 @@ class HealthMonitor:
             await save_health_record(rec)
             await purge_old_health(30)
             await vacuum()
+            if self._mqtt:
+                try:
+                    self._mqtt.publish(self.data or {})
+                except Exception:
+                    logging.exception("MQTT publish failed")
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 
