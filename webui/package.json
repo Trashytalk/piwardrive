@@ -10,6 +10,7 @@
     "start": "node ../server/index.js",
     "test": "vitest run --coverage",
     "badge": "coverage-badges",
+    "lint": "eslint .",
     "prettier": "prettier --write ."
   },
   "dependencies": {
