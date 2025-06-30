@@ -556,6 +556,61 @@ Comprehensive guides and API references live in the `docs/` directory. Run `make
 Detailed examples for each command line helper are available in [docs/cli_tools.rst](docs/cli_tools.rst).
 See [docs/notifications.rst](docs/notifications.rst) for enabling webhook alerts.
 
+## Python Examples
+
+Below are minimal snippets that can be validated with ``doctest``.
+
+### setup_logging
+
+```python
+>>> import sys, types, json, os
+>>> sys.modules['piwardrive.config'] = types.SimpleNamespace(CONFIG_DIR='.')
+>>> sys.path.insert(0, 'src')
+>>> from piwardrive.logconfig import setup_logging
+>>> logger = setup_logging('./temp.log')
+>>> logger.warning('issue')
+>>> json.loads(open('./temp.log').read().splitlines()[0])['level']
+'WARNING'
+>>> os.remove('./temp.log')
+
+```
+
+### suggest_route
+
+```python
+>>> import sys
+>>> sys.path.insert(0, 'src')
+>>> from piwardrive.route_optimizer import suggest_route
+>>> suggest_route([(0, 0), (0.001, 0)], steps=2, cell_size=0.001)
+[(0.0015, -0.0005), (0.0005, -0.0005)]
+
+```
+
+### sync_database_to_server
+
+```python
+>>> import sys, os, asyncio, tempfile, http.server, threading
+>>> sys.path.insert(0, 'src')
+>>> from piwardrive.remote_sync import sync_database_to_server
+>>> class Handler(http.server.BaseHTTPRequestHandler):
+...     def do_POST(self):
+...         self.server.received = True
+...         self.send_response(200)
+...         self.end_headers()
+...     def log_message(self, *args):
+...         pass
+>>> server = http.server.HTTPServer(('localhost', 0), Handler)
+>>> t = threading.Thread(target=server.serve_forever)
+>>> t.start()
+>>> db = tempfile.NamedTemporaryFile(delete=False)
+>>> _ = db.write(b'hello'); db.close()
+>>> asyncio.run(sync_database_to_server(db.name, f'http://localhost:{server.server_port}/', timeout=5, retries=1))
+>>> server.shutdown(); t.join(); os.unlink(db.name)
+>>> server.received
+True
+
+```
+
 ## Contributing
 
 Install the development dependencies (including the optional test extras) and
