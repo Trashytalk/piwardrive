@@ -13,13 +13,14 @@ except Exception:
     class KivyApp:  # type: ignore[no-redef]
         """Fallback ``App`` implementation when Kivy is unavailable."""
 
+App = KivyApp
+
+if App is None:
+    class App:  # type: ignore[no-redef]
         @staticmethod
         def get_running_app() -> None:
             return None
 
-App = KivyApp
-
-          
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
 
