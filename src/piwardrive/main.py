@@ -9,7 +9,7 @@ import subprocess
 import time
 from dataclasses import asdict, fields
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
 
 from piwardrive import diagnostics, exception_handler, notifications, remote_sync, utils
 from piwardrive.config import (
@@ -20,6 +20,7 @@ from piwardrive.config import (
     save_config,
 )
 from piwardrive.config_watcher import watch_config
+from watchdog.observers import Observer
 from piwardrive.di import Container
 from piwardrive.logconfig import setup_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
@@ -120,7 +121,7 @@ class PiWardriveApp:
             diagnostics.start_profiling()
         self._config_stamp = config_mtime()
         self._updating_config = False
-        self._config_observer: Any = watch_config(
+        self._config_observer: Observer = watch_config(
             CONFIG_PATH, lambda: self._reload_config_event(0)
         )
 
