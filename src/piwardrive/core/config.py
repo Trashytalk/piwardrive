@@ -258,7 +258,6 @@ class ConfigModel(FileConfigModel):
     mysql_db: str = DEFAULTS["mysql_db"]
     enable_graphql: bool = DEFAULTS["enable_graphql"]
     enable_mqtt: bool = DEFAULTS["enable_mqtt"]
-    scan_rules: Dict[str, Any] = field(default_factory=dict)
     scan_rules: Dict[str, Any] = Field(default_factory=dict)
     influx_url: str = DEFAULTS["influx_url"]
     influx_token: str = DEFAULTS["influx_token"]
