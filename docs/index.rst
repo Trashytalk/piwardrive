@@ -33,6 +33,7 @@ Common issues are answered in the :doc:`faq`.
    hardware_setup
    orientation
    geofencing
+   scheduling_rules
    status_service
    service_prefetch
    logging
@@ -49,6 +50,7 @@ Common issues are answered in the :doc:`faq`.
    drone_mapping
    r_integration
    grafana
-    web_ui
-    faq
-    legal
+   notifications
+   web_ui
+   faq
+   legal

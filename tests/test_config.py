@@ -1,9 +1,9 @@
 """Tests for the configuration module."""
 
+import builtins
 import json
 import os
 import sys
-import builtins
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -312,3 +312,13 @@ def test_export_config_missing_yaml(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "yaml", None)
     with pytest.raises(config.ConfigError, match="PyYAML required"):
         config.export_config(cfg, str(dest))
+
+
+def test_save_load_webhooks(tmp_path: Path) -> None:
+    cfg_file = setup_temp_config(tmp_path)
+    cfg = config.load_config()
+    cfg.notification_webhooks = ["http://x"]
+    config.save_config(cfg)
+    assert Path(cfg_file).is_file()
+    loaded = config.load_config()
+    assert loaded.notification_webhooks == ["http://x"]

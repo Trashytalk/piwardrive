@@ -144,3 +144,9 @@ def test_export_config_missing_yaml(tmp_path, monkeypatch):
     monkeypatch.setitem(sys.modules, "yaml", None)
     with pytest.raises(config.ConfigError, match="PyYAML required"):
         config.export_config(cfg, str(dest))
+
+
+def test_env_override_webhooks(monkeypatch):
+    monkeypatch.setenv("PW_NOTIFICATION_WEBHOOKS", '["http://h"]')
+    cfg = config.AppConfig.load()
+    assert cfg.notification_webhooks == ["http://h"]

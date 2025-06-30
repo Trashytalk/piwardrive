@@ -370,6 +370,13 @@
       "title": "Log Paths",
       "type": "array"
     },
+    "restart_services": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Restart Services",
+      "type": "array"
+    },
     "ui_font_size": {
       "default": 16,
       "minimum": 1,
@@ -464,6 +471,25 @@
       "title": "Log Tail Cache Seconds",
       "type": "number"
     },
+    "notification_webhooks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notification Webhooks",
+      "type": "array"
+    },
+    "notify_cpu_temp": {
+      "default": 80.0,
+      "minimum": 0,
+      "title": "Notify Cpu Temp",
+      "type": "number"
+    },
+    "notify_disk_percent": {
+      "default": 90.0,
+      "minimum": 0,
+      "title": "Notify Disk Percent",
+      "type": "number"
+    },
     "wigle_api_name": {
       "anyOf": [
         {
@@ -500,6 +526,32 @@
       ],
       "default": null,
       "title": "Gps Movement Threshold"
+    },
+    "baseline_history_days": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline History Days"
+    },
+    "baseline_threshold": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline Threshold"
     },
     "cloud_bucket": {
       "anyOf": [

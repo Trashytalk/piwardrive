@@ -17,8 +17,9 @@ Raspberry Pi OS
 
 1. Install required system packages::
 
-      sudo apt update && sudo apt install -y \
-          git build-essential cmake kismet bettercap gpsd evtest python3-venv
+     sudo apt update && sudo apt install -y \
+         git build-essential cmake kismet bettercap gpsd evtest python3-venv \
+         libsqlcipher-dev
 
 2. Clone the repository::
 
@@ -33,6 +34,12 @@ Raspberry Pi OS
 4. Install Python dependencies::
 
       pip install -r requirements.txt
+      pip install pysqlcipher3
+
+   Set ``PW_DB_KEY`` before running ``piwardrive-migrate`` to create an
+   encrypted database::
+
+      PW_DB_KEY=mysecret piwardrive-migrate
 
 5. (Optional) install developer tools::
 
