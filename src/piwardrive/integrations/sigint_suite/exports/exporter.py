@@ -41,7 +41,8 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
     try:
         first = next(it)
     except StopIteration:
-        open(path, "w", newline="", encoding="utf-8").close()
+        with open(path, "w", newline="", encoding="utf-8"):
+            pass
         return
 
     with open(path, "w", newline="", encoding="utf-8") as fh:

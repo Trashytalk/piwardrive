@@ -72,7 +72,8 @@ def export_csv(
     try:
         first = next(it)
     except StopIteration:
-        open(path, "w", newline="", encoding="utf-8").close()
+        with open(path, "w", newline="", encoding="utf-8"):
+            pass
         return
 
     fieldnames = fields or list(first.keys())
