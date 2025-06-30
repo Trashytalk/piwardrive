@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { install } from './exceptionHandler.js';
+import './auth.js';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App.jsx';
 import ConsoleView from './components/ConsoleView.jsx';

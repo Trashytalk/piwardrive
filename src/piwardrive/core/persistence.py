@@ -111,13 +111,14 @@ _MIGRATIONS.append(_migration_2)
 
 
 async def _migration_3(conn: aiosqlite.Connection) -> None:
-    """Add users table."""
+    """Add users table for authentication tokens."""
     await conn.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL
+            password_hash TEXT NOT NULL,
+            token_hash TEXT,
+            token_created INTEGER
         )
         """
     )
@@ -195,19 +196,11 @@ class DashboardSettings:
 
 @dataclass
 class User:
-    """Application user account."""
+    """Application user credentials and token."""
 
     username: str
-    password: str
-    role: str = "user"
-      
-class FingerprintInfo:
-    """Metadata about a fingerprint dataset."""
-
-    environment: str
-    source: str
-    record_count: int
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    password_hash: str
+    token_hash: str | None = None
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -366,46 +359,46 @@ async def load_dashboard_settings() -> DashboardSettings:
     return DashboardSettings(layout=layout, widgets=widgets)
 
 
-async def create_user(user: User) -> None:
-    """Insert or update a user account."""
+async def get_user(username: str) -> User | None:
+    """Return ``User`` row for ``username`` if it exists."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password_hash, token_hash FROM users WHERE username = ?",
+        (username,),
+    )
+    row = await cur.fetchone()
+    return User(**row) if row else None
+
+
+async def save_user(user: User) -> None:
+    """Insert or replace ``user`` in the database."""
     conn = await _get_conn()
     await conn.execute(
-        "INSERT OR REPLACE INTO users (username, password, role) VALUES (?, ?, ?)",
-        (user.username, user.password, user.role),
-async def save_fingerprint_info(info: FingerprintInfo) -> None:
-    """Insert fingerprint metadata row into the database."""
-    conn = await _get_conn()
-    await conn.execute(
-        (
-            "INSERT INTO fingerprint_info (environment, source, record_count, created_at) "
-            "VALUES (?, ?, ?, ?)"
-        ),
-        (info.environment, info.source, info.record_count, info.created_at),
+        "INSERT OR REPLACE INTO users (username, password_hash, token_hash) VALUES (?, ?, ?)",
+        (user.username, user.password_hash, user.token_hash),
     )
     await conn.commit()
 
 
-async def get_user(username: str) -> User | None:
-    """Return :class:`User` matching ``username`` if present."""
+async def update_user_token(username: str, token_hash: str) -> None:
+    """Set ``token_hash`` for ``username``."""
+    conn = await _get_conn()
+    await conn.execute(
+        "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') WHERE username = ?",
+        (token_hash, username),
+    )
+    await conn.commit()
+
+
+async def get_user_by_token(token_hash: str) -> User | None:
+    """Return ``User`` matching ``token_hash`` if found."""
     conn = await _get_conn()
     cur = await conn.execute(
-        "SELECT username, password, role FROM users WHERE username = ?",
-        (username,),
+        "SELECT username, password_hash, token_hash FROM users WHERE token_hash = ?",
+        (token_hash,),
     )
     row = await cur.fetchone()
-    if row is None:
-        return None
-    return User(username=row["username"], password=row["password"], role=row["role"])
-
-      
-async def load_fingerprint_info() -> list[FingerprintInfo]:
-    """Return saved :class:`FingerprintInfo` rows ordered by newest."""
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT environment, source, record_count, created_at FROM fingerprint_info ORDER BY id DESC"
-    )
-    rows = await cur.fetchall()
-    return [FingerprintInfo(**dict(row)) for row in rows]
+    return User(**row) if row else None
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
