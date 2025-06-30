@@ -70,7 +70,7 @@ def test_write_postgres(monkeypatch):
         return conn
 
     asyncpg = ModuleType("asyncpg")
-    asyncpg.connect = fake_connect  # type: ignore
+    asyncpg.connect = fake_connect  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "asyncpg", asyncpg)
     asyncio.run(ds.write_postgres("dsn", "tbl", rows))
     assert conn.calls and conn.calls[0][0].startswith("INSERT INTO tbl")

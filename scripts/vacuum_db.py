@@ -3,7 +3,7 @@
 import asyncio
 
 try:  # allow tests to provide a lightweight persistence module
-    import persistence  # type: ignore
+    import persistence
 except Exception:  # pragma: no cover - fallback
     from piwardrive import persistence
 

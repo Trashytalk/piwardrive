@@ -7,8 +7,7 @@ import json
 from typing import Iterable, cast
 
 try:
-    from persistence import HealthRecord  # type: ignore
-    from persistence import flush_health_records, save_health_record
+    from persistence import HealthRecord, flush_health_records, save_health_record
 except Exception:  # pragma: no cover - fall back if tests replaced module
     from piwardrive.persistence import (
         HealthRecord,

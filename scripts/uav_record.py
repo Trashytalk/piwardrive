@@ -16,7 +16,7 @@ from piwardrive.logconfig import setup_logging
 try:
     from dronekit import connect
 except Exception:  # pragma: no cover - optional dependency
-    connect = None  # type: ignore
+    connect = None
 
 
 def main(argv: list[str] | None = None) -> None:

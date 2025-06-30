@@ -8,7 +8,7 @@ from piwardrive.simpleui import DropdownMenu, Label, ScrollView
 from piwardrive.utils import tail_file
 
 try:  # pragma: no cover - optional dependency
-    from piwardrive.simpleui import App as SimpleApp  # type: ignore
+    from piwardrive.simpleui import App as SimpleApp
 except Exception:  # pragma: no cover - fallback when missing
     SimpleApp = None  # type: ignore[assignment]
 

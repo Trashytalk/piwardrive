@@ -22,7 +22,6 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
-    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
     from fastapi.security import (
         HTTPBasic,
         HTTPBasicCredentials,
@@ -30,7 +29,7 @@ try:  # pragma: no cover - optional FastAPI dependency
         OAuth2PasswordRequestForm,
     )
 except Exception:
-    FastAPI = type(  # type: ignore[misc, assignment]
+    FastAPI = type(
         "FastAPI",
         (),
         {
@@ -40,43 +39,43 @@ except Exception:
             "websocket": lambda *a, **k: (lambda f: f),
             "add_middleware": lambda *a, **k: None,
         },
-    )  # type: ignore[misc, assignment]
+    )
 
     def _noop(*_a: typing.Any, **_k: typing.Any) -> None:
         return None
 
-    Depends = _noop  # type: ignore[misc, assignment]
-    HTTPException = type(  # type: ignore[misc]
+    Depends = _noop
+    HTTPException = type(
         "HTTPException",
         (Exception,),
         {},
-    )  # type: ignore[misc, assignment]
-    WebSocket = object  # type: ignore[misc, assignment]
-    WebSocketDisconnect = Exception  # type: ignore[misc, assignment]
-    Body = _noop  # type: ignore[misc, assignment]
-    Request = object  # type: ignore[misc, assignment]
-    StreamingResponse = Response = object  # type: ignore[misc, assignment]
-    OAuth2PasswordBearer = type(  # type: ignore[misc]
+    )
+    WebSocket = object
+    WebSocketDisconnect = Exception
+    Body = _noop
+    Request = object
+    StreamingResponse = Response = object
+    OAuth2PasswordBearer = type(
         "OAuth2PasswordBearer",
         (),
         {"__init__": lambda self, tokenUrl="/token", **k: None},
-    )  # type: ignore[misc, assignment]
-    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+    )
+    OAuth2PasswordRequestForm = type(
         "OAuth2PasswordRequestForm",
         (),
         {"__init__": lambda self, **k: None, "username": "", "password": ""},
-    )  # type: ignore[misc, assignment]
-    OAuth2PasswordBearer = type(  # type: ignore[misc]
+    )
+    OAuth2PasswordBearer = type(
         "OAuth2PasswordBearer",
         (),
         {"__init__": lambda self, **k: None},
     )
-    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+    OAuth2PasswordRequestForm = type(
         "OAuth2PasswordRequestForm",
         (),
         {"__init__": lambda self, **k: None},
     )
-    CORSMiddleware = object  # type: ignore[misc, assignment]
+    CORSMiddleware = object
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from fastapi import (
@@ -99,12 +98,12 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
     from fastapi.middleware.cors import CORSMiddleware
 
 import asyncio
+import functools
 import importlib
 import json
 import secrets
 import tempfile
 import time
-import functools
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Tuple
@@ -112,22 +111,22 @@ from typing import TYPE_CHECKING, Any, Tuple
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
-    from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
-        User,
         FingerprintInfo,
+        User,
         _db_path,
         create_user,
         get_table_counts,
         get_user,
         get_user_by_token,
+        load_ap_cache,
         load_dashboard_settings,
-        load_recent_health,
-        load_health_history,
         load_fingerprint_info,
-        save_fingerprint_info,
+        load_health_history,
+        load_recent_health,
         save_dashboard_settings,
+        save_fingerprint_info,
         save_user,
         update_user_token,
     )
@@ -178,9 +177,12 @@ except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
 
 try:  # allow tests to stub out analytics
-    from analytics.baseline import analyze_health_baseline, load_baseline_health  # type: ignore
+    from analytics.baseline import analyze_health_baseline, load_baseline_health
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
+    from piwardrive.analytics.baseline import (
+        analyze_health_baseline,
+        load_baseline_health,
+    )
 
 
 logger = logging.getLogger(__name__)

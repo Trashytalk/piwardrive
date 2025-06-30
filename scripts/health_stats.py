@@ -6,7 +6,7 @@ import json
 import logging
 
 try:
-    from persistence import load_recent_health  # type: ignore
+    from persistence import load_recent_health
 except Exception:  # pragma: no cover - fall back if tests replaced module
     from piwardrive.persistence import load_recent_health
 
