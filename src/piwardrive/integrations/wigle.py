@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from types import SimpleNamespace
 from typing import Any, Dict, List
 
@@ -9,6 +11,7 @@ from piwardrive.core.utils import WIGLE_CACHE_SECONDS, async_ttl_cache
 
 try:  # pragma: no cover - optional dependency
     import aiohttp
+
     if not hasattr(aiohttp, "BasicAuth"):
         raise ImportError("incomplete aiohttp")
 except Exception:  # pragma: no cover - aiohttp not installed or incomplete
@@ -39,10 +42,14 @@ async def fetch_wigle_networks(
     }
     url = "https://api.wigle.net/api/v2/network/search"
     timeout = aiohttp.ClientTimeout(total=10)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.get(url, params=params, auth=auth) as resp:
-            resp.raise_for_status()
-            data = await resp.json()
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url, params=params, auth=auth) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
+    except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
+        logging.error("WiGLE request failed: %s", exc)
+        return []
     nets = []
     for rec in data.get("results", []):
         lat_val = rec.get("trilat")

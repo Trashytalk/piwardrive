@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import requests  # type: ignore
@@ -76,7 +77,11 @@ def robust_request(url: str) -> requests.Response:
     """Return ``requests.get(url)`` with simple retries."""
 
     def do_request() -> requests.Response:
-        return requests.get(url, timeout=5)
+        try:
+            return requests.get(url, timeout=5)
+        except requests.RequestException as exc:
+            logging.warning("Request failed: %s", exc)
+            raise
 
     return retry_call(do_request, attempts=3, delay=1)  # noqa: F405
 

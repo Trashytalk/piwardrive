@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -12,10 +13,18 @@ CONFIG_PATH = Path.home() / ".config" / "piwardrive" / "setup.json"
 def run_wizard() -> None:
     """Prompt for service configuration options and save them."""
     config: dict[str, Any] = {}
-    config["kismet_host"] = input("Kismet host [localhost]: ") or "localhost"
-    config["kismet_port"] = int(input("Kismet port [2501]: ") or "2501")
-    config["bettercap_iface"] = input("BetterCAP interface [wlan0]: ") or "wlan0"
-    config["gpsd_port"] = int(input("GPSD port [2947]: ") or "2947")
+    try:
+        config["kismet_host"] = input("Kismet host [localhost]: ") or "localhost"
+        config["kismet_port"] = int(input("Kismet port [2501]: ") or "2501")
+        config["bettercap_iface"] = input("BetterCAP interface [wlan0]: ") or "wlan0"
+        config["gpsd_port"] = int(input("GPSD port [2947]: ") or "2947")
+    except ValueError as exc:
+        logging.error("Invalid input: %s", exc)
+        return
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    CONFIG_PATH.write_text(json.dumps(config, indent=2))
+    try:
+        CONFIG_PATH.write_text(json.dumps(config, indent=2))
+    except OSError as exc:
+        logging.error("Failed to write config: %s", exc)
+        return
     print(f"Configuration saved to {CONFIG_PATH}")
