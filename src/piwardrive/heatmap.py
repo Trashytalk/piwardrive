@@ -41,6 +41,7 @@ def _fill_histogram(
         hist[i][j] += 1
     return hist
 
+
 Coord = Tuple[float, float]
 
 
@@ -132,6 +133,7 @@ def _spread_density(hist: Sequence[Sequence[int]], radius: int) -> List[List[int
                     if 0 <= ii < bins_lat and 0 <= jj < bins_lon:
                         density[ii][jj] += count
     return density
+
 
 def density_map(
     coords: Iterable[Coord],
