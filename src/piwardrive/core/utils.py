@@ -175,6 +175,9 @@ else:  # pragma: no cover - fallback without requests_cache
     HTTP_SESSION = _DummySession()
 
 
+T = TypeVar("T")
+
+
 def _expire_safe_request_cache() -> None:
     """Clean up expired cache entries without blocking requests."""
     with _SAFE_REQUEST_CACHE_LOCK:
@@ -305,9 +308,6 @@ def report_error(message: str) -> None:
             app.show_alert("Error", message)
     except Exception as exc:  # pragma: no cover - app may not be running
         logging.exception("Failed to display error alert: %s", exc)
-
-
-T = TypeVar("T")
 
 
 def require_id(widget: Any, name: str) -> Any:

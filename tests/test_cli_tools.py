@@ -100,7 +100,7 @@ def test_config_cli_get_unknown_api(monkeypatch):
 
     monkeypatch.setattr(cli, "_api_get", fake_get)
     with pytest.raises(SystemExit):
-    cli.main(["--url", "http://api", "get", "does_not_exist"])
+        cli.main(["--url", "http://api", "get", "does_not_exist"])
 
 
 def test_config_cli_set_unknown_api(monkeypatch):

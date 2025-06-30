@@ -147,7 +147,8 @@ def test_read_mpu6050_env(monkeypatch, add_dummy_module) -> None:
         monkeypatch.delenv("PW_MPU6050_ADDR", raising=False)
         _reload()
 
-        def test_reset_orientation_map_env(monkeypatch, tmp_path) -> None:
+
+def test_reset_orientation_map_env(monkeypatch, tmp_path) -> None:
     file_path = tmp_path / "omap.json"
     file_path.write_text('{"normal": 1, "flip": 45}')
     monkeypatch.setenv("PW_ORIENTATION_MAP_FILE", str(file_path))
