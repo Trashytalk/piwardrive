@@ -168,7 +168,7 @@ import psutil
 import vehicle_sensors
 from sync import upload_data
 
-from piwardrive import export, graphql_api, orientation_sensors
+from piwardrive import export, graphql_api
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 

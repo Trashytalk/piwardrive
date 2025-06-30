@@ -28,6 +28,7 @@ Common issues are answered in the :doc:`faq`.
    gps_clients
    tile_cache
    tile_prefetching
+   route_optimizer
    vector_tile_customizer
    bluetooth
    hardware_setup

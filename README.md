@@ -366,8 +366,70 @@ React frontend with `npm run build` and then launch the stack:
 docker compose up
 ```
 
+
 The compose file mounts `~/.config/piwardrive` and `webui/dist` so your
 configuration and compiled assets persist between container restarts.
+
+## Usage
+
+After installing the package activate the virtual environment and start the
+dashboard:
+
+```bash
+source gui-env/bin/activate
+piwardrive-webui
+```
+
+This launches a FastAPI server on <http://127.0.0.1:8000/> with the React
+frontend. Set the `PW_WEBUI_PORT` environment variable to change the port.
+
+Additional command line helpers are provided:
+
+```bash
+piwardrive-service   # API only
+piwardrive-prefetch  # download map tiles without starting the UI
+python -m piwardrive.sigint_suite.band_scanner --help
+```
+
+See [docs/cli_tools.rst](docs/cli_tools.rst) for the full list of commands.
+
+## Examples
+
+Retrieve the last few health records programmatically:
+
+```python
+import asyncio
+from piwardrive.core import persistence
+
+async def latest():
+    records = await persistence.load_recent_health(limit=3)
+    for rec in records:
+        print(rec.timestamp, rec.cpu_percent)
+
+asyncio.run(latest())
+```
+
+Start only the API service with Uvicorn:
+
+```python
+from piwardrive.service import app
+import uvicorn
+
+uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+## API Reference
+
+The most commonly used modules include:
+
+- `service` – FastAPI backend with metrics and sync endpoints.
+- `persistence` – async helpers for reading and writing the SQLite database.
+- `scheduler` – poll-based task scheduler used by widgets and diagnostics.
+- `sigint_suite` – command line scanning utilities under `python -m`.
+- `widgets` – base classes for custom dashboard components.
+
+Full documentation lives in the `docs/` directory; run `make html` to build the
+Sphinx site.
 
 ### Automated vs Manual Tasks
 
@@ -493,6 +555,61 @@ Password hashing guidelines are covered in [docs/security.rst](docs/security.rst
 Comprehensive guides and API references live in the `docs/` directory. Run `make html` there to build the Sphinx site. High level summaries are collected in [REFERENCE.md](REFERENCE.md).
 Detailed examples for each command line helper are available in [docs/cli_tools.rst](docs/cli_tools.rst).
 See [docs/notifications.rst](docs/notifications.rst) for enabling webhook alerts.
+
+## Python Examples
+
+Below are minimal snippets that can be validated with ``doctest``.
+
+### setup_logging
+
+```python
+>>> import sys, types, json, os
+>>> sys.modules['piwardrive.config'] = types.SimpleNamespace(CONFIG_DIR='.')
+>>> sys.path.insert(0, 'src')
+>>> from piwardrive.logconfig import setup_logging
+>>> logger = setup_logging('./temp.log')
+>>> logger.warning('issue')
+>>> json.loads(open('./temp.log').read().splitlines()[0])['level']
+'WARNING'
+>>> os.remove('./temp.log')
+
+```
+
+### suggest_route
+
+```python
+>>> import sys
+>>> sys.path.insert(0, 'src')
+>>> from piwardrive.route_optimizer import suggest_route
+>>> suggest_route([(0, 0), (0.001, 0)], steps=2, cell_size=0.001)
+[(0.0015, -0.0005), (0.0005, -0.0005)]
+
+```
+
+### sync_database_to_server
+
+```python
+>>> import sys, os, asyncio, tempfile, http.server, threading
+>>> sys.path.insert(0, 'src')
+>>> from piwardrive.remote_sync import sync_database_to_server
+>>> class Handler(http.server.BaseHTTPRequestHandler):
+...     def do_POST(self):
+...         self.server.received = True
+...         self.send_response(200)
+...         self.end_headers()
+...     def log_message(self, *args):
+...         pass
+>>> server = http.server.HTTPServer(('localhost', 0), Handler)
+>>> t = threading.Thread(target=server.serve_forever)
+>>> t.start()
+>>> db = tempfile.NamedTemporaryFile(delete=False)
+>>> _ = db.write(b'hello'); db.close()
+>>> asyncio.run(sync_database_to_server(db.name, f'http://localhost:{server.server_port}/', timeout=5, retries=1))
+>>> server.shutdown(); t.join(); os.unlink(db.name)
+>>> server.received
+True
+
+```
 
 ## Contributing
 

@@ -67,6 +67,7 @@ class RoutePrefetcher:
         delta: float = 0.01,
         offline_tile_path: str | None = None,
     ) -> None:
+        """Create the prefetcher and register the polling task."""
         self._map_screen = map_screen
         self._lookahead = lookahead
         self._delta = delta

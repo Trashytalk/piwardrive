@@ -17,6 +17,7 @@ try:  # pragma: no cover - optional dependency
 except Exception:  # pragma: no cover - fallbacks for tests without deps
 
     async def get_table_counts() -> dict[str, int]:
+        """Return an empty table-count mapping when persistence is missing."""
         return {}
 
     def _db_path() -> str:
@@ -34,6 +35,7 @@ except Exception:  # pragma: no cover - simple fallback
     def run_async_task(
         coro: Coroutine[Any, Any, T], callback: Callable[[T], None] | None = None
     ) -> Future[T]:
+        """Synchronously execute ``coro`` and invoke ``callback`` if given."""
         fut: Future[T] = Future()
 
         try:
@@ -52,6 +54,7 @@ class DBStatsWidget(DashboardWidget):
     update_interval = 10.0
 
     def __init__(self, **kwargs: Any) -> None:
+        """Create the widget and schedule the first update."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(text=f"{_('db')}: {_('not_available')}", halign="center")

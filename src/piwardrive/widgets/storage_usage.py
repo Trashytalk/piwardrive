@@ -13,12 +13,15 @@ from .base import DashboardWidget
 
 
 class StorageUsageWidget(DashboardWidget):
-    """Indicate SSD usage percentage."""
+    """Indicate SSD usage percentage.
+
+    A label widget is created on initialization and an initial update is
+    performed.
+    """
 
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Set up label widget and trigger initial update."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(text=f"{_('ssd')}: {_('not_available')}", halign="center")

@@ -3,22 +3,12 @@
 import json
 import os
 from dataclasses import asdict, dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError
 
 from ..errors import ConfigError
-
-
-class Theme(str, Enum):
-    """Available UI themes."""
-
-    Dark = "Dark"  # noqa: V107
-    Light = "Light"  # noqa: V107
-    Green = "Green"  # noqa: V107
-    Red = "Red"  # noqa: V107
 
 
 CONFIG_DIR = str(Path.home() / ".config" / "piwardrive")
@@ -68,9 +58,7 @@ def config_mtime(profile: Optional[str] = None) -> Optional[float]:  # noqa: V10
 class Config:
     """Persistent application configuration."""
 
-    theme: str = "Dark"  # noqa: V107
-    map_poll_gps: int = 10  # noqa: V107
-    map_poll_gps_max: int = 30  # noqa: V107
+
     map_poll_aps: int = 60  # noqa: V107
     map_poll_bt: int = 60  # noqa: V107
     map_poll_wigle: int = 0  # noqa: V107
@@ -166,9 +154,6 @@ def list_env_overrides() -> Dict[str, str]:
 class FileConfigModel(BaseModel):
     """Validation model for configuration files."""
 
-    theme: Optional[str] = None
-    map_poll_gps: Optional[int] = None
-    map_poll_gps_max: Optional[int] = None
     map_poll_aps: Optional[int] = None
     map_poll_wigle: Optional[int] = None
     map_show_gps: Optional[bool] = None
@@ -242,7 +227,6 @@ class FileConfigModel(BaseModel):
 class ConfigModel(FileConfigModel):
     """Extended validation used by :func:`validate_config_data`."""
 
-    map_poll_gps: int = Field(..., gt=0)
     map_poll_wigle: int = Field(default=0, ge=0)
     map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
@@ -281,15 +265,6 @@ class ConfigModel(FileConfigModel):
     influx_org: str = DEFAULTS["influx_org"]
     influx_bucket: str = DEFAULTS["influx_bucket"]
     postgres_dsn: str = DEFAULTS["postgres_dsn"]
-    theme: Theme
-
-    @field_validator("theme", mode="before")
-    def check_theme(cls, value: Any) -> Theme:
-        """Validate that ``value`` is a known :class:`Theme`."""
-        try:
-            return Theme(value)
-        except Exception as exc:  # pragma: no cover - should raise
-            raise ConfigError(f"Invalid theme: {value}") from exc
 
 
 def _parse_env_value(raw: str, default: Any) -> Any:
@@ -328,13 +303,7 @@ def _apply_env_overrides(cfg: Dict[str, Any]) -> Dict[str, Any]:
         default = DEFAULTS[key]
         raw = os.getenv(env_var)
         if raw is not None:
-            if key == "theme":
-                try:
-                    result[key] = Theme(raw)
-                except ValueError:
-                    result[key] = raw
-            else:
-                result[key] = _parse_env_value(raw, default)
+            result[key] = _parse_env_value(raw, default)
         elif key == "remote_sync_url" and result.get(key, default) == "":
             # Allow missing remote sync URL
             result[key] = None
@@ -447,10 +416,6 @@ def import_config(path: str) -> Config:
 @dataclass
 class AppConfig:
     """Typed configuration container."""
-
-    theme: str = DEFAULTS["theme"]
-    map_poll_gps: int = DEFAULTS["map_poll_gps"]
-    map_poll_gps_max: int = DEFAULTS["map_poll_gps_max"]
     map_poll_aps: int = DEFAULTS["map_poll_aps"]
     map_poll_bt: int = DEFAULTS["map_poll_bt"]
     map_poll_wigle: int = DEFAULTS["map_poll_wigle"]
