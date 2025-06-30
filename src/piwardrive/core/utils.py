@@ -33,7 +33,7 @@ from . import fastjson
 
 try:  # pragma: no cover - optional dependency
     from piwardrive.sigint_suite.models import BluetoothDevice
-except Exception:  # pragma: no cover - fallback when sigint_suite is missing
+except ImportError:  # pragma: no cover - fallback when sigint_suite is missing
     BluetoothDevice = dict[str, Any]
 from concurrent.futures import Future
 
@@ -44,7 +44,7 @@ import requests
 
 try:
     import requests_cache
-except Exception:  # pragma: no cover - optional dependency
+except ImportError:  # pragma: no cover - optional dependency
     requests_cache = None
 import aiohttp
 
@@ -447,7 +447,7 @@ def get_cpu_temp() -> float | None:
         with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
             temp_str = f.read().strip()
         return float(temp_str) / 1000.0
-    except Exception:
+    except (OSError, ValueError):
         return None
 
 
