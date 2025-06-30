@@ -27,7 +27,7 @@ and install the helper library::
    sudo apt install python3-smbus
    pip install mpu6050
 
-Refer to :doc:`hardware_setup` for wiring diagrams of the sensor and a
+See :doc:`hardware_setup` for wiring diagrams of the MPU-6050 and a
 typical GPS module.
 
 Orientation Map
