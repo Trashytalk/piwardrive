@@ -190,6 +190,12 @@ except Exception:  # pragma: no cover - fall back to real module
 
 logger = logging.getLogger(__name__)
 
+# Common timing defaults
+SUBPROCESS_TIMEOUT = 10
+WEBSOCKET_SEND_TIMEOUT = 1
+STREAM_SLEEP = 2
+MIN_EVENT_INTERVAL = 0.01
+
 # TypedDict definitions for API responses
 class TokenResponse(typing.TypedDict):
     access_token: str
@@ -744,7 +750,7 @@ async def run_command(
         stderr=asyncio.subprocess.STDOUT,
     )
     try:
-        out, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
+        out, _ = await asyncio.wait_for(proc.communicate(), timeout=SUBPROCESS_TIMEOUT)
     except asyncio.TimeoutError:
         proc.kill()
         return error_json(408, "timeout")
@@ -1035,13 +1041,15 @@ async def ws_aps(websocket: WebSocket) -> None:
                 "errors": error_count,
             }
             try:
-                await asyncio.wait_for(websocket.send_json(data), timeout=1)
+                await asyncio.wait_for(
+                    websocket.send_json(data), timeout=WEBSOCKET_SEND_TIMEOUT
+                )
             except (asyncio.TimeoutError, Exception):
                 error_count += 1
                 await websocket.close()
                 break
             seq += 1
-            await asyncio.sleep(2)
+            await asyncio.sleep(STREAM_SLEEP)
     except WebSocketDisconnect:
         pass
 
@@ -1075,7 +1083,7 @@ async def sse_aps(request: Request) -> StreamingResponse:
             }
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
-            await asyncio.sleep(2)
+            await asyncio.sleep(STREAM_SLEEP)
 
     headers = {
         "Cache-Control": "no-cache",
@@ -1102,13 +1110,15 @@ async def ws_status(websocket: WebSocket) -> None:
                 "errors": error_count,
             }
             try:
-                await asyncio.wait_for(websocket.send_json(data), timeout=1)
+                await asyncio.wait_for(
+                    websocket.send_json(data), timeout=WEBSOCKET_SEND_TIMEOUT
+                )
             except (asyncio.TimeoutError, Exception):
                 error_count += 1
                 await websocket.close()
                 break
             seq += 1
-            await asyncio.sleep(2)
+            await asyncio.sleep(STREAM_SLEEP)
     except WebSocketDisconnect:
         pass
 
@@ -1132,7 +1142,7 @@ async def sse_status(request: Request) -> StreamingResponse:
             }
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
-            await asyncio.sleep(2)
+            await asyncio.sleep(STREAM_SLEEP)
 
     headers = {
         "Cache-Control": "no-cache",
@@ -1160,7 +1170,7 @@ async def sse_history(
             data = {"seq": seq, "record": asdict(rec)}
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
-            await asyncio.sleep(max(interval, 0.01))
+            await asyncio.sleep(max(interval, MIN_EVENT_INTERVAL))
 
     headers = {
         "Cache-Control": "no-cache",

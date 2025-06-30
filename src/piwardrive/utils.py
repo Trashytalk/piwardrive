@@ -12,6 +12,10 @@ from .error_reporting import format_error, report_error
 
 __all__ = ["format_error", "report_error"]
 
+HTTP_TIMEOUT = 5
+RETRY_ATTEMPTS = 3
+RETRY_DELAY = 1
+
 try:  # pragma: no cover - optional dependencies may be missing
     from .core.utils import *  # noqa: F401,F403
     from .core.utils import __all__ as _core_all
@@ -86,12 +90,12 @@ def robust_request(url: str) -> requests.Response:
 
     def do_request() -> requests.Response:
         try:
-            return requests.get(url, timeout=5)
+            return requests.get(url, timeout=HTTP_TIMEOUT)
         except requests.RequestException as exc:
             logging.warning("Request failed: %s", exc)
             raise
 
-    return retry_call(do_request, attempts=3, delay=1)  # noqa: F405
+    return retry_call(do_request, attempts=RETRY_ATTEMPTS, delay=RETRY_DELAY)  # noqa: F405
 
 
 __all__.append("robust_request")

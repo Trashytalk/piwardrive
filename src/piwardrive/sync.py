@@ -11,6 +11,8 @@ import aiohttp
 
 from piwardrive import config
 
+RETRY_SLEEP = 1
+
 
 async def upload_data(records: Sequence[dict[str, Any]]) -> bool:
     """Upload ``records`` to the configured ``remote_sync_url``."""
@@ -36,5 +38,5 @@ async def upload_data(records: Sequence[dict[str, Any]]) -> bool:
             if attempt >= cfg.remote_sync_retries:
                 logging.exception("upload_data failed: %s", exc)
                 return False
-            await asyncio.sleep(1)
+            await asyncio.sleep(RETRY_SLEEP)
     return False

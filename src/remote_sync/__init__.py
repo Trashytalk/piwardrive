@@ -14,6 +14,11 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
+# Default behavior tuning
+DEFAULT_TIMEOUT = 30
+DEFAULT_RETRIES = 3
+INITIAL_RETRY_DELAY = 1.0
+
 # Treat these environment variable values as "metrics disabled"
 _DISABLED_METRIC_VALUES = {
     None,
@@ -114,8 +119,8 @@ async def sync_new_records(
     url: str,
     *,
     state_file: str | None = None,
-    timeout: int = 30,
-    retries: int = 3,
+    timeout: int = DEFAULT_TIMEOUT,
+    retries: int = DEFAULT_RETRIES,
 ) -> int:
     """Sync new ``health_records`` rows to ``url``.
 
@@ -149,8 +154,8 @@ async def sync_database_to_server(
     db_path: str,
     url: str,
     *,
-    timeout: int = 30,
-    retries: int = 3,
+    timeout: int = DEFAULT_TIMEOUT,
+    retries: int = DEFAULT_RETRIES,
     row_range: tuple[int, int] | None = None,
 ) -> None:
     """Upload the SQLite database at ``db_path`` to ``url`` via HTTP POST.
@@ -163,7 +168,7 @@ async def sync_database_to_server(
     if not os.path.exists(db_path):
         raise FileNotFoundError(db_path)
 
-    delay = 1.0
+    delay = INITIAL_RETRY_DELAY
     temp_path = None
     if row_range is not None:
         start, end = row_range
