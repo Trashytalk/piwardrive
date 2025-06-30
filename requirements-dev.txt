@@ -1,8 +1,9 @@
 flake8==7.2.0
 mypy==1.16.0
-types-ujson==5.10.0.20240511
-types-PyYAML==6.0.12.20240311
-types-requests==2.31.0.20240406
+types-ujson==5.10.0.20240515
+types-PyYAML==6.0.12.20250516
+types-requests==2.32.4.20250611
+types-cachetools==6.0.0.20250525
 pytest==8.4.0
 pytest-cov==6.2.1
 radon==6.0.1
