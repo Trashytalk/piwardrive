@@ -30,3 +30,10 @@ def test_rejects_nested_traversal(tmp_path, monkeypatch):
     client = TestClient(receiver.app)
     resp = client.post("/", files={"file": ("../../etc/passwd", b"data")})
     assert resp.status_code == 400
+
+
+def test_rejects_evil_db(tmp_path, monkeypatch):
+    receiver = _load_receiver(tmp_path, monkeypatch)
+    client = TestClient(receiver.app)
+    resp = client.post("/", files={"file": ("../evil.db", b"data")})
+    assert resp.status_code == 400
