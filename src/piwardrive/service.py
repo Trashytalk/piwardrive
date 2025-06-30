@@ -593,7 +593,7 @@ async def login(
 ) -> AuthLoginResponse:
     """Validate credentials and return a bearer token."""
     user = await get_user(form.username)
-    if user is None or not verify_password(form.password, user.password):
+    if user is None or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
     token = secrets.token_urlsafe(32)
     TOKENS[token] = user.username
