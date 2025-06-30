@@ -10,6 +10,8 @@ PiWardrive's primary interface is a React-based web dashboard served by
 
 See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
 
+For wiring diagrams of external sensors see :doc:`hardware_setup`.
+
 
 .. toctree::
    :maxdepth: 1
@@ -46,6 +48,7 @@ See :doc:`tile_prefetching` for a diagram of the automatic tile prefetch flow.
    cli_tools
    drone_mapping
    r_integration
+   grafana
     web_ui
     faq
     legal

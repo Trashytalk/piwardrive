@@ -14,13 +14,16 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-_METRICS_ENABLED = os.getenv("PW_REMOTE_SYNC_METRICS") not in {
+# Treat these environment variable values as "metrics disabled"
+_DISABLED_METRIC_VALUES = {
     None,
     "",
     "0",
     "false",
     "False",
 }
+_METRIC_ENV = os.getenv("PW_REMOTE_SYNC_METRICS")
+_METRICS_ENABLED = _METRIC_ENV not in _DISABLED_METRIC_VALUES
 _SUCCESS_TOTAL = 0
 _FAILURE_TOTAL = 0
 _LAST_DURATION = float("nan")
