@@ -1,6 +1,6 @@
 # PiWardrive Web UI Setup
 
-![Coverage](https://github.com/TRASHYTALK/piwardrive/raw/main/webui/badges/coverage.svg)
+[![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=frontend)
 
 > **Note**
 > Refer to the Legal Notice in [../README.md](../README.md) before running PiWardrive.

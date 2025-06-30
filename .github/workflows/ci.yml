@@ -55,9 +55,18 @@ jobs:
         run: |
           pytest --cov=src --cov-report=xml -q
 
-      - name: Upload coverage to Codecov
+      - name: Upload Python coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml,webui/coverage/lcov.info
+          files: coverage.xml
+          flags: backend
+          fail_ci_if_error: true
+
+      - name: Upload Node coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: webui/coverage/lcov.info
+          flags: frontend
           fail_ci_if_error: true
