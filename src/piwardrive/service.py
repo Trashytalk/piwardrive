@@ -539,6 +539,24 @@ async def update_config_endpoint(
     return data
 
 
+@GET("/webhooks")
+async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
+    """Return configured notification webhook URLs."""
+    cfg = config.load_config()
+    return {"webhooks": list(cfg.notification_webhooks)}
+
+
+@POST("/webhooks")
+async def update_webhooks_endpoint(
+    urls: list[str] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, list[str]]:
+    """Update notification webhook URL list."""
+    cfg = config.load_config()
+    cfg.notification_webhooks = list(urls)
+    config.save_config(cfg)
+    return {"webhooks": cfg.notification_webhooks}
+
+
 @GET("/dashboard-settings")
 async def get_dashboard_settings_endpoint(
     _auth: None = AUTH_DEP,

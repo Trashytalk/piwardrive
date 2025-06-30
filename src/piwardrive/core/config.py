@@ -39,6 +39,8 @@ ROUTE_PREFETCH_LOOKAHEAD = 5
 REMOTE_SYNC_INTERVAL = 60  # minutes
 HANDSHAKE_CACHE_SECONDS_DEFAULT = 10.0
 LOG_TAIL_CACHE_SECONDS_DEFAULT = 1.0
+NOTIFY_CPU_TEMP_DEFAULT = 80.0
+NOTIFY_DISK_PERCENT_DEFAULT = 90.0
 
 # Cloud upload defaults
 CLOUD_BUCKET = ""
@@ -120,6 +122,9 @@ class Config:
     remote_sync_interval: int = REMOTE_SYNC_INTERVAL  # noqa: V107
     handshake_cache_seconds: float = HANDSHAKE_CACHE_SECONDS_DEFAULT  # noqa: V107
     log_tail_cache_seconds: float = LOG_TAIL_CACHE_SECONDS_DEFAULT  # noqa: V107
+    notification_webhooks: List[str] = field(default_factory=list)  # noqa: V107
+    notify_cpu_temp: float = NOTIFY_CPU_TEMP_DEFAULT  # noqa: V107
+    notify_disk_percent: float = NOTIFY_DISK_PERCENT_DEFAULT  # noqa: V107
     wigle_api_name: str = ""  # noqa: V107
     wigle_api_key: str = ""  # noqa: V107
     gps_movement_threshold: float = 1.0  # noqa: V107
@@ -196,6 +201,9 @@ class FileConfigModel(BaseModel):
     remote_sync_interval: Optional[int] = Field(default=None, ge=1)
     handshake_cache_seconds: Optional[float] = Field(default=None, ge=0)
     log_tail_cache_seconds: Optional[float] = Field(default=None, ge=0)
+    notification_webhooks: List[str] = Field(default_factory=list)
+    notify_cpu_temp: Optional[float] = Field(default=None, ge=0)
+    notify_disk_percent: Optional[float] = Field(default=None, ge=0)
     wigle_api_name: Optional[str] = None
     wigle_api_key: Optional[str] = None
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
@@ -231,6 +239,9 @@ class ConfigModel(FileConfigModel):
     log_tail_cache_seconds: float = Field(
         default=DEFAULTS["log_tail_cache_seconds"], ge=0
     )
+    notification_webhooks: List[str] = Field(default_factory=list)
+    notify_cpu_temp: float = Field(default=DEFAULTS["notify_cpu_temp"], ge=0)
+    notify_disk_percent: float = Field(default=DEFAULTS["notify_disk_percent"], ge=0)
     mysql_host: str = DEFAULTS["mysql_host"]
     mysql_port: int = Field(default=DEFAULTS["mysql_port"], ge=1)
     mysql_user: str = DEFAULTS["mysql_user"]
@@ -452,6 +463,9 @@ class AppConfig:
     remote_sync_interval: int = DEFAULTS["remote_sync_interval"]
     handshake_cache_seconds: float = DEFAULTS["handshake_cache_seconds"]
     log_tail_cache_seconds: float = DEFAULTS["log_tail_cache_seconds"]
+    notification_webhooks: List[str] = field(default_factory=list)
+    notify_cpu_temp: float = DEFAULTS["notify_cpu_temp"]
+    notify_disk_percent: float = DEFAULTS["notify_disk_percent"]
     wigle_api_name: str = DEFAULTS["wigle_api_name"]
     wigle_api_key: str = DEFAULTS["wigle_api_key"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
