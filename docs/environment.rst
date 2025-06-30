@@ -212,6 +212,8 @@ All available overrides are summarised below.
      - ``remote_sync_url``
    * - ``PW_REPORTS_DIR``
      - ``reports_dir``
+   * - ``PW_RESTART_SERVICES``
+     - ``restart_services``
    * - ``PW_ROUTE_PREFETCH_INTERVAL``
      - ``route_prefetch_interval``
    * - ``PW_ROUTE_PREFETCH_LOOKAHEAD``

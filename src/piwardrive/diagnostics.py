@@ -216,12 +216,20 @@ def get_service_statuses(
 
 def self_test() -> Dict[str, Any]:
     """Run a few checks and return their results."""
+    services = get_service_statuses()
+
+    cfg = config.AppConfig.load()
+    restart = set(cfg.restart_services)
+    for name, active in services.items():
+        if not active and name in restart:
+            utils.run_service_cmd(name, "restart")
+
     return {
         "system": generate_system_report(),
         "network_ok": run_network_test(),
         "interfaces": get_interface_status(),
         "usb": list_usb_devices(),
-        "services": get_service_statuses(),
+        "services": services,
     }
 
 

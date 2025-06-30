@@ -375,6 +375,8 @@ configuration and compiled assets persist between container restarts.
 #### Automated Aspects
 
 - **Health Monitoring & Log Rotation** – `HealthMonitor` polls `diagnostics.self_test()` on a schedule while `rotate_logs` trims old log files automatically.
+- **Service Auto-Restart** – failed services listed in `restart_services` are
+  restarted by `self_test` using `utils.run_service_cmd(name, "restart")`.
 - **Tile Cache Maintenance** – stale tiles are purged and MBTiles databases vacuumed at intervals defined by `tile_maintenance_interval`.
 - **Configuration Reloads** – a filesystem watcher detects updates to `config.json` and applies them along with any `PW_` overrides without restarting.
 - **Plugin Discovery** – new widgets placed under `~/.config/piwardrive/plugins` are loaded automatically on startup. The `/plugins` API route lists any discovered classes so you can verify custom widgets were detected.

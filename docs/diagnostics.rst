@@ -31,6 +31,12 @@ options.
 ``scripts/service_status.py`` provides a small command-line interface to
 ``diagnostics.get_service_statuses`` for quick checks outside the React dashboard. The same information is visible in the dashboard via the status service.
 
+When a service check fails ``self_test`` calls
+``utils.run_service_cmd(name, "restart")`` for any entry found in the
+``restart_services`` list. Configure this behaviour in ``config.json`` or with
+the ``PW_RESTART_SERVICES`` environment variable (a JSON array of service
+names).
+
 Use :func:`utils.report_error` to surface exceptions consistently. It logs the
 message and displays a dialog via the running application if available.
 
