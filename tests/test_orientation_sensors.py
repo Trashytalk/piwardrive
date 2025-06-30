@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import logging
 import sys
 
 import piwardrive.orientation_sensors as osens  # noqa: E402
@@ -168,6 +169,20 @@ def test_reset_orientation_map_invalid(monkeypatch, tmp_path) -> None:
         osens.reset_orientation_map()
         assert osens.orientation_to_angle("normal") == 0.0  # nosec B101
         assert osens.orientation_to_angle("flip") is None  # nosec B101
+    finally:
+        monkeypatch.delenv("PW_ORIENTATION_MAP_FILE", raising=False)
+        osens.reset_orientation_map()
+
+
+def test_reset_orientation_map_unsafe(monkeypatch, caplog) -> None:
+    monkeypatch.setenv("PW_ORIENTATION_MAP_FILE", "../omap.json")
+    osens.update_orientation_map({"flip": 45.0})
+    caplog.set_level(logging.ERROR)
+    try:
+        osens.reset_orientation_map()
+        assert "Unsafe orientation map path" in caplog.text  # nosec B101
+        assert osens.orientation_to_angle("flip") is None  # nosec B101
+        assert osens.orientation_to_angle("normal") == 0.0  # nosec B101
     finally:
         monkeypatch.delenv("PW_ORIENTATION_MAP_FILE", raising=False)
         osens.reset_orientation_map()
