@@ -22,7 +22,12 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import (
+        HTTPBasic,
+        HTTPBasicCredentials,
+        OAuth2PasswordBearer,
+        OAuth2PasswordRequestForm,
+    )
 except Exception:
     FastAPI = type(  # type: ignore[misc, assignment]
         "FastAPI",
@@ -60,6 +65,16 @@ except Exception:
         (),
         {},
     )  # type: ignore[misc, assignment]
+    OAuth2PasswordBearer = type(  # type: ignore[misc]
+        "OAuth2PasswordBearer",
+        (),
+        {"__init__": lambda self, **k: None},
+    )
+    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+        "OAuth2PasswordRequestForm",
+        (),
+        {"__init__": lambda self, **k: None},
+    )
     CORSMiddleware = object  # type: ignore[misc, assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -73,12 +88,18 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
         WebSocketDisconnect,
     )
     from fastapi.responses import Response, StreamingResponse
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import (
+        HTTPBasic,
+        HTTPBasicCredentials,
+        OAuth2PasswordBearer,
+        OAuth2PasswordRequestForm,
+    )
     from fastapi.middleware.cors import CORSMiddleware
 
 import asyncio
 import importlib
 import json
+import secrets
 import tempfile
 import time
 from collections.abc import Mapping, Sequence
@@ -91,8 +112,11 @@ try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
+        User,
         _db_path,
+        create_user,
         get_table_counts,
+        get_user,
         load_dashboard_settings,
         load_recent_health,
         save_dashboard_settings,
@@ -106,6 +130,9 @@ except Exception:  # pragma: no cover - fall back to real module
         get_table_counts,
         _db_path,
         DashboardSettings,
+        get_user,
+        create_user,
+        User,
     )
 
 from piwardrive.errors import GeofenceError
@@ -199,8 +226,8 @@ async_tail_file: Callable[[str, int], Awaitable[list[str]]] = getattr(
 )
 
 
-security = HTTPBasic(auto_error=False)
-SECURITY_DEP = Depends(security)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+SECURITY_DEP = Depends(oauth2_scheme)
 BODY = Body(...)
 app = FastAPI()
 cors_origins_env = os.getenv("PW_CORS_ORIGINS", "")
@@ -248,6 +275,9 @@ ALLOWED_LOG_PATHS = [
     sanitize_path(p) for p in config.DEFAULT_CONFIG.log_paths + [DEFAULT_LOG_PATH]
 ]
 
+# In-memory token store mapping token string to username
+TOKENS: dict[str, str] = {}
+
 # Path storing polygon geofences
 GEOFENCE_FILE = os.path.join(CONFIG_DIR, "geofences.json")
 
@@ -276,16 +306,38 @@ def _save_geofences(polys: list[dict[str, Any]]) -> None:
         raise GeofenceError("Failed to save geofences") from exc
 
 
-def _check_auth(credentials: HTTPBasicCredentials = SECURITY_DEP) -> None:
-    """Validate optional HTTP basic authentication."""
-    pw_hash = os.getenv("PW_API_PASSWORD_HASH")
-    if not pw_hash:
-        return
-    if not credentials or not verify_password(credentials.password, pw_hash):
+async def _check_auth(token: str = SECURITY_DEP) -> User | None:
+    """Validate bearer token and return the associated user."""
+    if not TOKENS:
+        return None
+    username = TOKENS.get(token)
+    if not username:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    user = await get_user(username)
+    if user is None:
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    return user
 
 
 AUTH_DEP = Depends(_check_auth)
+
+
+@POST("/auth/login")
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, Any]:
+    """Validate credentials and return a bearer token."""
+    user = await get_user(form.username)
+    if user is None or not verify_password(form.password, user.password):
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    token = secrets.token_urlsafe(32)
+    TOKENS[token] = user.username
+    return {"access_token": token, "token_type": "bearer", "role": user.role}
+
+
+@POST("/auth/logout")
+async def logout(token: str = SECURITY_DEP) -> dict[str, bool]:
+    """Invalidate the current token."""
+    TOKENS.pop(token, None)
+    return {"logout": True}
 
 
 @GET("/status")
@@ -330,20 +382,20 @@ async def _collect_widget_metrics() -> dict[str, Any]:
 
 
 @GET("/api/widgets")
-async def list_widgets(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
+async def list_widgets(_auth: User | None = AUTH_DEP) -> dict[str, list[str]]:
     """Return available dashboard widget class names."""
     widgets_mod = importlib.import_module("piwardrive.widgets")
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
 
 @GET("/widget-metrics")
-async def get_widget_metrics(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_widget_metrics(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return basic metrics used by dashboard widgets."""
     return await _collect_widget_metrics()
 
 
 @GET("/plugins")
-async def get_plugins(_auth: None = AUTH_DEP) -> list[str]:
+async def get_plugins(_auth: User | None = AUTH_DEP) -> list[str]:
     """Return discovered plugin widget class names."""
     from piwardrive import widgets
 
@@ -351,7 +403,7 @@ async def get_plugins(_auth: None = AUTH_DEP) -> list[str]:
 
 
 @GET("/cpu")
-async def get_cpu(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_cpu(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return CPU temperature and usage percentage."""
     return {
         "temp": get_cpu_temp(),
@@ -360,7 +412,7 @@ async def get_cpu(_auth: None = AUTH_DEP) -> dict[str, Any]:
 
 
 @GET("/ram")
-async def get_ram(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_ram(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return system memory usage percentage."""
     return {"percent": get_mem_usage()}
 
@@ -368,7 +420,7 @@ async def get_ram(_auth: None = AUTH_DEP) -> dict[str, Any]:
 @GET("/storage")
 async def get_storage(
     path: str = "/mnt/ssd",
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return disk usage percentage for ``path``."""
     return {"percent": get_disk_usage(path)}
@@ -376,7 +428,7 @@ async def get_storage(
 
 @GET("/orientation")
 async def get_orientation_endpoint(
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return device orientation and raw sensor data."""
     orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
@@ -398,7 +450,7 @@ async def get_orientation_endpoint(
 
 
 @GET("/vehicle")
-async def get_vehicle_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return vehicle metrics from OBD-II sensors."""
     return {
         "speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
@@ -408,7 +460,7 @@ async def get_vehicle_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 
 
 @GET("/gps")
-async def get_gps_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_gps_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return current GPS position."""
     pos = await asyncio.to_thread(gps_client.get_position)
     lat = lon = None
@@ -426,7 +478,7 @@ async def get_gps_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 async def get_logs(
     lines: int = 200,
     path: str = DEFAULT_LOG_PATH,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
@@ -441,7 +493,7 @@ async def get_logs(
 
 
 @GET("/db-stats")
-async def get_db_stats_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return SQLite table counts and database size."""
     counts = await get_table_counts()
     try:
@@ -453,7 +505,7 @@ async def get_db_stats_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 
 @GET("/lora-scan")
 async def lora_scan_endpoint(
-    iface: str = "lora0", _auth: None = AUTH_DEP
+    iface: str = "lora0", _auth: User | None = AUTH_DEP
 ) -> dict[str, Any]:
     """Run ``lora-scan`` on ``iface`` and return output lines."""
     lines = await async_scan_lora(iface)
@@ -462,7 +514,7 @@ async def lora_scan_endpoint(
 
 @POST("/command")
 async def run_command(
-    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+    data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
 ) -> dict[str, Any]:
     """Execute a shell command and return its output."""
     cmd = str(data.get("cmd", "")).strip()
@@ -485,7 +537,7 @@ async def run_command(
 async def control_service_endpoint(
     name: str,
     action: str,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Start or stop a systemd service."""
     if action not in {"start", "stop", "restart"}:
@@ -502,7 +554,7 @@ async def control_service_endpoint(
 
 @GET("/service/{name}")
 async def get_service_status_endpoint(
-    name: str, _auth: None = AUTH_DEP
+    name: str, _auth: User | None = AUTH_DEP
 ) -> dict[str, Any]:
     """Return whether a ``systemd`` service is active."""
     active = await service_status_async(name)
@@ -510,7 +562,7 @@ async def get_service_status_endpoint(
 
 
 @GET("/config")
-async def get_config_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_config_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return the current configuration from ``config.json``."""
     return asdict(config.load_config())
 
@@ -518,7 +570,7 @@ async def get_config_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 @POST("/config")
 async def update_config_endpoint(
     updates: dict[str, Any] = BODY,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Update configuration values and persist them."""
     cfg = config.load_config()
@@ -541,7 +593,7 @@ async def update_config_endpoint(
 
 @GET("/dashboard-settings")
 async def get_dashboard_settings_endpoint(
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return persisted dashboard layout and widget list."""
     settings = await load_dashboard_settings()
@@ -551,7 +603,7 @@ async def get_dashboard_settings_endpoint(
 @POST("/dashboard-settings")
 async def update_dashboard_settings_endpoint(
     data: dict[str, Any] = BODY,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Persist dashboard layout and widget list."""
     layout = data.get("layout", [])
@@ -561,14 +613,16 @@ async def update_dashboard_settings_endpoint(
 
 
 @GET("/geofences")
-async def list_geofences_endpoint(_auth: None = AUTH_DEP) -> list[dict[str, Any]]:
+async def list_geofences_endpoint(
+    _auth: User | None = AUTH_DEP,
+) -> list[dict[str, Any]]:
     """Return saved geofence polygons."""
     return _load_geofences()
 
 
 @POST("/geofences")
 async def add_geofence_endpoint(
-    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+    data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
 ) -> list[dict[str, Any]]:
     """Add a new polygon to ``geofences.json``."""
     polys = _load_geofences()
@@ -588,7 +642,7 @@ async def add_geofence_endpoint(
 async def update_geofence_endpoint(
     name: str,
     updates: dict[str, Any] = BODY,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Modify a saved polygon."""
     polys = _load_geofences()
@@ -608,7 +662,9 @@ async def update_geofence_endpoint(
 
 
 @DELETE("/geofences/{name}")
-async def remove_geofence_endpoint(name: str, _auth: None = AUTH_DEP) -> dict[str, Any]:
+async def remove_geofence_endpoint(
+    name: str, _auth: User | None = AUTH_DEP
+) -> dict[str, Any]:
     """Delete ``name`` from ``geofences.json``."""
     polys = _load_geofences()
     for idx, poly in enumerate(polys):
@@ -620,7 +676,9 @@ async def remove_geofence_endpoint(name: str, _auth: None = AUTH_DEP) -> dict[st
 
 
 @POST("/sync")
-async def sync_records(limit: int = 100, _auth: None = AUTH_DEP) -> dict[str, Any]:
+async def sync_records(
+    limit: int = 100, _auth: User | None = AUTH_DEP
+) -> dict[str, Any]:
     """Upload recent health records to the configured sync endpoint."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):
@@ -665,7 +723,7 @@ async def _export_layer(
 
 @GET("/export/aps")
 async def export_access_points(
-    fmt: str = "geojson", _auth: None = AUTH_DEP
+    fmt: str = "geojson", _auth: User | None = AUTH_DEP
 ) -> Response:
     """Return saved Wi-Fi access points in the specified format."""
     records = load_ap_cache()
@@ -681,7 +739,9 @@ async def export_access_points(
 
 
 @GET("/export/bt")
-async def export_bluetooth(fmt: str = "geojson", _auth: None = AUTH_DEP) -> Response:
+async def export_bluetooth(
+    fmt: str = "geojson", _auth: User | None = AUTH_DEP
+) -> Response:
     """Return saved Bluetooth device data in the specified format."""
     try:
         from sigint_integration import load_sigint_data

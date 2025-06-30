@@ -36,7 +36,7 @@ _BUFFER_LIMIT = 50
 _FLUSH_INTERVAL = 30.0
 
 # Schema versioning
-LATEST_VERSION = 2
+LATEST_VERSION = 3
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
 
@@ -103,6 +103,22 @@ async def _migration_2(conn: aiosqlite.Connection) -> None:
 _MIGRATIONS.append(_migration_2)
 
 
+async def _migration_3(conn: aiosqlite.Connection) -> None:
+    """Add users table."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+        """
+    )
+
+
+_MIGRATIONS.append(_migration_3)
+
+
 async def _get_conn() -> aiosqlite.Connection:
     """Return a cached SQLite connection initialized with the proper schema."""
     global _DB_CONN, _DB_LOOP, _DB_DIR
@@ -151,6 +167,15 @@ class DashboardSettings:
 
     layout: list[Any] = field(default_factory=list)
     widgets: list[str] = field(default_factory=list)
+
+
+@dataclass
+class User:
+    """Application user account."""
+
+    username: str
+    password: str
+    role: str = "user"
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -274,6 +299,29 @@ async def load_dashboard_settings() -> DashboardSettings:
         cls for item in layout if isinstance(item, dict) and (cls := item.get("cls"))
     ]
     return DashboardSettings(layout=layout, widgets=widgets)
+
+
+async def create_user(user: User) -> None:
+    """Insert or update a user account."""
+    conn = await _get_conn()
+    await conn.execute(
+        "INSERT OR REPLACE INTO users (username, password, role) VALUES (?, ?, ?)",
+        (user.username, user.password, user.role),
+    )
+    await conn.commit()
+
+
+async def get_user(username: str) -> User | None:
+    """Return :class:`User` matching ``username`` if present."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password, role FROM users WHERE username = ?",
+        (username,),
+    )
+    row = await cur.fetchone()
+    if row is None:
+        return None
+    return User(username=row["username"], password=row["password"], role=row["role"])
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
