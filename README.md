@@ -623,6 +623,8 @@ pip install -r requirements-dev.txt
 pip install .[tests]
 pre-commit run --all-files
 pytest
+node --test                # runs scripts/*.test.js
+cd webui && npm test       # runs frontend tests
 ```
 
 You can also run `scripts/setup_dev_env.sh` to install these dependencies
@@ -636,6 +638,9 @@ Docker helpers are provided:
 ```bash
 docker compose run --rm tests
 ```
+
+The Makefile's `coverage` target also runs `pytest` and `npm test` when
+generating coverage reports.
 
 ## Legal Notice
 
