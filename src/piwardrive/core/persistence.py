@@ -245,6 +245,39 @@ async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
     return [HealthRecord(**dict(row)) for row in rows]
 
 
+async def iter_health_history(
+    start: str | None = None, end: str | None = None
+) -> AsyncIterator[HealthRecord]:
+    """Yield :class:`HealthRecord` rows between ``start`` and ``end``."""
+    await flush_health_records()
+    conn = await _get_conn()
+    query = (
+        "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
+        " FROM health_records"
+    )
+    params: list[str] = []
+    if start and end:
+        query += " WHERE timestamp >= ? AND timestamp <= ?"
+        params = [start, end]
+    elif start:
+        query += " WHERE timestamp >= ?"
+        params = [start]
+    elif end:
+        query += " WHERE timestamp <= ?"
+        params = [end]
+    query += " ORDER BY timestamp"
+    cur = await conn.execute(query, tuple(params))
+    async for row in cur:
+        yield HealthRecord(**dict(row))
+
+
+async def load_health_history(
+    start: str | None = None, end: str | None = None
+) -> List[HealthRecord]:
+    """Return a list of :class:`HealthRecord` rows between ``start`` and ``end``."""
+    return [rec async for rec in iter_health_history(start, end)]
+
+
 async def purge_old_health(days: int) -> None:
     """Delete ``health_records`` older than ``days`` days."""
     await flush_health_records()
