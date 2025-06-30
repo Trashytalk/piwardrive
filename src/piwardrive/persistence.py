@@ -6,7 +6,80 @@ database-related helpers in a consistent namespace while allowing the core
 implementation to reside in the ``core`` package.
 """
 
+from dataclasses import asdict, dataclass
+import json
+from pathlib import Path
+
+from . import config
 from .core.persistence import *  # noqa: F401,F403
 from .core.persistence import _db_path, _get_conn
 
-__all__ = [*globals().get("__all__", []), "_db_path", "_get_conn"]
+
+@dataclass
+class FingerprintInfo:
+    """Metadata about a captured fingerprint."""
+
+    environment: str
+    source: str
+    record_count: int
+    created_at: str | None = None
+
+
+async def save_fingerprint_info(info: FingerprintInfo) -> None:
+    """Append ``info`` to ``fingerprints.json`` under ``CONFIG_DIR``."""
+    path = Path(config.CONFIG_DIR) / "fingerprints.json"
+    try:
+        data = json.loads(path.read_text()) if path.exists() else []
+    except Exception:
+        data = []
+    data.append(asdict(info))
+    path.write_text(json.dumps(data))
+
+
+async def load_fingerprint_info() -> list[FingerprintInfo]:
+    """Return stored fingerprint metadata."""
+    path = Path(config.CONFIG_DIR) / "fingerprints.json"
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text())
+    except Exception:
+        return []
+    return [FingerprintInfo(**d) for d in data]
+
+
+async def create_user(*_a, **_k) -> None:
+    """Stub for ``service`` imports."""
+
+
+async def get_user(*_a, **_k):
+    """Stub returning ``None`` for ``service`` imports."""
+    return None
+
+
+async def get_user_by_token(*_a, **_k):
+    """Stub returning ``None`` for ``service`` imports."""
+    return None
+
+
+async def save_user(*_a, **_k) -> None:
+    """Stub for ``service`` imports."""
+
+
+async def update_user_token(*_a, **_k) -> None:
+    """Stub for ``service`` imports."""
+
+
+__all__ = [
+    *globals().get("__all__", []),
+    "_db_path",
+    "_get_conn",
+    "FingerprintInfo",
+    "save_fingerprint_info",
+    "load_fingerprint_info",
+    "create_user",
+    "get_user",
+    "get_user_by_token",
+    "save_user",
+    "update_user_token",
+]

@@ -2,6 +2,7 @@
 
 import json
 import os
+import dataclasses
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -474,6 +475,7 @@ class AppConfig:
     cloud_bucket: str = DEFAULTS["cloud_bucket"]
     cloud_prefix: str = DEFAULTS["cloud_prefix"]
     cloud_profile: str = DEFAULTS["cloud_profile"]
+    scan_rules: Dict[str, Any] = field(default_factory=dict)
     mysql_host: str = DEFAULTS["mysql_host"]
     mysql_port: int = DEFAULTS["mysql_port"]
     mysql_user: str = DEFAULTS["mysql_user"]
@@ -488,7 +490,9 @@ class AppConfig:
         file_cfg = asdict(load_config())
         merged = _apply_env_overrides(file_cfg)
         validate_config_data(merged)
-        return cls(**merged)
+        fields = {f.name for f in dataclasses.fields(cls)}
+        filtered = {k: v for k, v in merged.items() if k in fields}
+        return cls(**filtered)
 
     def to_dict(self) -> Dict[str, Any]:
         """Return configuration as a plain dictionary."""
