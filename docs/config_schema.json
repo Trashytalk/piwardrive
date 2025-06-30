@@ -520,6 +520,32 @@
       "default": null,
       "title": "Gps Movement Threshold"
     },
+    "baseline_history_days": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline History Days"
+    },
+    "baseline_threshold": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline Threshold"
+    },
     "cloud_bucket": {
       "anyOf": [
         {
