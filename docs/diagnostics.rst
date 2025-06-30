@@ -39,6 +39,14 @@ Profiling can be enabled by setting ``PW_PROFILE=1``. When active, a
 logged on exit.  Set ``PW_PROFILE_CALLGRIND=/tmp/out.callgrind`` to
 also export data in a format readable by KCachegrind.
 
+Baseline Analysis
+~~~~~~~~~~~~~~~~~
+
+``baseline_history_days`` determines how far back the historical slice spans
+when computing averages. ``baseline_threshold`` defines the minimum change that
+triggers an anomaly in ``/baseline-analysis`` results. Adjust these values in
+``config.json`` or via ``PW_BASELINE_HISTORY_DAYS`` and ``PW_BASELINE_THRESHOLD``.
+
 Log Rotation
 ~~~~~~~~~~~~
 

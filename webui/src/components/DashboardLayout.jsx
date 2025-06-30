@@ -15,6 +15,7 @@ import HealthStatus from './HealthStatus.jsx';
 import HealthAnalysis from './HealthAnalysis.jsx';
 import LogViewer from './LogViewer.jsx';
 import FingerprintSummary from './FingerprintSummary.jsx';
+import BaselineAnalysis from './BaselineAnalysis.jsx';
 
 const COMPONENTS = {
   BatteryStatusWidget: BatteryStatus,
@@ -30,6 +31,7 @@ const COMPONENTS = {
   VehicleSpeedWidget: VehicleSpeed,
   HealthStatusWidget: HealthStatus,
   HealthAnalysisWidget: HealthAnalysis,
+  BaselineAnalysisWidget: BaselineAnalysis,
   LogViewer: LogViewer,
   DBStatsWidget: DBStats,
   FingerprintSummaryWidget: FingerprintSummary,

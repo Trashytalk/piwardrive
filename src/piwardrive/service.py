@@ -138,6 +138,11 @@ try:  # allow tests to stub out lora_scanner
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
 
+try:  # allow tests to stub out analytics
+    from analytics.baseline import analyze_health_baseline, load_baseline_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
+
 
 logger = logging.getLogger(__name__)
 
@@ -302,6 +307,23 @@ async def get_status(limit: int = 5) -> list[dict[str, Any]]:
         records = await records
 
     return [asdict(rec) for rec in records]
+
+
+@GET("/baseline-analysis")
+async def baseline_analysis_endpoint(
+    limit: int = 10,
+    days: int = 30,
+    threshold: float = 5.0,
+    _auth: None = AUTH_DEP,
+) -> dict[str, Any]:
+    """Compare recent metrics to historical averages."""
+    recent = load_recent_health(limit)
+    if inspect.isawaitable(recent):
+        recent = await recent
+    baseline = load_baseline_health(days, limit)
+    if inspect.isawaitable(baseline):
+        baseline = await baseline
+    return analyze_health_baseline(recent, baseline, threshold)
 
 
 async def _collect_widget_metrics() -> dict[str, Any]:

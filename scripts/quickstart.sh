@@ -46,7 +46,8 @@ pip install -r requirements.txt
 pip install .
 
 echo "Fetching latest OUI registry..."
-bash "$SCRIPT_DIR/../sigint_suite/scripts/fetch_oui.sh"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+bash "$ROOT_DIR/src/piwardrive/integrations/sigint_suite/scripts/fetch_oui.sh"
 
 cat <<EOM
 Setup complete. Activate the environment with:
