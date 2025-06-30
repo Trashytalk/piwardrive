@@ -104,6 +104,7 @@ import json
 import secrets
 import tempfile
 import time
+import functools
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Tuple
@@ -306,6 +307,7 @@ TOKENS: dict[str, str] = {}
 GEOFENCE_FILE = os.path.join(CONFIG_DIR, "geofences.json")
 
 
+@functools.lru_cache(maxsize=1)
 def _load_geofences() -> list[dict[str, Any]]:
     """Return list of saved geofence dictionaries."""
     try:
@@ -328,6 +330,7 @@ def _save_geofences(polys: list[dict[str, Any]]) -> None:
     except OSError as exc:
         logging.exception("Failed to save geofences: %s", exc)
         raise GeofenceError("Failed to save geofences") from exc
+    _load_geofences.cache_clear()
 
 
 async def _ensure_default_user() -> None:
