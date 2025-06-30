@@ -16,6 +16,7 @@ import HealthStatus from './HealthStatus.jsx';
 import HealthAnalysis from './HealthAnalysis.jsx';
 import LoRaScan from './LoRaScan.jsx';
 import LogViewer from './LogViewer.jsx';
+import BaselineAnalysis from './BaselineAnalysis.jsx';
 
 const COMPONENTS = {
   BatteryStatusWidget: BatteryStatus,
@@ -33,6 +34,7 @@ const COMPONENTS = {
   DBStatsWidget: DBStats,
   HealthStatusWidget: HealthStatus,
   HealthAnalysisWidget: HealthAnalysis,
+  BaselineAnalysisWidget: BaselineAnalysis,
   LogViewer: LogViewer,
 };
 
