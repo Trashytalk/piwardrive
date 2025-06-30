@@ -7,19 +7,15 @@ import math
 import os
 from typing import Any
 
-try:  # pragma: no cover - optional dependency
-    from kivy.app import App as KivyApp
-except Exception:
-    class KivyApp:  # type: ignore[no-redef]
-        """Fallback ``App`` implementation when Kivy is unavailable."""
 
-App = KivyApp
+class App:  # type: ignore[misc]
+    """Placeholder application interface."""
 
-if App is None:
-    class App:  # type: ignore[no-redef]
-        @staticmethod
-        def get_running_app() -> None:
-            return None
+    @staticmethod
+    def get_running_app() -> None:
+        """Return ``None`` when no GUI is active."""
+        return None
+
 
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
@@ -113,7 +109,7 @@ class RoutePrefetcher:
             )
             mv = getattr(self._map_screen.ids, "mapview", None)
             zoom = getattr(mv, "zoom", 16)
-            app = KivyApp.get_running_app() if KivyApp is not None else None
+            app = App.get_running_app()
             folder = (
                 os.path.dirname(getattr(app, "offline_tile_path", ""))
                 or "/mnt/ssd/tiles"

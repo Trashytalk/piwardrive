@@ -41,8 +41,6 @@ graphene==3.3
 paho-mqtt==2.1.0
 
 # Additional GUI and scientific libraries
-kivy
-kivymd
 numpy
 folium
 dronekit

@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `piwardrive
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy Kivy interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/integrations/sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy GUI interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -71,7 +71,7 @@ The application polls `gpsd` at a configurable interval, increasing the delay wh
 
 ## Mobile Builds
 
-PiWardrive no longer distributes helper scripts or configuration for building mobile packages. The former Kivy-based tooling has been removed.
+PiWardrive no longer distributes helper scripts or configuration for building mobile packages. The former mobile GUI tooling has been removed.
 
 ## Building the CKML Extension
 

@@ -334,7 +334,7 @@ Headless setups can use `Xvfb`.
 
 Combine the web UI service with the example `kiosk.service` unit to
 launch the browser automatically on boot. This setup fully replaces the
-on-device Kivy GUI so the Pi's touch screen displays the React dashboard
+old on-device GUI so the Pi's touch screen displays the React dashboard
 in full‑screen mode.
 
 ### Optional C Extensions

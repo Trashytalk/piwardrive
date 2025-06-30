@@ -37,11 +37,6 @@ except Exception:  # pragma: no cover - fallback when sigint_suite is missing
     BluetoothDevice = dict[str, Any]
 from concurrent.futures import Future
 
-try:  # pragma: no cover - optional dependency
-    from kivy.app import App as KivyApp
-except Exception:
-    KivyApp = None  # type: ignore[assignment]
-
 from enum import IntEnum
 
 import psutil
@@ -55,7 +50,15 @@ import aiohttp
 
 from piwardrive import persistence
 
-App = KivyApp
+
+class App:
+    """Placeholder application interface."""
+
+    @staticmethod
+    def get_running_app() -> None:
+        """Return ``None`` when no GUI is active."""
+        return None
+
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
 
@@ -224,7 +227,7 @@ ERROR_PREFIX = "E"
 
 def network_scanning_disabled() -> bool:
     """Return ``True`` if scanning is globally disabled."""
-    app = App.get_running_app() if App is not None else None
+    app = App.get_running_app()
     if app is not None:
         disabled = bool(getattr(app, "disable_scanning", False))
     else:
@@ -286,7 +289,7 @@ def report_error(message: str) -> None:
     """
     logging.error(message)
     try:
-        app = App.get_running_app() if App is not None else None
+        app = App.get_running_app()
         if app and hasattr(app, "show_alert"):
             app.show_alert("Error", message)
     except Exception as exc:  # pragma: no cover - app may not be running

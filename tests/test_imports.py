@@ -16,12 +16,6 @@ MODULES = [
 def _setup_dummy_modules(monkeypatch: pytest.MonkeyPatch) -> None:
     root = Path(__file__).resolve().parents[1]
     monkeypatch.syspath_prepend(str(root))
-    km_pkg = ModuleType("kivymd")
-    km_app = ModuleType("kivymd.app")
-    km_app.MDApp = type("MDApp", (), {})
-    km_pkg.app = km_app
-    monkeypatch.setitem(sys.modules, "kivymd.app", km_app)
-    monkeypatch.setitem(sys.modules, "kivymd", km_pkg)
 
     fastapi_mod = ModuleType("fastapi")
     fastapi_mod.__path__ = []  # type: ignore[attr-defined]

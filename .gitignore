@@ -7,8 +7,6 @@ __pycache__/
 gui-env/
 venv/
 
-# Kivy logs
-.kivy/
 
 # Local config directory (not in repo)
 .config/piwardrive/
