@@ -94,6 +94,13 @@ the ``log_paths`` whitelist defined in ``config.json``::
 
    curl "http://localhost:8000/logs?lines=50"
 
+``/baseline-analysis`` compares recent metrics against historical averages.
+Pass ``limit`` and ``days`` query parameters to adjust the analysis window.
+Metrics deviating more than ``baseline_threshold`` are listed under
+``anomalies``::
+
+   curl http://localhost:8000/baseline-analysis
+
 ``/export/aps``
     Download saved Wi-Fi access points. Use the ``fmt`` query parameter to
     choose ``csv``, ``json``, ``geojson``, ``kml`` or ``gpx``.
@@ -136,6 +143,12 @@ environments where WebSockets are unavailable::
 
 The stream sends events formatted as JSON with the same ``seq`` and
 ``timestamp`` metadata.
+
+``/sse/history`` streams saved health records for time-based playback. Use
+``limit`` and ``interval`` to control the number of records and delay between
+events::
+
+   curl "http://localhost:8000/sse/history?limit=20&interval=0.5"
 
 Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
 

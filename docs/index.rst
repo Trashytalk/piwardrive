@@ -50,6 +50,7 @@ Common issues are answered in the :doc:`faq`.
    drone_mapping
    r_integration
    grafana
-    web_ui
-    faq
-    legal
+   notifications
+   web_ui
+   faq
+   legal

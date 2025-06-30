@@ -103,3 +103,21 @@ Cache Tuning
 
 ``log_tail_cache_seconds``
     Duration to cache tailed log lines before checking for updates.
+
+Data Sink Integrations
+----------------------
+
+``influx_url``
+    Base URL for an InfluxDB server.
+
+``influx_token``
+    Access token used for writes.
+
+``influx_org``
+    Organisation name associated with ``influx_token``.
+
+``influx_bucket``
+    Bucket receiving uploaded points.
+
+``postgres_dsn``
+    Connection string for a Postgres database.

@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `piwardrive
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy Kivy interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy Kivy interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/integrations/sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -108,7 +108,7 @@ The `docs/` directory contains mermaid diagrams showing scanning, logging and di
 
 ## SIGINT Suite
 
-Under `src/piwardrive/sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `src/piwardrive/sigint_suite/scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `src/piwardrive/sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python `bleak` library are installed (`./src/piwardrive/sigint_suite/scripts/setup_all.sh` can install them).
+Under `src/piwardrive/integrations/sigint_suite/` you will find lightweight command-line tools for scanning Wi‑Fi and Bluetooth. The `src/piwardrive/integrations/sigint_suite/scripts/start_imsi_mode.sh` helper runs one Wi‑Fi and Bluetooth scan and writes JSON results under `src/piwardrive/integrations/sigint_suite/exports/`. Override `EXPORT_DIR` to change the location. Ensure `iwlist` and either `bluetoothctl` or the Python `bleak` library are installed (`./src/piwardrive/integrations/sigint_suite/scripts/setup_all.sh` can install them).
 
 ## Environment Variables
 
