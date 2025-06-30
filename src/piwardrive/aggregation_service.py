@@ -10,10 +10,11 @@ import tempfile
 from typing import Dict, Iterable, List, Tuple
 
 import aiosqlite
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, HTTPException
 
 from . import analysis, heatmap
 from .persistence import HealthRecord
+from .security import validate_filename
 
 DATA_DIR = os.path.expanduser(os.getenv("PW_AGG_DIR", "~/piwardrive-aggregation"))
 DB_PATH = os.path.join(DATA_DIR, "aggregation.db")
@@ -98,7 +99,14 @@ async def _process_upload(path: str) -> None:
 async def upload(file: UploadFile) -> Dict[str, str]:  # noqa: V103 - FastAPI route
     """Save ``file`` and merge its contents into the aggregation database."""
     # Called by FastAPI as a route handler.
-    dest = os.path.join(UPLOAD_DIR, file.filename)
+    name = os.path.basename(file.filename)
+    if name != file.filename:
+        raise HTTPException(status_code=400, detail="invalid filename")
+    try:
+        validate_filename(name)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    dest = os.path.join(UPLOAD_DIR, name)
     fd, tmp_path = tempfile.mkstemp(dir=UPLOAD_DIR)
     os.close(fd)
     try:
