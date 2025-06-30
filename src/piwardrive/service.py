@@ -22,7 +22,13 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+    from fastapi.security import (
+        HTTPBasic,
+        HTTPBasicCredentials,
+        OAuth2PasswordBearer,
+        OAuth2PasswordRequestForm,
+    )
 except Exception:
     FastAPI = type(  # type: ignore[misc, assignment]
         "FastAPI",
@@ -50,16 +56,26 @@ except Exception:
     Body = _noop  # type: ignore[misc, assignment]
     Request = object  # type: ignore[misc, assignment]
     StreamingResponse = Response = object  # type: ignore[misc, assignment]
-    HTTPBasic = type(  # type: ignore[misc]
-        "HTTPBasic",
+    OAuth2PasswordBearer = type(  # type: ignore[misc]
+        "OAuth2PasswordBearer",
+        (),
+        {"__init__": lambda self, tokenUrl="/token", **k: None},
+    )  # type: ignore[misc, assignment]
+    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+        "OAuth2PasswordRequestForm",
+        (),
+        {"__init__": lambda self, **k: None, "username": "", "password": ""},
+    )  # type: ignore[misc, assignment]
+    OAuth2PasswordBearer = type(  # type: ignore[misc]
+        "OAuth2PasswordBearer",
         (),
         {"__init__": lambda self, **k: None},
-    )  # type: ignore[misc, assignment]
-    HTTPBasicCredentials = type(  # type: ignore[misc]
-        "HTTPBasicCredentials",
+    )
+    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+        "OAuth2PasswordRequestForm",
         (),
-        {},
-    )  # type: ignore[misc, assignment]
+        {"__init__": lambda self, **k: None},
+    )
     CORSMiddleware = object  # type: ignore[misc, assignment]
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -73,12 +89,19 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
         WebSocketDisconnect,
     )
     from fastapi.responses import Response, StreamingResponse
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+    from fastapi.security import (
+        HTTPBasic,
+        HTTPBasicCredentials,
+        OAuth2PasswordBearer,
+        OAuth2PasswordRequestForm,
+    )
     from fastapi.middleware.cors import CORSMiddleware
 
 import asyncio
 import importlib
 import json
+import secrets
 import tempfile
 import time
 from collections.abc import Mapping, Sequence
@@ -91,25 +114,46 @@ try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
+        User,
+        FingerprintInfo,
         _db_path,
+        create_user,
         get_table_counts,
+        get_user,
+        get_user_by_token,
         load_dashboard_settings,
         load_recent_health,
+        load_health_history,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
+        save_user,
+        update_user_token,
     )
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
+        load_health_history,
         load_ap_cache,
         load_dashboard_settings,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
         get_table_counts,
         _db_path,
         DashboardSettings,
+        get_user,
+        save_user,
+        update_user_token,
+        get_user_by_token,
+        User,
+        create_user,
+        User,
+        FingerprintInfo,
     )
 
 from piwardrive.errors import GeofenceError
-from piwardrive.security import sanitize_path, verify_password
+from piwardrive.security import hash_secret, sanitize_path, verify_password
 
 try:  # allow tests to provide a simplified utils module
     import utils as _utils
@@ -123,7 +167,7 @@ import psutil
 import vehicle_sensors
 from sync import upload_data
 
-from piwardrive import export, orientation_sensors
+from piwardrive import export, graphql_api, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 
@@ -131,6 +175,11 @@ try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
+
+try:  # allow tests to stub out analytics
+    from analytics.baseline import analyze_health_baseline, load_baseline_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
 
 
 logger = logging.getLogger(__name__)
@@ -143,7 +192,7 @@ def error_json(code: int, message: str | None = None) -> dict[str, str]:
             message = HTTPStatus(code).phrase
         except Exception:
             message = str(code)
-    return {"code": int(code), "message": message}
+    return {"code": str(int(code)), "message": message}
 
 
 async def _default_fetch_metrics_async(
@@ -199,10 +248,12 @@ async_tail_file: Callable[[str, int], Awaitable[list[str]]] = getattr(
 )
 
 
-security = HTTPBasic(auto_error=False)
-SECURITY_DEP = Depends(security)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+SECURITY_DEP = Depends(oauth2_scheme)
 BODY = Body(...)
 app = FastAPI()
+if config.AppConfig.load().enable_graphql:
+    graphql_api.add_graphql_route(app)
 cors_origins_env = os.getenv("PW_CORS_ORIGINS", "")
 cors_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
 if cors_origins:
@@ -248,6 +299,9 @@ ALLOWED_LOG_PATHS = [
     sanitize_path(p) for p in config.DEFAULT_CONFIG.log_paths + [DEFAULT_LOG_PATH]
 ]
 
+# In-memory token store mapping token string to username
+TOKENS: dict[str, str] = {}
+
 # Path storing polygon geofences
 GEOFENCE_FILE = os.path.join(CONFIG_DIR, "geofences.json")
 
@@ -276,16 +330,57 @@ def _save_geofences(polys: list[dict[str, Any]]) -> None:
         raise GeofenceError("Failed to save geofences") from exc
 
 
-def _check_auth(credentials: HTTPBasicCredentials = SECURITY_DEP) -> None:
-    """Validate optional HTTP basic authentication."""
+async def _ensure_default_user() -> None:
+    """Create default user from environment variables if needed."""
     pw_hash = os.getenv("PW_API_PASSWORD_HASH")
     if not pw_hash:
         return
-    if not credentials or not verify_password(credentials.password, pw_hash):
+    username = os.getenv("PW_API_USER", "admin")
+    if await get_user(username) is None:
+        await save_user(User(username=username, password_hash=pw_hash))
+
+
+async def _check_auth(token: str = SECURITY_DEP) -> None:
+    """Validate bearer token."""
+    await _ensure_default_user()
+    if not token:
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    user = await get_user_by_token(hash_secret(token))
+    if user is None:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
 
 
+@POST("/token")
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, str]:
+    """Return bearer token for valid credentials."""
+    await _ensure_default_user()
+    user = await get_user(form.username)
+    if not user or not verify_password(form.password, user.password_hash):
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    token = secrets.token_urlsafe(32)
+    await update_user_token(user.username, hash_secret(token))
+    return {"access_token": token, "token_type": "bearer"}
+
+
 AUTH_DEP = Depends(_check_auth)
+
+
+@POST("/auth/login")
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, Any]:
+    """Validate credentials and return a bearer token."""
+    user = await get_user(form.username)
+    if user is None or not verify_password(form.password, user.password):
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    token = secrets.token_urlsafe(32)
+    TOKENS[token] = user.username
+    return {"access_token": token, "token_type": "bearer", "role": user.role}
+
+
+@POST("/auth/logout")
+async def logout(token: str = SECURITY_DEP) -> dict[str, bool]:
+    """Invalidate the current token."""
+    TOKENS.pop(token, None)
+    return {"logout": True}
 
 
 @GET("/status")
@@ -296,6 +391,23 @@ async def get_status(limit: int = 5) -> list[dict[str, Any]]:
         records = await records
 
     return [asdict(rec) for rec in records]
+
+
+@GET("/baseline-analysis")
+async def baseline_analysis_endpoint(
+    limit: int = 10,
+    days: int = 30,
+    threshold: float = 5.0,
+    _auth: None = AUTH_DEP,
+) -> dict[str, Any]:
+    """Compare recent metrics to historical averages."""
+    recent = load_recent_health(limit)
+    if inspect.isawaitable(recent):
+        recent = await recent
+    baseline = load_baseline_health(days, limit)
+    if inspect.isawaitable(baseline):
+        baseline = await baseline
+    return analyze_health_baseline(recent, baseline, threshold)
 
 
 async def _collect_widget_metrics() -> dict[str, Any]:
@@ -330,20 +442,20 @@ async def _collect_widget_metrics() -> dict[str, Any]:
 
 
 @GET("/api/widgets")
-async def list_widgets(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
+async def list_widgets(_auth: User | None = AUTH_DEP) -> dict[str, list[str]]:
     """Return available dashboard widget class names."""
     widgets_mod = importlib.import_module("piwardrive.widgets")
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
 
 @GET("/widget-metrics")
-async def get_widget_metrics(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_widget_metrics(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return basic metrics used by dashboard widgets."""
     return await _collect_widget_metrics()
 
 
 @GET("/plugins")
-async def get_plugins(_auth: None = AUTH_DEP) -> list[str]:
+async def get_plugins(_auth: User | None = AUTH_DEP) -> list[str]:
     """Return discovered plugin widget class names."""
     from piwardrive import widgets
 
@@ -351,7 +463,7 @@ async def get_plugins(_auth: None = AUTH_DEP) -> list[str]:
 
 
 @GET("/cpu")
-async def get_cpu(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_cpu(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return CPU temperature and usage percentage."""
     return {
         "temp": get_cpu_temp(),
@@ -360,7 +472,7 @@ async def get_cpu(_auth: None = AUTH_DEP) -> dict[str, Any]:
 
 
 @GET("/ram")
-async def get_ram(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_ram(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return system memory usage percentage."""
     return {"percent": get_mem_usage()}
 
@@ -368,7 +480,7 @@ async def get_ram(_auth: None = AUTH_DEP) -> dict[str, Any]:
 @GET("/storage")
 async def get_storage(
     path: str = "/mnt/ssd",
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return disk usage percentage for ``path``."""
     return {"percent": get_disk_usage(path)}
@@ -376,7 +488,7 @@ async def get_storage(
 
 @GET("/orientation")
 async def get_orientation_endpoint(
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return device orientation and raw sensor data."""
     orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
@@ -398,7 +510,7 @@ async def get_orientation_endpoint(
 
 
 @GET("/vehicle")
-async def get_vehicle_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return vehicle metrics from OBD-II sensors."""
     return {
         "speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
@@ -408,7 +520,7 @@ async def get_vehicle_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 
 
 @GET("/gps")
-async def get_gps_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_gps_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return current GPS position."""
     pos = await asyncio.to_thread(gps_client.get_position)
     lat = lon = None
@@ -426,7 +538,7 @@ async def get_gps_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 async def get_logs(
     lines: int = 200,
     path: str = DEFAULT_LOG_PATH,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
@@ -441,7 +553,7 @@ async def get_logs(
 
 
 @GET("/db-stats")
-async def get_db_stats_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return SQLite table counts and database size."""
     counts = await get_table_counts()
     try:
@@ -453,7 +565,7 @@ async def get_db_stats_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 
 @GET("/lora-scan")
 async def lora_scan_endpoint(
-    iface: str = "lora0", _auth: None = AUTH_DEP
+    iface: str = "lora0", _auth: User | None = AUTH_DEP
 ) -> dict[str, Any]:
     """Run ``lora-scan`` on ``iface`` and return output lines."""
     lines = await async_scan_lora(iface)
@@ -462,7 +574,7 @@ async def lora_scan_endpoint(
 
 @POST("/command")
 async def run_command(
-    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+    data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
 ) -> dict[str, Any]:
     """Execute a shell command and return its output."""
     cmd = str(data.get("cmd", "")).strip()
@@ -485,7 +597,7 @@ async def run_command(
 async def control_service_endpoint(
     name: str,
     action: str,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Start or stop a systemd service."""
     if action not in {"start", "stop", "restart"}:
@@ -502,7 +614,7 @@ async def control_service_endpoint(
 
 @GET("/service/{name}")
 async def get_service_status_endpoint(
-    name: str, _auth: None = AUTH_DEP
+    name: str, _auth: User | None = AUTH_DEP
 ) -> dict[str, Any]:
     """Return whether a ``systemd`` service is active."""
     active = await service_status_async(name)
@@ -510,7 +622,7 @@ async def get_service_status_endpoint(
 
 
 @GET("/config")
-async def get_config_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def get_config_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
     """Return the current configuration from ``config.json``."""
     return asdict(config.load_config())
 
@@ -518,7 +630,7 @@ async def get_config_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 @POST("/config")
 async def update_config_endpoint(
     updates: dict[str, Any] = BODY,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Update configuration values and persist them."""
     cfg = config.load_config()
@@ -539,9 +651,27 @@ async def update_config_endpoint(
     return data
 
 
+@GET("/webhooks")
+async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
+    """Return configured notification webhook URLs."""
+    cfg = config.load_config()
+    return {"webhooks": list(cfg.notification_webhooks)}
+
+
+@POST("/webhooks")
+async def update_webhooks_endpoint(
+    urls: list[str] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, list[str]]:
+    """Update notification webhook URL list."""
+    cfg = config.load_config()
+    cfg.notification_webhooks = list(urls)
+    config.save_config(cfg)
+    return {"webhooks": cfg.notification_webhooks}
+
+
 @GET("/dashboard-settings")
 async def get_dashboard_settings_endpoint(
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Return persisted dashboard layout and widget list."""
     settings = await load_dashboard_settings()
@@ -551,7 +681,7 @@ async def get_dashboard_settings_endpoint(
 @POST("/dashboard-settings")
 async def update_dashboard_settings_endpoint(
     data: dict[str, Any] = BODY,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Persist dashboard layout and widget list."""
     layout = data.get("layout", [])
@@ -560,15 +690,38 @@ async def update_dashboard_settings_endpoint(
     return {"layout": layout, "widgets": widgets}
 
 
+@GET("/fingerprints")
+async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+    """Return stored fingerprint metadata."""
+    items = await load_fingerprint_info()
+    return {"fingerprints": [asdict(i) for i in items]}
+
+
+@POST("/fingerprints")
+async def add_fingerprint_endpoint(
+    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, Any]:
+    """Store fingerprint metadata in the database."""
+    info = FingerprintInfo(
+        environment=data.get("environment", ""),
+        source=data.get("source", ""),
+        record_count=int(data.get("record_count", 0)),
+    )
+    await save_fingerprint_info(info)
+    return asdict(info)
+
+
 @GET("/geofences")
-async def list_geofences_endpoint(_auth: None = AUTH_DEP) -> list[dict[str, Any]]:
+async def list_geofences_endpoint(
+    _auth: User | None = AUTH_DEP,
+) -> list[dict[str, Any]]:
     """Return saved geofence polygons."""
     return _load_geofences()
 
 
 @POST("/geofences")
 async def add_geofence_endpoint(
-    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+    data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
 ) -> list[dict[str, Any]]:
     """Add a new polygon to ``geofences.json``."""
     polys = _load_geofences()
@@ -588,7 +741,7 @@ async def add_geofence_endpoint(
 async def update_geofence_endpoint(
     name: str,
     updates: dict[str, Any] = BODY,
-    _auth: None = AUTH_DEP,
+    _auth: User | None = AUTH_DEP,
 ) -> dict[str, Any]:
     """Modify a saved polygon."""
     polys = _load_geofences()
@@ -608,7 +761,9 @@ async def update_geofence_endpoint(
 
 
 @DELETE("/geofences/{name}")
-async def remove_geofence_endpoint(name: str, _auth: None = AUTH_DEP) -> dict[str, Any]:
+async def remove_geofence_endpoint(
+    name: str, _auth: User | None = AUTH_DEP
+) -> dict[str, Any]:
     """Delete ``name`` from ``geofences.json``."""
     polys = _load_geofences()
     for idx, poly in enumerate(polys):
@@ -620,7 +775,9 @@ async def remove_geofence_endpoint(name: str, _auth: None = AUTH_DEP) -> dict[st
 
 
 @POST("/sync")
-async def sync_records(limit: int = 100, _auth: None = AUTH_DEP) -> dict[str, Any]:
+async def sync_records(
+    limit: int = 100, _auth: User | None = AUTH_DEP
+) -> dict[str, Any]:
     """Upload recent health records to the configured sync endpoint."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):
@@ -665,7 +822,7 @@ async def _export_layer(
 
 @GET("/export/aps")
 async def export_access_points(
-    fmt: str = "geojson", _auth: None = AUTH_DEP
+    fmt: str = "geojson", _auth: User | None = AUTH_DEP
 ) -> Response:
     """Return saved Wi-Fi access points in the specified format."""
     records = load_ap_cache()
@@ -681,7 +838,9 @@ async def export_access_points(
 
 
 @GET("/export/bt")
-async def export_bluetooth(fmt: str = "geojson", _auth: None = AUTH_DEP) -> Response:
+async def export_bluetooth(
+    fmt: str = "geojson", _auth: User | None = AUTH_DEP
+) -> Response:
     """Return saved Bluetooth device data in the specified format."""
     try:
         from sigint_integration import load_sigint_data
@@ -816,6 +975,34 @@ async def sse_status(request: Request) -> StreamingResponse:
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
             await asyncio.sleep(2)
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        _event_gen(), media_type="text/event-stream", headers=headers
+    )
+
+
+@GET("/sse/history")
+async def sse_history(
+    request: Request, limit: int = 100, interval: float = 1.0
+) -> StreamingResponse:
+    """Stream historical health records for playback."""
+    records = await load_health_history()
+    if limit:
+        records = records[-limit:]
+
+    async def _event_gen() -> typing.AsyncGenerator[str, None]:
+        seq = 0
+        for rec in records:
+            if await request.is_disconnected():
+                break
+            data = {"seq": seq, "record": asdict(rec)}
+            yield f"data: {json.dumps(data)}\n\n"
+            seq += 1
+            await asyncio.sleep(max(interval, 0.01))
 
     headers = {
         "Cache-Control": "no-cache",

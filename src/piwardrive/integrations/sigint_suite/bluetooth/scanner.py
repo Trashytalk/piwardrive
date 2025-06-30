@@ -7,6 +7,9 @@ import os
 import subprocess
 from typing import Dict, List
 
+from piwardrive.core import config
+from piwardrive.scheduler import PollScheduler
+
 from piwardrive.sigint_suite.models import BluetoothDevice
 
 logger = logging.getLogger(__name__)
@@ -14,6 +17,12 @@ logger = logging.getLogger(__name__)
 _proc: asyncio.subprocess.Process | None = None
 _reader_task: asyncio.Task[None] | None = None
 _devices: Dict[str, str] = {}
+
+
+def _allowed() -> bool:
+    cfg = config.AppConfig.load()
+    rules = cfg.scan_rules.get("bluetooth", {}) if hasattr(cfg, "scan_rules") else {}
+    return PollScheduler.check_rules(rules)
 
 
 async def _reader() -> None:
@@ -78,6 +87,8 @@ async def stop_scanner() -> None:
 
 def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
     """Scan for nearby Bluetooth devices using ``bleak`` or ``bluetoothctl``."""
+    if not _allowed():
+        return []
     timeout = (
         timeout
         if timeout is not None
@@ -91,6 +102,8 @@ def scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
 
 async def async_scan_bluetooth(timeout: int = 10) -> List[BluetoothDevice]:
     """Asynchronously scan for nearby Bluetooth devices."""
+    if not _allowed():
+        return []
     timeout = (
         timeout
         if timeout is not None

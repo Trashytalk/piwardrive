@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import sys
 import tempfile
 from dataclasses import asdict
@@ -64,6 +65,9 @@ def test_widget_metrics_endpoint() -> None:
     async def fake_fetch() -> tuple[list, list, int]:
         return ([{"signal_dbm": -10}], [], 5)
 
+    pw_hash = security.hash_password("pw")
+    os.environ["PW_API_PASSWORD_HASH"] = pw_hash
+
     with (
         mock.patch("service.fetch_metrics_async", fake_fetch),
         mock.patch("piwardrive.service.fetch_metrics_async", fake_fetch),
@@ -85,7 +89,17 @@ def test_widget_metrics_endpoint() -> None:
         mock.patch("service.vehicle_sensors.read_engine_load_obd", return_value=50.0),
     ):
         client = TestClient(service.app)
-        resp = client.get("/widget-metrics")
+        resp_token = client.post(
+            "/token",
+            data={"username": "admin", "password": "pw"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert resp_token.status_code == 200
+        token = resp_token.json()["access_token"]
+        resp = client.get(
+            "/widget-metrics",
+            headers={"Authorization": f"Bearer {token}"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["bssid_count"] == 1
@@ -503,7 +517,13 @@ def test_widget_metrics_auth_bad_password(monkeypatch) -> None:
         ),
     ):
         client = TestClient(service.app)
-        resp = client.get("/widget-metrics", auth=("u", "wrong"))
+        resp = client.post(
+            "/token",
+            data={"username": "admin", "password": "wrong"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert resp.status_code == 401
+        resp = client.get("/widget-metrics", headers={"Authorization": "Bearer bad"})
         assert resp.status_code == 401
 
 
@@ -518,6 +538,32 @@ def test_cpu_endpoint() -> None:
         resp = client.get("/cpu")
         assert resp.status_code == 200
         assert resp.json() == {"temp": 50.0, "percent": 25.0}
+
+
+def test_baseline_analysis_endpoint() -> None:
+    rec = service.HealthRecord("t", 40.0, 20.0, 30.0, 40.0)
+
+    async def fake_recent(limit: int = 10) -> list:
+        return [rec]
+
+    async def fake_base(days: int, limit: int) -> list:
+        return [rec]
+
+    def fake_analyze(r, b, threshold=5.0):
+        return {"delta": {"cpu_avg": 0.0}}
+
+    with (
+        mock.patch("service.load_recent_health", fake_recent),
+        mock.patch("piwardrive.service.load_recent_health", fake_recent),
+        mock.patch("service.load_baseline_health", fake_base),
+        mock.patch("piwardrive.service.load_baseline_health", fake_base),
+        mock.patch("service.analyze_health_baseline", fake_analyze),
+        mock.patch("piwardrive.service.analyze_health_baseline", fake_analyze),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/baseline-analysis")
+        assert resp.status_code == 200
+        assert resp.json()["delta"]["cpu_avg"] == 0.0
 
 
 def test_ram_endpoint() -> None:

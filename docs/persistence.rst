@@ -17,6 +17,22 @@ cached so repeated calls do not reinitialise the schema, reducing disk I/O.
 The connection is placed into write-ahead logging mode using
 ``PRAGMA journal_mode=WAL`` to improve read/write concurrency.
 
+Encryption
+~~~~~~~~~~
+
+Install ``pysqlcipher3`` and ``libsqlcipher-dev`` to enable optional
+database encryption. Set ``PW_DB_KEY`` to a passphrase before running
+``piwardrive-migrate`` or launching the application. When present the
+database is opened with SQLCipher and the schema is created using the
+provided key.
+
+Inspect encrypted databases with ``sqlcipher`` instead of ``sqlite3``:
+
+.. code-block:: bash
+
+   PW_DB_KEY=secret sqlcipher ~/.config/piwardrive/app.db
+
+
 Inspect the database using ``sqlite3 ~/.config/piwardrive/app.db``. The schema
 is intentionally small and deleting the file only clears history—configuration
 is kept separately in ``config.json``.

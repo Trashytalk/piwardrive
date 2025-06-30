@@ -87,3 +87,35 @@ def plot_cpu_temp(
     plt.tight_layout()
     plt.savefig(path)
     plt.close()
+
+
+# ─────────────────────────────────────────────────────────────
+# External ML hooks
+
+from typing import Callable
+
+_ML_HOOKS: list[Callable[[HealthRecord], None]] = []
+
+
+def register_ml_hook(func: Callable[[HealthRecord], None]) -> None:
+    """Register ``func`` to be called with each new :class:`HealthRecord`."""
+    _ML_HOOKS.append(func)
+
+
+def process_new_record(record: HealthRecord) -> None:
+    """Invoke registered ML hooks with ``record``."""
+    for hook in list(_ML_HOOKS):
+        try:
+            hook(record)
+        except Exception:  # pragma: no cover - third-party hooks
+            import logging
+
+            logging.exception("ML hook %s failed", hook)
+
+
+__all__ = [
+    "compute_health_stats",
+    "plot_cpu_temp",
+    "register_ml_hook",
+    "process_new_record",
+]

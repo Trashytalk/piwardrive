@@ -51,3 +51,8 @@ def encrypt_data(data: str, key: bytes) -> str:
 def decrypt_data(token: str, key: bytes) -> str:
     """Decrypt ``token`` with ``key``."""
     return Fernet(key).decrypt(token.encode()).decode()
+
+
+def hash_secret(secret: str) -> str:
+    """Return a SHA256 hex digest of ``secret``."""
+    return hashlib.sha256(secret.encode()).hexdigest()

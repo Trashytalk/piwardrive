@@ -4,7 +4,7 @@ import asyncio
 import gzip
 import os
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from unittest import mock
 
 aiohttp_mod = ModuleType("aiohttp")
@@ -45,6 +45,26 @@ def test_self_test_returns_extra_info() -> None:
         assert result["interfaces"] == {"eth0": True}
         assert result["usb"] == ["dev1", "dev2"]
         assert result["services"] == {"kismet": True, "bettercap": False, "gpsd": True}
+
+
+def test_self_test_restarts_failed_services(monkeypatch: Any) -> None:
+    called: list[tuple[str, str]] = []
+
+    monkeypatch.setattr(
+        diagnostics.config.AppConfig,
+        "load",
+        classmethod(lambda cls: SimpleNamespace(restart_services=["bettercap"])),
+    )
+    monkeypatch.setattr(
+        diagnostics,
+        "get_service_statuses",
+        lambda: {"kismet": True, "bettercap": False},
+    )
+    monkeypatch.setattr(diagnostics.utils, "run_service_cmd", lambda s, a: called.append((s, a)))
+
+    result = diagnostics.self_test()
+    assert called == [("bettercap", "restart")]
+    assert result["services"] == {"kismet": True, "bettercap": False}
 
 
 def test_stop_profiling_writes_callgrind(tmp_path: Any) -> None:

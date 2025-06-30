@@ -31,6 +31,12 @@ options.
 ``scripts/service_status.py`` provides a small command-line interface to
 ``diagnostics.get_service_statuses`` for quick checks outside the React dashboard. The same information is visible in the dashboard via the status service.
 
+When a service check fails ``self_test`` calls
+``utils.run_service_cmd(name, "restart")`` for any entry found in the
+``restart_services`` list. Configure this behaviour in ``config.json`` or with
+the ``PW_RESTART_SERVICES`` environment variable (a JSON array of service
+names).
+
 Use :func:`utils.report_error` to surface exceptions consistently. It logs the
 message and displays a dialog via the running application if available.
 
@@ -38,6 +44,14 @@ Profiling can be enabled by setting ``PW_PROFILE=1``. When active, a
 ``profile`` section is added to the system report and a summary is
 logged on exit.  Set ``PW_PROFILE_CALLGRIND=/tmp/out.callgrind`` to
 also export data in a format readable by KCachegrind.
+
+Baseline Analysis
+~~~~~~~~~~~~~~~~~
+
+``baseline_history_days`` determines how far back the historical slice spans
+when computing averages. ``baseline_threshold`` defines the minimum change that
+triggers an anomaly in ``/baseline-analysis`` results. Adjust these values in
+``config.json`` or via ``PW_BASELINE_HISTORY_DAYS`` and ``PW_BASELINE_THRESHOLD``.
 
 Log Rotation
 ~~~~~~~~~~~~

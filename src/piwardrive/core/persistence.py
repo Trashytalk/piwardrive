@@ -10,7 +10,13 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional
 
+import sqlite3
 import aiosqlite
+
+try:
+    from pysqlcipher3 import dbapi2 as sqlcipher
+except Exception:  # pragma: no cover - optional dependency
+    sqlcipher = None
 
 from piwardrive import config
 
@@ -26,6 +32,7 @@ def _db_path() -> str:
 _DB_CONN: aiosqlite.Connection | None = None
 _DB_LOOP: asyncio.AbstractEventLoop | None = None
 _DB_DIR: str | None = None
+_DB_KEY: str | None = None
 
 # Pending HealthRecord rows for bulk writes
 _HEALTH_BUFFER: list[dict[str, Any]] = []
@@ -36,7 +43,7 @@ _BUFFER_LIMIT = 50
 _FLUSH_INTERVAL = 30.0
 
 # Schema versioning
-LATEST_VERSION = 2
+LATEST_VERSION = 3
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
 
@@ -103,25 +110,59 @@ async def _migration_2(conn: aiosqlite.Connection) -> None:
 _MIGRATIONS.append(_migration_2)
 
 
+async def _migration_3(conn: aiosqlite.Connection) -> None:
+    """Add users table for authentication tokens."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password_hash TEXT NOT NULL,
+            token_hash TEXT,
+            token_created INTEGER
+        )
+        """
+    )
+
+
+_MIGRATIONS.append(_migration_3)
+
+
 async def _get_conn() -> aiosqlite.Connection:
     """Return a cached SQLite connection initialized with the proper schema."""
-    global _DB_CONN, _DB_LOOP, _DB_DIR
+    global _DB_CONN, _DB_LOOP, _DB_DIR, _DB_KEY
     loop = asyncio.get_running_loop()
     cur_dir = config.CONFIG_DIR
-    if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir:
+    key = os.getenv("PW_DB_KEY")
+    if (
+        _DB_CONN is None
+        or _DB_LOOP is not loop
+        or _DB_DIR != cur_dir
+        or _DB_KEY != key
+    ):
         if _DB_CONN is not None:
             try:
                 await _DB_CONN.close()
             except Exception:
                 logging.exception("Error closing previous DB connection")
+        if key:
+            if sqlcipher is None:
+                raise RuntimeError(
+                    "pysqlcipher3 must be installed to use PW_DB_KEY"
+                )
+            aiosqlite.core.sqlite3 = sqlcipher
+        else:
+            aiosqlite.core.sqlite3 = sqlite3
         path = _db_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
         _DB_CONN = await aiosqlite.connect(path)
+        if key:
+            await _DB_CONN.execute("PRAGMA key = ?", (key,))
         await _DB_CONN.execute("PRAGMA journal_mode=WAL")
         _DB_CONN.row_factory = aiosqlite.Row
         await _init_db(_DB_CONN)
         _DB_LOOP = loop
         _DB_DIR = cur_dir
+        _DB_KEY = key
     return _DB_CONN
 
 
@@ -151,6 +192,15 @@ class DashboardSettings:
 
     layout: list[Any] = field(default_factory=list)
     widgets: list[str] = field(default_factory=list)
+
+
+@dataclass
+class User:
+    """Application user credentials and token."""
+
+    username: str
+    password_hash: str
+    token_hash: str | None = None
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -217,6 +267,39 @@ async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
     return [HealthRecord(**dict(row)) for row in rows]
 
 
+async def iter_health_history(
+    start: str | None = None, end: str | None = None
+) -> AsyncIterator[HealthRecord]:
+    """Yield :class:`HealthRecord` rows between ``start`` and ``end``."""
+    await flush_health_records()
+    conn = await _get_conn()
+    query = (
+        "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
+        " FROM health_records"
+    )
+    params: list[str] = []
+    if start and end:
+        query += " WHERE timestamp >= ? AND timestamp <= ?"
+        params = [start, end]
+    elif start:
+        query += " WHERE timestamp >= ?"
+        params = [start]
+    elif end:
+        query += " WHERE timestamp <= ?"
+        params = [end]
+    query += " ORDER BY timestamp"
+    cur = await conn.execute(query, tuple(params))
+    async for row in cur:
+        yield HealthRecord(**dict(row))
+
+
+async def load_health_history(
+    start: str | None = None, end: str | None = None
+) -> List[HealthRecord]:
+    """Return a list of :class:`HealthRecord` rows between ``start`` and ``end``."""
+    return [rec async for rec in iter_health_history(start, end)]
+
+
 async def purge_old_health(days: int) -> None:
     """Delete ``health_records`` older than ``days`` days."""
     await flush_health_records()
@@ -274,6 +357,48 @@ async def load_dashboard_settings() -> DashboardSettings:
         cls for item in layout if isinstance(item, dict) and (cls := item.get("cls"))
     ]
     return DashboardSettings(layout=layout, widgets=widgets)
+
+
+async def get_user(username: str) -> User | None:
+    """Return ``User`` row for ``username`` if it exists."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password_hash, token_hash FROM users WHERE username = ?",
+        (username,),
+    )
+    row = await cur.fetchone()
+    return User(**row) if row else None
+
+
+async def save_user(user: User) -> None:
+    """Insert or replace ``user`` in the database."""
+    conn = await _get_conn()
+    await conn.execute(
+        "INSERT OR REPLACE INTO users (username, password_hash, token_hash) VALUES (?, ?, ?)",
+        (user.username, user.password_hash, user.token_hash),
+    )
+    await conn.commit()
+
+
+async def update_user_token(username: str, token_hash: str) -> None:
+    """Set ``token_hash`` for ``username``."""
+    conn = await _get_conn()
+    await conn.execute(
+        "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') WHERE username = ?",
+        (token_hash, username),
+    )
+    await conn.commit()
+
+
+async def get_user_by_token(token_hash: str) -> User | None:
+    """Return ``User`` matching ``token_hash`` if found."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password_hash, token_hash FROM users WHERE token_hash = ?",
+        (token_hash,),
+    )
+    row = await cur.fetchone()
+    return User(**row) if row else None
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:

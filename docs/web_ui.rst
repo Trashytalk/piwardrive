@@ -63,6 +63,14 @@ When GPS data is available the web interface predicts future positions using the
 two most recent fixes. It then downloads tiles along the anticipated path based
 on the ``route_prefetch_interval`` and ``route_prefetch_lookahead`` settings.
 
+Playback
+--------
+
+Historical health records can be reviewed directly in the browser. The
+``HealthPlayback`` component connects to ``/sse/history`` and displays each
+record at a configurable interval. Add the widget to your dashboard layout to
+step through past metrics.
+
 Authentication
 --------------
 

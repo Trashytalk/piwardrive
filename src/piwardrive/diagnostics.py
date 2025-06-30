@@ -19,6 +19,7 @@ import psutil
 
 from piwardrive import cloud_export, config, r_integration, utils
 from piwardrive.interfaces import DataCollector, SelfTestCollector
+from piwardrive.mqtt import MQTTClient
 from piwardrive.persistence import (
     HealthRecord,
     load_recent_health,
@@ -216,12 +217,20 @@ def get_service_statuses(
 
 def self_test() -> Dict[str, Any]:
     """Run a few checks and return their results."""
+    services = get_service_statuses()
+
+    cfg = config.AppConfig.load()
+    restart = set(cfg.restart_services)
+    for name, active in services.items():
+        if not active and name in restart:
+            utils.run_service_cmd(name, "restart")
+
     return {
         "system": generate_system_report(),
         "network_ok": run_network_test(),
         "interfaces": get_interface_status(),
         "usb": list_usb_devices(),
-        "services": get_service_statuses(),
+        "services": services,
     }
 
 
@@ -234,6 +243,7 @@ class HealthMonitor:
         interval: float = 10.0,
         collector: DataCollector | None = None,
         daily_summary: bool = False,
+        mqtt_client: "MQTTClient | None" = None,
     ) -> None:
         try:
             asyncio.get_running_loop()
@@ -241,6 +251,7 @@ class HealthMonitor:
             asyncio.set_event_loop(asyncio.new_event_loop())
         self._scheduler = scheduler
         self._collector: DataCollector = collector or SelfTestCollector()
+        self._mqtt = mqtt_client
         self.data: Dict[str, Any] | None = None
         self._event = "health_monitor"
         scheduler.schedule(
@@ -276,8 +287,19 @@ class HealthMonitor:
                 disk_percent=system.get("disk_percent", 0.0),
             )
             await save_health_record(rec)
+            try:
+                from piwardrive import analysis
+
+                analysis.process_new_record(rec)
+            except Exception:  # pragma: no cover - optional hooks
+                logging.exception("ML processing failed")
             await purge_old_health(30)
             await vacuum()
+            if self._mqtt:
+                try:
+                    self._mqtt.publish(self.data or {})
+                except Exception:
+                    logging.exception("MQTT publish failed")
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
             logging.exception("HealthMonitor poll failed: %s", exc)
 

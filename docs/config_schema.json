@@ -2,12 +2,7 @@
   "$defs": {
     "Theme": {
       "description": "Available UI themes.",
-      "enum": [
-        "Dark",
-        "Light",
-        "Green",
-        "Red"
-      ],
+      "enum": ["Dark", "Light", "Green", "Red"],
       "title": "Theme",
       "type": "string"
     }
@@ -375,6 +370,13 @@
       "title": "Log Paths",
       "type": "array"
     },
+    "restart_services": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Restart Services",
+      "type": "array"
+    },
     "ui_font_size": {
       "default": 16,
       "minimum": 1,
@@ -469,6 +471,25 @@
       "title": "Log Tail Cache Seconds",
       "type": "number"
     },
+    "notification_webhooks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Notification Webhooks",
+      "type": "array"
+    },
+    "notify_cpu_temp": {
+      "default": 80.0,
+      "minimum": 0,
+      "title": "Notify Cpu Temp",
+      "type": "number"
+    },
+    "notify_disk_percent": {
+      "default": 90.0,
+      "minimum": 0,
+      "title": "Notify Disk Percent",
+      "type": "number"
+    },
     "wigle_api_name": {
       "anyOf": [
         {
@@ -506,6 +527,32 @@
       "default": null,
       "title": "Gps Movement Threshold"
     },
+    "baseline_history_days": {
+      "anyOf": [
+        {
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline History Days"
+    },
+    "baseline_threshold": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline Threshold"
+    },
     "cloud_bucket": {
       "anyOf": [
         {
@@ -541,12 +588,45 @@
       ],
       "default": null,
       "title": "Cloud Profile"
+    },
+    "mysql_host": {
+      "default": "localhost",
+      "title": "Mysql Host",
+      "type": "string"
+    },
+    "mysql_port": {
+      "default": 3306,
+      "minimum": 1,
+      "title": "Mysql Port",
+      "type": "integer"
+    },
+    "mysql_user": {
+      "default": "piwardrive",
+      "title": "Mysql User",
+      "type": "string"
+    },
+    "mysql_password": {
+      "default": "",
+      "title": "Mysql Password",
+      "type": "string"
+    },
+    "mysql_db": {
+      "default": "piwardrive",
+      "title": "Mysql Db",
+      "type": "string"
+    },
+    "enable_graphql": {
+      "default": false,
+      "title": "Enable Graphql",
+      "type": "boolean"
+    },
+    "enable_mqtt": {
+      "default": false,
+      "title": "Enable Mqtt",
+      "type": "boolean"
     }
   },
-  "required": [
-    "theme",
-    "map_poll_gps"
-  ],
+  "required": ["theme", "map_poll_gps"],
   "title": "ConfigModel",
   "type": "object"
 }
