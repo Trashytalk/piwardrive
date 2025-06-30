@@ -45,6 +45,9 @@ General
 ``PW_MPU6050_ADDR``
     I\ :sup:`2`\ C address for :func:`orientation_sensors.read_mpu6050` (default ``0x68``).
 
+``PW_ORIENTATION_MAP_FILE``
+    Path to a JSON orientation map loaded at startup.
+
 ``PW_REMOTE_SYNC_URL``
     Upload endpoint for automatic database sync.
 
