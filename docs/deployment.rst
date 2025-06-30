@@ -79,6 +79,15 @@ Run the container exposing port 8000::
 
 Set ``PW_API_PASSWORD_HASH``, ``PW_CORS_ORIGINS`` and ``PORT`` as needed when running ``docker run``.
 
+Updating
+~~~~~~~~
+
+Run ``scripts/update.sh`` from the repository root to pull the latest code and restart the ``service_api`` and ``piwardrive-webui`` services::
+
+    cd piwardrive
+    ./scripts/update.sh
+
+Set ``PW_UPDATE_INTERVAL`` (in hours) before launching PiWardrive to schedule automatic updates. For example, ``PW_UPDATE_INTERVAL=24`` checks for updates once per day.
 
 tmux or screen
 ~~~~~~~~~~~~~~
