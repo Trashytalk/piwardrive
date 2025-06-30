@@ -11,5 +11,6 @@ pre-commit==3.7.1
 black==25.1.0
 isort==6.0.1
 bandit==1.8.5
+cachetools==6.1.0
 
 watchgod==0.8.2

@@ -38,6 +38,8 @@ except ImportError:  # pragma: no cover - fallback when sigint_suite is missing
 from concurrent.futures import Future
 from enum import IntEnum
 
+from cachetools import TTLCache
+
 import psutil
 import requests
 
@@ -120,12 +122,30 @@ _DISK_USAGE_CACHE: dict[str, _DiskUsageEntry] = {}
 
 
 # Cache for HTTP requests issued via :func:`safe_request`
-# Default TTL in seconds and maximum cache size
+# Default TTL in seconds and maximum cache size. ``cachetools.TTLCache``
+# handles automatic eviction without blocking individual requests.
 SAFE_REQUEST_CACHE_SECONDS = 10.0
 SAFE_REQUEST_CACHE_MAX_SIZE = 128
-_SAFE_REQUEST_CACHE: dict[str, tuple[float, requests.Response | Any]] = {}
+_SAFE_REQUEST_CACHE: TTLCache[str, requests.Response | Any] = TTLCache(
+    maxsize=SAFE_REQUEST_CACHE_MAX_SIZE, ttl=SAFE_REQUEST_CACHE_SECONDS
+)
 
 _SAFE_REQUEST_CACHE_LOCK = threading.Lock()
+
+
+def _safe_request_cache_pruner() -> None:
+    """Background task expiring old safe request cache entries."""
+    while True:
+        time.sleep(SAFE_REQUEST_CACHE_SECONDS)
+        _expire_safe_request_cache()
+
+
+_safe_request_cache_pruner_thread = threading.Thread(
+    target=_safe_request_cache_pruner,
+    daemon=True,
+    name="safe_request_cache_pruner",
+)
+_safe_request_cache_pruner_thread.start()
 
 # Cache for BetterCAP handshake counts
 HANDSHAKE_CACHE_SECONDS = pw_config.DEFAULT_CONFIG.handshake_cache_seconds
@@ -155,20 +175,10 @@ else:  # pragma: no cover - fallback without requests_cache
     HTTP_SESSION = _DummySession()
 
 
-def _prune_safe_request_cache(now: float) -> None:
-    """Remove expired or excess cached responses."""
-    expired: list[str] = []
-    for url, (ts, _) in list(_SAFE_REQUEST_CACHE.items()):
-        if now - ts > SAFE_REQUEST_CACHE_SECONDS:
-            expired.append(url)
-    for url in expired:
-        _SAFE_REQUEST_CACHE.pop(url, None)
-
-    if len(_SAFE_REQUEST_CACHE) > SAFE_REQUEST_CACHE_MAX_SIZE:
-        sorted_items = sorted(_SAFE_REQUEST_CACHE.items(), key=lambda it: it[1][0])
-        limit = len(_SAFE_REQUEST_CACHE) - SAFE_REQUEST_CACHE_MAX_SIZE
-        for url, _ in sorted_items[:limit]:
-            _SAFE_REQUEST_CACHE.pop(url, None)
+def _expire_safe_request_cache() -> None:
+    """Clean up expired cache entries without blocking requests."""
+    with _SAFE_REQUEST_CACHE_LOCK:
+        _SAFE_REQUEST_CACHE.expire()
 
 
 def async_ttl_cache(ttl_getter: float | Callable[[], float]):
@@ -369,19 +379,11 @@ def safe_request(
     The ``cache_seconds`` argument controls the per-request expiration.
     Passing ``cache_seconds`` as ``0`` disables caching.
     """
-    now = time.time()
-    _prune_safe_request_cache(now)
-    if cache_seconds and url in _SAFE_REQUEST_CACHE:
-        ts, cached = _SAFE_REQUEST_CACHE[url]
-        if now - ts <= cache_seconds:
-            return cached
     if cache_seconds:
         with _SAFE_REQUEST_CACHE_LOCK:
-            entry = _SAFE_REQUEST_CACHE.get(url)
-        if entry is not None:
-            ts, cached = entry
-            if now - ts <= cache_seconds:
-                return cached
+            cached = _SAFE_REQUEST_CACHE.get(url)
+        if cached is not None:
+            return cached
 
     def _get() -> Any:
         return HTTP_SESSION.get(
@@ -394,8 +396,9 @@ def safe_request(
     try:
         resp = retry_call(_get, attempts=attempts, delay=1)
         resp.raise_for_status()
-        with _SAFE_REQUEST_CACHE_LOCK:
-            _SAFE_REQUEST_CACHE[url] = (now, resp)
+        if cache_seconds:
+            with _SAFE_REQUEST_CACHE_LOCK:
+                _SAFE_REQUEST_CACHE[url] = resp
         return resp
     except requests.Timeout as exc:
         report_error(f"Request timeout for {url}: {exc}")
@@ -411,7 +414,9 @@ def safe_request(
     if fallback is not None:
         try:
             result = fallback()
-            _SAFE_REQUEST_CACHE[url] = (time.time(), result)
+            if cache_seconds:
+                with _SAFE_REQUEST_CACHE_LOCK:
+                    _SAFE_REQUEST_CACHE[url] = result
             return result
         except Exception as exc2:  # pragma: no cover - fallback failed
             report_error(f"Fallback for {url} failed: {exc2}")
@@ -1221,5 +1226,6 @@ __all__ = [
     "polygon_area",
     "point_in_polygon",
     "load_kml",
+    "SAFE_REQUEST_CACHE_MAX_SIZE",
     "HTTP_SESSION",
 ]

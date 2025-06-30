@@ -14,6 +14,7 @@ from typing import Any
 from unittest import mock
 
 import requests_cache
+from cachetools import TTLCache
 
 from piwardrive import persistence
 
@@ -539,12 +540,17 @@ def test_safe_request_cache(monkeypatch: Any) -> None:
 
     session = requests_cache.CachedSession(backend="memory", expire_after=5)
 
-    def request(method: str, url: str, **_kw: Any) -> Resp:
+    def request(url: str, *args: Any, **_kw: Any) -> Resp:
         calls.append(url)
         return Resp()
 
-    session.request = request  # type: ignore[assignment]
+    session.get = request  # type: ignore[assignment]
     monkeypatch.setattr(utils, "HTTP_SESSION", session)
+    import piwardrive.core.utils as core_utils
+
+    monkeypatch.setattr(core_utils, "HTTP_SESSION", session)
+    utils._SAFE_REQUEST_CACHE = TTLCache(maxsize=128, ttl=5)
+    core_utils._SAFE_REQUEST_CACHE = utils._SAFE_REQUEST_CACHE
 
     first = utils.safe_request("http://x", cache_seconds=5)
     second = utils.safe_request("http://x", cache_seconds=5)
@@ -559,15 +565,28 @@ def test_safe_request_cache_pruning(monkeypatch: Any) -> None:
         def raise_for_status(self) -> None:
             pass
 
-    def get(_url: str, timeout: int = 5) -> Resp:
+    def get(_url: str, timeout: int = 5, expire_after=None, **_kw: Any) -> Resp:
         return Resp()
 
+    monkeypatch.setattr(utils, "HTTP_SESSION", mock.Mock(get=get))
     monkeypatch.setattr(
-        utils, "requests", mock.Mock(get=get, RequestException=Exception)
+        utils,
+        "requests",
+        mock.Mock(Timeout=Exception, HTTPError=Exception, RequestException=Exception),
     )
-    times = [0.0, 1.0]
-    monkeypatch.setattr(utils.time, "time", lambda: times.pop(0))
-    utils._SAFE_REQUEST_CACHE = {}
+    import piwardrive.core.utils as core_utils
+
+    monkeypatch.setattr(core_utils, "HTTP_SESSION", utils.HTTP_SESSION)
+    monkeypatch.setattr(core_utils, "requests", utils.requests)
+    t = -1
+
+    def timer() -> float:
+        nonlocal t
+        t += 1
+        return float(t)
+
+    utils._SAFE_REQUEST_CACHE = TTLCache(maxsize=1, ttl=5, timer=timer)
+    core_utils._SAFE_REQUEST_CACHE = utils._SAFE_REQUEST_CACHE
     monkeypatch.setattr(utils, "SAFE_REQUEST_CACHE_MAX_SIZE", 1)
 
     utils.safe_request("http://a")
