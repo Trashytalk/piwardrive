@@ -295,9 +295,9 @@ def WEBSOCKET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F
 
 
 # Allowed log file paths for the /logs endpoint
-ALLOWED_LOG_PATHS = [
+ALLOWED_LOG_PATHS = {
     sanitize_path(p) for p in config.DEFAULT_CONFIG.log_paths + [DEFAULT_LOG_PATH]
-]
+}
 
 # In-memory token store mapping token string to username
 TOKENS: dict[str, str] = {}
