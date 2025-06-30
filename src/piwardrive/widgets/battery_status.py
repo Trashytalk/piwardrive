@@ -6,9 +6,9 @@ from typing import Any
 import psutil
 
 from piwardrive.localization import _
-from piwardrive.simpleui import Card as MDCard
-from piwardrive.simpleui import Label as MDLabel
-from piwardrive.simpleui import dp
+from piwardrive.ui import Card
+from piwardrive.ui import Label
+from piwardrive.ui import dp
 
 from .base import DashboardWidget
 
@@ -24,8 +24,8 @@ class BatteryStatusWidget(DashboardWidget):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(
+        self.card = Card(orientation="vertical", padding=dp(8), radius=[8])
+        self.label = Label(
             text=f"{_('battery')}: {_('not_available')}", halign="center"
         )
         self.card.add_widget(self.label)

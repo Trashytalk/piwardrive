@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from piwardrive.simpleui import BoxLayout
+from piwardrive.ui import BoxLayout
 
 
 class DashboardWidget(BoxLayout):

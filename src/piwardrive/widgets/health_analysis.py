@@ -7,10 +7,10 @@ from typing import Any
 from piwardrive.analysis import compute_health_stats, plot_cpu_temp
 from piwardrive.localization import _
 from piwardrive.persistence import load_recent_health
-from piwardrive.simpleui import Card as MDCard
-from piwardrive.simpleui import Image
-from piwardrive.simpleui import Label as MDLabel
-from piwardrive.simpleui import dp
+from piwardrive.ui import Card
+from piwardrive.ui import Image
+from piwardrive.ui import Label
+from piwardrive.ui import dp
 from piwardrive.utils import run_async_task
 
 from .base import DashboardWidget
@@ -28,8 +28,8 @@ class HealthAnalysisWidget(DashboardWidget):
     def __init__(self, max_records: int = 50, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.max_records = max_records
-        self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(
+        self.card = Card(orientation="vertical", padding=dp(8), radius=[8])
+        self.label = Label(
             text=f"{_('health_analysis')}: {_('not_available')}", halign="center"
         )
         self.image = Image(size_hint_y=None, height=dp(150))

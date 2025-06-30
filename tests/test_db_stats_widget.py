@@ -12,7 +12,7 @@ def _load_widget():
 def test_widget_update(monkeypatch: Any) -> None:
     ds = _load_widget()
     widget = object.__new__(ds.DBStatsWidget)
-    widget.label = ds.MDLabel()  # type: ignore[attr-defined]
+    widget.label = ds.Label()  # type: ignore[attr-defined]
 
     monkeypatch.setattr(ds, "_db_path", lambda: "x.db")
     monkeypatch.setattr(ds.os.path, "getsize", lambda p: 2048)

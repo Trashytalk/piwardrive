@@ -35,7 +35,7 @@ def test_orientation_widget_update(monkeypatch):
     from piwardrive.widgets import orientation_widget as ow
 
     widget = object.__new__(ow.OrientationWidget)
-    widget.label = ow.MDLabel()
+    widget.label = ow.Label()
 
     monkeypatch.setattr(
         ow.orientation_sensors, "get_orientation_dbus", lambda: "right-up"

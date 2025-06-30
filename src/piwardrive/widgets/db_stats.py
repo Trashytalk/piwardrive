@@ -6,9 +6,9 @@ import os
 from typing import Any
 
 from piwardrive.localization import _
-from piwardrive.simpleui import Card as MDCard
-from piwardrive.simpleui import Label as MDLabel
-from piwardrive.simpleui import dp
+from piwardrive.ui import Card
+from piwardrive.ui import Label
+from piwardrive.ui import dp
 
 from .base import DashboardWidget
 
@@ -56,8 +56,8 @@ class DBStatsWidget(DashboardWidget):
     def __init__(self, **kwargs: Any) -> None:
         """Create the widget and schedule the first update."""
         super().__init__(**kwargs)
-        self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(text=f"{_('db')}: {_('not_available')}", halign="center")
+        self.card = Card(orientation="vertical", padding=dp(8), radius=[8])
+        self.label = Label(text=f"{_('db')}: {_('not_available')}", halign="center")
         self.card.add_widget(self.label)
         self.add_widget(self.card)
         self.update()

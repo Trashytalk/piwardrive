@@ -17,7 +17,7 @@ def _load_widget():
 def test_widget_updates(monkeypatch: Any) -> None:
     bs = _load_widget()
     widget = object.__new__(bs.BatteryStatusWidget)
-    widget.label = bs.MDLabel()  # type: ignore[attr-defined]
+    widget.label = bs.Label()  # type: ignore[attr-defined]
     monkeypatch.setattr(bs.psutil, "sensors_battery", lambda: DummyBattery(50, False))
     bs.BatteryStatusWidget.update(widget)
     assert "50" in widget.label.text

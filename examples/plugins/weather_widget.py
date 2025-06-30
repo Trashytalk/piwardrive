@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import requests
-from piwardrive.simpleui import Card as MDCard
-from piwardrive.simpleui import Label as MDLabel
-from piwardrive.simpleui import dp
+from piwardrive.ui import Card
+from piwardrive.ui import Label
+from piwardrive.ui import dp
 
 from widgets.base import DashboardWidget
 
@@ -18,8 +18,8 @@ class WeatherWidget(DashboardWidget):
     def __init__(self, **kwargs: object) -> None:
         """Create widget layout and fetch initial data."""
         super().__init__(**kwargs)
-        self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
-        self.label = MDLabel(text="Fetching weather...", halign="center")
+        self.card = Card(orientation="vertical", padding=dp(8), radius=[8])
+        self.label = Label(text="Fetching weather...", halign="center")
         self.card.add_widget(self.label)
         self.add_widget(self.card)
         self.update()

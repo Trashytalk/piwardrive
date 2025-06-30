@@ -1,8 +1,8 @@
 """Minimal UI shim used within the test suite.
 
-This module provides very small stand-ins for a few Kivy widgets. They expose
-just enough behaviour for the unit tests without pulling in the heavy Kivy
-dependency.
+This module provides lightweight stand-ins for a handful of UI widgets.  They
+expose just enough behaviour for the unit tests without relying on any external
+GUI frameworks.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from typing import Any, Callable, Iterable
 
 
 class Label:
-    """Simple stand-in for ``kivy.uix.label.Label``."""
+    """Very small text container used in the tests."""
 
     def __init__(
         self,
@@ -93,7 +93,7 @@ class ScrollView:
 
 
 def dp(val: int | float) -> int | float:
-    """Return ``val`` unchanged to mimic :func:`kivy.metrics.dp`."""
+    """Return ``val`` unchanged to aid readability in tests."""
     return val
 
 

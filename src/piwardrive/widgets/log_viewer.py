@@ -4,11 +4,11 @@ import os
 import re
 from typing import Any, List
 
-from piwardrive.simpleui import DropdownMenu, Label, ScrollView
+from piwardrive.ui import DropdownMenu, Label, ScrollView
 from piwardrive.utils import tail_file
 
 try:  # pragma: no cover - optional dependency
-    from piwardrive.simpleui import App as SimpleApp
+    from piwardrive.ui import App as SimpleApp
 except Exception:  # pragma: no cover - fallback when missing
     SimpleApp = None  # type: ignore[assignment]
 
@@ -83,7 +83,7 @@ class LogViewer(ScrollView):
         """Display a dropdown menu to select ``log_path``."""
         app = App.get_running_app() if App is not None else None
         paths = getattr(app, "log_paths", self.log_paths)
-        MDDropdownMenu = DropdownMenu
+        DropdownMenu = DropdownMenu
         items = [
             {
                 "text": os.path.basename(p),
@@ -92,7 +92,7 @@ class LogViewer(ScrollView):
             }
             for p in paths
         ]
-        self._menu = MDDropdownMenu(caller=caller, items=items, width_mult=4)
+        self._menu = DropdownMenu(caller=caller, items=items, width_mult=4)
         self._menu.open()
 
     def _select_path(self, path: str) -> None:
