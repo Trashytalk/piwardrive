@@ -366,8 +366,70 @@ React frontend with `npm run build` and then launch the stack:
 docker compose up
 ```
 
+
 The compose file mounts `~/.config/piwardrive` and `webui/dist` so your
 configuration and compiled assets persist between container restarts.
+
+## Usage
+
+After installing the package activate the virtual environment and start the
+dashboard:
+
+```bash
+source gui-env/bin/activate
+piwardrive-webui
+```
+
+This launches a FastAPI server on <http://127.0.0.1:8000/> with the React
+frontend. Set the `PW_WEBUI_PORT` environment variable to change the port.
+
+Additional command line helpers are provided:
+
+```bash
+piwardrive-service   # API only
+piwardrive-prefetch  # download map tiles without starting the UI
+python -m piwardrive.sigint_suite.band_scanner --help
+```
+
+See [docs/cli_tools.rst](docs/cli_tools.rst) for the full list of commands.
+
+## Examples
+
+Retrieve the last few health records programmatically:
+
+```python
+import asyncio
+from piwardrive.core import persistence
+
+async def latest():
+    records = await persistence.load_recent_health(limit=3)
+    for rec in records:
+        print(rec.timestamp, rec.cpu_percent)
+
+asyncio.run(latest())
+```
+
+Start only the API service with Uvicorn:
+
+```python
+from piwardrive.service import app
+import uvicorn
+
+uvicorn.run(app, host="0.0.0.0", port=8000)
+```
+
+## API Reference
+
+The most commonly used modules include:
+
+- `service` – FastAPI backend with metrics and sync endpoints.
+- `persistence` – async helpers for reading and writing the SQLite database.
+- `scheduler` – poll-based task scheduler used by widgets and diagnostics.
+- `sigint_suite` – command line scanning utilities under `python -m`.
+- `widgets` – base classes for custom dashboard components.
+
+Full documentation lives in the `docs/` directory; run `make html` to build the
+Sphinx site.
 
 ### Automated vs Manual Tasks
 
