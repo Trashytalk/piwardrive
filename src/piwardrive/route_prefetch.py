@@ -93,9 +93,12 @@ class RoutePrefetcher:
 
     def _run(self) -> None:
         try:
-            points: list[tuple[float, float]] = list(
-                getattr(self._map_screen, "track_points", [])
-            )[-self._lookahead :]
+            track = list(getattr(self._map_screen, "track_points", []))
+            if self._lookahead > 0:
+                points: list[tuple[float, float]] = track[-self._lookahead :]
+            else:
+                points = []
+
             points += self._predict_points()
             if not points:
                 return
