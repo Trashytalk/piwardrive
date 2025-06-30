@@ -10,6 +10,8 @@ import subprocess
 from typing import Dict, Iterable, List, Optional, Union
 
 from piwardrive import orientation_sensors
+from piwardrive.core import config
+from piwardrive.scheduler import PollScheduler
 from piwardrive.sigint_suite.enrichment import cached_lookup_vendor
 from piwardrive.sigint_suite.hooks import apply_post_processors, register_post_processor
 from piwardrive.sigint_suite.models import WifiNetwork
@@ -18,6 +20,12 @@ logger = logging.getLogger(__name__)
 
 # expose lookup_vendor for tests, defaulting to cached_lookup_vendor
 lookup_vendor = cached_lookup_vendor
+
+
+def _allowed() -> bool:
+    cfg = config.AppConfig.load()
+    rules = cfg.scan_rules.get("wifi", {}) if hasattr(cfg, "scan_rules") else {}
+    return PollScheduler.check_rules(rules)
 
 
 def _vendor_hook(
@@ -105,6 +113,8 @@ def scan_wifi(
     timeout: Optional[int] = None,
 ) -> List[WifiNetwork]:
     """Scan for Wi-Fi networks using ``iwlist`` and return results."""
+    if not _allowed():
+        return []
     iwlist_cmd = str(iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist"))
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
@@ -140,6 +150,8 @@ async def async_scan_wifi(
     timeout: int | None = None,
 ) -> List[WifiNetwork]:
     """Asynchronously scan for Wi-Fi networks using ``iwlist``."""
+    if not _allowed():
+        return []
     iwlist_cmd = str(iwlist_cmd or os.getenv("IWLIST_CMD", "iwlist"))
     priv_cmd = priv_cmd if priv_cmd is not None else os.getenv("IW_PRIV_CMD", "sudo")
 
