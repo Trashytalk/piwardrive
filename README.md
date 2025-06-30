@@ -8,7 +8,7 @@ PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It mer
 python -m piwardrive.webui_server
 ```
 
-For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. A short [FAQ](docs/faq.rst) covers common issues.
+For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. Troubleshooting steps are summarized in the [FAQ](docs/faq.rst).
 
 ## Architecture Overview
 
@@ -196,7 +196,6 @@ source gui-env/bin/activate
 
 8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
-
    ```bash
    sudo cp examples/piwardrive-webui.service /etc/systemd/system/
    sudo systemctl enable --now piwardrive-webui.service
@@ -207,6 +206,7 @@ source gui-env/bin/activate
    ```bash
    piwardrive-webui
    ```
+
 #### Optional Dependencies
 
 Some components rely on additional Python packages. Install them only if you need the corresponding feature:
