@@ -66,7 +66,6 @@ def clone_orientation_map() -> Dict[str, float]:
 
 def reset_orientation_map() -> None:
     """Restore :data:`_ORIENTATION_MAP` from ``PW_ORIENTATION_MAP_FILE`` if set."""
-
     _ORIENTATION_MAP.clear()
     path = os.getenv("PW_ORIENTATION_MAP_FILE")
     if path:

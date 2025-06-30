@@ -24,19 +24,16 @@ logger = _impl.logger
 
 def _make_range_db(src: str, start: int, end: int) -> str:
     """Return path to a temporary DB containing rows ``start``..``end``."""
-
     return _impl._make_range_db(src, start, end)
 
 
 def _load_sync_state(path: str) -> int:
     """Return the last synced row id recorded in ``path``."""
-
     return _impl._load_sync_state(path)
 
 
 def _save_sync_state(path: str, row_id: int) -> None:
     """Persist ``row_id`` to ``path``."""
-
     _impl._save_sync_state(path, row_id)
 
 
@@ -49,7 +46,6 @@ async def sync_database_to_server(
     row_range: Tuple[int, int] | None = None,
 ) -> None:
     """Delegate to :func:`remote_sync.sync_database_to_server`."""
-
     await _impl.sync_database_to_server(
         db_path,
         url,
