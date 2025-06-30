@@ -10,6 +10,7 @@ import secrets
 from cryptography.fernet import Fernet
 
 _ALLOWED_SERVICE_RE: re.Pattern[str] = re.compile(r"^[\w.-]+$")
+_ALLOWED_FILENAME_RE: re.Pattern[str] = re.compile(r"^[\w.-]+$")
 
 
 def sanitize_path(path: str) -> str:
@@ -24,6 +25,12 @@ def validate_service_name(name: str) -> None:
     """Raise ``ValueError`` if ``name`` contains unsafe characters."""
     if not _ALLOWED_SERVICE_RE.fullmatch(name):
         raise ValueError(f"Invalid service name: {name}")
+
+
+def validate_filename(name: str) -> None:
+    """Raise ``ValueError`` if ``name`` contains unsafe characters."""
+    if not _ALLOWED_FILENAME_RE.fullmatch(name):
+        raise ValueError(f"Invalid filename: {name}")
 
 
 def hash_password(password: str) -> str:
