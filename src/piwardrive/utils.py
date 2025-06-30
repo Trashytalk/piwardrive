@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -85,17 +86,28 @@ except Exception:
         ]
 
 
-def robust_request(url: str) -> requests.Response:
-    """Return ``requests.get(url)`` with simple retries."""
+def robust_request(
+    url: str,
+    *,
+    method: str = "GET",
+    headers: dict[str, str] | None = None,
+    timeout: float = HTTP_TIMEOUT,
+) -> requests.Response:
+    """Return ``requests.request`` with retries and exponential backoff."""
 
-    def do_request() -> requests.Response:
+    delay = RETRY_DELAY
+    last_exc: Exception | None = None
+    for attempt in range(RETRY_ATTEMPTS):
         try:
-            return requests.get(url, timeout=HTTP_TIMEOUT)
+            return requests.request(method, url, headers=headers, timeout=timeout)
         except requests.RequestException as exc:
+            last_exc = exc
             logging.warning("Request failed: %s", exc)
-            raise
-
-    return retry_call(do_request, attempts=RETRY_ATTEMPTS, delay=RETRY_DELAY)  # noqa: F405
+            if attempt < RETRY_ATTEMPTS - 1:
+                time.sleep(delay)
+                delay *= 2
+    assert last_exc is not None
+    raise last_exc
 
 
 __all__.append("robust_request")

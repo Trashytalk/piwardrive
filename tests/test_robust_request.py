@@ -7,28 +7,32 @@ import piwardrive.utils as utils
 def test_robust_request_retries(monkeypatch):
     calls = []
 
-    def fake_get(url: str, *, timeout: int) -> str:
-        calls.append(url)
+    def fake_request(method: str, url: str, **kwargs: Any) -> str:
+        calls.append((method, url, kwargs.get("headers"), kwargs.get("timeout")))
         if len(calls) < 3:
-            raise Exception("boom")
+            raise utils.requests.RequestException("boom")
         return "ok"
 
-    def fake_retry(func: Any, *, attempts: int = 1, delay: float = 0) -> Any:
-        assert attempts == 3
-        result = None
-        for _ in range(attempts):
-            try:
-                result = func()
-                break
-            except Exception:
-                continue
-        return result
+    sleeps: list[float] = []
 
-    monkeypatch.setattr(utils, "retry_call", fake_retry, raising=False)
-    monkeypatch.setattr(utils.requests, "get", fake_get)
-    resp = utils.robust_request("http://example.com")
+    def fake_sleep(d: float) -> None:
+        sleeps.append(d)
+
+    monkeypatch.setattr(utils.requests, "request", fake_request)
+    monkeypatch.setattr(utils.time, "sleep", fake_sleep)
+    resp = utils.robust_request(
+        "http://example.com",
+        method="POST",
+        headers={"X-Test": "y"},
+        timeout=10,
+    )
     assert resp == "ok"
-    assert len(calls) == 3
+    assert calls == [
+        ("POST", "http://example.com", {"X-Test": "y"}, 10),
+        ("POST", "http://example.com", {"X-Test": "y"}, 10),
+        ("POST", "http://example.com", {"X-Test": "y"}, 10),
+    ]
+    assert sleeps == [1, 2]
 
 
 def test_orientation_widget_update(monkeypatch):
