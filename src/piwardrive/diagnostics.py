@@ -284,6 +284,12 @@ class HealthMonitor:
                 disk_percent=system.get("disk_percent", 0.0),
             )
             await save_health_record(rec)
+            try:
+                from piwardrive import analysis
+
+                analysis.process_new_record(rec)
+            except Exception:  # pragma: no cover - optional hooks
+                logging.exception("ML processing failed")
             await purge_old_health(30)
             await vacuum()
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
