@@ -1,7 +1,7 @@
 import importlib
 import importlib.util
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import ModuleType
 
@@ -18,6 +18,14 @@ def _load_service(monkeypatch):
     monkeypatch.setitem(sys.modules, "aiohttp", aiohttp_mod)
 
     utils_mod = ModuleType("utils")
+
+    @dataclass
+    class MetricsResult:
+        aps: list
+        clients: list
+        handshake_count: int
+
+    utils_mod.MetricsResult = MetricsResult
 
     async def _dummy(*a, **k):
         return None

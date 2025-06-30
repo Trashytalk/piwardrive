@@ -12,6 +12,7 @@ import subprocess
 import threading
 import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import (
@@ -38,10 +39,9 @@ except ImportError:  # pragma: no cover - fallback when sigint_suite is missing
 from concurrent.futures import Future
 from enum import IntEnum
 
-from cachetools import TTLCache
-
 import psutil
 import requests
+from cachetools import TTLCache
 
 try:
     import requests_cache
@@ -929,17 +929,26 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
     return [], []
 
 
+@dataclass
+class MetricsResult:
+    """Results from :func:`fetch_metrics_async`."""
+
+    aps: list[Any]
+    clients: list[Any]
+    handshake_count: int
+
+
 async def fetch_metrics_async(
     log_folder: str = "/mnt/ssd/kismet_logs",
-) -> tuple[list, list, int]:
+) -> MetricsResult:
     """Fetch Kismet devices and BetterCAP handshake count concurrently."""
     if network_scanning_disabled():
-        return [], [], 0
+        return MetricsResult([], [], 0)
     aps_clients = fetch_kismet_devices_async()
     handshake = asyncio.to_thread(count_bettercap_handshakes, log_folder)
     aps, clients = await aps_clients
     count = await handshake
-    return aps, clients, count
+    return MetricsResult(aps, clients, count)
 
 
 def count_bettercap_handshakes(
@@ -1217,6 +1226,7 @@ __all__ = [
     "fetch_kismet_devices",
     "fetch_kismet_devices_async",
     "fetch_metrics_async",
+    "MetricsResult",
     "count_bettercap_handshakes",
     "get_gps_accuracy",
     "get_gps_fix_quality",

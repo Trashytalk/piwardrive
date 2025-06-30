@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import requests
@@ -26,6 +27,12 @@ except Exception:
         # The following stubs match the names used by the builtin widgets. They
         # are replaced by monkeypatching in the unit tests when the real
         # implementations are unavailable.
+        @dataclass
+        class MetricsResult:
+            aps: list
+            clients: list
+            handshake_count: int
+
         def get_gps_fix_quality(
             *_args: object, **_kwargs: object
         ) -> str:  # type: ignore[misc]
@@ -63,6 +70,7 @@ except Exception:
             return None
 
         __all__ += [
+            "MetricsResult",
             "get_gps_fix_quality",
             "service_status",
             "count_bettercap_handshakes",

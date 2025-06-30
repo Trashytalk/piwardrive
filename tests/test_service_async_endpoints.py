@@ -1,6 +1,7 @@
 import asyncio
 import importlib
 import sys
+from dataclasses import dataclass
 from types import ModuleType, SimpleNamespace
 
 from httpx import ASGITransport, AsyncClient
@@ -24,6 +25,14 @@ def _get_service(add_dummy_module):
         ClientError=Exception,
     )
     utils_mod = add_dummy_module("utils")
+
+    @dataclass
+    class MetricsResult:
+        aps: list
+        clients: list
+        handshake_count: int
+
+    utils_mod.MetricsResult = MetricsResult
 
     async def _dummy_async(*_a, **_k):
         return None
@@ -52,9 +61,7 @@ def test_widgets_endpoint_async(monkeypatch, add_dummy_module):
     service = _get_service(add_dummy_module)
     stub = SimpleNamespace(__all__=["A", "B"])
     monkeypatch.setattr(service.importlib, "import_module", lambda n: stub)
-    monkeypatch.setattr(
-        "piwardrive.service.importlib.import_module", lambda n: stub
-    )
+    monkeypatch.setattr("piwardrive.service.importlib.import_module", lambda n: stub)
 
     async def call():
         resp = await _make_request(service.app, "/api/widgets")
