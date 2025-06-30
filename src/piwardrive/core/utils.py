@@ -42,7 +42,6 @@ try:  # pragma: no cover - optional dependency
 except Exception:
     KivyApp = None  # type: ignore[assignment]
 
-App = KivyApp
 from enum import IntEnum
 
 import psutil
@@ -55,6 +54,8 @@ except Exception:  # pragma: no cover - optional dependency
 import aiohttp
 
 from piwardrive import persistence
+
+App = KivyApp
 
 GPSD_CACHE_SECONDS = 2.0  # cache ttl in seconds
 
