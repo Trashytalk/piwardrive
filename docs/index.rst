@@ -48,6 +48,7 @@ Common issues are answered in the :doc:`faq`.
    cli_tools
    drone_mapping
    r_integration
+   grafana
     web_ui
     faq
     legal

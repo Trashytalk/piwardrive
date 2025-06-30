@@ -26,6 +26,9 @@ except Exception:  # pragma: no cover - missing dependency
 
 logger = logging.getLogger(__name__)
 
+# Environment variable used by :func:`reset_orientation_map`.
+ORIENTATION_MAP_ENV = "PW_ORIENTATION_MAP_FILE"
+
 # Default mapping between orientation strings and rotation angles.  The mapping
 # is copied to ``_ORIENTATION_MAP`` so callers can freely modify the latter
 # without losing the canonical defaults.
@@ -66,9 +69,8 @@ def clone_orientation_map() -> Dict[str, float]:
 
 def reset_orientation_map() -> None:
     """Restore :data:`_ORIENTATION_MAP` from ``PW_ORIENTATION_MAP_FILE`` if set."""
-
     _ORIENTATION_MAP.clear()
-    path = os.getenv("PW_ORIENTATION_MAP_FILE")
+    path = os.getenv(ORIENTATION_MAP_ENV)
     if path:
         try:
             with open(path, "r", encoding="utf-8") as fh:
@@ -76,6 +78,9 @@ def reset_orientation_map() -> None:
             if isinstance(data, dict):
                 _ORIENTATION_MAP.update({k.lower(): float(v) for k, v in data.items()})
                 return
+            logger.error("Invalid orientation map in %s", path)
+        except FileNotFoundError:
+            logger.error("Orientation map file not found: %s", path)
         except Exception as exc:  # pragma: no cover - runtime errors
             logger.error("Failed to load orientation map from %s: %s", path, exc)
 

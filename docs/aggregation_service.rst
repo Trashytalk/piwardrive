@@ -58,4 +58,4 @@ Container Image
 Run the container exposing port 9100 and mounting a data directory::
 
    docker run --rm -p 9100:9100 -v ~/agg-data:/data \
-      -e PW_AGG_DIR=/data piwardrive-aggregation
+      -e PW_AGG_DIR=/data -e PW_AGG_PORT=9100 piwardrive-aggregation

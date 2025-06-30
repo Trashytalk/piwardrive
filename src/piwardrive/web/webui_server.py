@@ -33,7 +33,10 @@ def create_app() -> FastAPI:
 def main() -> None:
     import uvicorn
 
-    port = int(os.getenv("PW_WEBUI_PORT", 8000))
+    # Allow overriding the listening port via the PW_WEBUI_PORT environment
+    # variable.  Default to 8000 when not set.
+    port = int(os.environ.get("PW_WEBUI_PORT", 8000))
+
     uvicorn.run(create_app(), host="127.0.0.1", port=port)
 
 
