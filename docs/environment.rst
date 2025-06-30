@@ -128,6 +128,10 @@ All available overrides are summarised below.
      - ``admin_password_hash``
    * - ``PW_BETTERCAP_CAPLET``
      - ``bettercap_caplet``
+   * - ``PW_BASELINE_HISTORY_DAYS``
+     - ``baseline_history_days``
+   * - ``PW_BASELINE_THRESHOLD``
+     - ``baseline_threshold``
    * - ``PW_CLEANUP_ROTATED_LOGS``
      - ``cleanup_rotated_logs``
    * - ``PW_CLOUD_BUCKET``
