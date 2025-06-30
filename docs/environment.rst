@@ -72,6 +72,27 @@ General
 ``PW_REMOTE_SYNC_INTERVAL``
     How often to upload the database in minutes. ``0`` disables scheduling.
 
+``PW_UPDATE_INTERVAL``
+    How often PiWardrive checks for updates in hours.
+
+``PW_AGG_DIR``
+    Directory used by ``aggregation_service`` to store data.
+
+``PW_AGG_PORT``
+    Listening port for ``aggregation_service`` (default ``9100``).
+
+``PW_SERVICE_PORT``
+    Port for the HTTP API when running ``service.py`` (default ``8000``).
+
+``PW_API_USER``
+    Username created with ``PW_API_PASSWORD_HASH`` (default ``admin``).
+
+``PW_CORS_ORIGINS``
+    Comma-separated origins allowed by CORS.
+
+``PW_DB_KEY``
+    Passphrase for optional SQLCipher database encryption.
+
 Remote Sync Variables
 ---------------------
 
