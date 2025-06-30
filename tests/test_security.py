@@ -32,3 +32,9 @@ def test_validate_filename() -> None:
     security.validate_filename("good.db")
     with pytest.raises(ValueError):
         security.validate_filename("../bad")
+
+
+def test_sanitize_filename() -> None:
+    assert security.sanitize_filename("db") == "db"
+    with pytest.raises(ValueError):
+        security.sanitize_filename("../../etc/passwd")

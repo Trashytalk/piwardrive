@@ -33,6 +33,15 @@ def validate_filename(name: str) -> None:
         raise ValueError(f"Invalid filename: {name}")
 
 
+def sanitize_filename(filename: str) -> str:
+    """Return ``filename`` sanitized for safe storage."""
+    name = os.path.basename(filename)
+    if name != filename:
+        raise ValueError(f"Invalid filename: {filename}")
+    validate_filename(name)
+    return name
+
+
 def hash_password(password: str) -> str:
     """Return a PBKDF2-HMAC-SHA256 hash of ``password``."""
     salt = os.urandom(16)
