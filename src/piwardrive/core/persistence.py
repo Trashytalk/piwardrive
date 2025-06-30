@@ -111,15 +111,13 @@ _MIGRATIONS.append(_migration_2)
 
 
 async def _migration_3(conn: aiosqlite.Connection) -> None:
-    """Add fingerprint_info table."""
+    """Add users table."""
     await conn.execute(
         """
-        CREATE TABLE IF NOT EXISTS fingerprint_info (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            environment TEXT,
-            source TEXT,
-            record_count INTEGER,
-            created_at TEXT
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
         )
         """
     )
@@ -196,6 +194,13 @@ class DashboardSettings:
 
 
 @dataclass
+class User:
+    """Application user account."""
+
+    username: str
+    password: str
+    role: str = "user"
+      
 class FingerprintInfo:
     """Metadata about a fingerprint dataset."""
 
@@ -361,6 +366,12 @@ async def load_dashboard_settings() -> DashboardSettings:
     return DashboardSettings(layout=layout, widgets=widgets)
 
 
+async def create_user(user: User) -> None:
+    """Insert or update a user account."""
+    conn = await _get_conn()
+    await conn.execute(
+        "INSERT OR REPLACE INTO users (username, password, role) VALUES (?, ?, ?)",
+        (user.username, user.password, user.role),
 async def save_fingerprint_info(info: FingerprintInfo) -> None:
     """Insert fingerprint metadata row into the database."""
     conn = await _get_conn()
@@ -374,6 +385,19 @@ async def save_fingerprint_info(info: FingerprintInfo) -> None:
     await conn.commit()
 
 
+async def get_user(username: str) -> User | None:
+    """Return :class:`User` matching ``username`` if present."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password, role FROM users WHERE username = ?",
+        (username,),
+    )
+    row = await cur.fetchone()
+    if row is None:
+        return None
+    return User(username=row["username"], password=row["password"], role=row["role"])
+
+      
 async def load_fingerprint_info() -> list[FingerprintInfo]:
     """Return saved :class:`FingerprintInfo` rows ordered by newest."""
     conn = await _get_conn()
