@@ -25,7 +25,11 @@ For an external MPU-6050 sensor connect the module to the I\ :sup:`2`\ C bus
 and install the helper library::
 
    sudo apt install python3-smbus
-   pip install mpu6050
+    pip install mpu6050
+
+.. note::
+   ``read_mpu6050`` communicates with address ``0x68`` by default. Set
+   ``PW_MPU6050_ADDR`` to override the I\ :sup:`2`\ C address.
 
 See :doc:`hardware_setup` for wiring diagrams of the MPU-6050 and a
 typical GPS module.
