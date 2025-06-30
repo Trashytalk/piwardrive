@@ -76,6 +76,17 @@ def test_tail_file_missing_returns_empty_list() -> None:
     assert result == []
 
 
+def test_tail_file_nonpositive_lines() -> None:
+    with tempfile.NamedTemporaryFile("w+", delete=False) as tmp:
+        tmp.write("line0\nline1\n")
+        tmp_path = tmp.name
+    try:
+        assert utils.tail_file(tmp_path, lines=0) == []
+        assert utils.tail_file(tmp_path, lines=-1) == []
+    finally:
+        os.unlink(tmp_path)
+
+
 def test_tail_file_handles_large_file(tmp_path: Any) -> None:
     path = tmp_path / "large.txt"
     with open(path, "w") as f:
