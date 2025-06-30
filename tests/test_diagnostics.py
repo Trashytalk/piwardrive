@@ -13,6 +13,7 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules["aiohttp"] = aiohttp_mod
 from typing import Any
+import pytest
 
 from piwardrive import diagnostics
 
@@ -115,6 +116,20 @@ def test_rotate_log_upload(tmp_path: Any, monkeypatch: Any) -> None:
     diagnostics.rotate_log(str(log), max_files=1)
     assert uploaded["bucket"] == "b"
     assert uploaded["path"].endswith(".gz")
+
+
+def test_rotate_log_max_files_check(tmp_path: Any) -> None:
+    log = tmp_path / "test.log"
+    log.write_text("data")
+    with pytest.raises(ValueError):
+        diagnostics.rotate_log(str(log), max_files=0)
+
+
+def test_rotate_log_async_max_files_check(tmp_path: Any) -> None:
+    log = tmp_path / "test.log"
+    log.write_text("data")
+    with pytest.raises(ValueError):
+        asyncio.run(diagnostics.rotate_log_async(str(log), max_files=0))
 
 
 def test_run_network_test_caches_success(monkeypatch: Any) -> None:

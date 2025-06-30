@@ -66,6 +66,8 @@ def generate_system_report() -> Dict[str, Any]:
 
 def rotate_log(path: str, max_files: int = 3) -> None:
     """Rotate and gzip ``path`` keeping ``max_files`` archives."""
+    if max_files < 1:
+        raise ValueError(f"max_files must be >= 1, got {max_files}")
     if not os.path.exists(path):
         return
 
@@ -97,6 +99,8 @@ def rotate_log(path: str, max_files: int = 3) -> None:
 
 async def rotate_log_async(path: str, max_files: int = 3) -> None:
     """Asynchronously rotate and gzip ``path`` using ``aiofiles``."""
+    if max_files < 1:
+        raise ValueError(f"max_files must be >= 1, got {max_files}")
     if not os.path.exists(path):
         return
 
