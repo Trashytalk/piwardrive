@@ -148,10 +148,12 @@ sudo apt install -y r-base r-base-dev
 #### Quickstart Script
 
 You can run `scripts/quickstart.sh` from the project root to install system
-packages and create the virtual environment automatically:
+packages and create the virtual environment automatically. The helper script
+uses `apt-get` to pull in required packages and sets up a Python environment in
+`gui-env/`. Run it with Bash and then activate the environment:
 
 ```bash
-scripts/quickstart.sh
+bash scripts/quickstart.sh
 source gui-env/bin/activate
 ```
 
@@ -198,10 +200,11 @@ source gui-env/bin/activate
 
 8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
-   ```bash
-   sudo cp examples/piwardrive-webui.service /etc/systemd/system/
-   sudo systemctl enable --now piwardrive-webui.service
-   ```
+
+    ```bash
+    sudo cp examples/piwardrive-webui.service /etc/systemd/system/
+    sudo systemctl enable --now piwardrive-webui.service
+    ```
 
 9. Start the application manually if the service is not enabled:
 
