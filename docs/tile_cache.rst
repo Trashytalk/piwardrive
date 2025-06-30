@@ -43,7 +43,7 @@ offline::
    node scripts/tileMaintenance.js prefetch 37.7 -122.5 37.8 -122.4 --zoom 15
 
 Command Line Maintenance
------------------------
+------------------------
 
 Run maintenance without the GUI using the ``piwardrive-maintain-tiles`` command. Combine ``--purge``, ``--limit`` and ``--vacuum`` to control which operations execute::
 

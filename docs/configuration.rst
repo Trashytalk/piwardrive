@@ -80,7 +80,7 @@ Automatic uploads to a remote server are controlled by several options:
     the scheduler.
 
 Tile Prefetch and Maintenance
-----------------------------
+-----------------------------
 
 ``tile_maintenance_interval``
     How often the cache cleanup routine runs in seconds.

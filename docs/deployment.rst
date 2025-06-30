@@ -12,6 +12,7 @@ Deployment
        sudo systemctl enable --now piwardrive-webui.service
 7. (Optional) copy `examples/kiosk.service` to `/etc/systemd/system/` and enable it with `sudo systemctl enable kiosk.service` so Chromium launches automatically after boot.
 8. Power down, remove the card and duplicate it with `dd` or other imaging tools to deploy multiple devices.
+
 SD Card Image
 ~~~~~~~~~~~~~
 

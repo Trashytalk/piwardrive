@@ -21,6 +21,15 @@ General
 ``PW_DB_PATH``
     Path to the SQLite database storing health metrics.
 
+``PW_HEALTH_FILE``
+    JSON file returned by ``/api/status`` when present.
+
+``PW_WEBUI_DIST``
+    Path to the compiled web UI served by :mod:`piwardrive.web.webui_server`.
+
+``PW_WEBUI_PORT``
+    Override port for :mod:`piwardrive.web.webui_server` (default ``8000``).
+
 ``PW_PROFILE_NAME``
     Name of the configuration profile to load at startup.
 
@@ -272,7 +281,7 @@ Example ``.env``::
    PW_LOG_ROTATE_ARCHIVES=7
 
 Typical Production Overrides
----------------------------
+----------------------------
 
 .. list-table:: Typical ``.env`` overrides
    :header-rows: 1
