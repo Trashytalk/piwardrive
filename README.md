@@ -1,8 +1,8 @@
 # PiWardrive
 
-[![codecov](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg)](https://codecov.io/gh/TRASHYTALK/piwardrive)
-[![Backend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/TRASHYTALK/piwardrive)
-[![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://codecov.io/gh/TRASHYTALK/piwardrive)
+[![Backend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=backend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=backend)
+[![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=frontend)
+
 
 PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
 
@@ -10,7 +10,7 @@ PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It mer
 python -m piwardrive.webui_server
 ```
 
-For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. A short [FAQ](docs/faq.rst) covers common issues.
+For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` directory. Troubleshooting steps are summarized in the [FAQ](docs/faq.rst).
 
 ## Architecture Overview
 
@@ -148,10 +148,12 @@ sudo apt install -y r-base r-base-dev
 #### Quickstart Script
 
 You can run `scripts/quickstart.sh` from the project root to install system
-packages and create the virtual environment automatically:
+packages and create the virtual environment automatically. The helper script
+uses `apt-get` to pull in required packages and sets up a Python environment in
+`gui-env/`. Run it with Bash and then activate the environment:
 
 ```bash
-scripts/quickstart.sh
+bash scripts/quickstart.sh
 source gui-env/bin/activate
 ```
 
@@ -198,10 +200,11 @@ source gui-env/bin/activate
 
 8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
-   ```bash
-   sudo cp examples/piwardrive-webui.service /etc/systemd/system/
-   sudo systemctl enable --now piwardrive-webui.service
-   ```
+
+    ```bash
+    sudo cp examples/piwardrive-webui.service /etc/systemd/system/
+    sudo systemctl enable --now piwardrive-webui.service
+    ```
 
 9. Start the application manually if the service is not enabled:
 
@@ -496,6 +499,8 @@ Install the development dependencies and run the tests:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+# Install frontend deps for lint and test hooks
+cd webui && npm install && cd ..
 # Some tests rely on additional scientific libraries such as `numpy`.
 # Install them with the optional `tests` extras if needed:
 # pip install .[tests]

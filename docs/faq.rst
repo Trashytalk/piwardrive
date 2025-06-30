@@ -27,3 +27,22 @@ Node Build Errors
 
 Ensure Node.js 18 or newer is installed. Check with ``node --version`` and
 upgrade via your package manager or the official installer.
+
+GPS Issues
+----------
+**Q: ``gpsd reports \"can't bind to port\"``**
+
+Another process may be using the GPS device. Stop the conflicting service and
+ensure ``gpsd`` itself is running.
+
+Compilation Errors
+------------------
+**Q: ``npm ERR! gyp`` or ``g++: command not found``**
+
+Install the system compiler and Python headers::
+
+   sudo apt install -y build-essential python3 python3-dev
+
+**Q: ``command 'gcc' failed with exit status 1``**
+
+Install ``build-essential`` or your distribution's compiler toolchain package.

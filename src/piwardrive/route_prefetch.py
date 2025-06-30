@@ -10,7 +10,8 @@ from typing import Any
 try:  # pragma: no cover - optional dependency
     from kivy.app import App as KivyApp
 except Exception:
-    KivyApp = None  # type: ignore[assignment]
+    class KivyApp:  # type: ignore[no-redef]
+        """Fallback ``App`` implementation when Kivy is unavailable."""
 
 App = KivyApp
 
