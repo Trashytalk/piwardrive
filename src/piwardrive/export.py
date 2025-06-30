@@ -275,7 +275,13 @@ def export_map_kml(
         pt = ET.SubElement(pm, "Point")
         ET.SubElement(pt, "coordinates").text = f"{lon},{lat}"
 
-    def _add_records(records: Sequence[Mapping[str, Any]], key1: str, key2: str | None = None, *, compute: bool = False) -> None:
+    def _add_records(
+        records: Sequence[Mapping[str, Any]],
+        key1: str,
+        key2: str | None = None,
+        *,
+        compute: bool = False,
+    ) -> None:
         for rec in records:
             lat = rec.get("lat")
             lon = rec.get("lon")
