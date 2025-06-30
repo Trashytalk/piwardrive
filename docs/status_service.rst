@@ -16,9 +16,10 @@ Run the server after activating your virtual environment::
    piwardrive-service
 
 The API listens on ``0.0.0.0:8000`` by default. Request ``/status`` to retrieve
-the last few records::
+the last few records. When authentication is enabled, supply a bearer token
+obtained from ``/token``::
 
-    curl http://localhost:8000/status
+    curl -H "Authorization: Bearer <token>" http://localhost:8000/status
 
 Use the ``limit`` query parameter to control how many entries are returned.
 

@@ -61,14 +61,37 @@ def test_status_endpoint_returns_recent_records() -> None:
     async def _mock(_: int) -> list:
         return [rec]
 
+    pw_hash = security.hash_password("pw")
+
     with (
         mock.patch("service.load_recent_health", _mock),
         mock.patch("piwardrive.service.load_recent_health", _mock),
+        mock.patch.dict(os.environ, {"PW_API_PASSWORD_HASH": pw_hash}, clear=False),
+    ):
+        client = TestClient(service.app)
+        resp_token = client.post(
+            "/token",
+            data={"username": "admin", "password": "pw"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        assert resp_token.status_code == 200
+        token = resp_token.json()["access_token"]
+        resp = client.get("/status", headers={"Authorization": f"Bearer {token}"})
+        assert resp.status_code == 200
+        assert resp.json() == [asdict(rec)]
+
+
+def test_status_auth_missing_credentials(monkeypatch) -> None:
+    pw_hash = security.hash_password("pw")
+    monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)
+
+    with (
+        mock.patch("service.load_recent_health", lambda *_a, **_k: []),
+        mock.patch("piwardrive.service.load_recent_health", lambda *_a, **_k: []),
     ):
         client = TestClient(service.app)
         resp = client.get("/status")
-        assert resp.status_code == 200
-        assert resp.json() == [asdict(rec)]
+        assert resp.status_code == 401
 
 
 def test_widget_metrics_endpoint() -> None:

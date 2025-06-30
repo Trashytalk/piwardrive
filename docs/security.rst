@@ -25,6 +25,7 @@ Alternatively export it via ``PW_ADMIN_PASSWORD_HASH`` or place it in
 
 For HTTP clients, obtain a bearer token by POSTing valid credentials to
 ``/token``. Include ``Authorization: Bearer <token>`` with requests to
-routes that modify configuration or control services. When
+routes that modify configuration or control services, as well as ``/status``.
+When
 ``PW_API_PASSWORD_HASH`` is unset the API does not enforce authentication,
 but running without a password is strongly discouraged.

@@ -21,11 +21,23 @@ def test_get_status_async(monkeypatch, add_dummy_module):
         return records
 
     monkeypatch.setattr(service, "load_recent_health", fake_load)
+    pw_hash = service.security.hash_password("pw")
+    monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)
 
     async def _call() -> None:
         transport = ASGITransport(app=service.app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.get("/status")
+            token_resp = await client.post(
+                "/token",
+                data={"username": "admin", "password": "pw"},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            assert token_resp.status_code == 200
+            token = token_resp.json()["access_token"]
+            resp = await client.get(
+                "/status",
+                headers={"Authorization": f"Bearer {token}"},
+            )
         assert resp.status_code == 200
         assert resp.json() == [asdict(r) for r in records]
 
