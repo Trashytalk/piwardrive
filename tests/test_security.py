@@ -26,3 +26,9 @@ def test_sanitize_path_valid() -> None:
 def test_sanitize_path_invalid(path: str) -> None:
     with pytest.raises(ValueError):
         security.sanitize_path(path)
+
+
+def test_validate_filename() -> None:
+    security.validate_filename("good.db")
+    with pytest.raises(ValueError):
+        security.validate_filename("../bad")

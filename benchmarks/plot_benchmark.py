@@ -9,7 +9,8 @@ from piwardrive.analysis import plot_cpu_temp
 from piwardrive.persistence import HealthRecord
 
 
-def generate_records(n: int = 1000):
+def generate_records(n: int = 1000) -> list[HealthRecord]:
+    """Return ``n`` fake :class:`HealthRecord` instances."""
     base = pd.date_range("2024-01-01", periods=n, freq="min")
     records = []
     for i, ts in enumerate(base):
@@ -17,7 +18,8 @@ def generate_records(n: int = 1000):
     return records
 
 
-def main():
+def main() -> None:
+    """Plot the benchmark data using both backends."""
     records = generate_records()
     for backend in ["matplotlib", "plotly"]:
         path = Path(f"benchmark_{backend}.png")

@@ -12,18 +12,15 @@ from __future__ import annotations
 import importlib
 import os
 import sys
+from types import ModuleType  # noqa: E402
+from typing import Any, Callable  # noqa: E402
 
 SRC_PATH = os.path.join(os.path.dirname(__file__), "src")
 if SRC_PATH not in sys.path:
     sys.path.insert(0, SRC_PATH)
 
-from types import ModuleType  # noqa: E402
-from typing import Any, Callable  # noqa: E402
-
 from piwardrive import orientation_sensors  # noqa: F401,E402
 from piwardrive import service as _p  # noqa: E402
-
-# Re-export everything from the real module
 from piwardrive.service import *  # noqa: F401,F403,E402
 
 

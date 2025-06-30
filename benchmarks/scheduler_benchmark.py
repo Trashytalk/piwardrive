@@ -11,11 +11,13 @@ from service import app
 
 
 async def long_running_task(client: AsyncClient, delay: float) -> None:
+    """Simulate a REST request followed by ``delay`` seconds of work."""
     await client.get("/status")
     await asyncio.sleep(delay)
 
 
 async def main(duration: float = 3.0) -> None:
+    """Run the scheduler benchmark for ``duration`` seconds."""
     scheduler = PollScheduler()
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

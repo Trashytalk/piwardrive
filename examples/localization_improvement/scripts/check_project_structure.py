@@ -4,6 +4,7 @@ import os
 
 
 def check_structure():
+    """Print any missing files or directories for the example project."""
     required_files = [
         "calibration_config.json",
         "main_localization.py",

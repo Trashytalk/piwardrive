@@ -8,11 +8,13 @@ from piwardrive import lora_scanner
 
 
 def generate_lines(n: int) -> list[str]:
+    """Return ``n`` copies of a fake LoRa log line."""
     base = "time=2024-01-01T00:00:00Z freq=868.1 rssi=-120 snr=7.5 devaddr=ABC"
     return [base] * n
 
 
 def bench(count: int = 100000, parser=lora_scanner.parse_packets) -> float:
+    """Benchmark ``parser`` with ``count`` log lines."""
     lines = generate_lines(count)
     start = time.perf_counter()
     parser(lines)
@@ -25,6 +27,7 @@ def bench(count: int = 100000, parser=lora_scanner.parse_packets) -> float:
 
 
 def profile_parsers(count: int = 100000) -> None:
+    """Profile both packet parsers using ``count`` log lines."""
     lines = generate_lines(count)
     for parser in [lora_scanner.parse_packets, lora_scanner.parse_packets_pandas]:
         prof = cProfile.Profile()

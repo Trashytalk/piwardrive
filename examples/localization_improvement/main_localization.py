@@ -22,6 +22,7 @@ with open("calibration_config.json") as config_file:
 
 
 def load_kismet_data(kismet_db_path):
+    """Load relevant AP data from a Kismet SQLite database."""
     conn = sqlite3.connect(kismet_db_path)
     query = (
         "SELECT devices.macaddr, devices.ssid, packets.lat, packets.lon, "
@@ -41,10 +42,12 @@ def load_kismet_data(kismet_db_path):
 
 
 def apply_kalman_filter(df):
+    """Reduce GPS jitter in ``df`` using a simple Kalman filter."""
     if not config.get("kalman_enable", False):
         return df
 
     def kalman_1d(series, q, r):
+        """1D Kalman filter implementation."""
         # q = process noise, r = measurement noise
         n = len(series)
         xhat = np.zeros(n)
@@ -83,6 +86,7 @@ def apply_kalman_filter(df):
 
 
 def remove_outliers(df):
+    """Remove GPS outliers using DBSCAN clustering."""
     coords = df[["lat", "lon"]]
     db = DBSCAN(eps=config["dbscan_eps"], min_samples=config["dbscan_min_samples"]).fit(
         coords
@@ -96,6 +100,7 @@ def remove_outliers(df):
 
 
 def rssi_to_distance(rssi):
+    """Convert RSSI to an estimated distance in meters."""
     A = config["path_loss_reference_rssi"]
     n = config["path_loss_exponent"]
     return 10 ** ((A - rssi) / (10 * n))
@@ -106,6 +111,7 @@ def rssi_to_distance(rssi):
 
 
 def estimate_ap_location_centroid(ap_data):
+    """Estimate AP location using a weighted RSSI centroid."""
     weight_power = config["centroid_rssi_weight_power"]
     weights = ap_data["signal"].apply(
         lambda rssi: max(0.01, 1 / ((100 - rssi) ** weight_power))
@@ -120,6 +126,7 @@ def estimate_ap_location_centroid(ap_data):
 
 
 def localize_aps(df):
+    """Estimate locations for all APs in ``df`` and generate a map."""
     ap_coords = {}
     map_center = [df["lat"].mean(), df["lon"].mean()]
     m = Map(location=map_center, zoom_start=config["map_zoom_start"])
@@ -149,6 +156,7 @@ def localize_aps(df):
 
 
 def load_fingerprint_dataset():
+    """Load the fingerprint RSSI dataset if enabled."""
     if not config.get("fingerprint_enabled", False):
         return None
     fp_meta = json.load(open("fingerprints/rssi_fingerprint_index.json"))
@@ -161,6 +169,7 @@ def load_fingerprint_dataset():
 
 
 def main():
+    """Run the full localization pipeline."""
     logger.info("[*] Loading Kismet data...")
     data = load_kismet_data("kismet_logs/Kismet-latest.kismet")
 

@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 
 export default function ConsoleView() {
   const [logs, setLogs] = useState('');
-  const [cmd, setCmd] = useState('');
-  const [output, setOutput] = useState('');
   const [path, setPath] = useState('/var/log/syslog');
   const [paths, setPaths] = useState([]);
 
@@ -31,36 +29,16 @@ export default function ConsoleView() {
     return () => clearInterval(id);
   }, [path]);
 
-  const runCommand = () => {
-    fetch('/command', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cmd }),
-    })
-      .then(r => r.json())
-      .then(d => setOutput(d.output || ''))
-      .catch(e => setOutput(String(e)));
-  };
-
   return (
     <div>
       <h2>Console</h2>
       <pre style={{ maxHeight: '200px', overflowY: 'auto' }}>{logs}</pre>
-      <div>
-        <input
-          value={cmd}
-          onChange={e => setCmd(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter') runCommand();
-          }}
-        />
-        <button onClick={runCommand}>Run</button>
-      </div>
-      {output && (
-        <>
-          <h3>Command Output</h3>
-          <pre data-testid="command-output">{output}</pre>
-        </>
+      {paths.length > 1 && (
+        <select value={path} onChange={e => setPath(e.target.value)}>
+          {paths.map(p => (
+            <option key={p}>{p}</option>
+          ))}
+        </select>
       )}
     </div>
   );

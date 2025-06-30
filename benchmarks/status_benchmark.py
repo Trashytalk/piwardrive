@@ -10,6 +10,7 @@ from service import app
 
 
 async def main(count: int = 100) -> None:
+    """Send ``count`` requests to the status endpoint."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         start = time.perf_counter()
