@@ -14,19 +14,12 @@ except Exception:
 
 App = KivyApp
 
-
-    class App:  # type: ignore[no-redef]
-        @staticmethod
-        def get_running_app() -> None:
-            return None
-          
-
+if App is None:
     class App:  # type: ignore[no-redef]
         @staticmethod
         def get_running_app() -> None:
             return None
 
-          
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
 
