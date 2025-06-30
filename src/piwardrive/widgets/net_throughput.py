@@ -17,6 +17,8 @@ class NetworkThroughputWidget(DashboardWidget):
     ) -> None:
         """Set up throughput graphs and schedule polling."""
         super().__init__(**kwargs)
+        if update_interval <= 0:
+            raise ValueError(_("update_interval must be positive"))
         self.update_interval = update_interval
         self.max_points = max_points
         self.index: int = 0

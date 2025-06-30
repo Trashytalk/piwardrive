@@ -90,6 +90,8 @@ class PollScheduler:
         rules: Mapping[str, Any] | None = None,
     ) -> None:
         """Register ``callback`` to run every ``interval`` seconds."""
+        if interval <= 0:
+            raise ValueError("interval must be greater than 0")
         self.cancel(name)
         self._rules[name] = rules or {}
 
@@ -175,6 +177,8 @@ class AsyncScheduler:
         self, name: str, callback: Callable[[], Awaitable[Any] | Any], interval: float
     ) -> None:
         """Run ``callback`` every ``interval`` seconds."""
+        if interval <= 0:
+            raise ValueError("interval must be greater than 0")
         self.cancel(name)
 
         async def _runner() -> None:

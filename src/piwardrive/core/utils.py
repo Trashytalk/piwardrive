@@ -562,6 +562,8 @@ def find_latest_file(directory: str, pattern: str = "*") -> str | None:
 
 def tail_file(path: str, lines: int = 50) -> list[str]:
     """Return the last ``lines`` from ``path`` efficiently using ``mmap``."""
+    if lines <= 0:
+        return []
     now = time.time()
     try:
         mtime = os.path.getmtime(path)
