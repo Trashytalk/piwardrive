@@ -13,12 +13,15 @@ from .base import DashboardWidget
 
 
 class LoRaScanWidget(DashboardWidget):
-    """Display LoRa scan count."""
+    """Display LoRa scan count.
+
+    A label widget is created on initialization and populated with the initial
+    scan count.
+    """
 
     update_interval = 30.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Create label widget and show initial count."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(text=f"{_('lora_devices')}: 0", halign="center")

@@ -13,12 +13,15 @@ from .base import DashboardWidget
 
 
 class HandshakeCounterWidget(DashboardWidget):
-    """Track the number of WPA handshakes captured."""
+    """Track the number of WPA handshakes captured.
+
+    A label widget is created during initialization and the first count is
+    performed immediately.
+    """
 
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Initialize label widget and trigger first count."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(text=f"{_('handshakes')}: 0", halign="center")

@@ -17,17 +17,17 @@ def suggest_route(
 ) -> List[Coord]:
     """Return waypoints that maximize coverage based on ``points``.
 
-    Parameters
-    ----------
-    points:
-        Sequence of ``(lat, lon)`` coordinates in chronological order.
-    cell_size:
-        Grid resolution in degrees used to mark visited areas.
-    steps:
-        Number of waypoints to return.
-    search_radius:
-        How far to search for new cells around the current location, in grid
-        cells.
+    Args:
+        points (Iterable[Coord]): Sequence of ``(lat, lon)`` coordinates in
+            chronological order.
+        cell_size (float): Grid resolution in degrees used to mark visited
+            areas.
+        steps (int): Number of waypoints to return.
+        search_radius (int): How far to search for new cells around the current
+            location, in grid cells.
+
+    Returns:
+        List[Coord]: Waypoints to visit in order.
     """
     pts = [(float(lat), float(lon)) for lat, lon in points]
     if not pts:
