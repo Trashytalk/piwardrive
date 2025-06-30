@@ -3,17 +3,17 @@
 import asyncio
 import logging
 import os
-import shlex
 import subprocess
 from typing import Any, Callable, List, Optional, cast
 
 from piwardrive.core import config
 from piwardrive.scheduler import PollScheduler
-
 from piwardrive.sigint_suite.cellular.parsers import parse_imsi_output
 from piwardrive.sigint_suite.gps import get_position
 from piwardrive.sigint_suite.hooks import apply_post_processors
 from piwardrive.sigint_suite.models import ImsiRecord
+
+from ..utils import build_cmd_args
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +33,12 @@ def scan_imsis(
     """Scan for IMSI numbers using an external command."""
     if not _allowed():
         return []
-    cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
-    args = shlex.split(cmd_str)
-    timeout = (
-        timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    args, timeout = build_cmd_args(
+        cmd,
+        "IMSI_CATCH_CMD",
+        "imsi-catcher",
+        timeout,
+        "IMSI_SCAN_TIMEOUT",
     )
     try:
         output = subprocess.check_output(
@@ -76,10 +78,12 @@ async def async_scan_imsis(
     """Asynchronously scan for IMSI numbers."""
     if not _allowed():
         return []
-    cmd_str = str(cmd or os.getenv("IMSI_CATCH_CMD", "imsi-catcher"))
-    args = shlex.split(cmd_str)
-    timeout = (
-        timeout if timeout is not None else int(os.getenv("IMSI_SCAN_TIMEOUT", "10"))
+    args, timeout = build_cmd_args(
+        cmd,
+        "IMSI_CATCH_CMD",
+        "imsi-catcher",
+        timeout,
+        "IMSI_SCAN_TIMEOUT",
     )
     logger.debug("Executing: %s", " ".join(args))
     try:
