@@ -97,6 +97,7 @@ class Config:
             "/var/log/bettercap.log",
         ]
     )
+    restart_services: List[str] = field(default_factory=list)  # noqa: V107
     health_poll_interval: int = 10  # noqa: V107
     log_rotate_interval: int = 3600  # noqa: V107
     log_rotate_archives: int = 3  # noqa: V107
@@ -194,6 +195,7 @@ class FileConfigModel(BaseModel):
     route_prefetch_lookahead: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
+    restart_services: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
     admin_password_hash: Optional[str] = ""
     remote_sync_url: Optional[str] = Field(default=None, min_length=1)
@@ -229,6 +231,7 @@ class ConfigModel(FileConfigModel):
     map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
+    restart_services: List[str] = Field(default_factory=list)
     health_export_interval: int = Field(default=6, ge=1)
     health_export_dir: str = DEFAULTS["health_export_dir"]
     reports_dir: str = DEFAULTS["reports_dir"]
@@ -445,6 +448,9 @@ class AppConfig:
     debug_mode: bool = DEFAULTS["debug_mode"]
     health_poll_interval: int = DEFAULTS["health_poll_interval"]
     log_paths: List[str] = field(default_factory=lambda: DEFAULTS["log_paths"])
+    restart_services: List[str] = field(
+        default_factory=lambda: DEFAULTS["restart_services"]
+    )
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     cleanup_rotated_logs: bool = DEFAULTS["cleanup_rotated_logs"]

@@ -370,6 +370,13 @@
       "title": "Log Paths",
       "type": "array"
     },
+    "restart_services": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Restart Services",
+      "type": "array"
+    },
     "ui_font_size": {
       "default": 16,
       "minimum": 1,
