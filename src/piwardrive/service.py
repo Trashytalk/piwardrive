@@ -22,7 +22,7 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import Response, StreamingResponse  # noqa: E402
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 except Exception:
     FastAPI = type(  # type: ignore[misc, assignment]
         "FastAPI",
@@ -50,15 +50,15 @@ except Exception:
     Body = _noop  # type: ignore[misc, assignment]
     Request = object  # type: ignore[misc, assignment]
     StreamingResponse = Response = object  # type: ignore[misc, assignment]
-    HTTPBasic = type(  # type: ignore[misc]
-        "HTTPBasic",
+    OAuth2PasswordBearer = type(  # type: ignore[misc]
+        "OAuth2PasswordBearer",
         (),
-        {"__init__": lambda self, **k: None},
+        {"__init__": lambda self, tokenUrl="/token", **k: None},
     )  # type: ignore[misc, assignment]
-    HTTPBasicCredentials = type(  # type: ignore[misc]
-        "HTTPBasicCredentials",
+    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+        "OAuth2PasswordRequestForm",
         (),
-        {},
+        {"__init__": lambda self, **k: None, "username": "", "password": ""},
     )  # type: ignore[misc, assignment]
     CORSMiddleware = object  # type: ignore[misc, assignment]
 
@@ -73,12 +73,13 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
         WebSocketDisconnect,
     )
     from fastapi.responses import Response, StreamingResponse
-    from fastapi.security import HTTPBasic, HTTPBasicCredentials
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
     from fastapi.middleware.cors import CORSMiddleware
 
 import asyncio
 import importlib
 import json
+import secrets
 import tempfile
 import time
 from collections.abc import Mapping, Sequence
@@ -91,11 +92,16 @@ try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
+        User,
         _db_path,
         get_table_counts,
+        get_user,
+        get_user_by_token,
         load_dashboard_settings,
         load_recent_health,
         save_dashboard_settings,
+        save_user,
+        update_user_token,
     )
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
@@ -106,10 +112,15 @@ except Exception:  # pragma: no cover - fall back to real module
         get_table_counts,
         _db_path,
         DashboardSettings,
+        get_user,
+        save_user,
+        update_user_token,
+        get_user_by_token,
+        User,
     )
 
 from piwardrive.errors import GeofenceError
-from piwardrive.security import sanitize_path, verify_password
+from piwardrive.security import hash_secret, sanitize_path, verify_password
 
 try:  # allow tests to provide a simplified utils module
     import utils as _utils
@@ -199,8 +210,8 @@ async_tail_file: Callable[[str, int], Awaitable[list[str]]] = getattr(
 )
 
 
-security = HTTPBasic(auto_error=False)
-SECURITY_DEP = Depends(security)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+SECURITY_DEP = Depends(oauth2_scheme)
 BODY = Body(...)
 app = FastAPI()
 cors_origins_env = os.getenv("PW_CORS_ORIGINS", "")
@@ -276,13 +287,36 @@ def _save_geofences(polys: list[dict[str, Any]]) -> None:
         raise GeofenceError("Failed to save geofences") from exc
 
 
-def _check_auth(credentials: HTTPBasicCredentials = SECURITY_DEP) -> None:
-    """Validate optional HTTP basic authentication."""
+async def _ensure_default_user() -> None:
+    """Create default user from environment variables if needed."""
     pw_hash = os.getenv("PW_API_PASSWORD_HASH")
     if not pw_hash:
         return
-    if not credentials or not verify_password(credentials.password, pw_hash):
+    username = os.getenv("PW_API_USER", "admin")
+    if await get_user(username) is None:
+        await save_user(User(username=username, password_hash=pw_hash))
+
+
+async def _check_auth(token: str = SECURITY_DEP) -> None:
+    """Validate bearer token."""
+    await _ensure_default_user()
+    if not token:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    user = await get_user_by_token(hash_secret(token))
+    if user is None:
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+
+
+@POST("/token")
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, str]:
+    """Return bearer token for valid credentials."""
+    await _ensure_default_user()
+    user = await get_user(form.username)
+    if not user or not verify_password(form.password, user.password_hash):
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    token = secrets.token_urlsafe(32)
+    await update_user_token(user.username, hash_secret(token))
+    return {"access_token": token, "token_type": "bearer"}
 
 
 AUTH_DEP = Depends(_check_auth)

@@ -36,7 +36,7 @@ _BUFFER_LIMIT = 50
 _FLUSH_INTERVAL = 30.0
 
 # Schema versioning
-LATEST_VERSION = 2
+LATEST_VERSION = 3
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
 
@@ -103,6 +103,23 @@ async def _migration_2(conn: aiosqlite.Connection) -> None:
 _MIGRATIONS.append(_migration_2)
 
 
+async def _migration_3(conn: aiosqlite.Connection) -> None:
+    """Add users table for authentication tokens."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            username TEXT PRIMARY KEY,
+            password_hash TEXT NOT NULL,
+            token_hash TEXT,
+            token_created INTEGER
+        )
+        """
+    )
+
+
+_MIGRATIONS.append(_migration_3)
+
+
 async def _get_conn() -> aiosqlite.Connection:
     """Return a cached SQLite connection initialized with the proper schema."""
     global _DB_CONN, _DB_LOOP, _DB_DIR
@@ -151,6 +168,15 @@ class DashboardSettings:
 
     layout: list[Any] = field(default_factory=list)
     widgets: list[str] = field(default_factory=list)
+
+
+@dataclass
+class User:
+    """Application user credentials and token."""
+
+    username: str
+    password_hash: str
+    token_hash: str | None = None
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -274,6 +300,48 @@ async def load_dashboard_settings() -> DashboardSettings:
         cls for item in layout if isinstance(item, dict) and (cls := item.get("cls"))
     ]
     return DashboardSettings(layout=layout, widgets=widgets)
+
+
+async def get_user(username: str) -> User | None:
+    """Return ``User`` row for ``username`` if it exists."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password_hash, token_hash FROM users WHERE username = ?",
+        (username,),
+    )
+    row = await cur.fetchone()
+    return User(**row) if row else None
+
+
+async def save_user(user: User) -> None:
+    """Insert or replace ``user`` in the database."""
+    conn = await _get_conn()
+    await conn.execute(
+        "INSERT OR REPLACE INTO users (username, password_hash, token_hash) VALUES (?, ?, ?)",
+        (user.username, user.password_hash, user.token_hash),
+    )
+    await conn.commit()
+
+
+async def update_user_token(username: str, token_hash: str) -> None:
+    """Set ``token_hash`` for ``username``."""
+    conn = await _get_conn()
+    await conn.execute(
+        "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') WHERE username = ?",
+        (token_hash, username),
+    )
+    await conn.commit()
+
+
+async def get_user_by_token(token_hash: str) -> User | None:
+    """Return ``User`` matching ``token_hash`` if found."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT username, password_hash, token_hash FROM users WHERE token_hash = ?",
+        (token_hash,),
+    )
+    row = await cur.fetchone()
+    return User(**row) if row else None
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
