@@ -5,8 +5,15 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+import os
 import time
-from typing import Any, Awaitable, Callable, Dict
+import json
+from datetime import datetime, time as dt_time
+from typing import Any, Awaitable, Callable, Dict, Mapping, Sequence
+
+from .core import config
+from .gpsd_client import client as gps_client
+from . import utils
 
 ClockEvent = object
 
@@ -18,15 +25,73 @@ class PollScheduler:
         self._tasks: Dict[str, asyncio.Task] = {}
         self._next_runs: Dict[str, float] = {}
         self._durations: Dict[str, float] = {}
+        self._rules: Dict[str, Mapping[str, Any]] = {}
+
+    # ------------------------------------------------------------------
+    # Scheduling rule helpers
+    @staticmethod
+    def _load_geofences() -> Dict[str, Sequence[tuple[float, float]]]:
+        path = os.path.join(config.CONFIG_DIR, "geofences.json")
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except Exception:
+            return {}
+        result: Dict[str, Sequence[tuple[float, float]]] = {}
+        for item in data if isinstance(data, list) else []:
+            name = str(item.get("name", ""))
+            points = [tuple(p) for p in item.get("points", []) if len(p) == 2]
+            if name and points:
+                result[name] = points
+        return result
+
+    @staticmethod
+    def _match_time(ranges: Sequence[Sequence[str]] | None) -> bool:
+        if not ranges:
+            return True
+        now = datetime.now().time()
+        for start_s, end_s in ranges:
+            try:
+                start = dt_time.fromisoformat(start_s)
+                end = dt_time.fromisoformat(end_s)
+            except ValueError:
+                continue
+            if start <= end:
+                if start <= now <= end:
+                    return True
+            else:
+                if now >= start or now <= end:
+                    return True
+        return False
+
+    @classmethod
+    def check_rules(cls, rules: Mapping[str, Any]) -> bool:
+        if not cls._match_time(rules.get("time_ranges")):
+            return False
+        geos = rules.get("geofences")
+        if geos:
+            pos = gps_client.get_position()
+            if not pos:
+                return False
+            fences = cls._load_geofences()
+            for name in geos:
+                points = fences.get(name)
+                if points and utils.point_in_polygon(pos, points):
+                    return True
+            return False
+        return True
 
     def schedule(
         self,
         name: str,
         callback: Callable[[float], Awaitable[Any] | Any],
         interval: float,
+        *,
+        rules: Mapping[str, Any] | None = None,
     ) -> None:
         """Register ``callback`` to run every ``interval`` seconds."""
         self.cancel(name)
+        self._rules[name] = rules or {}
 
         async def _runner() -> None:
             last = time.time()
@@ -35,11 +100,12 @@ class PollScheduler:
                 self._next_runs[name] = next_run
                 start = time.perf_counter()
                 try:
-                    dt = time.time() - last
-                    last = time.time()
-                    result = callback(dt)
-                    if inspect.isawaitable(result):
-                        await result
+                    if self.check_rules(self._rules.get(name, {})):
+                        dt = time.time() - last
+                        last = time.time()
+                        result = callback(dt)
+                        if inspect.isawaitable(result):
+                            await result
                 except asyncio.CancelledError:
                     raise
                 except Exception as exc:
@@ -79,6 +145,7 @@ class PollScheduler:
         task = self._tasks.pop(name, None)
         if task:
             task.cancel()
+        self._rules.pop(name, None)
 
     def cancel_all(self) -> None:
         """Cancel all registered callbacks."""

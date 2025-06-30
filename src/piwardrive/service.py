@@ -113,19 +113,26 @@ try:  # allow tests to stub out ``persistence``
     from persistence import (
         DashboardSettings,
         User,
+        FingerprintInfo,
         _db_path,
         create_user,
         get_table_counts,
         get_user,
         load_dashboard_settings,
         load_recent_health,
+        load_health_history,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
     )
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
+        load_health_history,
         load_ap_cache,
         load_dashboard_settings,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
         get_table_counts,
         _db_path,
@@ -133,6 +140,7 @@ except Exception:  # pragma: no cover - fall back to real module
         get_user,
         create_user,
         User,
+        FingerprintInfo,
     )
 
 from piwardrive.errors import GeofenceError
@@ -158,6 +166,11 @@ try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
+
+try:  # allow tests to stub out analytics
+    from analytics.baseline import analyze_health_baseline, load_baseline_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
 
 
 logger = logging.getLogger(__name__)
@@ -348,6 +361,23 @@ async def get_status(limit: int = 5) -> list[dict[str, Any]]:
         records = await records
 
     return [asdict(rec) for rec in records]
+
+
+@GET("/baseline-analysis")
+async def baseline_analysis_endpoint(
+    limit: int = 10,
+    days: int = 30,
+    threshold: float = 5.0,
+    _auth: None = AUTH_DEP,
+) -> dict[str, Any]:
+    """Compare recent metrics to historical averages."""
+    recent = load_recent_health(limit)
+    if inspect.isawaitable(recent):
+        recent = await recent
+    baseline = load_baseline_health(days, limit)
+    if inspect.isawaitable(baseline):
+        baseline = await baseline
+    return analyze_health_baseline(recent, baseline, threshold)
 
 
 async def _collect_widget_metrics() -> dict[str, Any]:
@@ -591,6 +621,24 @@ async def update_config_endpoint(
     return data
 
 
+@GET("/webhooks")
+async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
+    """Return configured notification webhook URLs."""
+    cfg = config.load_config()
+    return {"webhooks": list(cfg.notification_webhooks)}
+
+
+@POST("/webhooks")
+async def update_webhooks_endpoint(
+    urls: list[str] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, list[str]]:
+    """Update notification webhook URL list."""
+    cfg = config.load_config()
+    cfg.notification_webhooks = list(urls)
+    config.save_config(cfg)
+    return {"webhooks": cfg.notification_webhooks}
+
+
 @GET("/dashboard-settings")
 async def get_dashboard_settings_endpoint(
     _auth: User | None = AUTH_DEP,
@@ -610,6 +658,27 @@ async def update_dashboard_settings_endpoint(
     widgets = data.get("widgets", [])
     await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
     return {"layout": layout, "widgets": widgets}
+
+
+@GET("/fingerprints")
+async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+    """Return stored fingerprint metadata."""
+    items = await load_fingerprint_info()
+    return {"fingerprints": [asdict(i) for i in items]}
+
+
+@POST("/fingerprints")
+async def add_fingerprint_endpoint(
+    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, Any]:
+    """Store fingerprint metadata in the database."""
+    info = FingerprintInfo(
+        environment=data.get("environment", ""),
+        source=data.get("source", ""),
+        record_count=int(data.get("record_count", 0)),
+    )
+    await save_fingerprint_info(info)
+    return asdict(info)
 
 
 @GET("/geofences")
@@ -876,6 +945,34 @@ async def sse_status(request: Request) -> StreamingResponse:
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
             await asyncio.sleep(2)
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        _event_gen(), media_type="text/event-stream", headers=headers
+    )
+
+
+@GET("/sse/history")
+async def sse_history(
+    request: Request, limit: int = 100, interval: float = 1.0
+) -> StreamingResponse:
+    """Stream historical health records for playback."""
+    records = await load_health_history()
+    if limit:
+        records = records[-limit:]
+
+    async def _event_gen() -> typing.AsyncGenerator[str, None]:
+        seq = 0
+        for rec in records:
+            if await request.is_disconnected():
+                break
+            data = {"seq": seq, "record": asdict(rec)}
+            yield f"data: {json.dumps(data)}\n\n"
+            seq += 1
+            await asyncio.sleep(max(interval, 0.01))
 
     headers = {
         "Cache-Control": "no-cache",
