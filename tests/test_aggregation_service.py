@@ -98,3 +98,16 @@ def test_upload_rejects_nested_traversal(tmp_path):
     with open(db_path, "rb") as fh:
         resp = client.post("/upload", files={"file": ("../../etc/passwd", fh)})
     assert resp.status_code == 400
+
+
+def test_upload_rejects_evil_db(tmp_path):
+    os.environ["PW_AGG_DIR"] = str(tmp_path)
+    module = importlib.import_module("piwardrive.aggregation_service")
+    importlib.reload(module)
+    db_path = tmp_path / "upload.db"
+    _create_src_db(str(db_path))
+
+    client = TestClient(module.app)
+    with open(db_path, "rb") as fh:
+        resp = client.post("/upload", files={"file": ("../evil.db", fh)})
+    assert resp.status_code == 400
