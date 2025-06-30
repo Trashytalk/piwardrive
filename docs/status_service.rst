@@ -137,6 +137,12 @@ environments where WebSockets are unavailable::
 The stream sends events formatted as JSON with the same ``seq`` and
 ``timestamp`` metadata.
 
+``/sse/history`` streams saved health records for time-based playback. Use
+``limit`` and ``interval`` to control the number of records and delay between
+events::
+
+   curl "http://localhost:8000/sse/history?limit=20&interval=0.5"
+
 Set ``PW_API_PASSWORD_HASH`` to require HTTP basic auth for all routes.
 
 Benchmark

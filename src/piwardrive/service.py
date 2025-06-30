@@ -95,11 +95,13 @@ try:  # allow tests to stub out ``persistence``
         get_table_counts,
         load_dashboard_settings,
         load_recent_health,
+        load_health_history,
         save_dashboard_settings,
     )
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.persistence import (
         load_recent_health,
+        load_health_history,
         load_ap_cache,
         load_dashboard_settings,
         save_dashboard_settings,
@@ -816,6 +818,34 @@ async def sse_status(request: Request) -> StreamingResponse:
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
             await asyncio.sleep(2)
+
+    headers = {
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    }
+    return StreamingResponse(
+        _event_gen(), media_type="text/event-stream", headers=headers
+    )
+
+
+@GET("/sse/history")
+async def sse_history(
+    request: Request, limit: int = 100, interval: float = 1.0
+) -> StreamingResponse:
+    """Stream historical health records for playback."""
+    records = await load_health_history()
+    if limit:
+        records = records[-limit:]
+
+    async def _event_gen() -> typing.AsyncGenerator[str, None]:
+        seq = 0
+        for rec in records:
+            if await request.is_disconnected():
+                break
+            data = {"seq": seq, "record": asdict(rec)}
+            yield f"data: {json.dumps(data)}\n\n"
+            seq += 1
+            await asyncio.sleep(max(interval, 0.01))
 
     headers = {
         "Cache-Control": "no-cache",
