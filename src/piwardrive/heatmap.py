@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Iterable, List, Sequence, Tuple
 
+import numpy as np
+from scipy.ndimage import convolve
+
 
 def _get_bins(bins: int | Tuple[int, int]) -> Tuple[int, int]:
     """Return latitude/longitude bin counts."""
@@ -119,20 +122,15 @@ def save_png(hist: Sequence[Sequence[int]], path: str) -> None:
 
 
 def _spread_density(hist: Sequence[Sequence[int]], radius: int) -> List[List[int]]:
-    bins_lat = len(hist)
-    bins_lon = len(hist[0]) if hist else 0
-    density = [[0 for _ in range(bins_lon)] for _ in range(bins_lat)]
-    for i, row in enumerate(hist):
-        for j, count in enumerate(row):
-            if count <= 0:
-                continue
-            for di in range(-radius, radius + 1):
-                for dj in range(-radius, radius + 1):
-                    ii = i + di
-                    jj = j + dj
-                    if 0 <= ii < bins_lat and 0 <= jj < bins_lon:
-                        density[ii][jj] += count
-    return density
+    """Spread the counts from ``hist`` to neighbouring cells using convolution."""
+    arr = np.asarray(hist, dtype=int)
+    if arr.size == 0:
+        return arr.tolist()
+
+    kernel_size = 2 * radius + 1
+    kernel = np.ones((kernel_size, kernel_size), dtype=int)
+    density = convolve(arr, kernel, mode="constant", cval=0)
+    return density.tolist()
 
 
 def density_map(
