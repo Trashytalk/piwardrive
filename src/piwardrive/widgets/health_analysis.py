@@ -17,12 +17,15 @@ from .base import DashboardWidget
 
 
 class HealthAnalysisWidget(DashboardWidget):
-    """Visualize averaged system metrics and a temperature plot."""
+    """Visualize averaged system metrics and a temperature plot.
+
+    Widgets are prepared during initialization and analysis updates are
+    scheduled automatically.
+    """
 
     update_interval = 30.0
 
     def __init__(self, max_records: int = 50, **kwargs: Any) -> None:
-        """Prepare widgets and schedule periodic analysis updates."""
         super().__init__(**kwargs)
         self.max_records = max_records
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])

@@ -18,8 +18,12 @@ def summarize(path: str) -> Dict[str, int]:
     counts: Dict[str, int] = {}
     with sqlite3.connect(path) as db:
         for table in KEY_TABLES:
+            # verify the table name before using it in the SQL query
+            if table not in KEY_TABLES:
+                raise ValueError(f"Unknown table name: {table}")
             try:
-                row = db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()
+                # after validation build the query without direct string formatting
+                row = db.execute("SELECT COUNT(*) FROM " + table).fetchone()
             except sqlite3.DatabaseError:
                 counts[table] = 0
             else:

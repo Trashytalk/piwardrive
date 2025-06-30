@@ -48,9 +48,8 @@ def get_metrics() -> dict[str, float | int]:
 
 def _make_range_db(src: str, start: int, end: int) -> str:
     """Return path to a temporary DB with rows ``start``..``end`` from ``src``."""
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    tmp.close()
-    dest = tmp.name
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp:
+        dest = tmp.name
 
     with sqlite3.connect(src) as src_db, sqlite3.connect(dest) as dst_db:
         dst_db.execute(

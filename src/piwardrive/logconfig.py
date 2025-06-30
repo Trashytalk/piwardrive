@@ -35,24 +35,28 @@ def setup_logging(
     handlers: Optional[Iterable[logging.Handler]] = None,
     stdout: bool = False,
 ) -> Logger:
-    """
-    Configure root logger with JSON output.
+    """Configure the root logger for JSON output.
 
     ``PW_LOG_LEVEL`` may override ``level`` with a name like ``DEBUG`` or a
     numeric value. Invalid values are ignored.
 
     Parameters
     ----------
-    log_file:
+    log_file : str
         Destination file for :class:`logging.FileHandler`.
-    level:
+    level : int
         Logging level for the root logger.
-    handlers:
-        Extra handlers to attach in addition to the file handler.
-        If a handler has no formatter, :class:`JsonFormatter` is used.
-    stdout:
+    handlers : Optional[Iterable[logging.Handler]]
+        Extra handlers to attach in addition to the file handler. If a handler
+        has no formatter, :class:`JsonFormatter` is used.
+    stdout : bool
         When ``True`` also attach a :class:`logging.StreamHandler` writing to
         ``sys.stdout``.
+
+    Returns
+    -------
+    Logger
+        The configured root logger.
     """
     env_level = os.getenv("PW_LOG_LEVEL")
     if env_level:

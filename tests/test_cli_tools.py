@@ -27,9 +27,9 @@ def _import_cli():
 
 def test_config_cli_get_local(monkeypatch, capsys):
     cli = _import_cli()
-    monkeypatch.setattr(cli.cfg, "load_config", lambda: cli.cfg.Config(theme="Blue"))
-    cli.main(["get", "theme"])
-    assert capsys.readouterr().out.strip() == json.dumps("Blue")
+    monkeypatch.setattr(cli.cfg, "load_config", lambda: cli.cfg.Config(mysql_host="db"))
+    cli.main(["get", "mysql_host"])
+    assert capsys.readouterr().out.strip() == json.dumps("db")
 
 
 def test_config_cli_set_local(monkeypatch, capsys):
@@ -52,11 +52,11 @@ def test_config_cli_get_api(monkeypatch, capsys):
 
     async def fake_get(url):
         assert url == "http://api"
-        return {"theme": "Dark"}
+        return {"mysql_host": "db"}
 
     monkeypatch.setattr(cli, "_api_get", fake_get)
-    cli.main(["--url", "http://api", "get", "theme"])
-    assert capsys.readouterr().out.strip() == json.dumps("Dark")
+    cli.main(["--url", "http://api", "get", "mysql_host"])
+    assert capsys.readouterr().out.strip() == json.dumps("db")
 
 
 def test_config_cli_set_api(monkeypatch, capsys):
@@ -64,17 +64,17 @@ def test_config_cli_set_api(monkeypatch, capsys):
 
     async def fake_get(url):
         assert url == "http://api"
-        return {"theme": "Dark"}
+        return {"mysql_host": "db"}
 
     async def fake_update(url, updates):
         assert url == "http://api"
-        assert updates == {"theme": "Light"}
-        return {"theme": "Light"}
+        assert updates == {"mysql_host": "new"}
+        return {"mysql_host": "new"}
 
     monkeypatch.setattr(cli, "_api_get", fake_get)
     monkeypatch.setattr(cli, "_api_update", fake_update)
-    cli.main(["--url", "http://api", "set", "theme", "Light"])
-    assert capsys.readouterr().out.strip() == json.dumps("Light")
+    cli.main(["--url", "http://api", "set", "mysql_host", "new"])
+    assert capsys.readouterr().out.strip() == json.dumps("new")
 
 
 def test_config_cli_get_unknown_local(monkeypatch):
@@ -96,11 +96,11 @@ def test_config_cli_get_unknown_api(monkeypatch):
 
     async def fake_get(url):
         assert url == "http://api"
-        return {"theme": "Dark"}
+        return {"mysql_host": "db"}
 
     monkeypatch.setattr(cli, "_api_get", fake_get)
     with pytest.raises(SystemExit):
-        cli.main(["--url", "http://api", "get", "does_not_exist"])
+    cli.main(["--url", "http://api", "get", "does_not_exist"])
 
 
 def test_config_cli_set_unknown_api(monkeypatch):
@@ -108,7 +108,7 @@ def test_config_cli_set_unknown_api(monkeypatch):
 
     async def fake_get(url):
         assert url == "http://api"
-        return {"theme": "Dark"}
+        return {"mysql_host": "db"}
 
     monkeypatch.setattr(cli, "_api_get", fake_get)
     with pytest.raises(SystemExit):

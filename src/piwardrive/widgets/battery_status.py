@@ -14,12 +14,15 @@ from .base import DashboardWidget
 
 
 class BatteryStatusWidget(DashboardWidget):
-    """Show battery percentage and charging state."""
+    """Show battery percentage and charging state.
+
+    A label widget is created on initialization and the first reading is
+    displayed immediately.
+    """
 
     update_interval = 30.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Create label widget and display initial reading."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(

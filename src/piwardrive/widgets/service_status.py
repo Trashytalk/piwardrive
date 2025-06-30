@@ -13,12 +13,15 @@ from .base import DashboardWidget
 
 
 class ServiceStatusWidget(DashboardWidget):
-    """Report whether key capture services are running."""
+    """Report whether key capture services are running.
+
+    A label widget is created on initialization and the first status check is
+    performed immediately.
+    """
 
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Set up label widget and kick off the first refresh."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(

@@ -13,12 +13,15 @@ from .base import DashboardWidget
 
 
 class OrientationWidget(DashboardWidget):
-    """Show the current device orientation."""
+    """Show the current device orientation.
+
+    A label widget is created during initialization and the first orientation
+    reading is displayed immediately.
+    """
 
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Create label widget and display initial reading."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(
