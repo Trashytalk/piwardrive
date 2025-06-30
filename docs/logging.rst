@@ -32,7 +32,7 @@ Passing ``stdout=True`` to ``setup_logging`` duplicates output to the console,
 which is useful during development or when running inside Docker.
 
 Rotating Logs Manually
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 Use ``scripts/rotate_logs.py`` to rotate the default log files without running PiWardrive::
 
     python scripts/rotate_logs.py

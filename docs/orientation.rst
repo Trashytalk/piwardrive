@@ -55,7 +55,7 @@ string into a numeric angle using this mapping.
 
 
 Running ``calibrate_orientation.py``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ``calibrate-orientation`` guides you through positioning the device at
 0°, 90°, 180° and 270°.  The resulting mapping is written to
 ``orientation_map.json`` and can be applied with
@@ -111,7 +111,7 @@ Refer to :func:`orientation_sensors.get_orientation_dbus` and
 :func:`orientation_sensors.read_mpu6050` for reading the sensor values.
 
 Running ``check_orientation_sensors.py``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``check-orientation-sensors`` command prints the current orientation and
 raw accelerometer/gyroscope readings in JSON format. Use the installed command
 or run the script from the repository root::

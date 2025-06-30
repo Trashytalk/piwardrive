@@ -72,6 +72,7 @@ current orientation string, rotation angle and raw accelerometer/gyroscope data:
 ``/gps`` exposes latitude, longitude, accuracy and fix quality from ``gpsd``::
 
    curl http://localhost:8000/gps
+
 ``/api/widgets`` lists all widget class names discovered by :mod:`piwardrive.widgets`::
 
    curl http://localhost:8000/api/widgets
