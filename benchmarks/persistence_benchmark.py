@@ -9,6 +9,7 @@ import aiosqlite
 
 
 async def bench(mode: str, count: int = 1000) -> tuple[float, float]:
+    """Benchmark SQLite reads and writes using ``mode`` journal."""
     fd, path = tempfile.mkstemp()
     os.close(fd)
     try:
@@ -34,6 +35,7 @@ async def bench(mode: str, count: int = 1000) -> tuple[float, float]:
 
 
 async def main(count: int = 1000) -> None:
+    """Run benchmarks for common journal modes."""
     for mode in ["DELETE", "WAL"]:
         w, r = await bench(mode, count)
         print(f"{mode}: write {w*1000:.3f} ms/read {r*1000:.3f} ms")
