@@ -181,7 +181,9 @@ def _expire_safe_request_cache() -> None:
         _SAFE_REQUEST_CACHE.expire()
 
 
-def async_ttl_cache(ttl_getter: float | Callable[[], float]):
+def async_ttl_cache(
+    ttl_getter: float | Callable[[], float]
+) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
     """Return decorator caching async function results for ``ttl`` seconds."""
 
     def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:

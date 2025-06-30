@@ -8,7 +8,7 @@ from piwardrive.simpleui import DropdownMenu, Label, ScrollView
 from piwardrive.utils import tail_file
 
 try:  # pragma: no cover - optional dependency
-    from piwardrive.simpleui import App as SimpleApp  # type: ignore
+    from piwardrive.simpleui import App as SimpleApp
 except Exception:  # pragma: no cover - fallback when missing
     SimpleApp = None  # type: ignore[assignment]
 
@@ -17,7 +17,11 @@ from piwardrive.utils import tail_file
 
 
 class LogViewer(ScrollView):
-    """Display the last N lines of a log file and update periodically."""
+    """Display the last N lines of a log file and update periodically.
+
+    The label widget is created on initialization and log polling is scheduled
+    automatically.
+    """
 
     log_path: str = "/var/log/syslog"
     max_lines: int = 200
@@ -27,7 +31,6 @@ class LogViewer(ScrollView):
     log_paths: List[str] = []
 
     def __init__(self, **kwargs: Any) -> None:
-        """Set up label widget and schedule periodic log refresh."""
         super().__init__(**kwargs)
         self.label = Label(size_hint_y=None, halign="left", valign="top")
         self.label.bind(texture_size=self._update_height)

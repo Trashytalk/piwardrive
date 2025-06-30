@@ -29,7 +29,7 @@ try:  # pragma: no cover - optional FastAPI dependency
         OAuth2PasswordRequestForm,
     )
 except Exception:
-    FastAPI = type(  # type: ignore[misc, assignment]
+    FastAPI = type(
         "FastAPI",
         (),
         {
@@ -39,43 +39,43 @@ except Exception:
             "websocket": lambda *a, **k: (lambda f: f),
             "add_middleware": lambda *a, **k: None,
         },
-    )  # type: ignore[misc, assignment]
+    )
 
     def _noop(*_a: typing.Any, **_k: typing.Any) -> None:
         return None
 
-    Depends = _noop  # type: ignore[misc, assignment]
-    HTTPException = type(  # type: ignore[misc]
+    Depends = _noop
+    HTTPException = type(
         "HTTPException",
         (Exception,),
         {},
-    )  # type: ignore[misc, assignment]
-    WebSocket = object  # type: ignore[misc, assignment]
-    WebSocketDisconnect = Exception  # type: ignore[misc, assignment]
-    Body = _noop  # type: ignore[misc, assignment]
-    Request = object  # type: ignore[misc, assignment]
-    StreamingResponse = Response = object  # type: ignore[misc, assignment]
-    OAuth2PasswordBearer = type(  # type: ignore[misc]
+    )
+    WebSocket = object
+    WebSocketDisconnect = Exception
+    Body = _noop
+    Request = object
+    StreamingResponse = Response = object
+    OAuth2PasswordBearer = type(
         "OAuth2PasswordBearer",
         (),
         {"__init__": lambda self, tokenUrl="/token", **k: None},
-    )  # type: ignore[misc, assignment]
-    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+    )
+    OAuth2PasswordRequestForm = type(
         "OAuth2PasswordRequestForm",
         (),
         {"__init__": lambda self, **k: None, "username": "", "password": ""},
-    )  # type: ignore[misc, assignment]
-    OAuth2PasswordBearer = type(  # type: ignore[misc]
+    )
+    OAuth2PasswordBearer = type(
         "OAuth2PasswordBearer",
         (),
         {"__init__": lambda self, **k: None},
     )
-    OAuth2PasswordRequestForm = type(  # type: ignore[misc]
+    OAuth2PasswordRequestForm = type(
         "OAuth2PasswordRequestForm",
         (),
         {"__init__": lambda self, **k: None},
     )
-    CORSMiddleware = object  # type: ignore[misc, assignment]
+    CORSMiddleware = object
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
     from fastapi import (
@@ -111,7 +111,6 @@ from typing import TYPE_CHECKING, Any, Tuple
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
-    from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
         FingerprintInfo,
@@ -121,6 +120,7 @@ try:  # allow tests to stub out ``persistence``
         get_table_counts,
         get_user,
         get_user_by_token,
+        load_ap_cache,
         load_dashboard_settings,
         load_fingerprint_info,
         load_health_history,
@@ -167,7 +167,7 @@ import psutil
 import vehicle_sensors
 from sync import upload_data
 
-from piwardrive import export, graphql_api, orientation_sensors
+from piwardrive import export, graphql_api
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 
@@ -189,6 +189,156 @@ except Exception:  # pragma: no cover - fall back to real module
 
 
 logger = logging.getLogger(__name__)
+
+# TypedDict definitions for API responses
+class TokenResponse(typing.TypedDict):
+    access_token: str
+    token_type: str
+
+
+class AuthLoginResponse(TokenResponse):
+    role: str
+
+
+class LogoutResponse(typing.TypedDict):
+    logout: bool
+
+
+class HealthRecordDict(typing.TypedDict):
+    timestamp: str
+    cpu_temp: float | None
+    cpu_percent: float
+    memory_percent: float
+    disk_percent: float
+
+
+class BaselineAnalysisResult(typing.TypedDict):
+    recent: dict[str, float]
+    baseline: dict[str, float]
+    delta: dict[str, float]
+    anomalies: list[str]
+
+
+class WidgetMetrics(typing.TypedDict):
+    cpu_temp: float | None
+    bssid_count: int
+    handshake_count: int
+    avg_rssi: float | None
+    kismet_running: bool
+    bettercap_running: bool
+    gps_fix: str | None
+    rx_kbps: float
+    tx_kbps: float
+    battery_percent: float | None
+    battery_plugged: bool | None
+    vehicle_speed: float | None
+    vehicle_rpm: float | None
+    engine_load: float | None
+
+
+class WidgetsListResponse(typing.TypedDict):
+    widgets: list[str]
+
+
+class CPUInfo(typing.TypedDict):
+    temp: float | None
+    percent: float
+
+
+class RAMInfo(typing.TypedDict):
+    percent: float | None
+
+
+class StorageInfo(typing.TypedDict):
+    percent: float | None
+
+
+class OrientationInfo(typing.TypedDict):
+    orientation: str | None
+    angle: float | None
+    accelerometer: dict[str, float] | None
+    gyroscope: dict[str, float] | None
+
+
+class VehicleInfo(typing.TypedDict):
+    speed: float | None
+    rpm: float | None
+    engine_load: float | None
+
+
+class GPSInfo(typing.TypedDict):
+    lat: float | None
+    lon: float | None
+    accuracy: float | None
+    fix: str | None
+
+
+class LogsResponse(typing.TypedDict):
+    path: str
+    lines: list[str]
+
+
+class DBStatsResponse(typing.TypedDict):
+    size_kb: float | None
+    tables: dict[str, int]
+
+
+class LoraScanResponse(typing.TypedDict):
+    count: int
+    lines: list[str]
+
+
+class CommandResponse(typing.TypedDict):
+    output: str
+
+
+class ServiceControlResponse(typing.TypedDict):
+    service: str
+    action: str
+    success: bool
+
+
+class ServiceStatusResponse(typing.TypedDict):
+    service: str
+    active: bool
+
+
+class WebhooksResponse(typing.TypedDict):
+    webhooks: list[str]
+
+
+class DashboardSettingsResponse(typing.TypedDict):
+    layout: list[typing.Any]
+    widgets: list[str]
+
+
+class FingerprintInfoDict(typing.TypedDict):
+    environment: str
+    source: str
+    record_count: int
+    created_at: str | None
+
+
+class Geofence(typing.TypedDict, total=False):
+    name: str
+    points: list[typing.Any]
+    enter_message: str | None
+    exit_message: str | None
+
+
+class RemoveResponse(typing.TypedDict):
+    removed: bool
+
+
+class SyncResponse(typing.TypedDict):
+    uploaded: int
+
+
+class ConfigResponse(typing.TypedDict, total=False):
+    theme: str
+    dashboard_layout: list[typing.Any]
+    notification_webhooks: list[str]
+    remote_sync_url: str | None
 
 
 def error_json(code: int, message: str | None = None) -> dict[str, str]:
@@ -357,7 +507,7 @@ async def _check_auth(token: str = SECURITY_DEP) -> None:
 
 
 @POST("/token")
-async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, str]:
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:
     """Return bearer token for valid credentials."""
     await _ensure_default_user()
     user = await get_user(form.username)
@@ -372,7 +522,7 @@ AUTH_DEP = Depends(_check_auth)
 
 
 @POST("/auth/login")
-async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, Any]:
+async def login(form: OAuth2PasswordRequestForm = Depends()) -> AuthLoginResponse:
     """Validate credentials and return a bearer token."""
     user = await get_user(form.username)
     if user is None or not verify_password(form.password, user.password):
@@ -383,14 +533,14 @@ async def login(form: OAuth2PasswordRequestForm = Depends()) -> dict[str, Any]:
 
 
 @POST("/auth/logout")
-async def logout(token: str = SECURITY_DEP) -> dict[str, bool]:
+async def logout(token: str = SECURITY_DEP) -> LogoutResponse:
     """Invalidate the current token."""
     TOKENS.pop(token, None)
     return {"logout": True}
 
 
 @GET("/status")
-async def get_status(limit: int = 5) -> list[dict[str, Any]]:
+async def get_status(limit: int = 5) -> list[HealthRecordDict]:
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):
@@ -405,7 +555,7 @@ async def baseline_analysis_endpoint(
     days: int = 30,
     threshold: float = 5.0,
     _auth: None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> BaselineAnalysisResult:
     """Compare recent metrics to historical averages."""
     recent = load_recent_health(limit)
     if inspect.isawaitable(recent):
@@ -416,7 +566,7 @@ async def baseline_analysis_endpoint(
     return analyze_health_baseline(recent, baseline, threshold)
 
 
-async def _collect_widget_metrics() -> dict[str, Any]:
+async def _collect_widget_metrics() -> WidgetMetrics:
     """Return basic metrics used by dashboard widgets."""
     metrics = await fetch_metrics_async()
     aps = metrics.aps
@@ -450,14 +600,14 @@ async def _collect_widget_metrics() -> dict[str, Any]:
 
 
 @GET("/api/widgets")
-async def list_widgets(_auth: User | None = AUTH_DEP) -> dict[str, list[str]]:
+async def list_widgets(_auth: User | None = AUTH_DEP) -> WidgetsListResponse:
     """Return available dashboard widget class names."""
     widgets_mod = importlib.import_module("piwardrive.widgets")
     return {"widgets": list(getattr(widgets_mod, "__all__", []))}
 
 
 @GET("/widget-metrics")
-async def get_widget_metrics(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_widget_metrics(_auth: User | None = AUTH_DEP) -> WidgetMetrics:
     """Return basic metrics used by dashboard widgets."""
     return await _collect_widget_metrics()
 
@@ -471,7 +621,7 @@ async def get_plugins(_auth: User | None = AUTH_DEP) -> list[str]:
 
 
 @GET("/cpu")
-async def get_cpu(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_cpu(_auth: User | None = AUTH_DEP) -> CPUInfo:
     """Return CPU temperature and usage percentage."""
     return {
         "temp": get_cpu_temp(),
@@ -480,7 +630,7 @@ async def get_cpu(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
 
 
 @GET("/ram")
-async def get_ram(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_ram(_auth: User | None = AUTH_DEP) -> RAMInfo:
     """Return system memory usage percentage."""
     return {"percent": get_mem_usage()}
 
@@ -489,7 +639,7 @@ async def get_ram(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
 async def get_storage(
     path: str = "/mnt/ssd",
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> StorageInfo:
     """Return disk usage percentage for ``path``."""
     return {"percent": get_disk_usage(path)}
 
@@ -497,7 +647,7 @@ async def get_storage(
 @GET("/orientation")
 async def get_orientation_endpoint(
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> OrientationInfo:
     """Return device orientation and raw sensor data."""
     orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
     angle = None
@@ -518,7 +668,7 @@ async def get_orientation_endpoint(
 
 
 @GET("/vehicle")
-async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> VehicleInfo:
     """Return vehicle metrics from OBD-II sensors."""
     return {
         "speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
@@ -528,7 +678,7 @@ async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
 
 
 @GET("/gps")
-async def get_gps_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_gps_endpoint(_auth: User | None = AUTH_DEP) -> GPSInfo:
     """Return current GPS position."""
     pos = await asyncio.to_thread(gps_client.get_position)
     lat = lon = None
@@ -547,7 +697,7 @@ async def get_logs(
     lines: int = 200,
     path: str = DEFAULT_LOG_PATH,
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> LogsResponse:
     """Return last ``lines`` from ``path``."""
     safe = sanitize_path(path)
     if safe not in ALLOWED_LOG_PATHS:
@@ -561,7 +711,7 @@ async def get_logs(
 
 
 @GET("/db-stats")
-async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> DBStatsResponse:
     """Return SQLite table counts and database size."""
     counts = await get_table_counts()
     try:
@@ -574,7 +724,7 @@ async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]
 @GET("/lora-scan")
 async def lora_scan_endpoint(
     iface: str = "lora0", _auth: User | None = AUTH_DEP
-) -> dict[str, Any]:
+) -> LoraScanResponse:
     """Run ``lora-scan`` on ``iface`` and return output lines."""
     lines = await async_scan_lora(iface)
     return {"count": len(lines), "lines": lines}
@@ -583,7 +733,7 @@ async def lora_scan_endpoint(
 @POST("/command")
 async def run_command(
     data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
-) -> dict[str, Any]:
+) -> CommandResponse:
     """Execute a shell command and return its output."""
     cmd = str(data.get("cmd", "")).strip()
     if not cmd:
@@ -606,7 +756,7 @@ async def control_service_endpoint(
     name: str,
     action: str,
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> ServiceControlResponse:
     """Start or stop a systemd service."""
     if action not in {"start", "stop", "restart"}:
         raise HTTPException(status_code=400, detail=error_json(400, "Invalid action"))
@@ -623,14 +773,14 @@ async def control_service_endpoint(
 @GET("/service/{name}")
 async def get_service_status_endpoint(
     name: str, _auth: User | None = AUTH_DEP
-) -> dict[str, Any]:
+) -> ServiceStatusResponse:
     """Return whether a ``systemd`` service is active."""
     active = await service_status_async(name)
     return {"service": name, "active": active}
 
 
 @GET("/config")
-async def get_config_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
+async def get_config_endpoint(_auth: User | None = AUTH_DEP) -> ConfigResponse:
     """Return the current configuration from ``config.json``."""
     return asdict(config.load_config())
 
@@ -639,7 +789,7 @@ async def get_config_endpoint(_auth: User | None = AUTH_DEP) -> dict[str, Any]:
 async def update_config_endpoint(
     updates: dict[str, Any] = BODY,
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> ConfigResponse:
     """Update configuration values and persist them."""
     cfg = config.load_config()
     data = asdict(cfg)
@@ -660,7 +810,7 @@ async def update_config_endpoint(
 
 
 @GET("/webhooks")
-async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
+async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> WebhooksResponse:
     """Return configured notification webhook URLs."""
     cfg = config.load_config()
     return {"webhooks": list(cfg.notification_webhooks)}
@@ -669,7 +819,7 @@ async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[str]]:
 @POST("/webhooks")
 async def update_webhooks_endpoint(
     urls: list[str] = BODY, _auth: None = AUTH_DEP
-) -> dict[str, list[str]]:
+) -> WebhooksResponse:
     """Update notification webhook URL list."""
     cfg = config.load_config()
     cfg.notification_webhooks = list(urls)
@@ -680,7 +830,7 @@ async def update_webhooks_endpoint(
 @GET("/dashboard-settings")
 async def get_dashboard_settings_endpoint(
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> DashboardSettingsResponse:
     """Return persisted dashboard layout and widget list."""
     settings = await load_dashboard_settings()
     return {"layout": settings.layout, "widgets": settings.widgets}
@@ -690,7 +840,7 @@ async def get_dashboard_settings_endpoint(
 async def update_dashboard_settings_endpoint(
     data: dict[str, Any] = BODY,
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> DashboardSettingsResponse:
     """Persist dashboard layout and widget list."""
     layout = data.get("layout", [])
     widgets = data.get("widgets", [])
@@ -699,7 +849,7 @@ async def update_dashboard_settings_endpoint(
 
 
 @GET("/fingerprints")
-async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[FingerprintInfoDict]]:
     """Return stored fingerprint metadata."""
     items = await load_fingerprint_info()
     return {"fingerprints": [asdict(i) for i in items]}
@@ -708,7 +858,7 @@ async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
 @POST("/fingerprints")
 async def add_fingerprint_endpoint(
     data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
-) -> dict[str, Any]:
+) -> FingerprintInfoDict:
     """Store fingerprint metadata in the database."""
     info = FingerprintInfo(
         environment=data.get("environment", ""),
@@ -722,7 +872,7 @@ async def add_fingerprint_endpoint(
 @GET("/geofences")
 async def list_geofences_endpoint(
     _auth: User | None = AUTH_DEP,
-) -> list[dict[str, Any]]:
+) -> list[Geofence]:
     """Return saved geofence polygons."""
     return _load_geofences()
 
@@ -730,7 +880,7 @@ async def list_geofences_endpoint(
 @POST("/geofences")
 async def add_geofence_endpoint(
     data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
-) -> list[dict[str, Any]]:
+) -> list[Geofence]:
     """Add a new polygon to ``geofences.json``."""
     polys = _load_geofences()
     polys.append(
@@ -750,7 +900,7 @@ async def update_geofence_endpoint(
     name: str,
     updates: dict[str, Any] = BODY,
     _auth: User | None = AUTH_DEP,
-) -> dict[str, Any]:
+) -> Geofence:
     """Modify a saved polygon."""
     polys = _load_geofences()
     for poly in polys:
@@ -771,7 +921,7 @@ async def update_geofence_endpoint(
 @DELETE("/geofences/{name}")
 async def remove_geofence_endpoint(
     name: str, _auth: User | None = AUTH_DEP
-) -> dict[str, Any]:
+) -> RemoveResponse:
     """Delete ``name`` from ``geofences.json``."""
     polys = _load_geofences()
     for idx, poly in enumerate(polys):
@@ -785,7 +935,7 @@ async def remove_geofence_endpoint(
 @POST("/sync")
 async def sync_records(
     limit: int = 100, _auth: User | None = AUTH_DEP
-) -> dict[str, Any]:
+) -> SyncResponse:
     """Upload recent health records to the configured sync endpoint."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):

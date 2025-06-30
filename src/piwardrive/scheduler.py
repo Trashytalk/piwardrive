@@ -9,13 +9,22 @@ import os
 import time
 import json
 from datetime import datetime, time as dt_time
-from typing import Any, Awaitable, Callable, Dict, Mapping, Sequence
+from typing import Any, Awaitable, Callable, Dict, Mapping, Protocol, Sequence
 
 from .core import config
 from .gpsd_client import client as gps_client
 from . import utils
 
 ClockEvent = object
+
+
+class Updatable(Protocol):
+    """Protocol for widgets that can be scheduled."""
+
+    update_interval: float
+
+    def update(self) -> Awaitable[None] | None:
+        ...
 
 
 class PollScheduler:
@@ -84,7 +93,7 @@ class PollScheduler:
     def schedule(
         self,
         name: str,
-        callback: Callable[[float], Awaitable[Any] | Any],
+        callback: Callable[[float], Awaitable[None] | None],
         interval: float,
         *,
         rules: Mapping[str, Any] | None = None,
@@ -124,7 +133,7 @@ class PollScheduler:
 
     # ------------------------------------------------------------------
     # Widget helpers
-    def register_widget(self, widget: Any, name: str | None = None) -> None:
+    def register_widget(self, widget: Updatable, name: str | None = None) -> None:
         """Register a widget's ``update`` method based on ``update_interval``."""
         interval = getattr(widget, "update_interval", None)
         if interval is None:
@@ -132,7 +141,7 @@ class PollScheduler:
 
         cb_name = name or f"{widget.__class__.__name__}-{id(widget)}"
 
-        async def _call_update() -> Any:
+        async def _call_update() -> None:
             try:
                 result = widget.update()
                 if inspect.isawaitable(result):
@@ -174,7 +183,7 @@ class AsyncScheduler:
         self._durations: Dict[str, float] = {}
 
     def schedule(
-        self, name: str, callback: Callable[[], Awaitable[Any] | Any], interval: float
+        self, name: str, callback: Callable[[], Awaitable[None] | None], interval: float
     ) -> None:
         """Run ``callback`` every ``interval`` seconds."""
         if interval <= 0:
@@ -204,14 +213,14 @@ class AsyncScheduler:
         self._durations[name] = float("nan")
         self._tasks[name] = asyncio.create_task(_runner())
 
-    def register_widget(self, widget: Any, name: str | None = None) -> None:
+    def register_widget(self, widget: Updatable, name: str | None = None) -> None:
         """Register a widget's ``update`` coroutine based on ``update_interval``."""
         interval = getattr(widget, "update_interval", None)
         if interval is None:
             raise ValueError(f"Widget {widget} missing 'update_interval'")
         cb_name = name or f"{widget.__class__.__name__}-{id(widget)}"
 
-        def _call_update() -> Awaitable[Any] | Any:
+        def _call_update() -> Awaitable[None] | None:
             return widget.update()
 
         self.schedule(cb_name, _call_update, interval)

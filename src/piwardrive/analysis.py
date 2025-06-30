@@ -8,7 +8,7 @@ from typing import Dict, List
 from piwardrive.persistence import HealthRecord
 
 try:  # optional dependency
-    import pandas as pd  # type: ignore
+    import pandas as pd
 except Exception:  # pragma: no cover - fallback when pandas missing
     pd = None
 

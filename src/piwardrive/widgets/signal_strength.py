@@ -13,12 +13,15 @@ from .base import DashboardWidget
 
 
 class SignalStrengthWidget(DashboardWidget):
-    """Display average RSSI from Kismet devices."""
+    """Display average RSSI from Kismet devices.
+
+    The label widget is initialized when the widget is created and the first
+    RSSI poll is queued immediately.
+    """
 
     update_interval = 5.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Initialize label widget and queue the first RSSI poll."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(text=f"{_('rssi')}: {_('not_available')}", halign="center")

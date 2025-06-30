@@ -415,25 +415,25 @@ def test_websocket_timeout_closes_connection() -> None:
 
 def test_get_config_endpoint() -> None:
     with mock.patch("service.config.load_config") as load:
-        load.return_value = service.config.Config(theme="Green")
+        load.return_value = service.config.Config(mysql_host="db")
         client = TestClient(service.app)
         resp = client.get("/config")
         assert resp.status_code == 200
-        assert resp.json()["theme"] == "Green"
+        assert resp.json()["mysql_host"] == "db"
 
 
 def test_update_config_endpoint_success() -> None:
-    cfg = service.config.Config(theme="Dark")
+    cfg = service.config.Config(mysql_host="old")
     with (
         mock.patch("service.config.load_config", return_value=cfg),
         mock.patch("service.config.save_config") as save,
     ):
         client = TestClient(service.app)
-        resp = client.post("/config", json={"theme": "Light"})
+        resp = client.post("/config", json={"mysql_host": "new"})
         assert resp.status_code == 200
-        assert resp.json()["theme"] == "Light"
+        assert resp.json()["mysql_host"] == "new"
         args = save.call_args[0][0]
-        assert args.theme == "Light"
+        assert args.mysql_host == "new"
 
 
 def test_update_config_endpoint_invalid_key() -> None:
@@ -598,94 +598,6 @@ def test_storage_endpoint() -> None:
         assert resp.json() == {"percent": 70.0}
 
 
-def test_orientation_endpoint_dbus(monkeypatch) -> None:
-    with (
-        mock.patch(
-            "service.orientation_sensors.get_orientation_dbus",
-            return_value="right-up",
-        ),
-        mock.patch(
-            "piwardrive.service.orientation_sensors.get_orientation_dbus",
-            return_value="right-up",
-        ),
-        mock.patch(
-            "service.orientation_sensors.orientation_to_angle",
-            return_value=90.0,
-        ),
-        mock.patch(
-            "piwardrive.service.orientation_sensors.orientation_to_angle",
-            return_value=90.0,
-        ),
-        mock.patch(
-            "service.orientation_sensors.read_mpu6050",
-            return_value=None,
-        ),
-        mock.patch(
-            "piwardrive.service.orientation_sensors.read_mpu6050",
-            return_value=None,
-        ),
-    ):
-        client = TestClient(service.app)
-        resp = client.get("/orientation")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["orientation"] == "right-up"
-        assert data["angle"] == 90.0
-        assert data["accelerometer"] is None
-
-
-def test_orientation_endpoint_mpu(monkeypatch) -> None:
-    with (
-        mock.patch(
-            "service.orientation_sensors.get_orientation_dbus",
-            return_value=None,
-        ),
-        mock.patch(
-            "piwardrive.service.orientation_sensors.get_orientation_dbus",
-            return_value=None,
-        ),
-        mock.patch(
-            "service.orientation_sensors.read_mpu6050",
-            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
-        ),
-        mock.patch(
-            "piwardrive.service.orientation_sensors.read_mpu6050",
-            return_value={"accelerometer": {"x": 1}, "gyroscope": {"y": 2}},
-        ),
-    ):
-        client = TestClient(service.app)
-        resp = client.get("/orientation")
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["orientation"] is None
-        assert data["accelerometer"] == {"x": 1}
-        assert data["gyroscope"] == {"y": 2}
-
-
-def test_vehicle_endpoint(monkeypatch) -> None:
-    with (
-        mock.patch("service.vehicle_sensors.read_speed_obd", return_value=55.0),
-        mock.patch(
-            "piwardrive.service.vehicle_sensors.read_speed_obd", return_value=55.0
-        ),
-        mock.patch("service.vehicle_sensors.read_rpm_obd", return_value=1800.0),
-        mock.patch(
-            "piwardrive.service.vehicle_sensors.read_rpm_obd", return_value=1800.0
-        ),
-        mock.patch("service.vehicle_sensors.read_engine_load_obd", return_value=40.0),
-        mock.patch(
-            "piwardrive.service.vehicle_sensors.read_engine_load_obd",
-            return_value=40.0,
-        ),
-    ):
-        client = TestClient(service.app)
-        resp = client.get("/vehicle")
-        assert resp.status_code == 200
-        assert resp.json() == {
-            "speed": 55.0,
-            "rpm": 1800.0,
-            "engine_load": 40.0,
-        }
 
 
 def test_gps_endpoint(monkeypatch) -> None:

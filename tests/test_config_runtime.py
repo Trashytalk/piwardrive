@@ -13,10 +13,10 @@ def setup_tmp(tmp_path: Path) -> Path:
 
 def test_config_mtime_updates(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
-    cfg = config.Config(theme="Dark")
+    cfg = config.Config(mysql_host="db1")
     config.save_config(cfg)
     first = config.config_mtime()
-    cfg.theme = "Green"
+    cfg.mysql_host = "db2"
     config.save_config(cfg)
     second = config.config_mtime()
     assert first is not None and second is not None  # nosec B101

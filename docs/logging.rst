@@ -8,6 +8,16 @@ The main log file is ``~/.config/piwardrive/app.log``. Set the ``PW_LOG_LEVEL``
 environment variable to control verbosity or pass ``level`` to ``setup_logging``.
 Common levels are ``DEBUG``, ``INFO``, ``WARNING`` and ``ERROR``.
 
+Example::
+
+    from piwardrive.logconfig import setup_logging
+    import logging
+
+    logger = setup_logging(
+        "/tmp/piwardrive.log", level=logging.DEBUG, stdout=True
+    )
+    logger.info("PiWardrive initialized")
+
 Logs from external tools are stored separately. ``kismet_logdir`` points to the
 capture directory for Kismet (``/mnt/ssd/kismet_logs`` by default) while
 BetterCAP writes to ``/var/log/bettercap.log``. Additional paths may be listed

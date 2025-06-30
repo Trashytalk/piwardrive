@@ -7,9 +7,9 @@ from piwardrive.core import config
 
 
 def test_env_override(monkeypatch):
-    monkeypatch.setenv("PW_THEME", "Red")
+    monkeypatch.setenv("PW_HEALTH_POLL_INTERVAL", "5")
     cfg = config.AppConfig.load()
-    assert cfg.theme == "Red"
+    assert cfg.health_poll_interval == 5
 
 
 @pytest.mark.parametrize("ext", [".json", ".yaml"])
@@ -19,7 +19,6 @@ def test_export_import_roundtrip(tmp_path, ext):
     path = tmp_path / f"cfg{ext}"
     config.export_config(cfg, str(path))
     loaded = config.import_config(str(path))
-    assert loaded.theme == cfg.theme
     assert loaded.remote_sync_url == cfg.remote_sync_url
 
 
@@ -36,21 +35,9 @@ def test_yaml_export_import(tmp_path):
     path = tmp_path / "cfg.yaml"
     config.export_config(cfg, str(path))
     loaded = config.import_config(str(path))
-    assert loaded.theme == cfg.theme
+    assert loaded.remote_sync_url == cfg.remote_sync_url
 
 
-def test_apply_env_overrides_invalid_theme(monkeypatch):
-    base = {"theme": "Dark"}
-    monkeypatch.setenv("PW_THEME", "Blueish")
-    result = config._apply_env_overrides(base)
-    assert result["theme"] == "Blueish"
-
-
-def test_apply_env_overrides_theme(monkeypatch):
-    base = {"theme": "Light"}
-    monkeypatch.setenv("PW_THEME", "Green")
-    result = config._apply_env_overrides(base)
-    assert result["theme"] == config.Theme.Green
 
 
 def test_apply_env_overrides_remote_sync_url(monkeypatch):
@@ -102,17 +89,17 @@ def test_switch_profile(tmp_path, monkeypatch):
     profiles = cfg_dir / "profiles"
     monkeypatch.setattr(config, "PROFILES_DIR", str(profiles))
     profiles.mkdir()
-    cfg = config.Config(theme="Light")
+    cfg = config.Config(mysql_host="db")
     config.save_config(cfg, profile="p1")
     loaded = config.switch_profile("p1")
-    assert loaded.theme == "Light"
+    assert loaded.mysql_host == "db"
     assert (cfg_dir / "active_profile").read_text() == "p1"
 
 
 def test_import_config_missing_yaml(tmp_path, monkeypatch):
     """import_config raises ConfigError if PyYAML is missing."""
     file = tmp_path / "cfg.yaml"
-    file.write_text("theme: Dark\nremote_sync_url: http://localhost")
+    file.write_text("mysql_host: db\nremote_sync_url: http://localhost")
 
     orig_import = builtins.__import__
 

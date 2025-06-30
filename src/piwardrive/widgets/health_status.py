@@ -12,12 +12,15 @@ from .base import DashboardWidget
 
 
 class HealthStatusWidget(DashboardWidget):
-    """Display results from the global health monitor."""
+    """Display results from the global health monitor.
+
+    A label widget is prepared on initialization and the first update is
+    triggered immediately.
+    """
 
     update_interval = 10.0
 
     def __init__(self, **kwargs: Any) -> None:
-        """Create widget label and trigger the first update."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(

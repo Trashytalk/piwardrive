@@ -41,7 +41,8 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
     try:
         first = next(it)
     except StopIteration:
-        open(path, "w", newline="", encoding="utf-8").close()
+        with open(path, "w", newline="", encoding="utf-8"):
+            pass
         return
 
     with open(path, "w", newline="", encoding="utf-8") as fh:
@@ -55,7 +56,7 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
 def export_yaml(records: Iterable[Any], path: str) -> None:
     """Export ``records`` to ``path`` in YAML format."""
     try:
-        import yaml  # type: ignore
+        import yaml
     except Exception as exc:  # pragma: no cover - optional dep
         raise RuntimeError("PyYAML required for YAML export") from exc
 
