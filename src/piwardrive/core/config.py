@@ -126,6 +126,11 @@ class Config:
     cloud_bucket: str = CLOUD_BUCKET  # noqa: V107
     cloud_prefix: str = CLOUD_PREFIX  # noqa: V107
     cloud_profile: str = CLOUD_PROFILE  # noqa: V107
+    mysql_host: str = "localhost"  # noqa: V107
+    mysql_port: int = 3306  # noqa: V107
+    mysql_user: str = "piwardrive"  # noqa: V107
+    mysql_password: str = ""  # noqa: V107
+    mysql_db: str = "piwardrive"  # noqa: V107
 
 
 DEFAULT_CONFIG = Config()
@@ -197,6 +202,11 @@ class FileConfigModel(BaseModel):
     cloud_bucket: Optional[str] = None
     cloud_prefix: Optional[str] = None
     cloud_profile: Optional[str] = None
+    mysql_host: Optional[str] = None
+    mysql_port: Optional[int] = Field(default=None, ge=1)
+    mysql_user: Optional[str] = None
+    mysql_password: Optional[str] = None
+    mysql_db: Optional[str] = None
 
 
 class ConfigModel(FileConfigModel):
@@ -221,6 +231,11 @@ class ConfigModel(FileConfigModel):
     log_tail_cache_seconds: float = Field(
         default=DEFAULTS["log_tail_cache_seconds"], ge=0
     )
+    mysql_host: str = DEFAULTS["mysql_host"]
+    mysql_port: int = Field(default=DEFAULTS["mysql_port"], ge=1)
+    mysql_user: str = DEFAULTS["mysql_user"]
+    mysql_password: str = DEFAULTS["mysql_password"]
+    mysql_db: str = DEFAULTS["mysql_db"]
 
     theme: Theme
 
@@ -443,6 +458,11 @@ class AppConfig:
     cloud_bucket: str = DEFAULTS["cloud_bucket"]
     cloud_prefix: str = DEFAULTS["cloud_prefix"]
     cloud_profile: str = DEFAULTS["cloud_profile"]
+    mysql_host: str = DEFAULTS["mysql_host"]
+    mysql_port: int = DEFAULTS["mysql_port"]
+    mysql_user: str = DEFAULTS["mysql_user"]
+    mysql_password: str = DEFAULTS["mysql_password"]
+    mysql_db: str = DEFAULTS["mysql_db"]
 
     @classmethod
     def load(cls) -> "AppConfig":
