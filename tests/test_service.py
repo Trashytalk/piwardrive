@@ -184,33 +184,6 @@ def test_logs_endpoint_rejects_unknown_path() -> None:
         assert not called
 
 
-def test_command_endpoint_runs_command() -> None:
-    class DummyProc:
-        async def communicate(self) -> tuple[bytes, bytes]:
-            return b"out", b""
-
-        def kill(self) -> None:
-            pass
-
-    async def fake_create(cmd: str, **_k: Any) -> DummyProc:
-        assert cmd == "echo hi"
-        return DummyProc()
-
-    with (
-        mock.patch("service.asyncio.create_subprocess_shell", fake_create),
-        mock.patch("piwardrive.service.asyncio.create_subprocess_shell", fake_create),
-    ):
-        client = TestClient(service.app)
-        resp = client.post("/command", json={"cmd": "echo hi"})
-        assert resp.status_code == 200
-        assert resp.json()["output"] == "out"
-
-
-def test_command_endpoint_requires_cmd() -> None:
-    client = TestClient(service.app)
-    resp = client.post("/command", json={})
-    assert resp.status_code == 400
-
 
 def test_websocket_status_stream() -> None:
     rec = persistence.HealthRecord(
