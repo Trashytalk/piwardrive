@@ -27,14 +27,23 @@ except Exception:  # pragma: no cover - minimal fallback
     if requests is not None:
         HTTP_SESSION = requests.Session()
 
-        def robust_request(url: str) -> "Response":
+        def robust_request(
+            url: str,
+            *,
+            method: str = "GET",
+            headers: Dict[str, str] | None = None,
+            timeout: float = REQUEST_TIMEOUT,
+        ) -> "Response":
             last_exc = None
-            for _ in range(REQUEST_RETRY_ATTEMPTS):
+            delay = REQUEST_RETRY_DELAY
+            for attempt in range(REQUEST_RETRY_ATTEMPTS):
                 try:
-                    return requests.get(url, timeout=REQUEST_TIMEOUT)
+                    return requests.request(method, url, headers=headers, timeout=timeout)
                 except Exception as exc:  # pragma: no cover - simple retry
                     last_exc = exc
-                    time.sleep(REQUEST_RETRY_DELAY)
+                    if attempt < REQUEST_RETRY_ATTEMPTS - 1:
+                        time.sleep(delay)
+                        delay *= 2
             if last_exc is not None:
                 raise last_exc
             raise RuntimeError("Unreachable")
@@ -49,7 +58,13 @@ except Exception:  # pragma: no cover - minimal fallback
 
         HTTP_SESSION = _DummySession()
 
-        def robust_request(url: str) -> "Response":  # pragma: no cover - simple stub
+        def robust_request(
+            url: str,
+            *,
+            method: str = "GET",
+            headers: Dict[str, str] | None = None,
+            timeout: float = REQUEST_TIMEOUT,
+        ) -> "Response":  # pragma: no cover - simple stub
             raise RuntimeError("HTTP session unavailable")
 
 else:  # pragma: no cover - optional dependency available
