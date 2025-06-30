@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import subprocess
 import time
 from dataclasses import asdict, fields
+from pathlib import Path
 from typing import Any, Callable
 
-from piwardrive import diagnostics, exception_handler, remote_sync, utils
+from piwardrive import diagnostics, exception_handler, notifications, remote_sync, utils
 from piwardrive.config import (
     CONFIG_PATH,
     Config,
@@ -48,10 +50,17 @@ class PiWardriveApp:
         if not self.container.has("scheduler"):
             self.container.register_instance("scheduler", PollScheduler())
         self.scheduler: PollScheduler = self.container.resolve("scheduler")
+        mqtt_client = None
+        if self.config_data.enable_mqtt:
+            from piwardrive.mqtt import MQTTClient
+
+            mqtt_client = MQTTClient()
+            mqtt_client.connect()
+        self.mqtt_client = mqtt_client
         if not self.container.has("health_monitor"):
             self.container.register_instance(
                 "health_monitor",
-                diagnostics.HealthMonitor(self.scheduler, 10),
+                diagnostics.HealthMonitor(self.scheduler, 10, mqtt_client=mqtt_client),
             )
         self.health_monitor = self.container.resolve("health_monitor")
         import tile_maintenance
@@ -82,6 +91,31 @@ class PiWardriveApp:
                 ),
                 self.config_data.remote_sync_interval * 60,
             )
+        update_hours = int(os.getenv("PW_UPDATE_INTERVAL", "0"))
+        if update_hours > 0:
+            script = Path(__file__).resolve().parents[2] / "scripts" / "update.sh"
+
+            async def _run_update() -> None:
+                try:
+                    proc = await asyncio.create_subprocess_exec(str(script))
+                    await proc.wait()
+                    if proc.returncode != 0:
+                        logging.error("Updater exited with %s", proc.returncode)
+                except Exception as exc:
+                    logging.exception("Failed to run updater: %s", exc)
+
+            self.scheduler.schedule(
+                "auto_update",
+                lambda _dt: utils.run_async_task(_run_update()),
+                update_hours * 3600,
+            )
+
+        self.notifications = notifications.NotificationManager(
+            self.scheduler,
+            webhooks=self.config_data.notification_webhooks,
+            cpu_temp_threshold=self.config_data.notify_cpu_temp,
+            disk_percent_threshold=self.config_data.notify_disk_percent,
+        )
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self._config_stamp = config_mtime()

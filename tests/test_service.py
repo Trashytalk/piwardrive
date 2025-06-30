@@ -540,6 +540,32 @@ def test_cpu_endpoint() -> None:
         assert resp.json() == {"temp": 50.0, "percent": 25.0}
 
 
+def test_baseline_analysis_endpoint() -> None:
+    rec = service.HealthRecord("t", 40.0, 20.0, 30.0, 40.0)
+
+    async def fake_recent(limit: int = 10) -> list:
+        return [rec]
+
+    async def fake_base(days: int, limit: int) -> list:
+        return [rec]
+
+    def fake_analyze(r, b, threshold=5.0):
+        return {"delta": {"cpu_avg": 0.0}}
+
+    with (
+        mock.patch("service.load_recent_health", fake_recent),
+        mock.patch("piwardrive.service.load_recent_health", fake_recent),
+        mock.patch("service.load_baseline_health", fake_base),
+        mock.patch("piwardrive.service.load_baseline_health", fake_base),
+        mock.patch("service.analyze_health_baseline", fake_analyze),
+        mock.patch("piwardrive.service.analyze_health_baseline", fake_analyze),
+    ):
+        client = TestClient(service.app)
+        resp = client.get("/baseline-analysis")
+        assert resp.status_code == 200
+        assert resp.json()["delta"]["cpu_avg"] == 0.0
+
+
 def test_ram_endpoint() -> None:
     with (
         mock.patch("service.get_mem_usage", return_value=60.0),

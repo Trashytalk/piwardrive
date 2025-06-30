@@ -18,6 +18,18 @@ import HealthImport from './components/HealthImport.jsx';
 
 install();
 
+const origFetch = window.fetch;
+window.fetch = (url, opts = {}) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    opts = {
+      ...opts,
+      headers: { ...(opts.headers || {}), Authorization: `Bearer ${token}` },
+    };
+  }
+  return origFetch(url, opts);
+};
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
