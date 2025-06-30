@@ -10,23 +10,17 @@ from typing import Any
 try:  # pragma: no cover - optional dependency
     from kivy.app import App as KivyApp
 except Exception:
-    KivyApp = None  # type: ignore[assignment]
+    class KivyApp:  # type: ignore[no-redef]
+        """Fallback ``App`` implementation when Kivy is unavailable."""
 
 App = KivyApp
 
-
-    class App:  # type: ignore[no-redef]
-        @staticmethod
-        def get_running_app() -> None:
-            return None
-          
-
+if App is None:
     class App:  # type: ignore[no-redef]
         @staticmethod
         def get_running_app() -> None:
             return None
 
-          
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import haversine_distance
 

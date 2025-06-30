@@ -88,6 +88,29 @@ defaults are summarised below.  See :doc:`remote_sync` for a full setup guide.
      - How often to upload the database in minutes
      - ``60``
 
+Remote Sync Overrides
+---------------------
+
+The variables above override keys in ``config.json`` when prefixed with
+``PW_``. Set them in the environment to change the values returned by
+:mod:`config.AppConfig.load` at runtime.
+
+.. list-table:: ``PW_REMOTE_SYNC_*`` overrides
+   :header-rows: 1
+
+   * - Environment variable
+     - Configuration key
+   * - ``PW_REMOTE_SYNC_URL``
+     - ``remote_sync_url``
+   * - ``PW_REMOTE_SYNC_TOKEN``
+     - ``remote_sync_token``
+   * - ``PW_REMOTE_SYNC_TIMEOUT``
+     - ``remote_sync_timeout``
+   * - ``PW_REMOTE_SYNC_RETRIES``
+     - ``remote_sync_retries``
+   * - ``PW_REMOTE_SYNC_INTERVAL``
+     - ``remote_sync_interval``
+
 Configuration Overrides
 -----------------------
 

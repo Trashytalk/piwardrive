@@ -1,6 +1,6 @@
 # PiWardrive Web UI Setup
 
-![Coverage](https://github.com/TRASHYTALK/piwardrive/raw/main/webui/badges/coverage.svg)
+[![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=frontend)
 
 > **Note**
 > Refer to the Legal Notice in [../README.md](../README.md) before running PiWardrive.
@@ -83,7 +83,9 @@ python -c "import security,sys;print(security.hash_password(sys.argv[1]))" mypas
 ```
 
 Assign the resulting value to the environment variable before launching `piwardrive.webui_server`.
-Set `PW_WEBUI_PORT` if you need the Python server to listen on a different port (default `8000`).
+Set `PW_WEBUI_PORT` if you need the Python server to listen on a different
+port. The default is `8000`.
+
 
 ## PW_API_PASSWORD_HASH and PORT
 

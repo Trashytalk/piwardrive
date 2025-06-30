@@ -26,4 +26,3 @@ if not isinstance(widgets, list):
     widgets = []
 widgets = [str(x) for x in widgets]
 print(json.dumps(widgets))
-

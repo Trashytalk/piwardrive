@@ -55,8 +55,9 @@ Docker Container
        docker tag <IMAGE_ID> myuser/piwardrive:latest
        docker push myuser/piwardrive:latest
 
-``piwardrive-service`` listens on port ``8000`` by default. Override this by
-setting ``PW_SERVICE_PORT`` when launching the container.
+``piwardrive-service`` listens on port ``8000`` by default. Set a different
+port using the ``PW_SERVICE_PORT`` environment variable before launching the
+container.
 
 Both approaches produce a self-contained environment ready to capture Wi‑Fi and GPS data with minimal setup on new hardware.
 
@@ -66,6 +67,11 @@ Web UI Container
 ``Dockerfile.webui`` builds the React dashboard and launches ``server/index.js``. Build it with::
 
     docker build -f Dockerfile.webui -t piwardrive-webui .
+
+Tag the image and push it to your registry so it can be deployed on other machines::
+
+    docker tag piwardrive-webui myuser/piwardrive-webui:latest
+    docker push myuser/piwardrive-webui:latest
 
 Run the container exposing port 8000::
 

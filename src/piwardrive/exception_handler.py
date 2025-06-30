@@ -46,7 +46,6 @@ def install(app: FastAPI | None = None) -> None:
     If ``app`` is provided and FastAPI is available, an exception handler is
     registered that logs the error and responds with ``HTTP 500``.
     """
-
     global _installed
     if _installed:
         return

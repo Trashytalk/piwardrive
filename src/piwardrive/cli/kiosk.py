@@ -22,7 +22,10 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    proc = subprocess.Popen(["piwardrive-webui"])
+    webui = shutil.which("piwardrive-webui")
+    if webui is None:
+        raise FileNotFoundError("piwardrive-webui executable not found")
+    proc = subprocess.Popen([webui])
     try:
         time.sleep(args.delay)
         browser = shutil.which("chromium-browser") or shutil.which("chromium")

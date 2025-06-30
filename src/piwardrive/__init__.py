@@ -3,6 +3,9 @@
 import sys
 from importlib import import_module
 from types import ModuleType
+import logging
+
+logger = logging.getLogger(__name__)
 
 sigint_suite: ModuleType | None
 
@@ -37,7 +40,7 @@ for _mod in (
     try:  # pragma: no cover - optional imports may fail
         module = import_module(f"piwardrive.{_mod}")
         sys.modules.setdefault(_mod, module)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to import optional module '%s': %s", _mod, exc)
 
 __all__ = ["sigint_suite"]
