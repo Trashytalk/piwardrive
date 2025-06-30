@@ -1,5 +1,6 @@
 import sys
 from types import SimpleNamespace
+import pytest
 
 
 # lightweight scheduler and utils modules for import
@@ -117,3 +118,26 @@ def test_predict_points(monkeypatch):
     lat, lon = pts[0]
     assert lat == pytest.approx(0.2, rel=1e-3)
     assert lon == pytest.approx(0.2, rel=1e-3)
+
+
+def test_zero_lookahead(monkeypatch):
+    sched = DummyScheduler()
+    m = DummyMap()
+    monkeypatch.setitem(
+        sys.modules,
+        "piwardrive.utils",
+        SimpleNamespace(haversine_distance=_haversine),
+    )
+    import importlib
+
+    route_prefetch = importlib.import_module("piwardrive.route_prefetch")
+    route_prefetch.RoutePrefetcher(
+        sched,
+        m,
+        interval=1,
+        lookahead=0,
+        offline_tile_path="/tiles/off.mbtiles",
+    )
+    # callback executed but with no lookahead, nothing prefetched
+    assert ("route_prefetch", 1) in sched.scheduled
+    assert not m.called
