@@ -91,11 +91,14 @@ try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
+        FingerprintInfo,
         _db_path,
         get_table_counts,
         load_dashboard_settings,
         load_recent_health,
         load_health_history,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
     )
 except Exception:  # pragma: no cover - fall back to real module
@@ -104,10 +107,13 @@ except Exception:  # pragma: no cover - fall back to real module
         load_health_history,
         load_ap_cache,
         load_dashboard_settings,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
         get_table_counts,
         _db_path,
         DashboardSettings,
+        FingerprintInfo,
     )
 
 from piwardrive.errors import GeofenceError
@@ -133,6 +139,11 @@ try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
+
+try:  # allow tests to stub out analytics
+    from analytics.baseline import analyze_health_baseline, load_baseline_health  # type: ignore
+except Exception:  # pragma: no cover - fall back to real module
+    from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
 
 
 logger = logging.getLogger(__name__)
@@ -298,6 +309,23 @@ async def get_status(limit: int = 5) -> list[dict[str, Any]]:
         records = await records
 
     return [asdict(rec) for rec in records]
+
+
+@GET("/baseline-analysis")
+async def baseline_analysis_endpoint(
+    limit: int = 10,
+    days: int = 30,
+    threshold: float = 5.0,
+    _auth: None = AUTH_DEP,
+) -> dict[str, Any]:
+    """Compare recent metrics to historical averages."""
+    recent = load_recent_health(limit)
+    if inspect.isawaitable(recent):
+        recent = await recent
+    baseline = load_baseline_health(days, limit)
+    if inspect.isawaitable(baseline):
+        baseline = await baseline
+    return analyze_health_baseline(recent, baseline, threshold)
 
 
 async def _collect_widget_metrics() -> dict[str, Any]:
@@ -560,6 +588,27 @@ async def update_dashboard_settings_endpoint(
     widgets = data.get("widgets", [])
     await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
     return {"layout": layout, "widgets": widgets}
+
+
+@GET("/fingerprints")
+async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+    """Return stored fingerprint metadata."""
+    items = await load_fingerprint_info()
+    return {"fingerprints": [asdict(i) for i in items]}
+
+
+@POST("/fingerprints")
+async def add_fingerprint_endpoint(
+    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, Any]:
+    """Store fingerprint metadata in the database."""
+    info = FingerprintInfo(
+        environment=data.get("environment", ""),
+        source=data.get("source", ""),
+        record_count=int(data.get("record_count", 0)),
+    )
+    await save_fingerprint_info(info)
+    return asdict(info)
 
 
 @GET("/geofences")

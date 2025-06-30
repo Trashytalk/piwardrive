@@ -67,7 +67,7 @@ graph LR
 - Remote database sync (`remote_sync.py`) with a central aggregation service
   for combined statistics and map overlays
 - Observations stored in SQLite for later analysis
-- CLI SIGINT tools under `src/piwardrive/sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
+- CLI SIGINT tools under `src/piwardrive/integrations/sigint_suite/` (set `SIGINT_DEBUG=1` for debug logs)
 
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 

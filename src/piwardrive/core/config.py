@@ -123,6 +123,8 @@ class Config:
     wigle_api_name: str = ""  # noqa: V107
     wigle_api_key: str = ""  # noqa: V107
     gps_movement_threshold: float = 1.0  # noqa: V107
+    baseline_history_days: int = 30  # noqa: V107
+    baseline_threshold: float = 5.0  # noqa: V107
     cloud_bucket: str = CLOUD_BUCKET  # noqa: V107
     cloud_prefix: str = CLOUD_PREFIX  # noqa: V107
     cloud_profile: str = CLOUD_PROFILE  # noqa: V107
@@ -199,6 +201,8 @@ class FileConfigModel(BaseModel):
     wigle_api_name: Optional[str] = None
     wigle_api_key: Optional[str] = None
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
+    baseline_history_days: Optional[int] = Field(default=None, ge=1)
+    baseline_threshold: Optional[float] = Field(default=None, ge=0)
     cloud_bucket: Optional[str] = None
     cloud_prefix: Optional[str] = None
     cloud_profile: Optional[str] = None
@@ -231,6 +235,8 @@ class ConfigModel(FileConfigModel):
     log_tail_cache_seconds: float = Field(
         default=DEFAULTS["log_tail_cache_seconds"], ge=0
     )
+    baseline_history_days: int = Field(default=DEFAULTS["baseline_history_days"], ge=1)
+    baseline_threshold: float = Field(default=DEFAULTS["baseline_threshold"], ge=0)
     mysql_host: str = DEFAULTS["mysql_host"]
     mysql_port: int = Field(default=DEFAULTS["mysql_port"], ge=1)
     mysql_user: str = DEFAULTS["mysql_user"]
@@ -455,6 +461,8 @@ class AppConfig:
     wigle_api_name: str = DEFAULTS["wigle_api_name"]
     wigle_api_key: str = DEFAULTS["wigle_api_key"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
+    baseline_history_days: int = DEFAULTS["baseline_history_days"]
+    baseline_threshold: float = DEFAULTS["baseline_threshold"]
     cloud_bucket: str = DEFAULTS["cloud_bucket"]
     cloud_prefix: str = DEFAULTS["cloud_prefix"]
     cloud_profile: str = DEFAULTS["cloud_profile"]

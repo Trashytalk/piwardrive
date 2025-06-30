@@ -94,6 +94,13 @@ the ``log_paths`` whitelist defined in ``config.json``::
 
    curl "http://localhost:8000/logs?lines=50"
 
+``/baseline-analysis`` compares recent metrics against historical averages.
+Pass ``limit`` and ``days`` query parameters to adjust the analysis window.
+Metrics deviating more than ``baseline_threshold`` are listed under
+``anomalies``::
+
+   curl http://localhost:8000/baseline-analysis
+
 ``/export/aps``
     Download saved Wi-Fi access points. Use the ``fmt`` query parameter to
     choose ``csv``, ``json``, ``geojson``, ``kml`` or ``gpx``.
