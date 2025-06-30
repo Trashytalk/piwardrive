@@ -12,6 +12,9 @@ async def playback_track(
     interval: float = 1.0,
 ) -> None:
     """Replay ``points`` by invoking ``callback`` for each coordinate."""
+    if interval <= 0:
+        raise ValueError(f"interval must be > 0, got {interval}")
+
     for lat, lon in points:
         await callback(lat, lon)
         await asyncio.sleep(interval)
