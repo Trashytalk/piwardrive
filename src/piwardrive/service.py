@@ -158,7 +158,7 @@ import psutil
 import vehicle_sensors
 from sync import upload_data
 
-from piwardrive import export, orientation_sensors
+from piwardrive import export, graphql_api, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 
@@ -183,7 +183,7 @@ def error_json(code: int, message: str | None = None) -> dict[str, str]:
             message = HTTPStatus(code).phrase
         except Exception:
             message = str(code)
-    return {"code": int(code), "message": message}
+    return {"code": str(int(code)), "message": message}
 
 
 async def _default_fetch_metrics_async(
@@ -243,6 +243,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 SECURITY_DEP = Depends(oauth2_scheme)
 BODY = Body(...)
 app = FastAPI()
+if config.AppConfig.load().enable_graphql:
+    graphql_api.add_graphql_route(app)
 cors_origins_env = os.getenv("PW_CORS_ORIGINS", "")
 cors_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
 if cors_origins:

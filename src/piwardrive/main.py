@@ -50,10 +50,17 @@ class PiWardriveApp:
         if not self.container.has("scheduler"):
             self.container.register_instance("scheduler", PollScheduler())
         self.scheduler: PollScheduler = self.container.resolve("scheduler")
+        mqtt_client = None
+        if self.config_data.enable_mqtt:
+            from piwardrive.mqtt import MQTTClient
+
+            mqtt_client = MQTTClient()
+            mqtt_client.connect()
+        self.mqtt_client = mqtt_client
         if not self.container.has("health_monitor"):
             self.container.register_instance(
                 "health_monitor",
-                diagnostics.HealthMonitor(self.scheduler, 10),
+                diagnostics.HealthMonitor(self.scheduler, 10, mqtt_client=mqtt_client),
             )
         self.health_monitor = self.container.resolve("health_monitor")
         import tile_maintenance

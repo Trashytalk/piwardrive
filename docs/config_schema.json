@@ -614,6 +614,16 @@
       "default": "piwardrive",
       "title": "Mysql Db",
       "type": "string"
+    },
+    "enable_graphql": {
+      "default": false,
+      "title": "Enable Graphql",
+      "type": "boolean"
+    },
+    "enable_mqtt": {
+      "default": false,
+      "title": "Enable Mqtt",
+      "type": "boolean"
     }
   },
   "required": ["theme", "map_poll_gps"],

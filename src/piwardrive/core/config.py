@@ -139,6 +139,8 @@ class Config:
     mysql_user: str = "piwardrive"  # noqa: V107
     mysql_password: str = ""  # noqa: V107
     mysql_db: str = "piwardrive"  # noqa: V107
+    enable_graphql: bool = False  # noqa: V107
+    enable_mqtt: bool = False  # noqa: V107
     scan_rules: Dict[str, Any] = field(default_factory=dict)  # noqa: V107
     influx_url: str = ""  # noqa: V107
     influx_token: str = ""  # noqa: V107
@@ -227,6 +229,8 @@ class FileConfigModel(BaseModel):
     mysql_user: Optional[str] = None
     mysql_password: Optional[str] = None
     mysql_db: Optional[str] = None
+    enable_graphql: Optional[bool] = None
+    enable_mqtt: Optional[bool] = None
     scan_rules: Dict[str, Any] = Field(default_factory=dict)
     influx_url: Optional[str] = None
     influx_token: Optional[str] = None
@@ -268,6 +272,8 @@ class ConfigModel(FileConfigModel):
     mysql_user: str = DEFAULTS["mysql_user"]
     mysql_password: str = DEFAULTS["mysql_password"]
     mysql_db: str = DEFAULTS["mysql_db"]
+    enable_graphql: bool = DEFAULTS["enable_graphql"]
+    enable_mqtt: bool = DEFAULTS["enable_mqtt"]
     scan_rules: Dict[str, Any] = field(default_factory=dict)
     scan_rules: Dict[str, Any] = Field(default_factory=dict)
     influx_url: str = DEFAULTS["influx_url"]
@@ -509,6 +515,8 @@ class AppConfig:
     mysql_user: str = DEFAULTS["mysql_user"]
     mysql_password: str = DEFAULTS["mysql_password"]
     mysql_db: str = DEFAULTS["mysql_db"]
+    enable_graphql: bool = DEFAULTS["enable_graphql"]
+    enable_mqtt: bool = DEFAULTS["enable_mqtt"]
 
     @classmethod
     def load(cls) -> "AppConfig":
