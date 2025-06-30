@@ -76,18 +76,20 @@ def reset_orientation_map() -> None:
     if path:
         try:
             safe = sanitize_path(path)
-            with open(safe, "r", encoding="utf-8") as fh:
-                data = json.load(fh)
-            if isinstance(data, dict):
-                _ORIENTATION_MAP.update({k.lower(): float(v) for k, v in data.items()})
-                return
-            logger.error("Invalid orientation map in %s", path)
         except ValueError:
             logger.error("Unsafe orientation map path: %s", path)
-        except FileNotFoundError:
-            logger.error("Orientation map file not found: %s", path)
-        except Exception as exc:  # pragma: no cover - runtime errors
-            logger.error("Failed to load orientation map from %s: %s", path, exc)
+        else:
+            try:
+                with open(safe, "r", encoding="utf-8") as fh:
+                    data = json.load(fh)
+                if isinstance(data, dict):
+                    _ORIENTATION_MAP.update({k.lower(): float(v) for k, v in data.items()})
+                    return
+                logger.error("Invalid orientation map in %s", path)
+            except FileNotFoundError:
+                logger.error("Orientation map file not found: %s", path)
+            except Exception as exc:  # pragma: no cover - runtime errors
+                logger.error("Failed to load orientation map from %s: %s", path, exc)
 
     _ORIENTATION_MAP.update(DEFAULT_ORIENTATION_MAP)
 

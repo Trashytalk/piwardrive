@@ -93,3 +93,17 @@ def test_read_mpu6050_env_pkg(monkeypatch):
     data = osens.read_mpu6050()
     monkeypatch.delenv("PW_MPU6050_ADDR", raising=False)
     assert data == {"accelerometer": {"addr": 105}, "gyroscope": {"addr": 105}}
+
+
+def test_reset_orientation_map_unsafe_pkg(monkeypatch, caplog) -> None:
+    monkeypatch.setenv("PW_ORIENTATION_MAP_FILE", "../omap.json")
+    osens.update_orientation_map({"flip": 45.0})
+    caplog.set_level(logging.ERROR)
+    try:
+        osens.reset_orientation_map()
+        assert "Unsafe orientation map path" in caplog.text
+        assert osens.orientation_to_angle("flip") is None
+        assert osens.orientation_to_angle("normal") == 0.0
+    finally:
+        monkeypatch.delenv("PW_ORIENTATION_MAP_FILE", raising=False)
+        osens.reset_orientation_map()
