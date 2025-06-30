@@ -3,7 +3,6 @@
 [![Backend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=backend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=backend)
 [![Frontend Coverage](https://codecov.io/gh/TRASHYTALK/piwardrive/branch/main/graph/badge.svg?flag=frontend)](https://app.codecov.io/gh/TRASHYTALK/piwardrive?flags=frontend)
 
-
 PiWardrive is a headless mapping and diagnostic suite for Raspberry Pi 5. It merges war-driving tools such as Kismet and BetterCAP with a lightweight command line SIGINT suite for scanning. The primary interface is a browser-based dashboard built with React. Launch it after building the frontend with:
 
 ```bash
@@ -59,6 +58,7 @@ graph LR
 - Status service with React web UI
 - Plugin widgets dynamically loaded in the web UI
 - Offline-capable PWA frontend
+- Webhook notifications for high CPU or disk usage
 
 ## Data Handling
 
@@ -200,11 +200,10 @@ source gui-env/bin/activate
 
 8. (Optional) copy `examples/piwardrive.service` into `/etc/systemd/system/` and enable it to run the API on boot:
 
-
-    ```bash
-    sudo cp examples/piwardrive-webui.service /etc/systemd/system/
-    sudo systemctl enable --now piwardrive-webui.service
-    ```
+   ```bash
+   sudo cp examples/piwardrive-webui.service /etc/systemd/system/
+   sudo systemctl enable --now piwardrive-webui.service
+   ```
 
 9. Start the application manually if the service is not enabled:
 
@@ -491,6 +490,7 @@ Password hashing guidelines are covered in [docs/security.rst](docs/security.rst
 
 Comprehensive guides and API references live in the `docs/` directory. Run `make html` there to build the Sphinx site. High level summaries are collected in [REFERENCE.md](REFERENCE.md).
 Detailed examples for each command line helper are available in [docs/cli_tools.rst](docs/cli_tools.rst).
+See [docs/notifications.rst](docs/notifications.rst) for enabling webhook alerts.
 
 ## Contributing
 
