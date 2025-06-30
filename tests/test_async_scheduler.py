@@ -227,3 +227,15 @@ def test_async_scheduler_metrics(monkeypatch: Any) -> None:
         sched.utils.shutdown_async_loop()
 
     asyncio.run(runner())
+
+
+def test_scheduler_rejects_invalid_interval(monkeypatch: Any) -> None:
+    sched = load_scheduler(monkeypatch)
+
+    poll = sched.PollScheduler()
+    with pytest.raises(ValueError):
+        poll.schedule("job", lambda dt: None, 0)
+
+    async_sched = sched.AsyncScheduler()
+    with pytest.raises(ValueError):
+        async_sched.schedule("job", lambda: None, 0)
