@@ -11,8 +11,11 @@ os.makedirs(STORAGE, exist_ok=True)
 @app.post("/")
 async def receive(file: UploadFile):
     dest = os.path.join(STORAGE, file.filename)
-    with open(dest, "wb") as fh:
-        shutil.copyfileobj(file.file, fh)
+    try:
+        with open(dest, "wb") as fh:
+            shutil.copyfileobj(file.file, fh)
+    except OSError as exc:  # pragma: no cover - I/O failure
+        return {"error": str(exc)}
     return {"saved": dest}
 
 
