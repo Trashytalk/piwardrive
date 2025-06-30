@@ -608,7 +608,9 @@ async def logout(token: str = SECURITY_DEP) -> LogoutResponse:
 
 
 @GET("/status")
-async def get_status(limit: int = 5) -> list[HealthRecordDict]:
+async def get_status(
+    limit: int = 5, _auth: User | None = AUTH_DEP
+) -> list[HealthRecordDict]:
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):
