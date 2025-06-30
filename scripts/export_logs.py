@@ -7,7 +7,7 @@ import logging
 from piwardrive.logconfig import setup_logging
 
 try:  # allow tests to substitute a lightweight main module
-    from main import PiWardriveApp  # type: ignore
+    from main import PiWardriveApp
 except Exception:  # pragma: no cover - fallback
     from piwardrive.main import PiWardriveApp
 

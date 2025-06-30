@@ -6,7 +6,7 @@ import os
 from typing import Any
 
 try:
-    from persistence import load_ap_cache, load_recent_health  # type: ignore
+    from persistence import load_ap_cache, load_recent_health
 except Exception:  # pragma: no cover - fallback
     from piwardrive.persistence import load_ap_cache, load_recent_health
 

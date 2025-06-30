@@ -48,7 +48,7 @@ def _insert_wifi(conn: sqlite3.Connection, records: list[dict[str, Any]]) -> Non
 
 async def _load_data(limit: int) -> tuple[list[Any], list[dict[str, Any]]]:
     try:
-        from persistence import load_ap_cache, load_recent_health  # type: ignore
+        from persistence import load_ap_cache, load_recent_health
     except Exception:  # pragma: no cover - fallback
         from piwardrive.persistence import load_ap_cache, load_recent_health
 

@@ -2,7 +2,7 @@ import math
 import os
 import sys
 
-from piwardrive import route_optimizer  # noqa: E402  # type: ignore
+from piwardrive import route_optimizer  # noqa: E402
 
 
 def test_suggest_route_empty_returns_empty() -> None:

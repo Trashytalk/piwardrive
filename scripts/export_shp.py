@@ -5,7 +5,7 @@ import logging
 from piwardrive.logconfig import setup_logging
 
 try:  # allow tests to substitute a lightweight persistence module
-    from persistence import load_ap_cache  # type: ignore
+    from persistence import load_ap_cache
 except Exception:  # pragma: no cover - fallback
     from piwardrive.persistence import load_ap_cache
 

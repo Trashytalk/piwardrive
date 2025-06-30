@@ -5,9 +5,9 @@ from pathlib import Path
 from setuptools import Extension, find_packages, setup
 
 try:  # Python >=3.11
-    import tomllib  # type: ignore
+    import tomllib
 except ModuleNotFoundError:  # Python <=3.10
-    import tomli as tomllib  # type: ignore
+    import tomli as tomllib
 
 
 def load_project_config():

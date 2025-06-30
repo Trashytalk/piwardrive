@@ -14,7 +14,7 @@ from piwardrive.core.config import _parse_env_value
 try:
     import httpx
 except Exception:  # pragma: no cover - optional dependency
-    httpx = None  # type: ignore
+    httpx = None
 
 
 def _parse_value(raw: str, default: Any) -> Any:

@@ -105,7 +105,7 @@ async def rotate_log_async(path: str, max_files: int = 3) -> None:
         return
 
     try:
-        import aiofiles  # type: ignore
+        import aiofiles
     except Exception:  # pragma: no cover - optional dependency
         await asyncio.to_thread(rotate_log, path, max_files)
         return

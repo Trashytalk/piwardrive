@@ -55,7 +55,7 @@ def export_csv(records: Iterable[Mapping[str, str]], path: str) -> None:
 def export_yaml(records: Iterable[Any], path: str) -> None:
     """Export ``records`` to ``path`` in YAML format."""
     try:
-        import yaml  # type: ignore
+        import yaml
     except Exception as exc:  # pragma: no cover - optional dep
         raise RuntimeError("PyYAML required for YAML export") from exc
 
