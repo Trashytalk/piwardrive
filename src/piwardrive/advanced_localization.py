@@ -40,7 +40,6 @@ def load_config(path: str | Path) -> Config:
 
 def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
     """Return observation rows from a Kismet SQLite log."""
-    conn = sqlite3.connect(str(db_path))
     query = """
     SELECT devices.macaddr, devices.ssid, packets.lat, packets.lon,
            packets.signal AS rssi, packets.gpstime
@@ -49,8 +48,8 @@ def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
     WHERE devices.type = 'infrastructure'
       AND packets.lat != 0 AND packets.lon != 0;
     """
-    df = pd.read_sql_query(query, conn)
-    conn.close()
+    with sqlite3.connect(str(db_path)) as conn:
+        df = pd.read_sql_query(query, conn)
     return df
 
 
