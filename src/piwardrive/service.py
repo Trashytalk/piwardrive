@@ -109,6 +109,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Tuple
 
 from piwardrive.logconfig import DEFAULT_LOG_PATH
+from piwardrive.errors import GeofenceError
 
 try:  # allow tests to stub out ``persistence``
     from persistence import (
@@ -152,7 +153,6 @@ except Exception:  # pragma: no cover - fall back to real module
         FingerprintInfo,
     )
 
-from piwardrive.errors import GeofenceError
 from piwardrive.security import hash_secret, sanitize_path, verify_password
 
 try:  # allow tests to provide a simplified utils module
@@ -162,14 +162,16 @@ except Exception:  # pragma: no cover - fall back to real module
 
 from typing import Awaitable, Callable
 
-import config
 import psutil
-import vehicle_sensors
-from sync import upload_data
 
-from piwardrive import export, graphql_api
+import config
+from sync import upload_data
+import vehicle_sensors
+
+from piwardrive import export, graphql_api, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
+from piwardrive.utils import MetricsResult
 
 try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner
@@ -192,19 +194,27 @@ logger = logging.getLogger(__name__)
 
 # TypedDict definitions for API responses
 class TokenResponse(typing.TypedDict):
+    """Bearer token response."""
+
     access_token: str
     token_type: str
 
 
 class AuthLoginResponse(TokenResponse):
+    """Auth token response that includes the user role."""
+
     role: str
 
 
 class LogoutResponse(typing.TypedDict):
+    """Logout operation result."""
+
     logout: bool
 
 
 class HealthRecordDict(typing.TypedDict):
+    """Serialized health record."""
+
     timestamp: str
     cpu_temp: float | None
     cpu_percent: float
@@ -213,6 +223,8 @@ class HealthRecordDict(typing.TypedDict):
 
 
 class BaselineAnalysisResult(typing.TypedDict):
+    """Result of comparing recent metrics to a baseline."""
+
     recent: dict[str, float]
     baseline: dict[str, float]
     delta: dict[str, float]
@@ -220,6 +232,7 @@ class BaselineAnalysisResult(typing.TypedDict):
 
 
 class WidgetMetrics(typing.TypedDict):
+    """Metrics used by dashboard widgets."""
     cpu_temp: float | None
     bssid_count: int
     handshake_count: int
@@ -237,23 +250,33 @@ class WidgetMetrics(typing.TypedDict):
 
 
 class WidgetsListResponse(typing.TypedDict):
+    """Response containing available widget names."""
+
     widgets: list[str]
 
 
 class CPUInfo(typing.TypedDict):
+    """CPU temperature and utilization."""
+
     temp: float | None
     percent: float
 
 
 class RAMInfo(typing.TypedDict):
+    """Memory utilization."""
+
     percent: float | None
 
 
 class StorageInfo(typing.TypedDict):
+    """Disk usage percentage."""
+
     percent: float | None
 
 
 class OrientationInfo(typing.TypedDict):
+    """Orientation and raw sensor data."""
+
     orientation: str | None
     angle: float | None
     accelerometer: dict[str, float] | None
@@ -261,12 +284,16 @@ class OrientationInfo(typing.TypedDict):
 
 
 class VehicleInfo(typing.TypedDict):
+    """Vehicle sensor readings."""
+
     speed: float | None
     rpm: float | None
     engine_load: float | None
 
 
 class GPSInfo(typing.TypedDict):
+    """GPS information."""
+
     lat: float | None
     lon: float | None
     accuracy: float | None
@@ -274,41 +301,63 @@ class GPSInfo(typing.TypedDict):
 
 
 class LogsResponse(typing.TypedDict):
+    """Log tailing response."""
+
     path: str
     lines: list[str]
 
 
 class DBStatsResponse(typing.TypedDict):
+    """Database statistics."""
+
     size_kb: float | None
     tables: dict[str, int]
 
 
 class LoraScanResponse(typing.TypedDict):
+    """LoRa scan results."""
+
     count: int
     lines: list[str]
 
 
+class CommandResponse(typing.TypedDict):
+    """Result from running a shell command."""
+
+    output: str
+
+
 class ServiceControlResponse(typing.TypedDict):
+    """Response from systemctl wrapper."""
+
     service: str
     action: str
     success: bool
 
 
 class ServiceStatusResponse(typing.TypedDict):
+    """Service active/inactive state."""
+
     service: str
     active: bool
 
 
 class WebhooksResponse(typing.TypedDict):
+    """Configured webhook URLs."""
+
     webhooks: list[str]
 
 
 class DashboardSettingsResponse(typing.TypedDict):
+    """Serialized dashboard layout settings."""
+
     layout: list[typing.Any]
     widgets: list[str]
 
 
 class FingerprintInfoDict(typing.TypedDict):
+    """Metadata about stored Wi-Fi fingerprints."""
+
     environment: str
     source: str
     record_count: int
@@ -316,6 +365,8 @@ class FingerprintInfoDict(typing.TypedDict):
 
 
 class Geofence(typing.TypedDict, total=False):
+    """Polygon used to trigger entry/exit notifications."""
+
     name: str
     points: list[typing.Any]
     enter_message: str | None
@@ -323,14 +374,20 @@ class Geofence(typing.TypedDict, total=False):
 
 
 class RemoveResponse(typing.TypedDict):
+    """Result of a delete operation."""
+
     removed: bool
 
 
 class SyncResponse(typing.TypedDict):
+    """Count of uploaded records."""
+
     uploaded: int
 
 
 class ConfigResponse(typing.TypedDict, total=False):
+    """Application configuration values."""
+
     theme: str
     dashboard_layout: list[typing.Any]
     notification_webhooks: list[str]
@@ -425,22 +482,27 @@ def _wrap_route(
 
 
 def GET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
+    """Wrapper around :func:`FastAPI.get`."""
     return _wrap_route(app.get, *args, **kwargs)
 
 
 def POST(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
+    """Wrapper around :func:`FastAPI.post`."""
     return _wrap_route(app.post, *args, **kwargs)
 
 
 def PUT(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
+    """Wrapper around :func:`FastAPI.put`."""
     return _wrap_route(app.put, *args, **kwargs)
 
 
 def DELETE(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
+    """Wrapper around :func:`FastAPI.delete`."""
     return _wrap_route(app.delete, *args, **kwargs)
 
 
 def WEBSOCKET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
+    """Wrapper around :func:`FastAPI.websocket`."""
     return _wrap_route(app.websocket, *args, **kwargs)
 
 
@@ -503,7 +565,9 @@ async def _check_auth(token: str = SECURITY_DEP) -> None:
 
 
 @POST("/token")
-async def login(form: OAuth2PasswordRequestForm = Depends()) -> TokenResponse:
+async def token_login(
+    form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
+) -> TokenResponse:
     """Return bearer token for valid credentials."""
     await _ensure_default_user()
     user = await get_user(form.username)
@@ -518,7 +582,9 @@ AUTH_DEP = Depends(_check_auth)
 
 
 @POST("/auth/login")
-async def login(form: OAuth2PasswordRequestForm = Depends()) -> AuthLoginResponse:
+async def login(
+    form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
+) -> AuthLoginResponse:
     """Validate credentials and return a bearer token."""
     user = await get_user(form.username)
     if user is None or not verify_password(form.password, user.password):
@@ -824,7 +890,9 @@ async def update_dashboard_settings_endpoint(
 
 
 @GET("/fingerprints")
-async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, list[FingerprintInfoDict]]:
+async def list_fingerprints_endpoint(
+    _auth: None = AUTH_DEP,
+) -> dict[str, list[FingerprintInfoDict]]:
     """Return stored fingerprint metadata."""
     items = await load_fingerprint_info()
     return {"fingerprints": [asdict(i) for i in items]}
@@ -1147,7 +1215,7 @@ async def sse_history(
 
 
 async def main() -> None:
-
+    """Run the FastAPI app using ``uvicorn``."""
     import uvicorn
 
     port_str = os.getenv("PW_SERVICE_PORT", "8000")

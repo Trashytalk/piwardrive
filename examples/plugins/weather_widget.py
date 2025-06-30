@@ -16,6 +16,7 @@ class WeatherWidget(DashboardWidget):
     update_interval = 600.0  # 10 minutes
 
     def __init__(self, **kwargs: object) -> None:
+        """Create widget layout and fetch initial data."""
         super().__init__(**kwargs)
         self.card = MDCard(orientation="vertical", padding=dp(8), radius=[8])
         self.label = MDLabel(text="Fetching weather...", halign="center")
