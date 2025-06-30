@@ -1,13 +1,58 @@
 import logging
 
 
+try:  # pragma: no cover - optional GUI dependency
+    import tkinter as _tk
+    from tkinter import messagebox as _messagebox
+except Exception:  # pragma: no cover - headless or tkinter missing
+    _tk = None  # type: ignore[assignment]
+    _messagebox = None  # type: ignore[assignment]
+
+_tk_root: object | None = None
+
+
+def _get_root() -> object | None:
+    """Return a hidden ``Tk`` instance or ``None`` when not available."""
+
+    global _tk_root
+    if _tk is None:
+        return None
+    if _tk_root is None:
+        try:  # pragma: no cover - may fail on headless systems
+            _tk_root = _tk.Tk()
+            _tk_root.withdraw()
+        except Exception:
+            _tk_root = None
+    return _tk_root
+
+
 class App:
-    """Placeholder application interface."""
+    """Minimal application helper that tracks a running instance."""
+
+    _instance: "App | None" = None
+
+    def __init__(self) -> None:
+        self._root = _get_root()
+        App._instance = self
 
     @staticmethod
-    def get_running_app() -> None:
-        """Return ``None`` when no GUI is active."""
-        return None
+    def get_running_app() -> "App | None":
+        """Return the current application instance if one exists."""
+
+        return App._instance
+
+    def show_alert(self, title: str, message: str) -> None:
+        """Display ``message`` in a simple popup when possible."""
+
+        if _messagebox is None:
+            return
+        root = self._root if self._root is not None else _get_root()
+        if root is None:
+            return
+        try:  # pragma: no cover - UI update
+            _messagebox.showerror(title, message, parent=root)  # type: ignore[arg-type]
+        except Exception:
+            pass
 
 
 ERROR_PREFIX = "E"
