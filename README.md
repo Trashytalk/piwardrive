@@ -496,6 +496,8 @@ Install the development dependencies and run the tests:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+# Install frontend deps for lint and test hooks
+cd webui && npm install && cd ..
 # Some tests rely on additional scientific libraries such as `numpy`.
 # Install them with the optional `tests` extras if needed:
 # pip install .[tests]
