@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-import time
+import asyncio
 from typing import Any, Callable, Dict, List
 
 from .bluetooth import scan_bluetooth
+from .bluetooth.scanner import async_scan_bluetooth
 from .wifi import scan_wifi
+from .wifi.scanner import async_scan_wifi
 
 Result = Dict[str, List[Any]]
 
@@ -16,18 +18,22 @@ def scan_once() -> Result:
     return {"wifi": wifi, "bluetooth": bt}
 
 
-def run_continuous_scan(
+async def run_continuous_scan(
     interval: float = 60.0,
     iterations: int = 0,
     on_result: Callable[[Result], None] | None = None,
 ) -> None:
-    """Run :func:`scan_once` repeatedly."""
+    """Run Wi-Fi and Bluetooth scans repeatedly."""
     count = 0
     while True:
-        result = scan_once()
+        wifi, bt = await asyncio.gather(
+            async_scan_wifi(),
+            async_scan_bluetooth(),
+        )
+        result = {"wifi": wifi, "bluetooth": bt}
         if on_result:
             on_result(result)
         count += 1
         if iterations and count >= iterations:
             break
-        time.sleep(interval)
+        await asyncio.sleep(interval)

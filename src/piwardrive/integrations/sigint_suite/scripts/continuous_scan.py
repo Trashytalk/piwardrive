@@ -1,6 +1,7 @@
 """Module continuous_scan."""
 
 import argparse
+import asyncio
 import os
 
 from piwardrive.sigint_suite import continuous_scan, paths
@@ -42,10 +43,12 @@ def main(argv: list[str] | None = None) -> None:
 
     os.makedirs(args.export_dir, exist_ok=True)
 
-    continuous_scan.run_continuous_scan(
-        interval=args.interval,
-        iterations=args.iterations,
-        on_result=lambda res: _save_results(args.export_dir, res),
+    asyncio.run(
+        continuous_scan.run_continuous_scan(
+            interval=args.interval,
+            iterations=args.iterations,
+            on_result=lambda res: _save_results(args.export_dir, res),
+        )
     )
 
 

@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import piwardrive.sigint_suite.continuous_scan as cs
@@ -14,11 +15,29 @@ def test_scan_once_returns_data(monkeypatch):
 
 def test_run_continuous_scan_iterations(monkeypatch):
     calls = {"n": 0}
-    monkeypatch.setattr(cs, "scan_wifi", lambda: [])
-    monkeypatch.setattr(cs, "scan_bluetooth", lambda: [])
-    monkeypatch.setattr(cs.time, "sleep", lambda _s: None)
-    cs.run_continuous_scan(
-        interval=0, iterations=3, on_result=lambda _r: calls.update(n=calls["n"] + 1)
+
+    async def fake_wifi():
+        return []
+
+    async def fake_bt():
+        return []
+
+    monkeypatch.setattr(cs, "async_scan_wifi", fake_wifi)
+    monkeypatch.setattr(cs, "async_scan_bluetooth", fake_bt)
+
+    orig_sleep = asyncio.sleep
+
+    async def fast_sleep(_):
+        await orig_sleep(0)
+
+    monkeypatch.setattr(cs.asyncio, "sleep", fast_sleep)
+
+    asyncio.run(
+        cs.run_continuous_scan(
+            interval=0,
+            iterations=3,
+            on_result=lambda _r: calls.update(n=calls["n"] + 1),
+        )
     )
     assert calls["n"] == 3
 
@@ -43,8 +62,22 @@ def test_main_runs_iterations(tmp_path, monkeypatch):
         calls["n"] += 1
 
     monkeypatch.setattr(cli, "_save_results", fake_save)
-    monkeypatch.setattr(cs, "scan_once", lambda: {"wifi": [], "bluetooth": []})
-    monkeypatch.setattr(cs.time, "sleep", lambda _s: None)
+
+    async def fake_wifi():
+        return []
+
+    async def fake_bt():
+        return []
+
+    monkeypatch.setattr(cs, "async_scan_wifi", fake_wifi)
+    monkeypatch.setattr(cs, "async_scan_bluetooth", fake_bt)
+
+    orig_sleep = asyncio.sleep
+
+    async def fast_sleep(_):
+        await orig_sleep(0)
+
+    monkeypatch.setattr(cs.asyncio, "sleep", fast_sleep)
 
     cli.main(["--interval", "0", "--iterations", "3", "--export-dir", str(tmp_path)])
     assert calls["n"] == 3
