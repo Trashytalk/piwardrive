@@ -7,10 +7,19 @@ import shlex
 import subprocess
 from typing import List, Optional, cast
 
+from piwardrive.core import config
+from piwardrive.scheduler import PollScheduler
+
 from piwardrive.sigint_suite.cellular.parsers import parse_band_output
 from piwardrive.sigint_suite.models import BandRecord
 
 logger = logging.getLogger(__name__)
+
+
+def _allowed() -> bool:
+    cfg = config.AppConfig.load()
+    rules = cfg.scan_rules.get("bands", {}) if hasattr(cfg, "scan_rules") else {}
+    return PollScheduler.check_rules(rules)
 
 
 def scan_bands(
@@ -24,6 +33,8 @@ def scan_bands(
     variable to override the executable. The timeout defaults to the
     ``BAND_SCAN_TIMEOUT`` environment variable (``10`` seconds).
     """
+    if not _allowed():
+        return []
     cmd_str = str(cmd or os.getenv("BAND_SCAN_CMD", "celltrack"))
     args = shlex.split(cmd_str)
     timeout = (
@@ -46,6 +57,8 @@ async def async_scan_bands(
     timeout: int | None = None,
 ) -> List[BandRecord]:
     """Asynchronously scan for cellular bands using ``celltrack``."""
+    if not _allowed():
+        return []
     cmd_str = str(cmd or os.getenv("BAND_SCAN_CMD", "celltrack"))
     args = shlex.split(cmd_str)
     timeout = (

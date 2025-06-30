@@ -39,6 +39,8 @@ ROUTE_PREFETCH_LOOKAHEAD = 5
 REMOTE_SYNC_INTERVAL = 60  # minutes
 HANDSHAKE_CACHE_SECONDS_DEFAULT = 10.0
 LOG_TAIL_CACHE_SECONDS_DEFAULT = 1.0
+NOTIFY_CPU_TEMP_DEFAULT = 80.0
+NOTIFY_DISK_PERCENT_DEFAULT = 90.0
 
 # Cloud upload defaults
 CLOUD_BUCKET = ""
@@ -95,6 +97,7 @@ class Config:
             "/var/log/bettercap.log",
         ]
     )
+    restart_services: List[str] = field(default_factory=list)  # noqa: V107
     health_poll_interval: int = 10  # noqa: V107
     log_rotate_interval: int = 3600  # noqa: V107
     log_rotate_archives: int = 3  # noqa: V107
@@ -120,9 +123,14 @@ class Config:
     remote_sync_interval: int = REMOTE_SYNC_INTERVAL  # noqa: V107
     handshake_cache_seconds: float = HANDSHAKE_CACHE_SECONDS_DEFAULT  # noqa: V107
     log_tail_cache_seconds: float = LOG_TAIL_CACHE_SECONDS_DEFAULT  # noqa: V107
+    notification_webhooks: List[str] = field(default_factory=list)  # noqa: V107
+    notify_cpu_temp: float = NOTIFY_CPU_TEMP_DEFAULT  # noqa: V107
+    notify_disk_percent: float = NOTIFY_DISK_PERCENT_DEFAULT  # noqa: V107
     wigle_api_name: str = ""  # noqa: V107
     wigle_api_key: str = ""  # noqa: V107
     gps_movement_threshold: float = 1.0  # noqa: V107
+    baseline_history_days: int = 30  # noqa: V107
+    baseline_threshold: float = 5.0  # noqa: V107
     cloud_bucket: str = CLOUD_BUCKET  # noqa: V107
     cloud_prefix: str = CLOUD_PREFIX  # noqa: V107
     cloud_profile: str = CLOUD_PROFILE  # noqa: V107
@@ -131,6 +139,12 @@ class Config:
     mysql_user: str = "piwardrive"  # noqa: V107
     mysql_password: str = ""  # noqa: V107
     mysql_db: str = "piwardrive"  # noqa: V107
+    scan_rules: Dict[str, Any] = field(default_factory=dict)  # noqa: V107
+    influx_url: str = ""  # noqa: V107
+    influx_token: str = ""  # noqa: V107
+    influx_org: str = ""  # noqa: V107
+    influx_bucket: str = ""  # noqa: V107
+    postgres_dsn: str = ""  # noqa: V107
 
 
 DEFAULT_CONFIG = Config()
@@ -187,6 +201,7 @@ class FileConfigModel(BaseModel):
     route_prefetch_lookahead: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
+    restart_services: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
     admin_password_hash: Optional[str] = ""
     remote_sync_url: Optional[str] = Field(default=None, min_length=1)
@@ -196,9 +211,14 @@ class FileConfigModel(BaseModel):
     remote_sync_interval: Optional[int] = Field(default=None, ge=1)
     handshake_cache_seconds: Optional[float] = Field(default=None, ge=0)
     log_tail_cache_seconds: Optional[float] = Field(default=None, ge=0)
+    notification_webhooks: List[str] = Field(default_factory=list)
+    notify_cpu_temp: Optional[float] = Field(default=None, ge=0)
+    notify_disk_percent: Optional[float] = Field(default=None, ge=0)
     wigle_api_name: Optional[str] = None
     wigle_api_key: Optional[str] = None
     gps_movement_threshold: Optional[float] = Field(default=None, gt=0)
+    baseline_history_days: Optional[int] = Field(default=None, ge=1)
+    baseline_threshold: Optional[float] = Field(default=None, ge=0)
     cloud_bucket: Optional[str] = None
     cloud_prefix: Optional[str] = None
     cloud_profile: Optional[str] = None
@@ -207,6 +227,12 @@ class FileConfigModel(BaseModel):
     mysql_user: Optional[str] = None
     mysql_password: Optional[str] = None
     mysql_db: Optional[str] = None
+    scan_rules: Dict[str, Any] = Field(default_factory=dict)
+    influx_url: Optional[str] = None
+    influx_token: Optional[str] = None
+    influx_org: Optional[str] = None
+    influx_bucket: Optional[str] = None
+    postgres_dsn: Optional[str] = None
 
 
 class ConfigModel(FileConfigModel):
@@ -217,6 +243,7 @@ class ConfigModel(FileConfigModel):
     map_cluster_capacity: int = Field(default=8, ge=1)
     ui_font_size: int = Field(default=16, ge=1)
     log_paths: List[str] = Field(default_factory=list)
+    restart_services: List[str] = Field(default_factory=list)
     health_export_interval: int = Field(default=6, ge=1)
     health_export_dir: str = DEFAULTS["health_export_dir"]
     reports_dir: str = DEFAULTS["reports_dir"]
@@ -231,12 +258,23 @@ class ConfigModel(FileConfigModel):
     log_tail_cache_seconds: float = Field(
         default=DEFAULTS["log_tail_cache_seconds"], ge=0
     )
+    notification_webhooks: List[str] = Field(default_factory=list)
+    notify_cpu_temp: float = Field(default=DEFAULTS["notify_cpu_temp"], ge=0)
+    notify_disk_percent: float = Field(default=DEFAULTS["notify_disk_percent"], ge=0)
+    baseline_history_days: int = Field(default=DEFAULTS["baseline_history_days"], ge=1)
+    baseline_threshold: float = Field(default=DEFAULTS["baseline_threshold"], ge=0)
     mysql_host: str = DEFAULTS["mysql_host"]
     mysql_port: int = Field(default=DEFAULTS["mysql_port"], ge=1)
     mysql_user: str = DEFAULTS["mysql_user"]
     mysql_password: str = DEFAULTS["mysql_password"]
     mysql_db: str = DEFAULTS["mysql_db"]
-
+    scan_rules: Dict[str, Any] = field(default_factory=dict)
+    scan_rules: Dict[str, Any] = Field(default_factory=dict)
+    influx_url: str = DEFAULTS["influx_url"]
+    influx_token: str = DEFAULTS["influx_token"]
+    influx_org: str = DEFAULTS["influx_org"]
+    influx_bucket: str = DEFAULTS["influx_bucket"]
+    postgres_dsn: str = DEFAULTS["postgres_dsn"]
     theme: Theme
 
     @field_validator("theme", mode="before")
@@ -428,6 +466,9 @@ class AppConfig:
     debug_mode: bool = DEFAULTS["debug_mode"]
     health_poll_interval: int = DEFAULTS["health_poll_interval"]
     log_paths: List[str] = field(default_factory=lambda: DEFAULTS["log_paths"])
+    restart_services: List[str] = field(
+        default_factory=lambda: DEFAULTS["restart_services"]
+    )
     log_rotate_interval: int = DEFAULTS["log_rotate_interval"]
     log_rotate_archives: int = DEFAULTS["log_rotate_archives"]
     cleanup_rotated_logs: bool = DEFAULTS["cleanup_rotated_logs"]
@@ -452,9 +493,14 @@ class AppConfig:
     remote_sync_interval: int = DEFAULTS["remote_sync_interval"]
     handshake_cache_seconds: float = DEFAULTS["handshake_cache_seconds"]
     log_tail_cache_seconds: float = DEFAULTS["log_tail_cache_seconds"]
+    notification_webhooks: List[str] = field(default_factory=list)
+    notify_cpu_temp: float = DEFAULTS["notify_cpu_temp"]
+    notify_disk_percent: float = DEFAULTS["notify_disk_percent"]
     wigle_api_name: str = DEFAULTS["wigle_api_name"]
     wigle_api_key: str = DEFAULTS["wigle_api_key"]
     gps_movement_threshold: float = DEFAULTS["gps_movement_threshold"]
+    baseline_history_days: int = DEFAULTS["baseline_history_days"]
+    baseline_threshold: float = DEFAULTS["baseline_threshold"]
     cloud_bucket: str = DEFAULTS["cloud_bucket"]
     cloud_prefix: str = DEFAULTS["cloud_prefix"]
     cloud_profile: str = DEFAULTS["cloud_profile"]

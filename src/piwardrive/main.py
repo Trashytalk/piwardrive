@@ -11,7 +11,7 @@ from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Any, Callable
 
-from piwardrive import diagnostics, exception_handler, remote_sync, utils
+from piwardrive import diagnostics, exception_handler, notifications, remote_sync, utils
 from piwardrive.config import (
     CONFIG_PATH,
     Config,
@@ -102,6 +102,13 @@ class PiWardriveApp:
                 lambda _dt: utils.run_async_task(_run_update()),
                 update_hours * 3600,
             )
+
+        self.notifications = notifications.NotificationManager(
+            self.scheduler,
+            webhooks=self.config_data.notification_webhooks,
+            cpu_temp_threshold=self.config_data.notify_cpu_temp,
+            disk_percent_threshold=self.config_data.notify_disk_percent,
+        )
         if os.getenv("PW_PROFILE"):
             diagnostics.start_profiling()
         self._config_stamp = config_mtime()

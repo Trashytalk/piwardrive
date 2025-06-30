@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Required system packages
-packages=(git build-essential cmake kismet bettercap gpsd evtest python3-venv curl)
+packages=(git build-essential cmake kismet bettercap gpsd evtest python3-venv curl libsqlcipher-dev)
 
 # Check for apt-get
 if ! command -v apt-get >/dev/null 2>&1; then
@@ -43,10 +43,17 @@ source "$VENV_DIR/bin/activate"
 
 pip install --upgrade pip
 pip install -r requirements.txt
+pip install pysqlcipher3
 pip install .
 
 echo "Fetching latest OUI registry..."
-bash "$SCRIPT_DIR/../sigint_suite/scripts/fetch_oui.sh"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+bash "$ROOT_DIR/src/piwardrive/integrations/sigint_suite/scripts/fetch_oui.sh"
+
+if [ -n "${PW_DB_KEY:-}" ]; then
+    echo "Initializing encrypted database..."
+    piwardrive-migrate
+fi
 
 cat <<EOM
 Setup complete. Activate the environment with:
