@@ -366,7 +366,6 @@ React frontend with `npm run build` and then launch the stack:
 docker compose up
 ```
 
-
 The compose file mounts `~/.config/piwardrive` and `webui/dist` so your
 configuration and compiled assets persist between container restarts.
 
@@ -546,8 +545,10 @@ Settings persist in `~/.config/piwardrive/config.json`. Profiles under
 selected via the `PW_PROFILE_NAME` environment variable. Environment variables
 prefixed with `PW_` override any option. See `docs/configuration.rst` and the
 [Configuration Overrides](docs/environment.rst#configuration-overrides) section
-for a full list. A JSON schema describing all fields is provided at
-`docs/config_schema.json`.
+for a full list. Common examples include `PW_WEBUI_PORT` to change the server
+port and `PW_ORIENTATION_MAP_FILE` for loading a heading correction map (see
+[docs/orientation.rst](docs/orientation.rst)). A JSON schema describing all
+fields is provided at `docs/config_schema.json`.
 Password hashing guidelines are covered in [docs/security.rst](docs/security.rst).
 
 ## Additional Documentation
@@ -558,7 +559,7 @@ See [docs/notifications.rst](docs/notifications.rst) for enabling webhook alerts
 
 ## Python Examples
 
-Below are minimal snippets that can be validated with ``doctest``.
+Below are minimal snippets that can be validated with `doctest`.
 
 ### setup_logging
 
