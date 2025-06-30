@@ -4,7 +4,7 @@ This document consolidates the key information from `README.md`, the `piwardrive
 
 ## Overview
 
-PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy GUI interface has been removed, so use the web UI exclusively. Start it with ``python -m piwardrive.webui_server`` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
+PiWardrive provides a headless mapping and diagnostic interface delivered through a React dashboard. The legacy GUI interface has been removed, so use the web UI exclusively. Start it with `python -m piwardrive.webui_server` after building the frontend. PiWardrive manages Wi-Fi and Bluetooth scanning via Kismet and BetterCAP while polling GPS data and system metrics. Structured logs default to `~/.config/piwardrive/app.log` but `logconfig.setup_logging` can also output to `stdout` or additional handlers. A lightweight SIGINT suite for command-line scanning lives under `src/piwardrive/sigint_suite/`.
 
 ## Hardware and OS Requirements
 
@@ -52,7 +52,8 @@ cd ~/piwardrive
 source gui-env/bin/activate
 piwardrive
 ```
-Open the dashboard at ``http://localhost:8000`` in a browser after starting ``piwardrive-webui``.
+
+Open the dashboard at `http://localhost:8000` in a browser after starting `piwardrive-webui`.
 
 Dashboard widgets display metrics such as CPU temperature, handshake counts and service status. Custom widgets may be placed in `~/.config/piwardrive/plugins` and are discovered automatically at startup. Each widget subclasses `widgets.base.DashboardWidget` and implements an `update()` method. A built-in battery widget is available when the hardware exposes charge information.
 See `docs/widget_plugins.rst` for the expected directory structure.
@@ -229,8 +230,9 @@ New modules extend PiWardrive with optional capabilities:
 - `cloud_export` – helper to upload files to AWS S3 via the CLI.
 - `vehicle_sensors` – read speed, RPM and engine load from an OBD‑II adapter.
 - `orientation_sensors` – track device orientation via DBus
-  (`iio-sensor-proxy`) or an MPU‑6050 sensor. Functions return `None` when
-  the optional dependencies are missing.
+  (`iio-sensor-proxy`) or an MPU‑6050 sensor. Set
+  `PW_ORIENTATION_MAP_FILE` to load a custom orientation map. Functions
+  return `None` when the optional dependencies are missing.
 - `setup_wizard` – interactive configuration for external services.
 
 ## Further Reference
