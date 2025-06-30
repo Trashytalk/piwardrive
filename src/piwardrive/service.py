@@ -91,10 +91,13 @@ try:  # allow tests to stub out ``persistence``
     from persistence import load_ap_cache  # type: ignore
     from persistence import (
         DashboardSettings,
+        FingerprintInfo,
         _db_path,
         get_table_counts,
         load_dashboard_settings,
         load_recent_health,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
     )
 except Exception:  # pragma: no cover - fall back to real module
@@ -102,10 +105,13 @@ except Exception:  # pragma: no cover - fall back to real module
         load_recent_health,
         load_ap_cache,
         load_dashboard_settings,
+        load_fingerprint_info,
+        save_fingerprint_info,
         save_dashboard_settings,
         get_table_counts,
         _db_path,
         DashboardSettings,
+        FingerprintInfo,
     )
 
 from piwardrive.errors import GeofenceError
@@ -580,6 +586,27 @@ async def update_dashboard_settings_endpoint(
     widgets = data.get("widgets", [])
     await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
     return {"layout": layout, "widgets": widgets}
+
+
+@GET("/fingerprints")
+async def list_fingerprints_endpoint(_auth: None = AUTH_DEP) -> dict[str, Any]:
+    """Return stored fingerprint metadata."""
+    items = await load_fingerprint_info()
+    return {"fingerprints": [asdict(i) for i in items]}
+
+
+@POST("/fingerprints")
+async def add_fingerprint_endpoint(
+    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+) -> dict[str, Any]:
+    """Store fingerprint metadata in the database."""
+    info = FingerprintInfo(
+        environment=data.get("environment", ""),
+        source=data.get("source", ""),
+        record_count=int(data.get("record_count", 0)),
+    )
+    await save_fingerprint_info(info)
+    return asdict(info)
 
 
 @GET("/geofences")

@@ -36,7 +36,7 @@ _BUFFER_LIMIT = 50
 _FLUSH_INTERVAL = 30.0
 
 # Schema versioning
-LATEST_VERSION = 2
+LATEST_VERSION = 3
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
 
@@ -103,6 +103,24 @@ async def _migration_2(conn: aiosqlite.Connection) -> None:
 _MIGRATIONS.append(_migration_2)
 
 
+async def _migration_3(conn: aiosqlite.Connection) -> None:
+    """Add fingerprint_info table."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS fingerprint_info (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            environment TEXT,
+            source TEXT,
+            record_count INTEGER,
+            created_at TEXT
+        )
+        """
+    )
+
+
+_MIGRATIONS.append(_migration_3)
+
+
 async def _get_conn() -> aiosqlite.Connection:
     """Return a cached SQLite connection initialized with the proper schema."""
     global _DB_CONN, _DB_LOOP, _DB_DIR
@@ -151,6 +169,16 @@ class DashboardSettings:
 
     layout: list[Any] = field(default_factory=list)
     widgets: list[str] = field(default_factory=list)
+
+
+@dataclass
+class FingerprintInfo:
+    """Metadata about a fingerprint dataset."""
+
+    environment: str
+    source: str
+    record_count: int
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -274,6 +302,29 @@ async def load_dashboard_settings() -> DashboardSettings:
         cls for item in layout if isinstance(item, dict) and (cls := item.get("cls"))
     ]
     return DashboardSettings(layout=layout, widgets=widgets)
+
+
+async def save_fingerprint_info(info: FingerprintInfo) -> None:
+    """Insert fingerprint metadata row into the database."""
+    conn = await _get_conn()
+    await conn.execute(
+        (
+            "INSERT INTO fingerprint_info (environment, source, record_count, created_at) "
+            "VALUES (?, ?, ?, ?)"
+        ),
+        (info.environment, info.source, info.record_count, info.created_at),
+    )
+    await conn.commit()
+
+
+async def load_fingerprint_info() -> list[FingerprintInfo]:
+    """Return saved :class:`FingerprintInfo` rows ordered by newest."""
+    conn = await _get_conn()
+    cur = await conn.execute(
+        "SELECT environment, source, record_count, created_at FROM fingerprint_info ORDER BY id DESC"
+    )
+    rows = await cur.fetchall()
+    return [FingerprintInfo(**dict(row)) for row in rows]
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:

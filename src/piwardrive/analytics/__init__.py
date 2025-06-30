@@ -1,5 +1,6 @@
-"""Analytics utilities comparing recent data against historical baselines."""
+"""Analytics utilities."""
 
-from .baseline import analyze_health_baseline, load_baseline_health
+from .clustering import cluster_positions
 
-__all__ = ["analyze_health_baseline", "load_baseline_health"]
+__all__ = ["cluster_positions"]
+
