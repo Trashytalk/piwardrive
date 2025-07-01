@@ -1,4 +1,5 @@
 <!-- filepath: c:\Users\Blake Schmitz\Documents\GitHub\piwardrive\docs\api.md -->
+
 # API Reference
 
 PiWardrive provides a comprehensive REST API built with FastAPI. The API serves as the backend for the React web dashboard and provides programmatic access to all system functionality including health monitoring, service control, data export, and real-time streaming.
@@ -49,9 +50,11 @@ curl -X POST "http://localhost:8080/token" \
 ### Authentication
 
 #### `POST /api/v1/auth/token`
+
 **Description:** Obtain a JWT bearer token for API access.
 
 **Request Body:**
+
 ```json
 {
   "username": "string",
@@ -60,6 +63,7 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 **Response:**
+
 ```json
 {
   "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
@@ -70,9 +74,11 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 #### `POST /api/v1/auth/refresh`
+
 **Description:** Refresh an expired JWT token.
 
 **Request Body:**
+
 ```json
 {
   "refresh_token": "string"
@@ -80,6 +86,7 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 **Response:**
+
 ```json
 {
   "access_token": "string",
@@ -89,11 +96,13 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 #### `POST /api/v1/auth/logout`
+
 **Description:** Invalidate the current authentication token.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Response:**
+
 ```json
 {
   "message": "Successfully logged out"
@@ -103,9 +112,11 @@ curl -X POST "http://localhost:8080/token" \
 ### Wi-Fi Scanning
 
 #### `POST /api/v1/wifi/scan`
+
 **Description:** Start a new Wi-Fi scan with specified parameters.
 
 **Request Body:**
+
 ```json
 {
   "scan_type": "passive",
@@ -117,6 +128,7 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 **Response:**
+
 ```json
 {
   "scan_id": "scan_20250630_120000",
@@ -133,12 +145,15 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 #### `GET /api/v1/wifi/scan/{scan_id}`
+
 **Description:** Get results from a specific Wi-Fi scan.
 
 **Path Parameters:**
+
 - `scan_id`: Unique scan identifier
 
 **Response:**
+
 ```json
 {
   "scan_id": "scan_20250630_120000",
@@ -170,15 +185,18 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 #### `GET /api/v1/wifi/scans`
+
 **Description:** List all Wi-Fi scans with optional filtering.
 
 **Query Parameters:**
+
 - `status` (optional): Filter by scan status (started, completed, failed)
 - `limit` (optional): Number of scans to return (default: 20)
 - `offset` (optional): Number of scans to skip (default: 0)
 - `order_by` (optional): Sort field (started_at, duration, status)
 
 **Response:**
+
 ```json
 {
   "scans": [
@@ -199,12 +217,15 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 #### `DELETE /api/v1/wifi/scan/{scan_id}`
+
 **Description:** Cancel a running scan or delete scan results.
 
 **Path Parameters:**
+
 - `scan_id`: Unique scan identifier
 
 **Response:**
+
 ```json
 {
   "scan_id": "scan_20250630_120000",
@@ -214,12 +235,15 @@ curl -X POST "http://localhost:8080/token" \
 ```
 
 #### `GET /api/v1/wifi/scan/{scan_id}/stream`
+
 **Description:** Stream real-time updates from an active scan.
 
 **Path Parameters:**
+
 - `scan_id`: Unique scan identifier
 
 **Response:** Server-Sent Events stream
+
 ```
 data: {"event": "access_point_found", "data": {"ssid": "TestAP", "bssid": "...", "signal_strength": -60}}
 
@@ -229,9 +253,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `GET /api/v1/wifi/interfaces`
+
 **Description:** List available Wi-Fi interfaces and their capabilities.
 
 **Response:**
+
 ```json
 {
   "interfaces": [
@@ -250,12 +276,15 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `POST /api/v1/wifi/interfaces/{interface}/mode`
+
 **Description:** Change Wi-Fi interface mode (monitor/managed).
 
 **Path Parameters:**
+
 - `interface`: Interface name (e.g., "wlan0")
 
 **Request Body:**
+
 ```json
 {
   "mode": "monitor",
@@ -264,6 +293,7 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 **Response:**
+
 ```json
 {
   "interface": "wlan0",
@@ -277,9 +307,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ### System Status & Monitoring
 
 #### `GET /api/v1/system/health`
+
 **Description:** Get system health check status.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -287,18 +319,20 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
   "version": "1.0.0",
   "uptime": 86400,
   "checks": {
-    "database": {"status": "healthy"},
-    "wifi_adapter": {"status": "healthy"},
-    "disk_space": {"status": "healthy"},
-    "memory": {"status": "healthy"}
+    "database": { "status": "healthy" },
+    "wifi_adapter": { "status": "healthy" },
+    "disk_space": { "status": "healthy" },
+    "memory": { "status": "healthy" }
   }
 }
 ```
 
 #### `GET /api/v1/system/stats`
+
 **Description:** Get comprehensive system statistics.
 
 **Response:**
+
 ```json
 {
   "cpu_usage": 25.5,
@@ -321,9 +355,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `GET /api/v1/system/info`
+
 **Description:** Get system information and capabilities.
 
 **Response:**
+
 ```json
 {
   "hostname": "piwardrive-001",
@@ -351,9 +387,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ### Configuration Management
 
 #### `GET /api/v1/config`
+
 **Description:** Get current system configuration.
 
 **Response:**
+
 ```json
 {
   "app": {
@@ -379,9 +417,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `PUT /api/v1/config`
+
 **Description:** Update system configuration.
 
 **Request Body:**
+
 ```json
 {
   "wifi": {
@@ -394,6 +434,7 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Configuration updated successfully",
@@ -403,9 +444,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `POST /api/v1/config/reset`
+
 **Description:** Reset configuration to defaults.
 
 **Response:**
+
 ```json
 {
   "message": "Configuration reset to defaults",
@@ -416,9 +459,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ### Data Export
 
 #### `GET /api/v1/export/scans`
+
 **Description:** Export scan data in various formats.
 
 **Query Parameters:**
+
 - `format`: Export format (json, csv, xml, geojson)
 - `scan_ids` (optional): Comma-separated scan IDs
 - `start_date` (optional): Start date filter (ISO 8601)
@@ -428,9 +473,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 **Response:** File download in requested format
 
 #### `GET /api/v1/export/access-points`
+
 **Description:** Export access point data.
 
 **Query Parameters:**
+
 - `format`: Export format (json, csv, xml, geojson, kml)
 - `min_signal_strength` (optional): Minimum signal strength filter
 - `encryption_types` (optional): Comma-separated encryption types
@@ -439,9 +486,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 **Response:** File download in requested format
 
 #### `GET /api/v1/export/system-metrics`
+
 **Description:** Export system monitoring data.
 
 **Query Parameters:**
+
 - `format`: Export format (json, csv, xml)
 - `start_date` (optional): Start date filter
 - `end_date` (optional): End date filter
@@ -452,9 +501,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ### Advanced Features
 
 #### `POST /api/v1/analysis/fingerprint`
+
 **Description:** Create a Wi-Fi fingerprint for location identification.
 
 **Request Body:**
+
 ```json
 {
   "name": "office_location_1",
@@ -462,13 +513,14 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
   "scan_duration": 300,
   "location": {
     "lat": 40.7128,
-    "lon": -74.0060,
+    "lon": -74.006,
     "accuracy": 5.0
   }
 }
 ```
 
 **Response:**
+
 ```json
 {
   "fingerprint_id": "fp_20250630_120000",
@@ -479,16 +531,18 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
   "unique_networks": 18,
   "location": {
     "lat": 40.7128,
-    "lon": -74.0060,
+    "lon": -74.006,
     "accuracy": 5.0
   }
 }
 ```
 
 #### `POST /api/v1/analysis/locate`
+
 **Description:** Estimate location based on current Wi-Fi environment.
 
 **Request Body:**
+
 ```json
 {
   "scan_duration": 30,
@@ -498,11 +552,12 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 **Response:**
+
 ```json
 {
   "estimated_location": {
     "lat": 40.7128,
-    "lon": -74.0060,
+    "lon": -74.006,
     "accuracy": 10.0,
     "confidence": 0.85
   },
@@ -519,13 +574,16 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `GET /api/v1/analysis/interference`
+
 **Description:** Analyze Wi-Fi channel interference and congestion.
 
 **Query Parameters:**
+
 - `scan_id` (optional): Use specific scan data
 - `channels` (optional): Comma-separated channel list to analyze
 
 **Response:**
+
 ```json
 {
   "analysis_timestamp": "2025-06-30T12:00:00Z",
@@ -553,6 +611,7 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ### WebSocket Endpoints
 
 #### `WebSocket /ws/v1/scans/{scan_id}`
+
 **Description:** Stream real-time updates from an active Wi-Fi scan.
 
 **Connection URL:** `ws://localhost:8080/ws/v1/scans/{scan_id}`
@@ -560,6 +619,7 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 **Authentication:** Include `Authorization` header or `token` query parameter.
 
 **Message Types:**
+
 ```json
 // Scan started
 {
@@ -612,11 +672,13 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ```
 
 #### `WebSocket /ws/v1/system/metrics`
+
 **Description:** Stream real-time system metrics and status updates.
 
 **Connection URL:** `ws://localhost:8080/ws/v1/system/metrics`
 
 **Message Format:**
+
 ```json
 {
   "type": "system_metrics",
@@ -637,15 +699,18 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 ### Server-Sent Events (SSE)
 
 #### `GET /api/v1/events/scans`
+
 **Description:** Subscribe to scan events via Server-Sent Events.
 
 **Query Parameters:**
+
 - `scan_types` (optional): Filter by scan types
 - `include_progress` (optional): Include progress updates (default: true)
 
 **Content-Type:** `text/event-stream`
 
 **Example Events:**
+
 ```
 event: scan_started
 data: {"scan_id": "scan_20250630_120000", "scan_type": "passive"}
@@ -658,11 +723,13 @@ data: {"scan_id": "scan_20250630_120000", "access_points_found": 15}
 ```
 
 #### `GET /api/v1/events/system`
+
 **Description:** Subscribe to system events and alerts.
 
 **Content-Type:** `text/event-stream`
 
 **Example Events:**
+
 ```
 event: system_alert
 data: {"level": "warning", "message": "High CPU usage detected", "metric": "cpu_usage", "value": 85.2}
@@ -708,18 +775,18 @@ async for update in client.wifi.stream_scan_updates(scan.scan_id):
 ### JavaScript/TypeScript SDK
 
 ```typescript
-import { PiWardriveClient } from '@piwardrive/client';
+import { PiWardriveClient } from "@piwardrive/client";
 
 const client = new PiWardriveClient({
-  baseURL: 'http://localhost:8080',
-  apiKey: 'your-api-key'
+  baseURL: "http://localhost:8080",
+  apiKey: "your-api-key",
 });
 
 // Start scan
 const scan = await client.wifi.startScan({
-  scanType: 'passive',
+  scanType: "passive",
   duration: 60,
-  channels: [1, 6, 11]
+  channels: [1, 6, 11],
 });
 
 // Get results
@@ -727,7 +794,7 @@ const results = await client.wifi.getScanResults(scan.scanId);
 
 // Real-time updates
 client.wifi.onScanUpdate(scan.scanId, (update) => {
-  console.log('Scan update:', update);
+  console.log("Scan update:", update);
 });
 ```
 
@@ -753,17 +820,17 @@ All API endpoints return errors in a consistent format following RFC 7807 Proble
 
 ### Common Error Codes
 
-| HTTP Status | Error Code | Description |
-|-------------|------------|-------------|
-| 400 | `ValidationError` | Request validation failed |
-| 401 | `AuthenticationError` | Invalid or missing authentication |
-| 403 | `AuthorizationError` | Insufficient permissions |
-| 404 | `NotFoundError` | Resource not found |
-| 409 | `ConflictError` | Resource conflict (e.g., scan already running) |
-| 422 | `ProcessingError` | Request valid but processing failed |
-| 429 | `RateLimitError` | Rate limit exceeded |
-| 500 | `InternalServerError` | Server error |
-| 503 | `ServiceUnavailableError` | Service temporarily unavailable |
+| HTTP Status | Error Code                | Description                                    |
+| ----------- | ------------------------- | ---------------------------------------------- |
+| 400         | `ValidationError`         | Request validation failed                      |
+| 401         | `AuthenticationError`     | Invalid or missing authentication              |
+| 403         | `AuthorizationError`      | Insufficient permissions                       |
+| 404         | `NotFoundError`           | Resource not found                             |
+| 409         | `ConflictError`           | Resource conflict (e.g., scan already running) |
+| 422         | `ProcessingError`         | Request valid but processing failed            |
+| 429         | `RateLimitError`          | Rate limit exceeded                            |
+| 500         | `InternalServerError`     | Server error                                   |
+| 503         | `ServiceUnavailableError` | Service temporarily unavailable                |
 
 ### Error Handling Examples
 
@@ -872,14 +939,14 @@ Always use HTTPS in production environments:
 ```yaml
 # nginx configuration
 server {
-    listen 443 ssl http2;
-    ssl_certificate /path/to/cert.pem;
-    ssl_certificate_key /path/to/key.pem;
-    
-    location /api/ {
-        proxy_pass http://localhost:8080;
-        proxy_set_header X-Forwarded-Proto https;
-    }
+listen 443 ssl http2;
+ssl_certificate /path/to/cert.pem;
+ssl_certificate_key /path/to/key.pem;
+
+location /api/ {
+proxy_pass http://localhost:8080;
+proxy_set_header X-Forwarded-Proto https;
+}
 }
 ```
 
@@ -929,7 +996,7 @@ Refer to `docs/configuration.md` for complete configuration options.
 
 ## GraphQL Support (Optional)
 
-When enabled via configuration (`PIWARDRIVE_GRAPHQL_ENABLED=true`), PiWardrive provides a GraphQL endpoint at `/graphql` for more flexible querying:
+When enabled via configuration (`PW_ENABLE_GRAPHQL=true`), PiWardrive provides a GraphQL endpoint at `/graphql` for more flexible querying:
 
 ```graphql
 query GetScanResults($scanId: String!) {
@@ -944,7 +1011,7 @@ query GetScanResults($scanId: String!) {
       encryption
     }
   }
-  
+
   systemStats {
     cpuUsage
     memoryUsage
@@ -964,6 +1031,7 @@ curl http://localhost:8080/api/v1/system/health
 ### API Documentation
 
 Visit the interactive documentation:
+
 - Swagger UI: http://localhost:8080/docs
 - Enhanced docs: http://localhost:8080/api-docs
 
