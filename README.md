@@ -116,6 +116,12 @@ Schedulers expose basic metrics via `get_metrics()` including the next
 scheduled run time and duration of the last callback execution. These values
 aid troubleshooting periodic jobs during development.
 
+## Advanced Analytics
+
+Health metrics can be analyzed beyond simple averages. The `health_stats`
+script accepts a `--forecast N` option to predict CPU temperature for the next
+`N` intervals using an ARIMA or Prophet model.
+
 ## Quick Start
 
 ### Hardware
