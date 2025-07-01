@@ -1,7 +1,8 @@
 """Analytics utilities."""
 
 from .clustering import cluster_positions
-from .anomaly import HealthAnomalyDetector
+from .forecasting import forecast_cpu_temp
 
-__all__ = ["cluster_positions", "HealthAnomalyDetector"]
+__all__ = ["cluster_positions", "forecast_cpu_temp"]
+
 

@@ -13,7 +13,9 @@ def test_health_stats_script_output(monkeypatch, capsys):
         return records
 
     monkeypatch.setattr(hs, "load_recent_health", fake_load)
-    hs.main(["--limit", "5"])
+    monkeypatch.setattr(hs, "forecast_cpu_temp", lambda r, s: [1.0] * s)
+    hs.main(["--limit", "5", "--forecast", "2"])
     out_lines = [json.loads(l) for l in capsys.readouterr().out.strip().splitlines() if l]
     expected = {"temp_avg": 50.0, "cpu_avg": 20.0, "mem_avg": 30.0, "disk_avg": 40.0}
-    assert out_lines[-1]["message"] == json.dumps(expected)
+    assert out_lines[0]["message"] == json.dumps(expected)
+    assert out_lines[1]["message"] == json.dumps({"forecast": [1.0, 1.0]})
