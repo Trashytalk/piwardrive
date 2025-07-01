@@ -3,8 +3,8 @@
 [![Build Status](https://github.com/username/piwardrive/workflows/CI/badge.svg)](https://github.com/username/piwardrive/actions)
 [![Docker Pulls](https://img.shields.io/docker/pulls/username/piwardrive)](https://hub.docker.com/r/username/piwardrive)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://python.org)
-[![Node Version](https://img.shields.io/badge/node-16%2B-green)](https://nodejs.org)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
+[![Node Version](https://img.shields.io/badge/node-18%2B-green)](https://nodejs.org)
 
 ## Table of Contents
 
@@ -41,16 +41,16 @@
 
 ### Hardware Requirements
 
-- **Minimum**: Raspberry Pi 3B+ or equivalent ARM/x86 device
-- **Recommended**: Raspberry Pi 4 with 4GB+ RAM
+- **Recommended**: Raspberry Pi 5 with 7" touchscreen
+- **Minimum**: Raspberry Pi 4 or equivalent ARM/x86 device
 - **Storage**: 8GB+ SD card or storage device
 - **Network**: Wi-Fi adapter with monitor mode support
 
 ### Software Requirements
 
 - **Operating System**: Linux (Raspberry Pi OS, Ubuntu 20.04+)
-- **Python**: 3.8 or higher
-- **Node.js**: 16.x or higher (for web UI development)
+- **Python**: 3.10 or higher
+- **Node.js**: 18.x or higher (for web UI development)
 - **Docker**: 20.10+ (for containerized deployment)
 
 ### Network Permissions
@@ -77,7 +77,7 @@ cd piwardrive
 docker-compose up -d
 
 # Access the dashboard
-open http://localhost:8080
+open http://localhost:8000
 ```
 
 ### Option 2: Native Installation
@@ -97,21 +97,15 @@ pip3 install -r requirements.txt
 cd webui && npm install && npm run build && cd ..
 
 # Run the service
-python3 service.py
+piwardrive-webui
 ```
 
 ### First-Time Setup
 
-1. Navigate to `http://localhost:8080`
+1. Navigate to `http://localhost:8000`
 2. Complete the initial configuration wizard
 3. Configure your Wi-Fi adapter settings
 4. Start monitoring!
-
-### Default Credentials
-
-- **Username**: `admin`
-- **Password**: `piwardrive`
-- ⚠️ **Change these immediately** in production deployments
 
 ## ✨ Features
 
@@ -139,6 +133,7 @@ python3 service.py
 - **Customizable Widgets**: Drag-and-drop dashboard configuration
 - **Real-time Charts**: Live updating graphs and meters
 - **Data Export**: CSV, JSON export capabilities
+- **GraphQL API**: Enable with `PW_ENABLE_GRAPHQL=true`
 - **Multi-device Support**: Centralized monitoring of multiple sensors
 - **Mobile Responsive**: Works on tablets and smartphones
 
