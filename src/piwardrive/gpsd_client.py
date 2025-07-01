@@ -1,4 +1,15 @@
-"""Thread-safe client for ``gpsd`` with helpers for common queries."""
+"""Thread-safe client for ``gpsd`` with helpers for common queries.
+
+This module exposes :class:`GPSDClient`, a small wrapper around the ``gpsd``
+Python bindings. It provides safe concurrent access to GPS data and simple
+methods for retrieving the device's position and accuracy.
+
+Example:
+    >>> from piwardrive.gpsd_client import GPSDClient
+    >>> client = GPSDClient()
+    >>> client.get_position()
+    (51.0, -0.1)
+"""
 
 import logging
 import os
@@ -16,7 +27,16 @@ except Exception as exc:  # pragma: no cover - optional dependency
 
 
 class GPSDClient:
-    """Persistent connection to ``gpsd`` providing basic helpers."""
+    """Persistent connection to ``gpsd`` providing basic helpers.
+
+    Attributes:
+        host: Hostname of the ``gpsd`` service.
+        port: TCP port of the ``gpsd`` service.
+
+    The client lazily connects on first use and caches the connection for
+    subsequent queries. Access is synchronized via a thread lock so methods can
+    be called from multiple threads.
+    """
 
     def __init__(self, host: str | None = None, port: int | None = None) -> None:
         self.host = host or os.getenv("PW_GPSD_HOST", "127.0.0.1")
@@ -25,6 +45,8 @@ class GPSDClient:
         self._connected = False
 
     def _connect(self) -> None:
+        """Establish a connection to ``gpsd`` if the library is available."""
+
         if gpsd is None:
             return
         try:
@@ -35,10 +57,15 @@ class GPSDClient:
             self._connected = False
 
     def _ensure_connection(self) -> None:
+        """Connect to ``gpsd`` on first access."""
+
         if not self._connected:
             self._connect()
 
     def _get_packet(self) -> Any | None:
+        """Fetch the latest packet from ``gpsd`` if possible."""
+
+        # ``gpsd`` is not thread-safe; guard access with a lock to avoid races.
         with self._lock:
             self._ensure_connection()
             if not self._connected or gpsd is None:
@@ -51,7 +78,11 @@ class GPSDClient:
                 return None
 
     def get_position(self) -> tuple[float, float] | None:
-        """Return the current latitude and longitude if available."""
+        """Return the current latitude and longitude if available.
+
+        Returns:
+            A tuple ``(lat, lon)`` if a fix is available, otherwise ``None``.
+        """
         pkt = self._get_packet()
         if not pkt:
             return None
@@ -67,7 +98,12 @@ class GPSDClient:
         return None
 
     def get_accuracy(self) -> float | None:
-        """Return horizontal accuracy in meters when available."""
+        """Return horizontal accuracy in meters when available.
+
+        Returns:
+            The worst of ``epx`` and ``epy`` values from the GPS packet, or
+            ``None`` if unavailable.
+        """
         pkt = self._get_packet()
         if not pkt:
             return None
@@ -78,7 +114,12 @@ class GPSDClient:
             return None
 
     def get_fix_quality(self) -> str:
-        """Return a textual description of the current fix quality."""
+        """Return a textual description of the current fix quality.
+
+        Returns:
+            One of ``"No Fix"``, ``"2D"``, ``"3D"`` or ``"DGPS"`` depending on
+            the GPS mode, or ``"Unknown"`` if the information is not present.
+        """
         pkt = self._get_packet()
         if not pkt:
             return "Unknown"
