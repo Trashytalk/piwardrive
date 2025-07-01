@@ -1,0 +1,16 @@
+{
+  "scanResponse": {
+    "access_points": [
+      {
+        "ssid": "ExampleNet",
+        "bssid": "AA:BB:CC:DD:EE:FF",
+        "frequency": "2.437",
+        "channel": "6",
+        "quality": "70/100",
+        "encryption": "WPA2",
+        "vendor": "RaspberryPi",
+        "heading": 180.0
+      }
+    ]
+  }
+}

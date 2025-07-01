@@ -21,13 +21,20 @@ try:  # pragma: no cover - optional FastAPI dependency
         WebSocketDisconnect,
     )
     from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.responses import Response, StreamingResponse  # noqa: E402
+    from fastapi.openapi.utils import get_openapi
+    from fastapi.responses import (  # noqa: E402
+        HTMLResponse,
+        Response,
+        StreamingResponse,
+    )
     from fastapi.security import (
         HTTPBasic,
         HTTPBasicCredentials,
         OAuth2PasswordBearer,
         OAuth2PasswordRequestForm,
     )
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.templating import Jinja2Templates
 except Exception:
     FastAPI = type(
         "FastAPI",
@@ -54,7 +61,13 @@ except Exception:
     WebSocketDisconnect = Exception
     Body = _noop
     Request = object
-    StreamingResponse = Response = object
+    HTMLResponse = StreamingResponse = Response = object
+    Jinja2Templates = lambda *a, **k: None
+    StaticFiles = object
+
+    def get_openapi(*_a: typing.Any, **_k: typing.Any) -> dict[str, typing.Any]:
+        return {}
+
     OAuth2PasswordBearer = type(
         "OAuth2PasswordBearer",
         (),
@@ -108,8 +121,8 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Tuple
 
-from piwardrive.logconfig import DEFAULT_LOG_PATH
 from piwardrive.errors import GeofenceError
+from piwardrive.logconfig import DEFAULT_LOG_PATH
 
 try:  # allow tests to stub out ``persistence``
     from persistence import (
@@ -162,16 +175,15 @@ except Exception:  # pragma: no cover - fall back to real module
 
 from typing import Awaitable, Callable
 
-import psutil
-
 import config
-from sync import upload_data
+import psutil
 import vehicle_sensors
 
 from piwardrive import export, graphql_api, orientation_sensors
 from piwardrive.config import CONFIG_DIR
 from piwardrive.gpsd_client import client as gps_client
 from piwardrive.utils import MetricsResult
+from sync import upload_data
 
 try:  # allow tests to stub out lora_scanner
     import lora_scanner as _lora_scanner
@@ -197,6 +209,7 @@ SUBPROCESS_TIMEOUT = 10
 WEBSOCKET_SEND_TIMEOUT = 1
 STREAM_SLEEP = 2
 MIN_EVENT_INTERVAL = 0.01
+
 
 # TypedDict definitions for API responses
 class TokenResponse(typing.TypedDict):
@@ -239,6 +252,7 @@ class BaselineAnalysisResult(typing.TypedDict):
 
 class WidgetMetrics(typing.TypedDict):
     """Metrics used by dashboard widgets."""
+
     cpu_temp: float | None
     bssid_count: int
     handshake_count: int
@@ -478,6 +492,42 @@ if cors_origins:
         allow_headers=["*"],
     )
 
+templates = Jinja2Templates(
+    directory=os.path.join(os.path.dirname(__file__), "..", "templates")
+)
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.isdir(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+
+@app.get("/docs", include_in_schema=False)
+async def custom_docs(request: Request) -> HTMLResponse:
+    """Serve custom Swagger UI."""
+    return templates.TemplateResponse("api-docs.html", {"request": request})
+
+
+def custom_openapi() -> dict[str, typing.Any]:
+    """Return customized OpenAPI schema with security settings."""
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="PiWardrive API",
+        version="1.0.0",
+        description="REST API for Wi-Fi analysis and IoT monitoring",
+        routes=app.routes,
+    )
+    components = openapi_schema.setdefault("components", {})
+    security = components.setdefault("securitySchemes", {})
+    security["BearerAuth"] = {"type": "http", "scheme": "bearer"}
+    for path in openapi_schema.get("paths", {}).values():
+        for method in path.values():
+            method.setdefault("security", [{"BearerAuth": []}])
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
 F = typing.TypeVar("F", bound=typing.Callable[..., typing.Any])
 
 
@@ -510,6 +560,12 @@ def DELETE(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
 def WEBSOCKET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F]:
     """Wrapper around :func:`FastAPI.websocket`."""
     return _wrap_route(app.websocket, *args, **kwargs)
+
+
+# Include route modules
+from piwardrive.routes import wifi as wifi_routes
+
+app.include_router(wifi_routes.router)
 
 
 # Allowed log file paths for the /logs endpoint
@@ -800,7 +856,6 @@ async def lora_scan_endpoint(
     return {"count": len(lines), "lines": lines}
 
 
-
 @POST("/service/{name}/{action}")
 async def control_service_endpoint(
     name: str,
@@ -985,9 +1040,7 @@ async def remove_geofence_endpoint(
 
 
 @POST("/sync")
-async def sync_records(
-    limit: int = 100, _auth: User | None = AUTH_DEP
-) -> SyncResponse:
+async def sync_records(limit: int = 100, _auth: User | None = AUTH_DEP) -> SyncResponse:
     """Upload recent health records to the configured sync endpoint."""
     records = load_recent_health(limit)
     if inspect.isawaitable(records):
