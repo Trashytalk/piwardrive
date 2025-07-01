@@ -53,5 +53,6 @@ Common issues are answered in the :doc:`faq`.
    grafana
    notifications
    web_ui
+   network_analytics
    faq
    legal

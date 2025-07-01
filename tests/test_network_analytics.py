@@ -91,3 +91,87 @@ def test_duplicate_and_unknown_vendor_flagged(monkeypatch) -> None:
     monkeypatch.setattr(network_analytics, "cached_lookup_vendor", lambda b: None)
     result = network_analytics.find_suspicious_aps([r1, r2])
     assert result == [r1, r2]  # nosec B101
+
+
+def test_cluster_by_signal_returns_centroids() -> None:
+    records = [
+        {
+            "bssid": "AA:BB:CC:11:22:33",
+            "lat": 1.0,
+            "lon": 1.0,
+            "signal_dbm": -30,
+        },
+        {
+            "bssid": "AA:BB:CC:11:22:33",
+            "lat": 1.001,
+            "lon": 1.001,
+            "signal_dbm": -40,
+        },
+        {
+            "bssid": "AA:BB:CC:11:22:33",
+            "lat": 5.0,
+            "lon": 5.0,
+            "signal_dbm": -50,
+        },
+        {
+            "bssid": "11:22:33:44:55:66",
+            "lat": 2.0,
+            "lon": 2.0,
+            "signal_dbm": -20,
+        },
+        {
+            "bssid": "11:22:33:44:55:66",
+            "lat": 2.001,
+            "lon": 2.001,
+            "signal_dbm": -20,
+        },
+    ]
+
+    centers = network_analytics.cluster_by_signal(records, eps=0.002, min_samples=2)
+    a_lat, a_lon = centers["AA:BB:CC:11:22:33"]
+    b_lat, b_lon = centers["11:22:33:44:55:66"]
+    assert pytest.approx(a_lat, rel=1e-3) == 1.0004  # nosec B101
+    assert pytest.approx(a_lon, rel=1e-3) == 1.0004  # nosec B101
+    assert pytest.approx(b_lat, rel=1e-3) == 2.0005  # nosec B101
+    assert pytest.approx(b_lon, rel=1e-3) == 2.0005  # nosec B101
+
+
+def test_detect_rogue_devices_combines_checks() -> None:
+    records = [
+        {
+            "bssid": "AA:BB:CC:11:22:33",
+            "ssid": "Home",
+            "encryption": "wpa2",
+            "lat": 1.0,
+            "lon": 1.0,
+            "signal_dbm": -30,
+        },
+        {
+            "bssid": "AA:BB:CC:11:22:33",
+            "ssid": "Home",
+            "encryption": "wpa2",
+            "lat": 1.001,
+            "lon": 1.001,
+            "signal_dbm": -40,
+        },
+        {
+            "bssid": "AA:BB:CC:11:22:33",
+            "ssid": "Home",
+            "encryption": "wpa2",
+            "lat": 3.0,
+            "lon": 3.0,
+            "signal_dbm": -30,
+        },
+        {
+            "bssid": "CC:DD:EE:FF:00:11",
+            "ssid": "OpenNet",
+            "encryption": "open",
+            "lat": 0.0,
+            "lon": 0.0,
+            "signal_dbm": -50,
+        },
+    ]
+
+    rogues = network_analytics.detect_rogue_devices(records, eps=0.002, min_samples=2, distance=0.001)
+    assert records[2] in rogues  # nosec B101
+    assert records[3] in rogues  # nosec B101
