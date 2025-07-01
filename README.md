@@ -551,6 +551,13 @@ port and `PW_ORIENTATION_MAP_FILE` for loading a heading correction map (see
 fields is provided at `docs/config_schema.json`.
 Password hashing guidelines are covered in [docs/security.rst](docs/security.rst).
 
+### Automatic Anomaly Detection
+
+CPU temperature and usage are monitored by a lightweight machine learning
+model. The detector is enabled automatically when running the backend via
+`piwardrive-webui` or `piwardrive-service`. Set the environment variable
+`PW_DISABLE_ANOMALY_DETECTION=1` to disable this feature.
+
 ## Additional Documentation
 
 Comprehensive guides and API references live in the `docs/` directory. Run `make html` there to build the Sphinx site. High level summaries are collected in [REFERENCE.md](REFERENCE.md).

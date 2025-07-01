@@ -92,9 +92,31 @@ def plot_cpu_temp(
 # ─────────────────────────────────────────────────────────────
 # External ML hooks
 
+import os
+import sys
 from typing import Callable
 
+try:
+    from .analytics.anomaly import HealthAnomalyDetector
+except Exception:  # pragma: no cover - optional dependency
+    HealthAnomalyDetector = None
+
 _ML_HOOKS: list[Callable[[HealthRecord], None]] = []
+
+if (
+    HealthAnomalyDetector is not None
+    and (
+        "piwardrive.main" in sys.modules or "piwardrive.service" in sys.modules
+    )
+    and os.getenv("PW_DISABLE_ANOMALY_DETECTION", "0").lower() not in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+):
+    _ANOMALY_DETECTOR = HealthAnomalyDetector()
+    register_ml_hook(_ANOMALY_DETECTOR)
 
 
 def register_ml_hook(func: Callable[[HealthRecord], None]) -> None:
