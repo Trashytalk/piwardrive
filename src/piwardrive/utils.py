@@ -74,6 +74,18 @@ except Exception:
         ) -> float | None:  # type: ignore[misc]
             return None
 
+        def haversine_distance(
+            _p1: tuple[float, float], _p2: tuple[float, float]
+        ) -> float:
+            return 0.0
+
+        def tail_file(path: str, lines: int = 50) -> list[str]:
+            try:
+                with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                    return f.read().splitlines()[-lines:]
+            except Exception:
+                return []
+
         __all__ += [
             "MetricsResult",
             "get_gps_fix_quality",
@@ -83,6 +95,8 @@ except Exception:
             "fetch_kismet_devices_async",
             "run_async_task",
             "get_avg_rssi",
+            "haversine_distance",
+            "tail_file",
         ]
 
 

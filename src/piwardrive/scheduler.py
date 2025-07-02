@@ -129,7 +129,11 @@ class PollScheduler:
 
         self._next_runs[name] = time.time() + interval
         self._durations[name] = float("nan")
-        self._tasks[name] = asyncio.create_task(_runner())
+        try:
+            self._tasks[name] = asyncio.create_task(_runner())
+        except RuntimeError:
+            utils.run_async_task(_runner())
+            self._tasks[name] = None
 
     # ------------------------------------------------------------------
     # Widget helpers

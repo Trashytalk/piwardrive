@@ -562,10 +562,7 @@ def WEBSOCKET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F
     return _wrap_route(app.websocket, *args, **kwargs)
 
 
-# Include route modules
-from piwardrive.routes import wifi as wifi_routes
 
-app.include_router(wifi_routes.router)
 
 
 # Allowed log file paths for the /logs endpoint
@@ -641,6 +638,9 @@ async def token_login(
 
 
 AUTH_DEP = Depends(_check_auth)
+
+from piwardrive.routes import wifi as wifi_routes
+app.include_router(wifi_routes.router)
 
 
 @POST("/auth/login")
