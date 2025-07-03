@@ -11,10 +11,14 @@ aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
 aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
-aiohttp_mod.FormData = lambda: type("FormData", (), {"add_field": lambda *a, **k: None})()  # type: ignore[attr-defined]
+aiohttp_mod.FormData = lambda: type(
+    "FormData",
+    (),
+    {"add_field": lambda *a, **k: None},
+)()  # type: ignore[attr-defined]
 sys.modules.setdefault("aiohttp", aiohttp_mod)
 
-import piwardrive.remote_sync as rs
+import piwardrive.remote_sync as rs  # noqa: E402
 
 
 class DummyResp:
@@ -202,7 +206,7 @@ def test_make_range_db(tmp_path):
             )
         db.commit()
 
-    path = rs._make_range_db(str(db_path), 2, 3)
+    path = asyncio.run(rs._make_range_db(str(db_path), 2, 3))
     import os
 
     try:
@@ -252,14 +256,12 @@ def test_make_range_db_empty_range(tmp_path):
             )
         db.commit()
 
-    path = rs._make_range_db(str(db_path), 5, 4)
+    path = asyncio.run(rs._make_range_db(str(db_path), 5, 4))
     import os
 
     try:
         with sqlite3.connect(path) as db:
-            rows = db.execute(
-                "SELECT COUNT(*) FROM health_records"
-            ).fetchone()
+            rows = db.execute("SELECT COUNT(*) FROM health_records").fetchone()
             assert rows[0] == 0
             rows = db.execute("SELECT COUNT(*) FROM ap_cache").fetchone()
             assert rows[0] == 0
