@@ -18,15 +18,10 @@ from typing import Any, Dict
 import psutil
 
 from piwardrive import cloud_export, config, r_integration, utils
+from piwardrive.database_service import db_service
 from piwardrive.interfaces import DataCollector, SelfTestCollector
 from piwardrive.mqtt import MQTTClient
-from piwardrive.persistence import (
-    HealthRecord,
-    load_recent_health,
-    purge_old_health,
-    save_health_record,
-    vacuum,
-)
+from piwardrive.persistence import HealthRecord
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
 
@@ -296,15 +291,15 @@ class HealthMonitor:
                 memory_percent=system.get("memory_percent", 0.0),
                 disk_percent=system.get("disk_percent", 0.0),
             )
-            await save_health_record(rec)
+            await db_service.save_health_record(rec)
             try:
                 from piwardrive import analysis
 
                 analysis.process_new_record(rec)
             except Exception:  # pragma: no cover - optional hooks
                 logging.exception("ML processing failed")
-            await purge_old_health(30)
-            await vacuum()
+            await db_service.purge_old_health(30)
+            await db_service.vacuum()
             if self._mqtt:
                 try:
                     self._mqtt.publish(self.data or {})
@@ -319,7 +314,7 @@ class HealthMonitor:
         from dataclasses import asdict
 
         try:
-            records = await load_recent_health(10000)
+            records = await db_service.load_recent_health(10000)
         except Exception as exc:  # pragma: no cover - best-effort
             logging.exception("HealthMonitor load records failed: %s", exc)
             return

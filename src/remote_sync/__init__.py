@@ -6,11 +6,11 @@ import asyncio
 import json
 import logging
 import os
-import sqlite3
 import tempfile
 import time
 
 import aiohttp
+import aiosqlite
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +51,13 @@ def get_metrics() -> dict[str, float | int]:
     }
 
 
-def _make_range_db(src: str, start: int, end: int) -> str:
+async def _make_range_db(src: str, start: int, end: int) -> str:
     """Return path to a temporary DB with rows ``start``..``end`` from ``src``."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp:
         dest = tmp.name
 
-    with sqlite3.connect(src) as src_db, sqlite3.connect(dest) as dst_db:
-        dst_db.execute(
+    async with aiosqlite.connect(src) as src_db, aiosqlite.connect(dest) as dst_db:
+        await dst_db.execute(
             """CREATE TABLE health_records (
                 timestamp TEXT PRIMARY KEY,
                 cpu_temp REAL,
@@ -66,7 +66,7 @@ def _make_range_db(src: str, start: int, end: int) -> str:
                 disk_percent REAL
             )"""
         )
-        dst_db.execute(
+        await dst_db.execute(
             """CREATE TABLE ap_cache (
                 bssid TEXT,
                 ssid TEXT,
@@ -77,23 +77,25 @@ def _make_range_db(src: str, start: int, end: int) -> str:
             )"""
         )
 
-        cur = src_db.execute(
+        cur = await src_db.execute(
             "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
             " FROM health_records WHERE rowid BETWEEN ? AND ?",
             (start, end),
         )
-        dst_db.executemany(
+        rows = await cur.fetchall()
+        await dst_db.executemany(
             "INSERT INTO health_records VALUES (?, ?, ?, ?, ?)",
-            cur,
+            rows,
         )
 
-        cur = src_db.execute(
+        cur = await src_db.execute(
             "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache "
             "WHERE rowid BETWEEN ? AND ?",
             (start, end),
         )
-        dst_db.executemany("INSERT INTO ap_cache VALUES (?, ?, ?, ?, ?, ?)", cur)
-        dst_db.commit()
+        rows = await cur.fetchall()
+        await dst_db.executemany("INSERT INTO ap_cache VALUES (?, ?, ?, ?, ?, ?)", rows)
+        await dst_db.commit()
 
     return dest
 
@@ -102,7 +104,7 @@ def _load_sync_state(path: str) -> int:
     try:
         with open(path, "r", encoding="utf-8") as fh:
             return int(json.load(fh))
-    except Exception:
+    except (OSError, ValueError, json.JSONDecodeError):
         return 0
 
 
@@ -132,9 +134,10 @@ async def sync_new_records(
 
     last_id = _load_sync_state(state_file)
 
-    with sqlite3.connect(db_path) as db:
-        cur = db.execute("SELECT MAX(rowid) FROM health_records")
-        max_id = cur.fetchone()[0] or 0
+    async with aiosqlite.connect(db_path) as db:
+        cur = await db.execute("SELECT MAX(rowid) FROM health_records")
+        row = await cur.fetchone()
+        max_id = row[0] if row else 0
     if max_id <= last_id:
         return 0
 
@@ -171,13 +174,13 @@ async def sync_database_to_server(
     delay = INITIAL_RETRY_DELAY
     temp_path = None
     if row_range is not None:
-        start, end = row_range
-        temp_path = _make_range_db(db_path, start, end)
+        start_id, end_id = row_range
+        temp_path = await _make_range_db(db_path, start_id, end_id)
         path = temp_path
     else:
         path = db_path
 
-    start = time.perf_counter() if _METRICS_ENABLED else 0.0
+    start_time = time.perf_counter() if _METRICS_ENABLED else 0.0
     with open(path, "rb") as fh:
         for attempt in range(1, retries + 1):
             try:
@@ -193,7 +196,7 @@ async def sync_database_to_server(
                     os.unlink(temp_path)
                 if _METRICS_ENABLED:
                     _SUCCESS_TOTAL += 1
-                    _LAST_DURATION = time.perf_counter() - start
+                    _LAST_DURATION = time.perf_counter() - start_time
                 return
             except Exception as exc:  # pragma: no cover - network errors
                 if attempt >= retries:
@@ -202,7 +205,7 @@ async def sync_database_to_server(
                         os.unlink(temp_path)
                     if _METRICS_ENABLED:
                         _FAILURE_TOTAL += 1
-                        _LAST_DURATION = time.perf_counter() - start
+                        _LAST_DURATION = time.perf_counter() - start_time
                     raise
                 await asyncio.sleep(delay)
                 delay *= 2

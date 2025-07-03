@@ -1,7 +1,6 @@
+import asyncio
 import sqlite3
 from pathlib import Path
-
-import pandas as pd
 
 from piwardrive.advanced_localization import load_kismet_data
 
@@ -10,10 +9,12 @@ def create_kismet_db(path: Path) -> None:
     """Create a minimal kismet-like database with sample rows."""
     with sqlite3.connect(path) as conn:
         conn.execute(
-            "CREATE TABLE devices (devicekey INTEGER PRIMARY KEY, macaddr TEXT, ssid TEXT, type TEXT)"
+            "CREATE TABLE devices (devicekey INTEGER PRIMARY KEY, macaddr TEXT,"
+            " ssid TEXT, type TEXT)"
         )
         conn.execute(
-            "CREATE TABLE packets (devicekey INTEGER, lat REAL, lon REAL, signal INTEGER, gpstime INTEGER)"
+            "CREATE TABLE packets (devicekey INTEGER, lat REAL, lon REAL, signal "
+            "INTEGER, gpstime INTEGER)"
         )
         conn.execute(
             "INSERT INTO devices VALUES (1, 'aa:bb:cc', 'test', 'infrastructure')"
@@ -28,7 +29,7 @@ def test_load_kismet_data_filters_and_returns_dataframe(tmp_path: Path) -> None:
     db = tmp_path / "kismet.db"
     create_kismet_db(db)
 
-    df = load_kismet_data(db)
+    df = asyncio.run(load_kismet_data(db))
 
     assert list(df.columns) == [
         "macaddr",

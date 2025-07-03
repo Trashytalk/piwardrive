@@ -266,8 +266,11 @@ def plot_signal_trend(packets: Sequence[LoRaPacket], path: str) -> None:
     """
     rssi = [p.rssi for p in packets if p.rssi is not None]
     if not rssi:
-        with open(path, "wb") as fh:
-            fh.write(b"")
+        try:
+            with open(path, "wb") as fh:
+                fh.write(b"")
+        except OSError as exc:
+            logging.error("Failed to write %s: %s", path, exc)
         return
 
     try:
@@ -276,8 +279,11 @@ def plot_signal_trend(packets: Sequence[LoRaPacket], path: str) -> None:
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except Exception:  # pragma: no cover - optional dependency
-        with open(path, "wb") as fh:
-            fh.write(b"")
+        try:
+            with open(path, "wb") as fh:
+                fh.write(b"")
+        except OSError as exc:
+            logging.error("Failed to write %s: %s", path, exc)
         return
 
     plt.figure(figsize=(4, 2))
@@ -285,7 +291,11 @@ def plot_signal_trend(packets: Sequence[LoRaPacket], path: str) -> None:
     plt.xlabel("packet")
     plt.ylabel("rssi")
     plt.tight_layout()
-    plt.savefig(path)
+    try:
+        plt.savefig(path)
+    except OSError as exc:
+        logging.error("Failed to save plot %s: %s", path, exc)
+        return
     plt.close()
 
 

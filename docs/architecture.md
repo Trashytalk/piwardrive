@@ -1,6 +1,7 @@
 # PiWardrive Architecture Deep Dive
 
 ## Table of Contents
+
 - [System Overview](#system-overview)
 - [Component Architecture](#component-architecture)
 - [Data Flow](#data-flow)
@@ -72,6 +73,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 #### Frontend Components
 
 **Web Dashboard (React/TypeScript)**
+
 - Real-time data visualization
 - User authentication and session management
 - Configuration interface
@@ -79,6 +81,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 - Responsive design for mobile devices
 
 **CLI Tools (Python)**
+
 - Command-line interface for automation
 - Scripted data collection
 - Batch operations
@@ -87,6 +90,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 #### Backend Services
 
 **API Gateway (FastAPI)**
+
 - Request routing and load balancing
 - Authentication and authorization
 - Rate limiting and throttling
@@ -95,6 +99,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 - API documentation serving
 
 **Wi-Fi Scanner Service**
+
 - Wireless network discovery
 - Signal strength monitoring
 - Device detection and tracking
@@ -102,6 +107,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 - Interference detection
 
 **System Monitor Service**
+
 - Resource usage tracking (CPU, RAM, disk)
 - Temperature monitoring
 - Network interface statistics
@@ -109,6 +115,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 - Performance metrics collection
 
 **GPS Service (Optional)**
+
 - Location data collection
 - GPS coordinate tracking
 - Location-aware network mapping
@@ -177,23 +184,27 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 ### Backend Technologies
 
 **Core Framework**
+
 - **FastAPI**: Modern, fast web framework for building APIs
 - **Pydantic**: Data validation using Python type annotations
 - **SQLAlchemy**: SQL toolkit and ORM
 - **Alembic**: Database migration tool
 
 **Data Storage**
+
 - **SQLite**: Primary database for metadata and configuration
 - **InfluxDB** (Optional): Time-series database for metrics
 - **Redis** (Optional): Caching and session storage
 
 **Networking & Monitoring**
+
 - **psutil**: System and process monitoring
 - **scapy**: Packet capture and analysis
 - **netifaces**: Network interface enumeration
 - **gpsd**: GPS daemon interface
 
 **Async & Concurrency**
+
 - **asyncio**: Asynchronous I/O support
 - **aiofiles**: Asynchronous file operations
 - **asyncpg**: Async PostgreSQL adapter (optional)
@@ -201,16 +212,19 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 ### Frontend Technologies
 
 **Core Framework**
+
 - **React 18**: Modern React with concurrent features
 - **TypeScript**: Type-safe JavaScript development
 - **Vite**: Fast build tool and development server
 
 **UI Components**
+
 - **Material-UI**: React component library
 - **Chart.js**: Data visualization library
 - **Leaflet**: Interactive maps for GPS data
 
 **State Management**
+
 - **React Query**: Server state management
 - **Zustand**: Client state management
 - **React Hook Form**: Form state management
@@ -218,11 +232,13 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 ### Infrastructure
 
 **Containerization**
+
 - **Docker**: Container platform
 - **Docker Compose**: Multi-container orchestration
 - **BuildKit**: Enhanced Docker build features
 
 **Web Server**
+
 - **Nginx**: Reverse proxy and static file serving
 - **Uvicorn**: ASGI server for FastAPI
 - **Gunicorn**: WSGI server with worker processes
@@ -232,6 +248,7 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 ### Service Communication Patterns
 
 #### Synchronous Communication
+
 ```python
 # Direct API calls between services
 async def get_scan_results(scan_id: str) -> ScanResults:
@@ -241,6 +258,7 @@ async def get_scan_results(scan_id: str) -> ScanResults:
 ```
 
 #### Asynchronous Communication
+
 ```python
 # Event-driven communication via message bus
 async def publish_scan_event(event: ScanEvent):
@@ -253,6 +271,7 @@ async def handle_scan_completion(event_data: dict):
 ```
 
 #### Real-Time Communication
+
 ```python
 # WebSocket connections for live updates
 async def websocket_endpoint(websocket: WebSocket):
@@ -264,6 +283,7 @@ async def websocket_endpoint(websocket: WebSocket):
 ### Service Discovery
 
 **Static Configuration**
+
 ```yaml
 # services.yaml
 services:
@@ -271,7 +291,7 @@ services:
     host: localhost
     port: 8081
     health_endpoint: /health
-  
+
   system_monitor:
     host: localhost
     port: 8082
@@ -279,15 +299,16 @@ services:
 ```
 
 **Dynamic Discovery** (Optional)
+
 ```python
 # Service registry pattern
 class ServiceRegistry:
     def __init__(self):
         self.services = {}
-    
+
     def register(self, name: str, endpoint: str):
         self.services[name] = endpoint
-    
+
     def discover(self, name: str) -> str:
         return self.services.get(name)
 ```
@@ -297,6 +318,7 @@ class ServiceRegistry:
 ### SQLite Schema Design
 
 **Core Tables**
+
 ```sql
 -- Scan metadata and configuration
 CREATE TABLE scans (
@@ -351,6 +373,7 @@ CREATE TABLE users (
 ```
 
 **Indexes for Performance**
+
 ```sql
 -- Optimize common queries
 CREATE INDEX idx_scans_status ON scans(status);
@@ -364,9 +387,10 @@ CREATE INDEX idx_config_key ON config(key);
 ### Time Series Data (Optional InfluxDB)
 
 **Measurement Schema**
+
 ```sql
 -- System metrics
-system_metrics,host=pi4-001,interface=wlan0 
+system_metrics,host=pi4-001,interface=wlan0
   cpu_usage=25.5,
   memory_usage=68.2,
   disk_usage=45.8,
@@ -419,6 +443,7 @@ wifi_signals,scan_id=scan_123,bssid=aa:bb:cc:dd:ee:ff
 ### Port Configuration
 
 **Default Ports**
+
 - **8080**: Main API and web interface
 - **8081**: Wi-Fi scanner service (internal)
 - **8082**: System monitor service (internal)
@@ -427,6 +452,7 @@ wifi_signals,scan_id=scan_123,bssid=aa:bb:cc:dd:ee:ff
 - **8086**: InfluxDB (if used)
 
 **Firewall Rules**
+
 ```bash
 # Allow incoming connections
 sudo ufw allow 8080/tcp    # Main web interface
@@ -442,6 +468,7 @@ sudo ufw deny 8082/tcp     # Monitor service
 ### Authentication & Authorization
 
 **Multi-Layer Security Model**
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Security Layers                              │
@@ -472,6 +499,7 @@ sudo ufw deny 8082/tcp     # Monitor service
 ```
 
 **Authentication Flow**
+
 ```python
 # JWT-based authentication
 async def authenticate_user(credentials: UserCredentials):
@@ -494,16 +522,19 @@ async def verify_api_key(api_key: str = Header(...)):
 ### Data Privacy & Compliance
 
 **Data Minimization**
+
 - Store only necessary data for functionality
 - Automatic data purging based on retention policies
 - Anonymize sensitive information where possible
 
 **Access Controls**
+
 - Role-based access control (RBAC)
 - Principle of least privilege
 - Audit trails for all data access
 
 **Legal Compliance**
+
 - GDPR compliance for EU deployments
 - Clear data usage policies
 - User consent mechanisms
@@ -578,37 +609,37 @@ spec:
         app: piwardrive-api
     spec:
       containers:
-      - name: api
-        image: piwardrive/api:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secret
-              key: url
-        - name: REDIS_URL
-          value: "redis://redis-service:6379"
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /api/v1/system/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /api/v1/system/health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: api
+          image: piwardrive/api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: url
+            - name: REDIS_URL
+              value: "redis://redis-service:6379"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/system/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/v1/system/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ```
 
 ## Performance Considerations
@@ -616,6 +647,7 @@ spec:
 ### Resource Optimization
 
 **Memory Management**
+
 ```python
 # Efficient data structures for large datasets
 from collections import deque
@@ -627,10 +659,10 @@ class CircularBuffer:
     def __init__(self, maxsize: int):
         self.buffer = deque(maxlen=maxsize)
         self.maxsize = maxsize
-    
+
     def append(self, item):
         self.buffer.append(item)
-    
+
     def get_latest(self, count: int = None):
         if count:
             return list(self.buffer)[-count:]
@@ -642,7 +674,7 @@ class DatabasePool:
         self.pool = None
         self.database_url = database_url
         self.pool_size = pool_size
-    
+
     async def create_pool(self):
         self.pool = await asyncpg.create_pool(
             self.database_url,
@@ -652,6 +684,7 @@ class DatabasePool:
 ```
 
 **CPU Optimization**
+
 ```python
 # Async processing for I/O bound operations
 async def process_scan_results(scan_data: List[dict]):
@@ -659,7 +692,7 @@ async def process_scan_results(scan_data: List[dict]):
     for data in scan_data:
         task = asyncio.create_task(process_access_point(data))
         tasks.append(task)
-    
+
     results = await asyncio.gather(*tasks)
     return results
 
@@ -671,7 +704,7 @@ async def background_processor():
             await process_pending_scans()
             await cleanup_old_data()
             await update_metrics()
-            
+
             # Sleep between iterations
             await asyncio.sleep(30)
         except Exception as e:
@@ -679,9 +712,23 @@ async def background_processor():
             await asyncio.sleep(60)
 ```
 
+### Background Task Queue
+
+Long-running scans can tie up the event loop. The `BackgroundTaskQueue`
+provides worker coroutines that execute these jobs in the background. Each
+iteration of :func:`run_continuous_scan` may be enqueued instead of awaited::
+
+    from piwardrive.task_queue import BackgroundTaskQueue
+
+    queue = BackgroundTaskQueue(workers=2)
+    await queue.start()
+    await run_continuous_scan(interval=10, iterations=5, queue=queue)
+    await queue.stop()
+
 ### Caching Strategy
 
 **Multi-Level Caching**
+
 ```python
 # Application-level caching
 from functools import lru_cache
@@ -692,15 +739,15 @@ class CacheManager:
     def __init__(self, redis_url: str):
         self.redis = None
         self.redis_url = redis_url
-    
+
     async def init_redis(self):
         self.redis = await aioredis.from_url(self.redis_url)
-    
+
     @lru_cache(maxsize=1000)
     def get_system_info(self):
         """Memory cache for static system information"""
         return psutil.virtual_memory()._asdict()
-    
+
     async def cache_scan_results(self, scan_id: str, results: dict, ttl: int = 3600):
         """Redis cache for scan results"""
         await self.redis.setex(
@@ -708,7 +755,7 @@ class CacheManager:
             ttl,
             json.dumps(results)
         )
-    
+
     async def get_cached_scan(self, scan_id: str) -> dict:
         """Retrieve cached scan results"""
         cached = await self.redis.get(f"scan:{scan_id}")
@@ -720,6 +767,7 @@ class CacheManager:
 ### Database Performance
 
 **Query Optimization**
+
 ```sql
 -- Efficient queries with proper indexing
 EXPLAIN QUERY PLAN
@@ -732,13 +780,13 @@ ORDER BY ap.signal_strength DESC
 LIMIT 100;
 
 -- Partitioning for large datasets
-CREATE TABLE access_points_202506 AS 
-SELECT * FROM access_points 
+CREATE TABLE access_points_202506 AS
+SELECT * FROM access_points
 WHERE started_at >= '2025-06-01' AND started_at < '2025-07-01';
 
 -- Aggregation for analytics
 CREATE VIEW signal_strength_summary AS
-SELECT 
+SELECT
     ap.channel,
     AVG(ap.signal_strength) as avg_signal,
     MIN(ap.signal_strength) as min_signal,
@@ -755,6 +803,7 @@ GROUP BY ap.channel;
 ### Horizontal Scaling Patterns
 
 **Load Balancing**
+
 ```nginx
 # nginx.conf
 upstream piwardrive_backend {
@@ -767,14 +816,14 @@ upstream piwardrive_backend {
 server {
     listen 80;
     server_name piwardrive.local;
-    
+
     location /api/ {
         proxy_pass http://piwardrive_backend;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
-    
+
     location / {
         root /var/www/piwardrive;
         try_files $uri $uri/ /index.html;
@@ -783,6 +832,7 @@ server {
 ```
 
 **Database Sharding**
+
 ```python
 # Shard data by geographic region or time
 class ShardedDatabase:
@@ -790,13 +840,13 @@ class ShardedDatabase:
         self.shards = {}
         for config in shard_configs:
             self.shards[config['name']] = DatabaseConnection(config['url'])
-    
+
     def get_shard_for_scan(self, scan_id: str) -> str:
         """Determine which shard to use based on scan_id"""
         # Simple hash-based sharding
         shard_index = hash(scan_id) % len(self.shards)
         return list(self.shards.keys())[shard_index]
-    
+
     async def store_scan_data(self, scan_id: str, data: dict):
         shard_name = self.get_shard_for_scan(scan_id)
         shard = self.shards[shard_name]
@@ -806,9 +856,10 @@ class ShardedDatabase:
 ### Auto-Scaling Configuration
 
 **Docker Swarm Scaling**
+
 ```yaml
 # docker-compose.prod.yml
-version: '3.8'
+version: "3.8"
 services:
   piwardrive-api:
     image: piwardrive/api:latest
@@ -821,10 +872,10 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
         reservations:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
     ports:
       - "8080"
@@ -837,6 +888,7 @@ services:
 ### Metrics Collection
 
 **Application Metrics**
+
 ```python
 from prometheus_client import Counter, Histogram, Gauge, start_http_server
 
@@ -860,6 +912,7 @@ async def perform_scan(scan_request: WiFiScanRequest):
 ```
 
 **Health Checks**
+
 ```python
 # Comprehensive health monitoring
 class HealthChecker:
@@ -871,7 +924,7 @@ class HealthChecker:
             'memory': self.check_memory,
             'external_deps': self.check_external_dependencies
         }
-    
+
     async def check_database(self) -> bool:
         try:
             async with database.transaction():
@@ -879,18 +932,18 @@ class HealthChecker:
             return True
         except Exception:
             return False
-    
+
     async def check_wifi_adapter(self) -> bool:
         try:
             interfaces = psutil.net_if_addrs()
             return any('wlan' in iface for iface in interfaces)
         except Exception:
             return False
-    
+
     async def get_health_status(self) -> dict:
         results = {}
         overall_healthy = True
-        
+
         for check_name, check_func in self.checks.items():
             try:
                 result = await check_func()
@@ -900,7 +953,7 @@ class HealthChecker:
             except Exception as e:
                 results[check_name] = {'status': 'error', 'error': str(e)}
                 overall_healthy = False
-        
+
         return {
             'status': 'healthy' if overall_healthy else 'unhealthy',
             'checks': results,
@@ -911,6 +964,7 @@ class HealthChecker:
 ### Logging Architecture
 
 **Structured Logging**
+
 ```python
 import structlog
 import logging.config
@@ -982,7 +1036,7 @@ async def scan_wifi_networks(scan_request: WiFiScanRequest):
         duration=scan_request.duration,
         channels=scan_request.channels
     )
-    
+
     try:
         results = await perform_scan(scan_request)
         logger.info(

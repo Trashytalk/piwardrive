@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import logging
 from pathlib import Path
@@ -43,7 +44,7 @@ def main(argv: list[str] | None = None) -> None:
 
     setup_logging(stdout=True)
     cfg = load_config(args.config)
-    data = load_kismet_data(args.database)
+    data = asyncio.run(load_kismet_data(args.database))
     coords = localize_aps(data, cfg)
 
     if folium is not None:

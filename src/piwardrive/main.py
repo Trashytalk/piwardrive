@@ -93,6 +93,16 @@ class PiWardriveApp:
                 ),
                 self.config_data.remote_sync_interval * 60,
             )
+        try:
+            from piwardrive import scan_report
+
+            self.scheduler.schedule(
+                "scan_report",
+                lambda _dt: utils.run_async_task(scan_report.write_scan_report()),
+                86400,
+            )
+        except Exception:
+            logging.exception("Failed to schedule scan report")
         update_hours = int(os.getenv("PW_UPDATE_INTERVAL", "0"))
         if update_hours > 0:
             script = Path(__file__).resolve().parents[2] / "scripts" / "update.sh"
