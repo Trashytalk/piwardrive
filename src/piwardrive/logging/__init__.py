@@ -1,18 +1,24 @@
+from .config import LoggingConfig
 from .structured_logger import (
     LogContext,
-    StructuredFormatter,
     PiWardriveLogger,
-    set_log_context,
+    StructuredFormatter,
     get_logger,
+    set_log_context,
 )
-from .config import LoggingConfig
+
+
+def init_logging(config_path: str | None = None) -> None:
+    """Apply logging configuration from ``config_path`` if provided."""
+    LoggingConfig(config_path).apply()
+
 
 __all__ = [
     "LogContext",
     "StructuredFormatter",
     "PiWardriveLogger",
     "LoggingConfig",
+    "init_logging",
     "set_log_context",
     "get_logger",
 ]
-

@@ -10,6 +10,8 @@ from dataclasses import asdict
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
+from piwardrive.logging import init_logging
+
 try:  # pragma: no cover - optional FastAPI dependency
     from fastapi import (
         Body,
@@ -22,11 +24,8 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.openapi.utils import get_openapi
-    from fastapi.responses import (  # noqa: E402
-        HTMLResponse,
-        Response,
-        StreamingResponse,
-    )
+    from fastapi.responses import Response  # noqa: E402
+    from fastapi.responses import HTMLResponse, StreamingResponse
     from fastapi.security import (
         HTTPBasic,
         HTTPBasicCredentials,
@@ -191,10 +190,8 @@ except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
 
 try:  # allow tests to stub out analytics
-    from analytics.baseline import (  # type: ignore
-        analyze_health_baseline,
-        load_baseline_health,
-    )
+    from analytics.baseline import analyze_health_baseline  # type: ignore
+    from analytics.baseline import load_baseline_health
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.analytics.baseline import (
         analyze_health_baseline,
@@ -1283,6 +1280,8 @@ async def sse_history(
 async def main() -> None:
     """Run the FastAPI app using ``uvicorn``."""
     import uvicorn
+
+    init_logging()
 
     port_str = os.getenv("PW_SERVICE_PORT", "8000")
     try:

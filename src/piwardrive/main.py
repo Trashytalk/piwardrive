@@ -11,6 +11,8 @@ from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Callable
 
+from watchdog.observers import Observer
+
 from piwardrive import diagnostics, exception_handler, notifications, remote_sync, utils
 from piwardrive.config import (
     CONFIG_PATH,
@@ -20,9 +22,8 @@ from piwardrive.config import (
     save_config,
 )
 from piwardrive.config_watcher import watch_config
-from watchdog.observers import Observer
 from piwardrive.di import Container
-from piwardrive.logconfig import setup_logging
+from piwardrive.logging import init_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
 from piwardrive.scheduler import PollScheduler
 from piwardrive.security import hash_password
@@ -46,7 +47,7 @@ class PiWardriveApp:
         pw = os.getenv("PW_ADMIN_PASSWORD")
         if pw and not self.config_data.admin_password_hash:
             self.config_data.admin_password_hash = hash_password(pw)
-        setup_logging(level=logging.INFO)
+        init_logging()
         exception_handler.install()
         if not self.container.has("scheduler"):
             self.container.register_instance("scheduler", PollScheduler())

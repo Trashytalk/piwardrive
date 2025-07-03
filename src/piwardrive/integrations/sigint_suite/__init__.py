@@ -4,15 +4,18 @@ import logging
 import os
 from typing import Any
 
+from piwardrive.logging import init_logging
+
 from . import plugins as _plugins
 
 _DEBUG_FLAG = "SIGINT_DEBUG"
 
 
 def _setup_logging() -> None:
-    """Configure basic logging based on ``SIGINT_DEBUG``."""
-    level = logging.DEBUG if os.getenv(_DEBUG_FLAG) else logging.INFO
-    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
+    """Configure logging using :func:`init_logging`."""
+    init_logging()
+    if os.getenv(_DEBUG_FLAG):
+        logging.getLogger().setLevel(logging.DEBUG)
 
 
 _setup_logging()

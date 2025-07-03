@@ -574,13 +574,15 @@ See [docs/notifications.rst](docs/notifications.rst) for enabling webhook alerts
 
 Below are minimal snippets that can be validated with `doctest`.
 
-### setup_logging
+### init_logging
 
 ```python
 >>> import sys, types, json, os
 >>> sys.modules['piwardrive.config'] = types.SimpleNamespace(CONFIG_DIR='.')
 >>> sys.path.insert(0, 'src')
+>>> from piwardrive.logging import init_logging
 >>> from piwardrive.logconfig import setup_logging
+>>> init_logging()
 >>> logger = setup_logging('./temp.log')
 >>> logger.warning('issue')
 >>> json.loads(open('./temp.log').read().splitlines()[0])['level']

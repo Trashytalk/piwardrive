@@ -5,11 +5,11 @@ import json
 import logging
 from types import SimpleNamespace
 
-from piwardrive.logconfig import setup_logging
+from piwardrive.logging import init_logging
 
 
 def _get_service_statuses(
-    services: tuple[str, ...] | list[str] | None = None
+    services: tuple[str, ...] | list[str] | None = None,
 ) -> dict[str, bool]:
     """Import :mod:`piwardrive.diagnostics` lazily and get statuses."""
     from piwardrive import diagnostics as _diag
@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> None:
         help="Services to check (defaults to kismet, bettercap, gpsd)",
     )
     args = parser.parse_args(argv)
-    setup_logging(stdout=True)
+    init_logging()
     statuses = diagnostics.get_service_statuses(args.services or None)
     logging.info(json.dumps(statuses))
 

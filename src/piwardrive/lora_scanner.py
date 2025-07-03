@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from typing import Callable, List, ParamSpec, Sequence, TypeVar
 
 from .core import config
-from .logconfig import setup_logging
+from .logging import init_logging
 from .scheduler import PollScheduler
 
 P = ParamSpec("P")
@@ -304,7 +304,7 @@ def main() -> None:  # pragma: no cover - CLI helper
     parser.add_argument("--json", action="store_true", help="print as JSON")
     args = parser.parse_args()
 
-    setup_logging(stdout=True)
+    init_logging()
 
     lines = scan_lora(args.iface)
     if args.json:
