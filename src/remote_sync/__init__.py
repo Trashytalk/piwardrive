@@ -104,7 +104,7 @@ def _load_sync_state(path: str) -> int:
     try:
         with open(path, "r", encoding="utf-8") as fh:
             return int(json.load(fh))
-    except Exception:
+    except (OSError, ValueError, json.JSONDecodeError):
         return 0
 
 

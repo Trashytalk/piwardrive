@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 
@@ -20,9 +21,14 @@ def apply_style(
 
     style_json: str | None = None
     if style_path:
-        with open(style_path, "r", encoding="utf-8") as fh:
-            style_json = fh.read()
-            json.loads(style_json)  # validate
+        try:
+            with open(style_path, "r", encoding="utf-8") as fh:
+                style_json = fh.read()
+                json.loads(style_json)  # validate
+        except OSError as exc:
+            raise FileNotFoundError(style_path) from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Invalid style JSON in {style_path}: {exc}") from exc
 
     with sqlite3.connect(path) as db:
         db.execute("CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT)")
@@ -73,8 +79,12 @@ def build_mbtiles(folder: str, output: str) -> None:
                 except ValueError:
                     continue
                 tile_row = (2**z_i - 1) - y_i  # TMS
-                with open(os.path.join(root, f), "rb") as fh:
-                    data = fh.read()
+                try:
+                    with open(os.path.join(root, f), "rb") as fh:
+                        data = fh.read()
+                except OSError as exc:
+                    logging.exception("Failed to read tile %s: %s", f, exc)
+                    continue
                 db.execute(
                     (
                         "INSERT OR REPLACE INTO tiles "
