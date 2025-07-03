@@ -11,6 +11,7 @@ import os
 import subprocess
 import threading
 import time
+import pickle
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -42,6 +43,11 @@ from enum import IntEnum
 import psutil
 import requests
 from cachetools import TTLCache
+
+try:  # pragma: no cover - optional dependency
+    import redis.asyncio as aioredis
+except Exception:  # pragma: no cover - redis not installed
+    aioredis = None
 
 try:
     import requests_cache
@@ -132,6 +138,25 @@ _SAFE_REQUEST_CACHE: TTLCache[str, requests.Response | Any] = TTLCache(
 
 _SAFE_REQUEST_CACHE_LOCK = threading.Lock()
 
+# Optional Redis client for cross-process caching
+_REDIS_CLIENT: aioredis.Redis | None = None
+
+
+def _get_redis_client() -> aioredis.Redis | None:
+    """Return Redis client if ``PIWARDRIVE_REDIS_URL`` is configured."""
+    global _REDIS_CLIENT
+    if _REDIS_CLIENT is not None:
+        return _REDIS_CLIENT
+    url = os.getenv("PIWARDRIVE_REDIS_URL")
+    if not url or aioredis is None:
+        return None
+    try:
+        _REDIS_CLIENT = aioredis.from_url(url)
+    except Exception:  # pragma: no cover - Redis misconfiguration
+        logging.exception("Failed to initialize Redis client")
+        _REDIS_CLIENT = None
+    return _REDIS_CLIENT
+
 
 def _safe_request_cache_pruner() -> None:
     """Background task expiring old safe request cache entries."""
@@ -207,9 +232,30 @@ def async_ttl_cache(
                 entry = cache.get(key)
                 if entry and now is not None and now - entry[0] <= ttl:
                     return entry[1]
+            redis_cli = _get_redis_client()
+            redis_key = None
+            if redis_cli is not None:
+                redis_key = f"async_cache:{func.__module__}:{func.__name__}:{hash(key)}"
+                try:
+                    data = await redis_cli.get(redis_key)
+                    if data:
+                        ts, res = pickle.loads(data)
+                        if now is not None and now - ts <= ttl:
+                            return res
+                except Exception:
+                    logging.debug("Redis get failed", exc_info=True)
             result = await func(*args, **kwargs)
             async with lock:
                 cache[key] = ((0.0 if now is None else now), result)
+            if redis_cli is not None and redis_key is not None:
+                try:
+                    await redis_cli.set(
+                        redis_key,
+                        pickle.dumps((0.0 if now is None else now, result)),
+                        ex=int(ttl),
+                    )
+                except Exception:
+                    logging.debug("Redis set failed", exc_info=True)
             return result
 
         return wrapper
