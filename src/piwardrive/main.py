@@ -11,6 +11,8 @@ from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Callable
 
+from watchdog.observers import Observer
+
 from piwardrive import diagnostics, exception_handler, notifications, remote_sync, utils
 from piwardrive.config import (
     CONFIG_PATH,
@@ -20,7 +22,6 @@ from piwardrive.config import (
     save_config,
 )
 from piwardrive.config_watcher import watch_config
-from watchdog.observers import Observer
 from piwardrive.di import Container
 from piwardrive.logconfig import setup_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
@@ -92,6 +93,16 @@ class PiWardriveApp:
                 ),
                 self.config_data.remote_sync_interval * 60,
             )
+        try:
+            from piwardrive import scan_report
+
+            self.scheduler.schedule(
+                "scan_report",
+                lambda _dt: utils.run_async_task(scan_report.write_scan_report()),
+                86400,
+            )
+        except Exception:
+            logging.exception("Failed to schedule scan report")
         update_hours = int(os.getenv("PW_UPDATE_INTERVAL", "0"))
         if update_hours > 0:
             script = Path(__file__).resolve().parents[2] / "scripts" / "update.sh"

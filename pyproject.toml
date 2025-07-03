@@ -58,6 +58,7 @@ piwardrive-maintain-tiles = "piwardrive.scripts.tile_maintenance_cli:main"
 export-gpx = "piwardrive.scripts.export_gpx:main"
 export-shp = "piwardrive.scripts.export_shp:main"
 export-grafana = "piwardrive.scripts.export_grafana:main"
+scan-report = "piwardrive.scripts.scan_report:main"
 
 [project.optional-dependencies]
 c-extensions = [
