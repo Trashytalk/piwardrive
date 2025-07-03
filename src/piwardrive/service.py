@@ -806,7 +806,11 @@ async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> VehicleInfo:
 @GET("/gps")
 async def get_gps_endpoint(_auth: User | None = AUTH_DEP) -> GPSInfo:
     """Return current GPS position."""
-    pos = await asyncio.to_thread(gps_client.get_position)
+    try:
+        pos = await asyncio.to_thread(gps_client.get_position)
+    except Exception as exc:
+        logging.exception("GPS read failed: %s", exc)
+        pos = None
     lat = lon = None
     if pos:
         lat, lon = pos

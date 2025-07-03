@@ -4,7 +4,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 import boto3
 
@@ -116,15 +116,21 @@ class LogArchiveManager:
 
         def _hash_file() -> str:
             h = hashlib.sha256()
-            with open(file_path, "rb") as f:
-                for chunk in iter(lambda: f.read(4096), b""):
-                    h.update(chunk)
+            try:
+                with open(file_path, "rb") as f:
+                    for chunk in iter(lambda: f.read(4096), b""):
+                        h.update(chunk)
+            except OSError as exc:
+                logging.exception("Failed to read %s for hashing: %s", file_path, exc)
+                return ""
             return h.hexdigest()
 
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(self.executor, _hash_file)
 
-    async def _record_archival(self, log_file: str, backend_name: str, file_hash: str) -> None:
+    async def _record_archival(
+        self, log_file: str, backend_name: str, file_hash: str
+    ) -> None:
         record_dir = Path(self.config.get("archive_metadata", "/tmp"))
         record_dir.mkdir(parents=True, exist_ok=True)
         meta = {
@@ -134,7 +140,9 @@ class LogArchiveManager:
             "timestamp": datetime.utcnow().isoformat(),
         }
         path = record_dir / f"{Path(log_file).name}.json"
-        await asyncio.get_event_loop().run_in_executor(self.executor, path.write_text, str(meta))
+        await asyncio.get_event_loop().run_in_executor(
+            self.executor, path.write_text, str(meta)
+        )
 
 
 class LogRetentionManager:
@@ -202,5 +210,3 @@ class LogRetentionManager:
                     meta_file.unlink()
                 except Exception:
                     pass
-
-

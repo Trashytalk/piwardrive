@@ -1,5 +1,7 @@
 import asyncio
 import gzip
+import logging
+import logging.handlers
 import os
 import shutil
 import threading
@@ -7,26 +9,21 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Callable
+from typing import Callable, Dict, List, Optional
 
-import logging
-import logging.handlers
-
-from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import Counter, Gauge, Histogram
 
 from .scheduler import RotationScheduler
 from .storage import LogArchiveManager, LogRetentionManager
 
 # Metrics
 ROTATION_COUNTER = Counter(
-    'log_rotation_total', 'Total log rotations', ['policy', 'status']
+    "log_rotation_total", "Total log rotations", ["policy", "status"]
 )
 COMPRESSION_TIME = Histogram(
-    'log_compression_duration_seconds', 'Time spent compressing logs'
+    "log_compression_duration_seconds", "Time spent compressing logs"
 )
-ARCHIVE_SIZE = Gauge(
-    'log_archive_size_bytes', 'Size of archived logs', ['backend']
-)
+ARCHIVE_SIZE = Gauge("log_archive_size_bytes", "Size of archived logs", ["backend"])
 
 
 @dataclass
@@ -107,7 +104,9 @@ class LogRotationManager:
 class SmartRotatingHandler(logging.handlers.BaseRotatingHandler):
     """Advanced rotating handler with multiple rotation strategies."""
 
-    def __init__(self, filename: str, policy: RotationPolicy, manager: LogRotationManager):
+    def __init__(
+        self, filename: str, policy: RotationPolicy, manager: LogRotationManager
+    ):
         super().__init__(filename, "a", encoding="utf-8")
         self.policy = policy
         self.manager = manager
@@ -191,10 +190,19 @@ class SmartRotatingHandler(logging.handlers.BaseRotatingHandler):
     def _compress_log(self, filename: str) -> str:
         """Compress log file using gzip."""
         compressed_filename = f"{filename}.gz"
-        with open(filename, "rb") as f_in, gzip.open(
-            compressed_filename, "wb", compresslevel=self.policy.compression_level
-        ) as f_out:
-            shutil.copyfileobj(f_in, f_out)
+        try:
+            with (
+                open(filename, "rb") as f_in,
+                gzip.open(
+                    compressed_filename,
+                    "wb",
+                    compresslevel=self.policy.compression_level,
+                ) as f_out,
+            ):
+                shutil.copyfileobj(f_in, f_out)
+        except OSError as exc:
+            logging.error("Failed to compress %s: %s", filename, exc)
+            raise
         return compressed_filename
 
     def _archive_log(self, filename: str) -> None:
@@ -211,10 +219,16 @@ class SmartRotatingHandler(logging.handlers.BaseRotatingHandler):
     def _compress_old_files(self):
         if not self.policy.compression:
             return
-        for path in Path(self.baseFilename).parent.glob(f"{Path(self.baseFilename).name}.*"):
-            if path.suffix != ".gz" and path.is_file() and not path.name.endswith(".log"):
+        for path in Path(self.baseFilename).parent.glob(
+            f"{Path(self.baseFilename).name}.*"
+        ):
+            if (
+                path.suffix != ".gz"
+                and path.is_file()
+                and not path.name.endswith(".log")
+            ):
                 try:
-                    compressed = self._compress_log(str(path))
+                    self._compress_log(str(path))
                     path.unlink()
                 except Exception as exc:
                     logging.error("Failed to compress old log %s: %s", path, exc)
@@ -222,11 +236,11 @@ class SmartRotatingHandler(logging.handlers.BaseRotatingHandler):
     def _cleanup_old_files(self):
         directory = Path(self.baseFilename).parent
         pattern = f"{Path(self.baseFilename).name}.*"
-        files = sorted(directory.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True)
+        files = sorted(
+            directory.glob(pattern), key=lambda p: p.stat().st_mtime, reverse=True
+        )
         for old_file in files[self.policy.max_files :]:
             try:
                 old_file.unlink()
             except Exception as exc:
                 logging.error("Failed to remove old log %s: %s", old_file, exc)
-
-

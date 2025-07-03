@@ -185,7 +185,7 @@ def _expire_safe_request_cache() -> None:
 
 
 def async_ttl_cache(
-    ttl_getter: float | Callable[[], float]
+    ttl_getter: float | Callable[[], float],
 ) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
     """Return decorator caching async function results for ``ttl`` seconds."""
 
@@ -596,7 +596,7 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
             start = 0 if pos < 0 else pos + 1
             text = mm[start:]
             result = text.decode("utf-8", errors="ignore").splitlines()
-    except Exception:
+    except (OSError, ValueError):
         result = []
     with _TAIL_FILE_CACHE_LOCK:
         _TAIL_FILE_CACHE[path] = (now, mtime, result)
