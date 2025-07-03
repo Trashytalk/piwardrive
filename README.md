@@ -118,6 +118,17 @@ aid troubleshooting periodic jobs during development.
 
 ## Advanced Analytics
 
+## Installation Prerequisites
+
+Ensure the following base packages are installed before proceeding with the full installation steps.
+
+- **Python** >= 3.10 with the `venv` module
+- **Node.js** >= 18 for building the React dashboard
+- **System packages**: `kismet`, `gpsd`, `bettercap`, `evtest`, `git`, `build-essential`, `cmake`
+- **R base packages**: `r-base` and `r-base-dev` (optional, for advanced analytics)
+
+For a more complete walkthrough see [docs/installation.md](docs/installation.md).
+
 Health metrics can be analyzed beyond simple averages. The `health_stats`
 script accepts a `--forecast N` option to predict CPU temperature for the next
 `N` intervals using an ARIMA or Prophet model.
@@ -556,6 +567,12 @@ port and `PW_ORIENTATION_MAP_FILE` for loading a heading correction map (see
 [docs/orientation.rst](docs/orientation.rst)). A JSON schema describing all
 fields is provided at `docs/config_schema.json`.
 Password hashing guidelines are covered in [docs/security.rst](docs/security.rst).
+Key environment variables:
+
+- `PW_WEBUI_PORT` – port for the web interface (default `8000`)
+- `PW_DISABLE_ANOMALY_DETECTION` – set to `1` to disable health monitoring
+- `PW_PROFILE_NAME` – load a specific configuration profile
+- `PW_REMOTE_SYNC_URL` – optional endpoint for database uploads
 
 ### Automatic Anomaly Detection
 
@@ -567,6 +584,8 @@ model. The detector is enabled automatically when running the backend via
 ## Additional Documentation
 
 Comprehensive guides and API references live in the `docs/` directory. Run `make html` there to build the Sphinx site. High level summaries are collected in [REFERENCE.md](REFERENCE.md).
+In particular see [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, [docs/api_overview.md](docs/api_overview.md) for the REST API, and [docs/architecture_overview.md](docs/architecture_overview.md) for a high-level system diagram.
+
 Detailed examples for each command line helper are available in [docs/cli_tools.rst](docs/cli_tools.rst).
 See [docs/notifications.rst](docs/notifications.rst) for enabling webhook alerts.
 
@@ -658,3 +677,7 @@ generating coverage reports.
 ## Legal Notice
 
 Ensure all wireless and Bluetooth scans comply with local laws and have proper authorization. The authors are not responsible for misuse of this software.
+
+## License
+
+PiWardrive is released under the terms of the [MIT License](LICENSE).
