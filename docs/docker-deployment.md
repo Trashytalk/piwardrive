@@ -330,7 +330,7 @@ services:
       - PIWARDRIVE_API_HOST=0.0.0.0
       - PIWARDRIVE_API_PORT=8080
       - PIWARDRIVE_DATABASE_URL=postgresql://piwardrive:${DB_PASSWORD}@piwardrive-db:5432/piwardrive
-      - PIWARDRIVE_REDIS_URL=redis://piwardrive-redis:6379/0
+      - PIWARDRIVE_REDIS_URL=redis://piwardrive-redis:6379/0  # Enables Redis caching
       - PIWARDRIVE_SECRET_KEY=${PIWARDRIVE_SECRET_KEY}
       - PIWARDRIVE_LOG_LEVEL=INFO
     
@@ -361,7 +361,7 @@ services:
     
     environment:
       - PIWARDRIVE_WIFI_INTERFACE=wlan0
-      - PIWARDRIVE_REDIS_URL=redis://piwardrive-redis:6379/0
+      - PIWARDRIVE_REDIS_URL=redis://piwardrive-redis:6379/0  # Enables Redis caching
       - PIWARDRIVE_LOG_LEVEL=INFO
     
     volumes:
@@ -776,7 +776,7 @@ services:
       - PIWARDRIVE_DEBUG=false
       - PIWARDRIVE_LOG_LEVEL=WARNING
       - PIWARDRIVE_DATABASE_URL=postgresql://piwardrive:${DB_PASSWORD}@piwardrive-db:5432/piwardrive
-      - PIWARDRIVE_REDIS_URL=redis://piwardrive-redis:6379/0
+      - PIWARDRIVE_REDIS_URL=redis://piwardrive-redis:6379/0  # Enables Redis caching
       - PIWARDRIVE_SECRET_KEY=${PIWARDRIVE_SECRET_KEY}
       - PIWARDRIVE_CORS_ORIGINS=${PIWARDRIVE_CORS_ORIGINS}
     
@@ -2029,6 +2029,7 @@ services:
       - PIWARDRIVE_CACHE_TTL=300
       - PIWARDRIVE_CACHE_MAX_SIZE=1000
 ```
+The API automatically uses Redis for caching when `PIWARDRIVE_REDIS_URL` is set.
 
 ### Database Optimization
 

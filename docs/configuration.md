@@ -137,7 +137,7 @@ services:
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `PIWARDRIVE_REDIS_URL` | string | `""` | Redis connection URL (optional) |
+| `PIWARDRIVE_REDIS_URL` | string | `""` | Redis connection URL used for caching (optional) |
 | `PIWARDRIVE_INFLUXDB_URL` | string | `""` | InfluxDB connection URL (optional) |
 | `PIWARDRIVE_GPS_ENABLED` | boolean | `false` | Enable GPS functionality |
 | `PIWARDRIVE_GPS_DEVICE` | string | `"/dev/ttyUSB0"` | GPS device path |
