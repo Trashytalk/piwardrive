@@ -124,47 +124,12 @@ from typing import TYPE_CHECKING, Any, Tuple
 from piwardrive.errors import GeofenceError
 from piwardrive.logconfig import DEFAULT_LOG_PATH
 
-try:  # allow tests to stub out ``persistence``
-    from persistence import (
-        DashboardSettings,
-        FingerprintInfo,
-        User,
-        _db_path,
-        create_user,
-        get_table_counts,
-        get_user,
-        get_user_by_token,
-        load_ap_cache,
-        load_dashboard_settings,
-        load_fingerprint_info,
-        load_health_history,
-        load_recent_health,
-        save_dashboard_settings,
-        save_fingerprint_info,
-        save_user,
-        update_user_token,
-    )
+try:  # allow tests to stub out ``database_service``
+    from database_service import db_service
+    from persistence import DashboardSettings, FingerprintInfo, User
 except Exception:  # pragma: no cover - fall back to real module
-    from piwardrive.persistence import (
-        load_recent_health,
-        load_health_history,
-        load_ap_cache,
-        load_dashboard_settings,
-        load_fingerprint_info,
-        save_fingerprint_info,
-        save_dashboard_settings,
-        get_table_counts,
-        _db_path,
-        DashboardSettings,
-        get_user,
-        save_user,
-        update_user_token,
-        get_user_by_token,
-        User,
-        create_user,
-        User,
-        FingerprintInfo,
-    )
+    from piwardrive.database_service import db_service
+    from piwardrive.persistence import DashboardSettings, FingerprintInfo, User
 
 from piwardrive.security import hash_secret, sanitize_path, verify_password
 
@@ -612,8 +577,8 @@ async def _ensure_default_user() -> None:
     if not pw_hash:
         return
     username = os.getenv("PW_API_USER", "admin")
-    if await get_user(username) is None:
-        await save_user(User(username=username, password_hash=pw_hash))
+    if await db_service.get_user(username) is None:
+        await db_service.save_user(User(username=username, password_hash=pw_hash))
 
 
 async def _check_auth(token: str = SECURITY_DEP) -> None:
@@ -621,7 +586,7 @@ async def _check_auth(token: str = SECURITY_DEP) -> None:
     await _ensure_default_user()
     if not token:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
-    user = await get_user_by_token(hash_secret(token))
+    user = await db_service.get_user_by_token(hash_secret(token))
     if user is None:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
 
@@ -632,11 +597,11 @@ async def token_login(
 ) -> TokenResponse:
     """Return bearer token for valid credentials."""
     await _ensure_default_user()
-    user = await get_user(form.username)
+    user = await db_service.get_user(form.username)
     if not user or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
     token = secrets.token_urlsafe(32)
-    await update_user_token(user.username, hash_secret(token))
+    await db_service.update_user_token(user.username, hash_secret(token))
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -648,7 +613,7 @@ async def login(
     form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
 ) -> AuthLoginResponse:
     """Validate credentials and return a bearer token."""
-    user = await get_user(form.username)
+    user = await db_service.get_user(form.username)
     if not user or not verify_password(form.password, user.password_hash):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
     token = secrets.token_urlsafe(32)
@@ -668,7 +633,7 @@ async def get_status(
     limit: int = 5, _auth: User | None = AUTH_DEP
 ) -> list[HealthRecordDict]:
     """Return ``limit`` most recent :class:`HealthRecord` entries."""
-    records = load_recent_health(limit)
+    records = db_service.load_recent_health(limit)
     if inspect.isawaitable(records):
         records = await records
 
@@ -683,7 +648,7 @@ async def baseline_analysis_endpoint(
     _auth: None = AUTH_DEP,
 ) -> BaselineAnalysisResult:
     """Compare recent metrics to historical averages."""
-    recent = load_recent_health(limit)
+    recent = db_service.load_recent_health(limit)
     if inspect.isawaitable(recent):
         recent = await recent
     baseline = load_baseline_health(days, limit)
@@ -839,9 +804,9 @@ async def get_logs(
 @GET("/db-stats")
 async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> DBStatsResponse:
     """Return SQLite table counts and database size."""
-    counts = await get_table_counts()
+    counts = await db_service.get_table_counts()
     try:
-        size_kb = os.path.getsize(_db_path()) / 1024
+        size_kb = os.path.getsize(db_service.db_path()) / 1024
     except OSError:
         size_kb = None
     return {"size_kb": size_kb, "tables": counts}
@@ -937,7 +902,7 @@ async def get_dashboard_settings_endpoint(
     _auth: User | None = AUTH_DEP,
 ) -> DashboardSettingsResponse:
     """Return persisted dashboard layout and widget list."""
-    settings = await load_dashboard_settings()
+    settings = await db_service.load_dashboard_settings()
     return {"layout": settings.layout, "widgets": settings.widgets}
 
 
@@ -949,7 +914,9 @@ async def update_dashboard_settings_endpoint(
     """Persist dashboard layout and widget list."""
     layout = data.get("layout", [])
     widgets = data.get("widgets", [])
-    await save_dashboard_settings(DashboardSettings(layout=layout, widgets=widgets))
+    await db_service.save_dashboard_settings(
+        DashboardSettings(layout=layout, widgets=widgets)
+    )
     return {"layout": layout, "widgets": widgets}
 
 
@@ -958,7 +925,7 @@ async def list_fingerprints_endpoint(
     _auth: None = AUTH_DEP,
 ) -> dict[str, list[FingerprintInfoDict]]:
     """Return stored fingerprint metadata."""
-    items = await load_fingerprint_info()
+    items = await db_service.load_fingerprint_info()
     return {"fingerprints": [asdict(i) for i in items]}
 
 
@@ -972,7 +939,7 @@ async def add_fingerprint_endpoint(
         source=data.get("source", ""),
         record_count=int(data.get("record_count", 0)),
     )
-    await save_fingerprint_info(info)
+    await db_service.save_fingerprint_info(info)
     return asdict(info)
 
 
@@ -1042,7 +1009,7 @@ async def remove_geofence_endpoint(
 @POST("/sync")
 async def sync_records(limit: int = 100, _auth: User | None = AUTH_DEP) -> SyncResponse:
     """Upload recent health records to the configured sync endpoint."""
-    records = load_recent_health(limit)
+    records = db_service.load_recent_health(limit)
     if inspect.isawaitable(records):
         records = await records
     success = await upload_data([asdict(r) for r in records])
@@ -1088,7 +1055,7 @@ async def export_access_points(
     fmt: str = "geojson", _auth: User | None = AUTH_DEP
 ) -> Response:
     """Return saved Wi-Fi access points in the specified format."""
-    records = load_ap_cache()
+    records = db_service.load_ap_cache()
     if inspect.isawaitable(records):
         records = await records
     try:
@@ -1124,7 +1091,7 @@ async def ws_aps(websocket: WebSocket) -> None:
     try:
         while True:
             start = time.perf_counter()
-            records = load_ap_cache(last_time)
+            records = db_service.load_ap_cache(last_time)
             if inspect.isawaitable(records):
                 records = await records
             load_time = time.perf_counter() - start
@@ -1165,7 +1132,7 @@ async def sse_aps(request: Request) -> StreamingResponse:
             if await request.is_disconnected():
                 break
             start = time.perf_counter()
-            records = load_ap_cache(last_time)
+            records = db_service.load_ap_cache(last_time)
             if inspect.isawaitable(records):
                 records = await records
             load_time = time.perf_counter() - start
@@ -1257,7 +1224,7 @@ async def sse_history(
     request: Request, limit: int = 100, interval: float = 1.0
 ) -> StreamingResponse:
     """Stream historical health records for playback."""
-    records = await load_health_history()
+    records = await db_service.load_health_history()
     if limit:
         records = records[-limit:]
 
