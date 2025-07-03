@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Callable, Dict, List
 
+from piwardrive.task_queue import BackgroundTaskQueue
+
 from .bluetooth import scan_bluetooth
 from .bluetooth.scanner import async_scan_bluetooth
 from .wifi import scan_wifi
@@ -22,10 +24,17 @@ async def run_continuous_scan(
     interval: float = 60.0,
     iterations: int = 0,
     on_result: Callable[[Result], None] | None = None,
+    *,
+    queue: "BackgroundTaskQueue | None" = None,
 ) -> None:
-    """Run Wi-Fi and Bluetooth scans repeatedly."""
+    """Run Wi-Fi and Bluetooth scans repeatedly.
+
+    When ``queue`` is provided each scan iteration is enqueued for background
+    processing so the loop itself is non-blocking.
+    """
     count = 0
-    while True:
+
+    async def _scan_once() -> None:
         wifi, bt = await asyncio.gather(
             async_scan_wifi(),
             async_scan_bluetooth(),
@@ -33,6 +42,12 @@ async def run_continuous_scan(
         result = {"wifi": wifi, "bluetooth": bt}
         if on_result:
             on_result(result)
+
+    while True:
+        if queue is not None:
+            queue.enqueue(_scan_once)
+        else:
+            await _scan_once()
         count += 1
         if iterations and count >= iterations:
             break

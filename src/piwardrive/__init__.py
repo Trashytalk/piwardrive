@@ -1,9 +1,9 @@
 """PiWardrive package initializer."""
 
+import logging
 import sys
 from importlib import import_module
 from types import ModuleType
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ for _mod in (
     "service",
     "diagnostics",
     "exception_handler",
+    "task_queue",
 ):
     try:  # pragma: no cover - optional imports may fail
         module = import_module(f"piwardrive.{_mod}")
