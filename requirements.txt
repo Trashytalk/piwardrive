@@ -33,6 +33,7 @@ watchdog==6.0.0
 ## pybluez>=0.23
 ## Re-enable this after testing is done. It is breaking the environment
 gps==3.19
+python-gps
 orjson==3.10.18
 pandas==2.3.0
 pyprof2calltree==1.4.5
