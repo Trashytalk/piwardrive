@@ -90,6 +90,15 @@ General
 ``PW_CORS_ORIGINS``
     Comma-separated origins allowed by CORS.
 
+``PW_CONTENT_SECURITY_POLICY``
+    Value for the ``Content-Security-Policy`` response header.
+
+``PIWARDRIVE_RATE_LIMIT_REQUESTS``
+    Requests allowed per ``PIWARDRIVE_RATE_LIMIT_WINDOW`` seconds.
+
+``PIWARDRIVE_RATE_LIMIT_WINDOW``
+    Time window in seconds for rate limiting.
+
 ``PW_DB_KEY``
     Passphrase for optional SQLCipher database encryption.
 

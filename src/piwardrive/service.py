@@ -6,9 +6,12 @@ import inspect
 import logging
 import os
 import typing
+from collections import defaultdict, deque
 from dataclasses import asdict
 from http import HTTPStatus
 from typing import TYPE_CHECKING
+
+from starlette.middleware.base import BaseHTTPMiddleware
 
 try:  # pragma: no cover - optional FastAPI dependency
     from fastapi import (
@@ -22,11 +25,8 @@ try:  # pragma: no cover - optional FastAPI dependency
     )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.openapi.utils import get_openapi
-    from fastapi.responses import (  # noqa: E402
-        HTMLResponse,
-        Response,
-        StreamingResponse,
-    )
+    from fastapi.responses import Response  # noqa: E402
+    from fastapi.responses import HTMLResponse, StreamingResponse
     from fastapi.security import (
         HTTPBasic,
         HTTPBasicCredentials,
@@ -191,10 +191,8 @@ except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
 
 try:  # allow tests to stub out analytics
-    from analytics.baseline import (  # type: ignore
-        analyze_health_baseline,
-        load_baseline_health,
-    )
+    from analytics.baseline import analyze_health_baseline  # type: ignore
+    from analytics.baseline import load_baseline_health
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.analytics.baseline import (
         analyze_health_baseline,
@@ -209,6 +207,55 @@ SUBPROCESS_TIMEOUT = 10
 WEBSOCKET_SEND_TIMEOUT = 1
 STREAM_SLEEP = 2
 MIN_EVENT_INTERVAL = 0.01
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add common security headers."""
+
+    def __init__(self, app: FastAPI, csp: str) -> None:
+        super().__init__(app)
+        self.csp = csp
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        response = await call_next(request)
+        response.headers.setdefault("Content-Security-Policy", self.csp)
+        return response
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Basic in-memory rate limiting per client IP."""
+
+    def __init__(self, app: FastAPI, max_requests: int, window_seconds: int) -> None:
+        super().__init__(app)
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.records: defaultdict[str, deque[float]] = defaultdict(deque)
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        host = request.client.host if request.client else "anonymous"
+        now = time.time()
+        q = self.records[host]
+        cutoff = now - self.window_seconds
+        while q and q[0] < cutoff:
+            q.popleft()
+        if len(q) >= self.max_requests:
+            retry_after = int(self.window_seconds - (now - q[0]))
+            headers = {
+                "X-RateLimit-Limit": str(self.max_requests),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(int(q[0] + self.window_seconds)),
+                "X-RateLimit-Window": str(self.window_seconds),
+                "Retry-After": str(retry_after),
+            }
+            return Response("rate limit exceeded", status_code=429, headers=headers)
+        q.append(now)
+        response = await call_next(request)
+        remaining = self.max_requests - len(q)
+        response.headers["X-RateLimit-Limit"] = str(self.max_requests)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(q[0] + self.window_seconds))
+        response.headers["X-RateLimit-Window"] = str(self.window_seconds)
+        return response
 
 
 # TypedDict definitions for API responses
@@ -490,6 +537,18 @@ if cors_origins:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+    )
+
+csp_header = os.getenv("PW_CONTENT_SECURITY_POLICY", "default-src 'self'")
+app.add_middleware(SecurityHeadersMiddleware, csp=csp_header)
+
+rl_requests = int(os.getenv("PIWARDRIVE_RATE_LIMIT_REQUESTS", "100"))
+rl_window = int(os.getenv("PIWARDRIVE_RATE_LIMIT_WINDOW", "60"))
+if rl_requests > 0:
+    app.add_middleware(
+        RateLimitMiddleware,
+        max_requests=rl_requests,
+        window_seconds=rl_window,
     )
 
 templates = Jinja2Templates(

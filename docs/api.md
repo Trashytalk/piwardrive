@@ -948,6 +948,14 @@ proxy_pass http://localhost:8080;
 proxy_set_header X-Forwarded-Proto https;
 }
 }
+
+### Security Headers
+
+The API enforces CORS based on the ``PW_CORS_ORIGINS`` environment variable.
+All responses include a configurable ``Content-Security-Policy`` header and
+rate limiting metadata. Set ``PW_CONTENT_SECURITY_POLICY`` to customize the
+CSP value. Use ``PIWARDRIVE_RATE_LIMIT_REQUESTS`` and
+``PIWARDRIVE_RATE_LIMIT_WINDOW`` to tune rate limits.
 ```
 
 ### Input Validation
