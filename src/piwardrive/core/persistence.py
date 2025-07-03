@@ -5,12 +5,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import sqlite3
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional
 
-import sqlite3
 import aiosqlite
 
 try:
@@ -133,12 +133,7 @@ async def _get_conn() -> aiosqlite.Connection:
     loop = asyncio.get_running_loop()
     cur_dir = config.CONFIG_DIR
     key = os.getenv("PW_DB_KEY")
-    if (
-        _DB_CONN is None
-        or _DB_LOOP is not loop
-        or _DB_DIR != cur_dir
-        or _DB_KEY != key
-    ):
+    if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir or _DB_KEY != key:
         if _DB_CONN is not None:
             try:
                 await _DB_CONN.close()
@@ -146,9 +141,7 @@ async def _get_conn() -> aiosqlite.Connection:
                 logging.exception("Error closing previous DB connection")
         if key:
             if sqlcipher is None:
-                raise RuntimeError(
-                    "pysqlcipher3 must be installed to use PW_DB_KEY"
-                )
+                raise RuntimeError("pysqlcipher3 must be installed to use PW_DB_KEY")
             aiosqlite.core.sqlite3 = sqlcipher
         else:
             aiosqlite.core.sqlite3 = sqlite3
@@ -254,30 +247,35 @@ async def save_health_record(rec: HealthRecord) -> None:
         await flush_health_records()
 
 
-async def load_recent_health(limit: int = 10) -> List[HealthRecord]:
-    """Return up to ``limit`` most recent :class:`HealthRecord` entries."""
+async def load_recent_health(limit: int = 10, offset: int = 0) -> List[HealthRecord]:
+    """Return ``limit`` most recent :class:`HealthRecord` entries with ``offset``."""
     await flush_health_records()
     conn = await _get_conn()
     cur = await conn.execute(
         """SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent
-        FROM health_records ORDER BY timestamp DESC LIMIT ?""",
-        (limit,),
+        FROM health_records ORDER BY timestamp DESC LIMIT ? OFFSET ?""",
+        (limit, offset),
     )
     rows = await cur.fetchall()
     return [HealthRecord(**dict(row)) for row in rows]
 
 
 async def iter_health_history(
-    start: str | None = None, end: str | None = None
+    start: str | None = None,
+    end: str | None = None,
+    *,
+    limit: int | None = None,
+    offset: int = 0,
 ) -> AsyncIterator[HealthRecord]:
-    """Yield :class:`HealthRecord` rows between ``start`` and ``end``."""
+    """Yield :class:`HealthRecord` rows between ``start`` and ``end`` with
+    pagination."""
     await flush_health_records()
     conn = await _get_conn()
     query = (
         "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
         " FROM health_records"
     )
-    params: list[str] = []
+    params: list[object] = []
     if start and end:
         query += " WHERE timestamp >= ? AND timestamp <= ?"
         params = [start, end]
@@ -288,16 +286,25 @@ async def iter_health_history(
         query += " WHERE timestamp <= ?"
         params = [end]
     query += " ORDER BY timestamp"
+    if limit is not None:
+        query += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
     cur = await conn.execute(query, tuple(params))
     async for row in cur:
         yield HealthRecord(**dict(row))
 
 
 async def load_health_history(
-    start: str | None = None, end: str | None = None
+    start: str | None = None,
+    end: str | None = None,
+    *,
+    limit: int | None = None,
+    offset: int = 0,
 ) -> List[HealthRecord]:
     """Return a list of :class:`HealthRecord` rows between ``start`` and ``end``."""
-    return [rec async for rec in iter_health_history(start, end)]
+    return [
+        rec async for rec in iter_health_history(start, end, limit=limit, offset=offset)
+    ]
 
 
 async def purge_old_health(days: int) -> None:
@@ -374,7 +381,8 @@ async def save_user(user: User) -> None:
     """Insert or replace ``user`` in the database."""
     conn = await _get_conn()
     await conn.execute(
-        "INSERT OR REPLACE INTO users (username, password_hash, token_hash) VALUES (?, ?, ?)",
+        "INSERT OR REPLACE INTO users (username, password_hash, token_hash) "
+        "VALUES (?, ?, ?)",
         (user.username, user.password_hash, user.token_hash),
     )
     await conn.commit()
@@ -384,7 +392,8 @@ async def update_user_token(username: str, token_hash: str) -> None:
     """Set ``token_hash`` for ``username``."""
     conn = await _get_conn()
     await conn.execute(
-        "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') WHERE username = ?",
+        "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') "
+        "WHERE username = ?",
         (token_hash, username),
     )
     await conn.commit()
@@ -416,26 +425,36 @@ async def save_ap_cache(records: list[dict[str, Any]]) -> None:
     await conn.commit()
 
 
-async def iter_ap_cache(after: float | None = None) -> AsyncIterator[dict[str, Any]]:
-    """Yield rows from ``ap_cache`` optionally newer than ``after``."""
+async def iter_ap_cache(
+    after: float | None = None,
+    *,
+    limit: int | None = None,
+    offset: int = 0,
+) -> AsyncIterator[dict[str, Any]]:
+    """Yield rows from ``ap_cache`` optionally newer than ``after`` with pagination."""
     conn = await _get_conn()
-    if after is None:
-        cur = await conn.execute(
-            "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
-        )
-    else:
-        cur = await conn.execute(
-            "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache "
-            "WHERE last_time > ?",
-            (after,),
-        )
+    params: list[object] = []
+    query = "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
+    if after is not None:
+        query += " WHERE last_time > ?"
+        params.append(after)
+    query += " ORDER BY last_time"
+    if limit is not None:
+        query += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+    cur = await conn.execute(query, tuple(params))
     async for row in cur:
         yield dict(row)
 
 
-async def load_ap_cache(after: float | None = None) -> list[dict[str, Any]]:
-    """Return rows from ``ap_cache`` optionally newer than ``after``."""
-    return [row async for row in iter_ap_cache(after)]
+async def load_ap_cache(
+    after: float | None = None,
+    *,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[dict[str, Any]]:
+    """Return rows from ``ap_cache`` optionally newer than ``after`` with pagination."""
+    return [row async for row in iter_ap_cache(after, limit=limit, offset=offset)]
 
 
 async def get_table_counts() -> dict[str, int]:

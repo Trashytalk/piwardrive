@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Tuple
 
+import aiosqlite
 import numpy as np
 import pandas as pd
 from scipy import signal
@@ -38,7 +38,7 @@ def load_config(path: str | Path) -> Config:
 # SQLite helpers
 
 
-def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
+async def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
     """Return observation rows from a Kismet SQLite log."""
     query = """
     SELECT devices.macaddr, devices.ssid, packets.lat, packets.lon,
@@ -48,9 +48,11 @@ def load_kismet_data(db_path: str | Path) -> pd.DataFrame:
     WHERE devices.type = 'infrastructure'
       AND packets.lat != 0 AND packets.lon != 0;
     """
-    with sqlite3.connect(str(db_path)) as conn:
-        df = pd.read_sql_query(query, conn)
-    return df
+    async with aiosqlite.connect(str(db_path)) as conn:
+        conn.row_factory = aiosqlite.Row
+        cur = await conn.execute(query)
+        rows = await cur.fetchall()
+    return pd.DataFrame([dict(r) for r in rows])
 
 
 # ─────────────────────────────────────────────────────────────

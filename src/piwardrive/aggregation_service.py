@@ -7,10 +7,11 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import Dict, Iterable, List, Tuple
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Dict, Iterable, List, Tuple
 
 import aiosqlite
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 
 from . import analysis, heatmap
 from .persistence import HealthRecord
@@ -25,17 +26,21 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI()
 
-_DB_CONN: aiosqlite.Connection | None = None
+_POOL: asyncio.Queue[aiosqlite.Connection] | None = None
+_POOL_SIZE = int(os.getenv("PW_AGG_POOL_SIZE", "5"))
 
 
-async def _get_conn() -> aiosqlite.Connection:
-    """Return cached connection to the aggregation database."""
-    global _DB_CONN
-    if _DB_CONN is None:
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
-        _DB_CONN = await aiosqlite.connect(DB_PATH)
-        await _DB_CONN.execute("PRAGMA journal_mode=WAL")
-        await _DB_CONN.execute(
+async def _init_pool() -> None:
+    """Initialize the global connection pool if needed."""
+    global _POOL
+    if _POOL is not None:
+        return
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    _POOL = asyncio.Queue(maxsize=_POOL_SIZE)
+    for _ in range(_POOL_SIZE):
+        conn = await aiosqlite.connect(DB_PATH)
+        await conn.execute("PRAGMA journal_mode=WAL")
+        await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS health_records (
                 timestamp TEXT PRIMARY KEY,
@@ -46,7 +51,7 @@ async def _get_conn() -> aiosqlite.Connection:
             )
             """
         )
-        await _DB_CONN.execute(
+        await conn.execute(
             """
             CREATE TABLE IF NOT EXISTS ap_points (
                 lat REAL,
@@ -54,30 +59,43 @@ async def _get_conn() -> aiosqlite.Connection:
             )
             """
         )
-        await _DB_CONN.commit()
-    return _DB_CONN
+        await conn.commit()
+        _POOL.put_nowait(conn)
+
+
+@asynccontextmanager
+async def _get_conn() -> AsyncIterator[aiosqlite.Connection]:
+    """Yield a connection from the pool."""
+    await _init_pool()
+    if _POOL is None:
+        raise RuntimeError("connection pool not initialized")
+    conn = await _POOL.get()
+    try:
+        yield conn
+    finally:
+        await _POOL.put(conn)
 
 
 async def _merge_records(
     records: Iterable[Tuple[str, float | None, float, float, float]],
 ) -> None:
-    conn = await _get_conn()
-    await conn.executemany(
-        """INSERT OR IGNORE INTO health_records
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """INSERT OR IGNORE INTO health_records
             (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
             VALUES (?, ?, ?, ?, ?)""",
-        records,
-    )
-    await conn.commit()
+            records,
+        )
+        await conn.commit()
 
 
 async def _merge_points(points: Iterable[Tuple[float, float]]) -> None:
-    conn = await _get_conn()
-    await conn.executemany(
-        "INSERT INTO ap_points (lat, lon) VALUES (?, ?)",
-        points,
-    )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.executemany(
+            "INSERT INTO ap_points (lat, lon) VALUES (?, ?)",
+            points,
+        )
+        await conn.commit()
 
 
 async def _process_upload(path: str) -> None:
@@ -87,7 +105,7 @@ async def _process_upload(path: str) -> None:
             "disk_percent FROM health_records"
         )
         recs = await cur.fetchall()
-        await _merge_records(recs)
+        await _merge_records([tuple(r) for r in recs])
         cur = await db.execute(
             "SELECT lat, lon FROM ap_cache WHERE lat IS NOT NULL AND lon IS NOT NULL"
         )
@@ -99,9 +117,12 @@ async def _process_upload(path: str) -> None:
 async def upload(file: UploadFile) -> Dict[str, str]:  # noqa: V103 - FastAPI route
     """Save ``file`` and merge its contents into the aggregation database."""
     # Called by FastAPI as a route handler.
-    name = os.path.basename(file.filename)
-    if name != file.filename:
-        raise HTTPException(status_code=400, detail=f"Invalid filename: {file.filename}")
+    filename = file.filename or ""
+    name = os.path.basename(filename)
+    if name != filename:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid filename: {file.filename}"
+        )
     try:
         validate_filename(name)
     except ValueError as exc:
@@ -130,13 +151,13 @@ async def upload(file: UploadFile) -> Dict[str, str]:  # noqa: V103 - FastAPI ro
 async def stats() -> Dict[str, float]:  # noqa: V103 - FastAPI route
     """Return averaged system metrics from all records."""
     # Called by FastAPI as a route handler.
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
-        "disk_percent FROM health_records"
-    )
-    rows = await cur.fetchall()
-    records = [HealthRecord(*row) for row in rows]
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
+            "disk_percent FROM health_records"
+        )
+        rows = await cur.fetchall()
+        records = [HealthRecord(*row) for row in rows]
     return analysis.compute_health_stats(records)
 
 
@@ -145,9 +166,9 @@ async def overlay(bins: int = 100) -> Dict[str, List[Tuple[float, float, int]]]:
     # noqa: V103 - FastAPI route
     """Return heatmap points derived from all uploaded access points."""
     # Called by FastAPI as a route handler.
-    conn = await _get_conn()
-    cur = await conn.execute("SELECT lat, lon FROM ap_points")
-    coords = [(float(r[0]), float(r[1])) for r in await cur.fetchall()]
+    async with _get_conn() as conn:
+        cur = await conn.execute("SELECT lat, lon FROM ap_points")
+        coords = [(float(r[0]), float(r[1])) for r in await cur.fetchall()]
     hist, lat_range, lon_range = heatmap.histogram(coords, bins=bins)
     points = heatmap.histogram_points(hist, lat_range, lon_range)
     return {"points": points}
@@ -156,7 +177,7 @@ async def overlay(bins: int = 100) -> Dict[str, List[Tuple[float, float, int]]]:
 async def main() -> None:
     import uvicorn
 
-    await _get_conn()
+    await _init_pool()
     port = int(os.getenv("PW_AGG_PORT", str(DEFAULT_PORT)))
     config = uvicorn.Config(app, host="0.0.0.0", port=port)  # nosec B104
     server = uvicorn.Server(config)
