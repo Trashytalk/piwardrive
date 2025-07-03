@@ -1,23 +1,23 @@
 # PiWardrive - Wi-Fi Analysis & IoT Monitoring System
 
-[![Build Status](https://github.com/username/piwardrive/workflows/CI/badge.svg)](https://github.com/username/piwardrive/actions)
-[![Docker Pulls](https://img.shields.io/docker/pulls/username/piwardrive)](https://hub.docker.com/r/username/piwardrive)
+[![Build Status](https://github.com/TrashyTalk/piwardrive/workflows/CI/badge.svg)](https://github.com/TrashyTalk/piwardrive/actions)
+[![Docker Pulls](https://img.shields.io/docker/pulls/trashytalk/piwardrive)](https://hub.docker.com/r/trashytalk/piwardrive)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![Node Version](https://img.shields.io/badge/node-18%2B-green)](https://nodejs.org)
 
 ## Table of Contents
 
-- [🚀 Quick Start](#quick-start)
-- [✨ Features](#features)
-- [🏗️ Architecture](#architecture)
-- [💾 Installation Methods](#installation)
-- [🔧 Configuration](#configuration)
-- [📊 Usage Examples](#usage)
-- [🐳 Docker Deployment](#docker)
-- [🔍 Troubleshooting](#troubleshooting)
-- [📚 Documentation](#documentation)
-- [🤝 Contributing](#contributing)
+-   [🚀 Quick Start](#quick-start)
+-   [✨ Features](#features)
+-   [🏗️ Architecture](#architecture)
+-   [🔧 Configuration](#configuration)
+-   [📊 Usage Examples](#usage-examples)
+-   [🐳 Docker Deployment](#docker-deployment)
+-   [📚 Documentation](#documentation)
+-   [🤝 Contributing](#contributing)
+-   [🛡️ Legal Notice](#legal-notice)
+-   [📄 License](#license)
 
 <div align="center">
   <img src="docs/images/piwardrive-logo.png" alt="PiWardrive Logo" width="200"/>
@@ -31,27 +31,27 @@
 
 ### Key Highlights
 
-- 📡 **Real-time Wi-Fi Scanning** - Monitor access points and connected devices
-- 📊 **Interactive Dashboard** - Customizable widgets and real-time charts
-- 🌍 **GPS Integration** - Location-aware network mapping
-- 🏠 **IoT Monitoring** - System health and resource tracking
-- 🐳 **Easy Deployment** - Docker, systemd, or development setups
+-   📡 **Real-time Wi-Fi Scanning** - Monitor access points and connected devices
+-   📊 **Interactive Dashboard** - Customizable widgets and real-time charts
+-   🌍 **GPS Integration** - Location-aware network mapping
+-   🏠 **IoT Monitoring** - System health and resource tracking
+-   🐳 **Easy Deployment** - Docker, systemd, or development setups
 
 ## Prerequisites
 
 ### Hardware Requirements
 
-- **Recommended**: Raspberry Pi 5 with 7" touchscreen
-- **Minimum**: Raspberry Pi 4 or equivalent ARM/x86 device
-- **Storage**: 8GB+ SD card or storage device
-- **Network**: Wi-Fi adapter with monitor mode support
+-   **Recommended**: Raspberry Pi 5 with 7" touchscreen
+-   **Minimum**: Raspberry Pi 4 or equivalent ARM/x86 device
+-   **Storage**: 8GB+ SD card or storage device
+-   **Network**: Wi-Fi adapter with monitor mode support
 
 ### Software Requirements
 
-- **Operating System**: Linux (Raspberry Pi OS, Ubuntu 20.04+)
-- **Python**: 3.10 or higher
-- **Node.js**: 18.x or higher (for web UI development)
-- **Docker**: 20.10+ (for containerized deployment)
+-   **Operating System**: Linux (Raspberry Pi OS, Ubuntu 20.04+)
+-   **Python**: 3.10 or higher
+-   **Node.js**: 18.x or higher (for web UI development)
+-   **Docker**: 20.10+ (for containerized deployment)
 
 ### Network Permissions
 
@@ -59,10 +59,10 @@
 
 ### Supported Wi-Fi Adapters
 
-- Ralink RT5370/RT5372
-- Atheros AR9271
-- Realtek RTL8188CUS
-- See [Hardware Compatibility Guide](docs/hardware-compatibility.md) for full list
+-   Ralink RT5370/RT5372
+-   Atheros AR9271
+-   Realtek RTL8188CUS
+-   See [Hardware Compatibility Guide](docs/hardware-compatibility.md) for full list
 
 ## 🚀 Quick Start
 
@@ -70,11 +70,11 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/username/piwardrive.git
+git clone https://github.com/TrashyTalk/piwardrive.git
 cd piwardrive
 
 # Start with Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # Access the dashboard
 open http://localhost:8000
@@ -84,17 +84,24 @@ open http://localhost:8000
 
 ```bash
 # Install system dependencies (Ubuntu/Debian)
-sudo apt update && sudo apt install -y python3-pip nodejs npm wireless-tools
+sudo apt update && sudo apt install -y git build-essential cmake \
+    kismet bettercap gpsd evtest python3-venv nodejs npm
 
 # Clone and setup
-git clone https://github.com/username/piwardrive.git
+git clone https://github.com/TrashyTalk/piwardrive.git
 cd piwardrive
 
 # Install Python dependencies
-pip3 install -r requirements.txt
+python3 -m venv gui-env
+source gui-env/bin/activate
+pip install -r requirements.txt
+pip install .
 
 # Install and build Web UI
-cd webui && npm install && npm run build && cd ..
+cd webui
+npm install
+npm run build
+cd ..
 
 # Run the service
 piwardrive-webui
@@ -113,37 +120,41 @@ piwardrive-webui
 
 <img src="docs/images/wifi-analysis.png" alt="Wi-Fi Analysis" width="400" align="right"/>
 
-- **Real-time Scanning**: Continuous monitoring of wireless networks
-- **Signal Strength Mapping**: RSSI tracking and visualization
-- **Device Detection**: Identify connected and nearby devices
-- **Channel Analysis**: Frequency usage and interference detection
-- **Historical Data**: Trend analysis and reporting
+-   **Real-time Scanning**: Continuous monitoring of wireless networks
+-   **Signal Strength Mapping**: RSSI tracking and visualization
+-   **Device Detection**: Identify connected and nearby devices
+-   **Channel Analysis**: Frequency usage and interference detection
+-   **Historical Data**: Trend analysis and reporting
 
 ### System Monitoring
 
-- **Resource Tracking**: CPU, RAM, storage, and temperature monitoring
-- **Network Statistics**: Bandwidth usage and connection health
-- **GPS Integration**: Location-aware data collection
-- **Alert System**: Configurable notifications for anomalies
+-   **Resource Tracking**: CPU, RAM, storage, and temperature monitoring
+-   **Network Statistics**: Bandwidth usage and connection health
+-   **GPS Integration**: Location-aware data collection
+-   **Alert System**: Configurable notifications for anomalies
+-   **Remote Sync**: Optional database uploads to an aggregation server
 
 ### Web Dashboard
 
 <img src="docs/images/dashboard-widgets.png" alt="Dashboard Widgets" width="400" align="left"/>
 
-- **Customizable Widgets**: Drag-and-drop dashboard configuration
-- **Real-time Charts**: Live updating graphs and meters
-- **Data Export**: CSV, JSON export capabilities
-- **GraphQL API**: Enable with `PW_ENABLE_GRAPHQL=true`
-- **Multi-device Support**: Centralized monitoring of multiple sensors
-- **Mobile Responsive**: Works on tablets and smartphones
+-   **Customizable Widgets**: Drag-and-drop dashboard configuration
+-   **Real-time Charts**: Live updating graphs and meters
+-   **Data Export**: CSV, JSON export capabilities
+-   **Offline Maps**: Predictive tile caching and geofencing
+-   **Service Controls**: Start or stop Kismet and BetterCAP from the UI
+-   **GraphQL API**: Enable with `PW_ENABLE_GRAPHQL=true`
+-   **Multi-device Support**: Centralized monitoring of multiple sensors
+-   **Orientation Sensors**: Record antenna heading alongside Wi-Fi scans
+-   **Mobile Responsive**: Works on tablets and smartphones
 
 ### Use Cases
 
-- **Network Administration**: Monitor enterprise Wi-Fi infrastructure
-- **IoT Deployments**: Edge device monitoring and management
-- **Research Projects**: Wireless environment studies
-- **Home Automation**: Personal network monitoring
-- **Event Monitoring**: Temporary deployment for gatherings
+-   **Network Administration**: Monitor enterprise Wi-Fi infrastructure
+-   **IoT Deployments**: Edge device monitoring and management
+-   **Research Projects**: Wireless environment studies
+-   **Home Automation**: Personal network monitoring
+-   **Event Monitoring**: Temporary deployment for gatherings
 
 ## 🏗️ Architecture
 
@@ -200,10 +211,51 @@ piwardrive-webui
 
 ### Deployment Options
 
-- **Standalone**: Single device with web interface
-- **Distributed**: Multiple sensors with central aggregation
-- **Kiosk Mode**: Full-screen dashboard for dedicated displays
-- **Development**: Local development with hot-reload
+-   **Standalone**: Single device with web interface
+-   **Distributed**: Multiple sensors with central aggregation
+-   **Kiosk Mode**: Full-screen dashboard for dedicated displays
+-   **Development**: Local development with hot-reload
+
+## 🔧 Configuration
+
+PiWardrive stores its configuration in `~/.config/piwardrive/config.json`. Profiles
+under `~/.config/piwardrive/profiles` can be selected with the `PW_PROFILE_NAME`
+environment variable. Common overrides include:
+
+-   `PW_WEBUI_PORT` – port for the web interface (default `8000`)
+-   `PW_DISABLE_ANOMALY_DETECTION` – disable health monitoring
+-   `PW_REMOTE_SYNC_URL` – endpoint for database uploads
+
+See [docs/configuration.rst](docs/configuration.rst) for all options.
+
+## 📊 Usage Examples
+
+Start only the API service with Uvicorn:
+
+```bash
+uvicorn piwardrive.service:app --reload
+```
+
+Run the full dashboard:
+
+```bash
+piwardrive-webui
+```
+
+Download map tiles without starting the UI:
+
+```bash
+piwardrive-prefetch --help
+```
+
+## 🐳 Docker Deployment
+
+```bash
+docker compose up
+```
+
+The compose file mounts `~/.config/piwardrive` and `webui/dist` so your
+configuration and assets persist between restarts.
 
 ## 📸 Screenshots
 
@@ -227,21 +279,49 @@ piwardrive-webui
 
 ### User Guides
 
-- [Installation Guide](docs/installation.md) - Detailed setup instructions
-- [Configuration Reference](docs/configuration.md) - All configuration options
-- [User Manual](docs/user-manual.md) - Complete feature documentation
-- [Hardware Compatibility](docs/hardware-compatibility.md) - Supported devices
+-   [Installation Guide](docs/installation.md) - Detailed setup instructions
+-   [Configuration Reference](docs/configuration.md) - All configuration options
+-   [User Manual](docs/user-manual.md) - Complete feature documentation
+-   [Hardware Compatibility](docs/hardware-compatibility.md) - Supported devices
 
 ### Deployment Guides
 
-- [Docker Deployment](docs/docker-deployment.md) - Container setup
-- [Raspberry Pi Setup](docs/raspberry-pi-setup.md) - Pi-specific instructions
-- [Production Deployment](docs/production-deployment.md) - Enterprise setup
-- [Kiosk Mode](docs/kiosk-mode.md) - Dedicated display setup
+-   [Docker Deployment](docs/docker-deployment.md) - Container setup
+-   [Raspberry Pi Setup](docs/raspberry-pi-setup.md) - Pi-specific instructions
+-   [Production Deployment](docs/production-deployment.md) - Enterprise setup
+-   [Kiosk Mode](docs/kiosk-mode.md) - Dedicated display setup
 
 ### Developer Resources
 
-- [API Documentation](docs/api.md) - REST API reference
-- [Development Setup](docs/development.md) - Local development guide
-- [Contributing Guide](CONTRIBUTING.md) - How to contribute
-- [Architecture Deep Dive](docs/architecture.md) - Detailed system design
+-   [API Documentation](docs/api.md) - REST API reference
+-   [Development Setup](docs/development.md) - Local development guide
+-   [Contributing Guide](CONTRIBUTING.md) - How to contribute
+-   [Architecture Deep Dive](docs/architecture.md) - Detailed system design
+
+## 🤝 Contributing
+
+1. Install the development dependencies:
+
+    ```bash
+    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
+    pip install .[tests]
+    ```
+
+2. Run the formatter and tests:
+
+    ```bash
+    pre-commit run --all-files
+    pytest
+    cd webui && npm test
+    ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
+
+## 🛡️ Legal Notice
+
+Ensure all wireless and Bluetooth scans comply with local regulations and that you have authorization to test networks. The authors are not responsible for misuse of this software.
+
+## 📄 License
+
+PiWardrive is released under the terms of the [MIT License](LICENSE).
