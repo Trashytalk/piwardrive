@@ -11,6 +11,7 @@ from dataclasses import asdict
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
+from piwardrive.logging import init_logging
 from starlette.middleware.base import BaseHTTPMiddleware
 
 try:  # pragma: no cover - optional FastAPI dependency
@@ -1313,6 +1314,8 @@ async def sse_history(
 async def main() -> None:
     """Run the FastAPI app using ``uvicorn``."""
     import uvicorn
+
+    init_logging()
 
     port_str = os.getenv("PW_SERVICE_PORT", "8000")
     try:
