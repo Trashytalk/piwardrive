@@ -7,6 +7,7 @@ import logging
 import os
 import subprocess
 import time
+import argparse
 from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Callable
@@ -226,8 +227,28 @@ class PiWardriveApp:
         utils.shutdown_async_loop()
 
 
-def main() -> None:
-    """Entry point for backwards compatibility."""
+
+async def _run_migrations() -> None:
+    """Apply pending database migrations."""
+    from piwardrive import migrations
+    from piwardrive.migrations import runner
+    from piwardrive.persistence import _get_conn
+
+    async with _get_conn() as conn:
+        await runner.run_migrations(conn, migrations.MIGRATIONS)
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Command line entry point."""
+    parser = argparse.ArgumentParser(description="PiWardrive utilities")
+    sub = parser.add_subparsers(dest="cmd")
+    sub.add_parser("run", help="start the application")
+    sub.add_parser("migrate", help="apply pending database migrations")
+    args = parser.parse_args(argv)
+
+    if args.cmd == "migrate":
+        asyncio.run(_run_migrations())
+        return
     try:
         PiWardriveApp()
     finally:
