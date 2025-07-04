@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from piwardrive.api.analysis_queries import router as analysis_queries_router
 from piwardrive.api.analytics import router as analytics_router
+from piwardrive.api.analytics_jobs import router as jobs_router
 from piwardrive.api.auth import AUTH_DEP, AuthMiddleware
 from piwardrive.api.auth import router as auth_router
 from piwardrive.api.common import (
@@ -59,6 +60,7 @@ app.include_router(wifi_routes.router)
 app.include_router(bluetooth_routes.router)
 app.include_router(cellular_routes.router)
 app.include_router(analytics_routes.router)
+app.include_router(jobs_router)
 app.include_router(security_routes.router)
 app.include_router(auth_router)
 app.include_router(health_router)

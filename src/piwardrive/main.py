@@ -23,11 +23,13 @@ from piwardrive.config import (
 )
 from piwardrive.config_watcher import watch_config
 from piwardrive.di import Container
+from piwardrive.jobs import analytics_jobs
 from piwardrive.logging import init_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
-from piwardrive.scheduler import PollScheduler
+from piwardrive.scheduler import AsyncScheduler, PollScheduler
 from piwardrive.security import hash_password
 from piwardrive.services.view_refresher import ViewRefresher
+from piwardrive.task_queue import BackgroundTaskQueue
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -79,6 +81,14 @@ class PiWardriveApp:
             vacuum=True,
         )
         self.view_refresher = ViewRefresher(self.scheduler)
+        self.analytics_queue = BackgroundTaskQueue(workers=2)
+        self.analytics_scheduler = AsyncScheduler()
+
+        async def _start_jobs() -> None:
+            analytics_jobs.init_jobs(self.analytics_scheduler, self.analytics_queue)
+            await self.analytics_queue.start()
+
+        utils.run_async_task(_start_jobs())
         if (
             self.config_data.remote_sync_url
             and self.config_data.remote_sync_interval > 0
@@ -225,6 +235,10 @@ class PiWardriveApp:
             asyncio.run(save_app_state(self.app_state))
         except OSError as exc:  # pragma: no cover - save failure
             logging.exception("Failed to save app state: %s", exc)
+        if hasattr(self, "analytics_scheduler"):
+            utils.run_async_task(self.analytics_scheduler.cancel_all())
+        if hasattr(self, "analytics_queue"):
+            utils.run_async_task(self.analytics_queue.stop())
         utils.shutdown_async_loop()
 
 
