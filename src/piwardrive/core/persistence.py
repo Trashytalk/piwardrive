@@ -772,6 +772,33 @@ async def save_bluetooth_detections(records: list[dict[str, Any]]) -> None:
         await conn.commit()
 
 
+async def save_cellular_detections(records: list[dict[str, Any]]) -> None:
+    """Insert ``records`` into the ``cellular_detections`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO cellular_detections (
+                scan_session_id, detection_timestamp, cell_id, lac, mcc, mnc,
+                network_name, technology, frequency_mhz, band, channel,
+                signal_strength_dbm, signal_quality, timing_advance, latitude,
+                longitude, altitude_meters, accuracy_meters, heading_degrees,
+                speed_kmh, first_seen, last_seen, detection_count
+            ) VALUES (
+                :scan_session_id, :detection_timestamp, :cell_id, :lac, :mcc,
+                :mnc, :network_name, :technology, :frequency_mhz, :band,
+                :channel, :signal_strength_dbm, :signal_quality,
+                :timing_advance, :latitude, :longitude, :altitude_meters,
+                :accuracy_meters, :heading_degrees, :speed_kmh, :first_seen,
+                :last_seen, :detection_count
+            )
+            """,
+            records,
+        )
+        await conn.commit()
+
+
 async def save_gps_tracks(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``gps_tracks`` table."""
     if not records:

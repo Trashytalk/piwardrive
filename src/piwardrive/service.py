@@ -7,11 +7,9 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from piwardrive.logging import init_logging
-from piwardrive.error_middleware import add_error_middleware
+from piwardrive.api.auth import AUTH_DEP, AuthMiddleware
+from piwardrive.api.auth import router as auth_router
 from piwardrive.api.common import (
-    BODY,
-    SECURITY_DEP,
     async_scan_lora,
     async_tail_file,
     fetch_metrics_async,
@@ -25,17 +23,15 @@ from piwardrive.api.common import (
     run_service_cmd,
     service_status_async,
 )
-from piwardrive.api.auth import router as auth_router, AuthMiddleware, AUTH_DEP
 from piwardrive.api.health import router as health_router
-from piwardrive.api.system import (
-    router as system_router,
-    collect_widget_metrics as _collect_widget_metrics,
-)
+from piwardrive.api.system import collect_widget_metrics as _collect_widget_metrics
+from piwardrive.api.system import router as system_router
 from piwardrive.api.websockets import router as ws_router
 from piwardrive.api.widgets import router as widgets_router
-from piwardrive.routes import wifi as wifi_routes
+from piwardrive.error_middleware import add_error_middleware
 from piwardrive.routes import bluetooth as bluetooth_routes
-
+from piwardrive.routes import cellular as cellular_routes
+from piwardrive.routes import wifi as wifi_routes
 
 app = FastAPI()
 
@@ -57,6 +53,7 @@ add_error_middleware(app)
 
 app.include_router(wifi_routes.router)
 app.include_router(bluetooth_routes.router)
+app.include_router(cellular_routes.router)
 app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(widgets_router)
