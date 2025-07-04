@@ -37,15 +37,15 @@ const COMPONENTS = {
   FingerprintSummaryWidget: FingerprintSummary,
 };
 
-export default function DashboardLayout({ metrics }) {
+export default function DashboardLayout({ metrics, tableStyle }) {
   const [order, setOrder] = useState([]);
 
   useEffect(() => {
     fetch('/dashboard-settings')
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         if (d.layout && d.layout.length > 0) {
-          setOrder(d.layout.map(w => w.cls));
+          setOrder(d.layout.map((w) => w.cls));
         } else if (d.widgets) {
           setOrder(d.widgets);
         }
@@ -54,7 +54,7 @@ export default function DashboardLayout({ metrics }) {
 
   const save = (items) => {
     setOrder(items);
-    const layout = items.map(cls => ({ cls }));
+    const layout = items.map((cls) => ({ cls }));
     fetch('/dashboard-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -78,6 +78,25 @@ export default function DashboardLayout({ metrics }) {
 
   const onDragOver = (e) => e.preventDefault();
 
+  if (tableStyle) {
+    return (
+      <table style={tableStyle}>
+        <tbody>
+          {order.map((name) => {
+            const Comp = COMPONENTS[name];
+            return (
+              <tr key={name}>
+                <td style={{ border: '1px solid #ccc', padding: '4px' }}>
+                  {Comp ? <Comp metrics={metrics} /> : <div>{name}</div>}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
+
   return (
     <div>
       {order.map((name, idx) => {
@@ -86,10 +105,14 @@ export default function DashboardLayout({ metrics }) {
           <div
             key={name}
             draggable
-            onDragStart={e => onDragStart(e, idx)}
-            onDrop={e => onDrop(e, idx)}
+            onDragStart={(e) => onDragStart(e, idx)}
+            onDrop={(e) => onDrop(e, idx)}
             onDragOver={onDragOver}
-            style={{ border: '1px solid #ccc', padding: '4px', marginBottom: '4px' }}
+            style={{
+              border: '1px solid #ccc',
+              padding: '4px',
+              marginBottom: '4px',
+            }}
           >
             {Comp ? <Comp metrics={metrics} /> : <div>{name}</div>}
           </div>
