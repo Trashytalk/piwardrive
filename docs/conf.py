@@ -9,6 +9,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.graphviz",
     "sphinxcontrib.mermaid",
+    "sphinxcontrib.openapi",
+    "sphinxcontrib.redoc",
 ]
 html_theme = os.getenv("PW_DOC_THEME", "alabaster")
 html_title = project

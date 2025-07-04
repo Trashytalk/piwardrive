@@ -19,8 +19,26 @@ jobs:
                   pip install -r requirements.txt
                   pip install -r requirements-dev.txt
             - name: Run bandit
-              run: bandit -r src || true
+              run: bandit -r src --severity-level medium -f sarif -o bandit.sarif
+
             - name: Run pip-audit
-              run: pip-audit -r requirements.txt || true
+              run: pip-audit -r requirements.txt -f sarif -o pip_audit.sarif
+
             - name: Run safety
-              run: safety check -r requirements.txt || true
+              run: safety check -r requirements.txt --json > safety.json
+
+            - name: Upload Bandit results
+              uses: github/codeql-action/upload-sarif@v3
+              with:
+                  sarif_file: bandit.sarif
+
+            - name: Upload pip-audit results
+              uses: github/codeql-action/upload-sarif@v3
+              with:
+                  sarif_file: pip_audit.sarif
+
+            - name: Upload safety report
+              uses: actions/upload-artifact@v4
+              with:
+                  name: safety-report
+                  path: safety.json

@@ -14,16 +14,21 @@ import subprocess
 import time
 from datetime import datetime
 from typing import Any, Dict
+from uuid import uuid4
 
 import psutil
 
 from piwardrive import cloud_export, config, r_integration, utils
 from piwardrive.database_service import db_service
+from piwardrive.exceptions import PiWardriveError, ServiceError
 from piwardrive.interfaces import DataCollector, SelfTestCollector
+from piwardrive.logging.structured_logger import get_logger
 from piwardrive.mqtt import MQTTClient
 from piwardrive.persistence import HealthRecord
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
+
+logger = get_logger(__name__).logger
 
 _PROFILER: cProfile.Profile | None = None
 _LAST_NETWORK_OK: float | None = None
@@ -39,12 +44,18 @@ def _upload_to_cloud(path: str) -> None:
     if not cfg.cloud_bucket:
         return
     key = os.path.join(cfg.cloud_prefix.strip("/"), os.path.basename(path))
+    cid = str(uuid4())
     try:
         cloud_export.upload_to_s3(
             path, cfg.cloud_bucket, key, cfg.cloud_profile or None
         )
     except Exception as exc:  # pragma: no cover - upload errors
-        logging.exception("Cloud upload failed: %s", exc)
+        logger.error(
+            "Cloud upload failed",
+            exc_info=exc,
+            extra={"correlation_id": cid, "path": path},
+        )
+        raise ServiceError(f"Failed to upload {path}") from exc
 
 
 def generate_system_report() -> Dict[str, Any]:
@@ -105,7 +116,7 @@ async def rotate_log_async(path: str, max_files: int = DEFAULT_LOG_ARCHIVES) -> 
 
     try:
         import aiofiles
-    except Exception:  # pragma: no cover - optional dependency
+    except ImportError:  # pragma: no cover - optional dependency
         await asyncio.to_thread(rotate_log, path, max_files)
         return
 
@@ -154,16 +165,18 @@ def stop_profiling() -> str | None:
     if path:
         try:
             import pyprof2calltree
-
-            pyprof2calltree.convert(stats, path)
-        except Exception as exc:  # pragma: no cover - optional
-            logging.exception("Failed to export callgrind data: %s", exc)
+        except ImportError as exc:  # pragma: no cover - optional
+            logger.warning("pyprof2calltree not available: %s", exc)
+        else:
             try:
-                with open(path, "w", encoding="utf-8") as f:
-                    f.write("")
-            except Exception:
-
-                pass
+                pyprof2calltree.convert(stats, path)
+            except Exception as exc:  # pragma: no cover - optional
+                logger.error("Failed to export callgrind data", exc_info=exc)
+                try:
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write("")
+                except Exception:
+                    pass
     _PROFILER = None
     return s.getvalue()
 
@@ -281,6 +294,7 @@ class HealthMonitor:
         asyncio.run(self._poll())
 
     async def _poll(self) -> None:
+        cid = str(uuid4())
         try:
             self.data = await asyncio.to_thread(self._collector.collect)
             system = self.data.get("system", {}) if self.data else {}
@@ -296,27 +310,57 @@ class HealthMonitor:
                 from piwardrive import analysis
 
                 analysis.process_new_record(rec)
-            except Exception:  # pragma: no cover - optional hooks
-                logging.exception("ML processing failed")
+            except PiWardriveError as exc:
+                logger.error(
+                    "ML processing failed",
+                    exc_info=exc,
+                    extra={"correlation_id": cid},
+                )
+            except Exception as exc:  # pragma: no cover - optional hooks
+                logger.exception(
+                    "ML processing failed: %s", exc, extra={"correlation_id": cid}
+                )
             await db_service.purge_old_health(30)
             await db_service.vacuum()
             if self._mqtt:
                 try:
                     self._mqtt.publish(self.data or {})
-                except Exception:
-                    logging.exception("MQTT publish failed")
+                except Exception as exc:
+                    logger.exception(
+                        "MQTT publish failed",
+                        exc_info=exc,
+                        extra={"correlation_id": cid},
+                    )
+        except PiWardriveError as exc:  # pragma: no cover - diagnostics best-effort
+            logger.error(
+                "HealthMonitor poll failed", exc_info=exc, extra={"correlation_id": cid}
+            )
         except Exception as exc:  # pragma: no cover - diagnostics best-effort
-            logging.exception("HealthMonitor poll failed: %s", exc)
+            logger.exception(
+                "HealthMonitor poll failed: %s", exc, extra={"correlation_id": cid}
+            )
 
     async def _run_summary(self) -> None:
         import csv
         import json
         from dataclasses import asdict
 
+        cid = str(uuid4())
         try:
             records = await db_service.load_recent_health(10000)
+        except PiWardriveError as exc:  # pragma: no cover - best-effort
+            logger.error(
+                "HealthMonitor load records failed",
+                exc_info=exc,
+                extra={"correlation_id": cid},
+            )
+            return
         except Exception as exc:  # pragma: no cover - best-effort
-            logging.exception("HealthMonitor load records failed: %s", exc)
+            logger.exception(
+                "HealthMonitor load records failed: %s",
+                exc,
+                extra={"correlation_id": cid},
+            )
             return
 
         if not records:
@@ -346,8 +390,19 @@ class HealthMonitor:
             result = await asyncio.to_thread(
                 r_integration.health_summary, csv_path, plot_path
             )
+        except PiWardriveError as exc:  # pragma: no cover - optional
+            logger.error(
+                "HealthMonitor summary failed",
+                exc_info=exc,
+                extra={"correlation_id": cid},
+            )
+            return
         except Exception as exc:  # pragma: no cover - optional
-            logging.exception("HealthMonitor summary failed: %s", exc)
+            logger.exception(
+                "HealthMonitor summary failed: %s",
+                exc,
+                extra={"correlation_id": cid},
+            )
             return
 
         json_path = os.path.join(cfg.reports_dir, f"health_{date}.json")
@@ -357,6 +412,7 @@ class HealthMonitor:
     async def _run_export(self) -> None:
         import piwardrive.scripts.health_export as health_export
 
+        cid = str(uuid4())
         try:
             cfg = config.AppConfig.load()
             os.makedirs(cfg.health_export_dir, exist_ok=True)
@@ -372,10 +428,20 @@ class HealthMonitor:
                 os.remove(path)
                 path += ".gz"
             await asyncio.to_thread(self._cleanup_exports)
-            logging.info("Exported health data to %s", path)
+            logger.info(
+                "Exported health data to %s", path, extra={"correlation_id": cid}
+            )
             await asyncio.to_thread(_upload_to_cloud, path)
+        except PiWardriveError as exc:  # pragma: no cover - best-effort
+            logger.error(
+                "HealthMonitor export failed",
+                exc_info=exc,
+                extra={"correlation_id": cid},
+            )
         except Exception as exc:  # pragma: no cover - best-effort
-            logging.exception("HealthMonitor export failed: %s", exc)
+            logger.exception(
+                "HealthMonitor export failed: %s", exc, extra={"correlation_id": cid}
+            )
 
     def _cleanup_exports(self) -> None:
         cfg = config.AppConfig.load()
@@ -387,8 +453,8 @@ class HealthMonitor:
             try:
                 if os.path.isfile(fpath) and os.path.getmtime(fpath) < cutoff:
                     os.remove(fpath)
-            except Exception:  # pragma: no cover - cleanup best effort
-                logging.exception("Failed to remove old export %s", fpath)
+            except Exception as exc:  # pragma: no cover - cleanup best effort
+                logger.exception("Failed to remove old export %s", fpath, exc_info=exc)
 
     def stop(self) -> None:
         """Cancel the periodic health export task."""

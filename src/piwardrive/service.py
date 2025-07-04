@@ -32,6 +32,7 @@ from piwardrive.api.websockets import router as ws_router
 from piwardrive.api.widgets import router as widgets_router
 from piwardrive.routes import wifi as wifi_routes
 
+
 app = FastAPI()
 
 cors_origins = [o.strip() for o in os.getenv("PW_CORS_ORIGINS", "").split(",") if o.strip()]
@@ -46,6 +47,7 @@ if cors_origins:
 
 app.add_middleware(AuthMiddleware)
 add_error_middleware(app)
+
 
 app.include_router(wifi_routes.router)
 app.include_router(auth_router)
@@ -71,4 +73,5 @@ __all__ = [
     "run_service_cmd",
     "_collect_widget_metrics",
 ]
+
 

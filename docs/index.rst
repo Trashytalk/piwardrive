@@ -53,6 +53,8 @@ Common issues are answered in the :doc:`faq`.
    grafana
    notifications
    web_ui
+   api_usage_examples
+   api_overview
    network_analytics
    scaling_architecture
    faq
