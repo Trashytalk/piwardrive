@@ -10,10 +10,10 @@ The API is served at `http://localhost:8080/api/v1` by default. The port can be 
 
 ## Interactive Documentation
 
-- **Swagger UI**: http://localhost:8080/docs
-- **Enhanced Documentation**: http://localhost:8080/api-docs
-- **ReDoc**: http://localhost:8080/redoc
-- **OpenAPI Schema**: http://localhost:8080/openapi.json
+-   **Swagger UI**: http://localhost:8080/docs
+-   **Enhanced Documentation**: http://localhost:8080/api-docs
+-   **ReDoc**: http://localhost:8080/redoc
+-   **OpenAPI Schema**: http://localhost:8080/openapi.json
 
 ## Authentication
 
@@ -57,8 +57,8 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "username": "string",
-  "password": "string"
+    "username": "string",
+    "password": "string"
 }
 ```
 
@@ -66,10 +66,10 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
-  "token_type": "bearer",
-  "expires_in": 86400,
-  "refresh_token": "string"
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "token_type": "bearer",
+    "expires_in": 86400,
+    "refresh_token": "string"
 }
 ```
 
@@ -81,7 +81,7 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "refresh_token": "string"
+    "refresh_token": "string"
 }
 ```
 
@@ -89,9 +89,9 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "access_token": "string",
-  "token_type": "bearer",
-  "expires_in": 86400
+    "access_token": "string",
+    "token_type": "bearer",
+    "expires_in": 86400
 }
 ```
 
@@ -105,7 +105,7 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "message": "Successfully logged out"
+    "message": "Successfully logged out"
 }
 ```
 
@@ -119,11 +119,11 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "scan_type": "passive",
-  "duration": 60,
-  "channels": [1, 6, 11],
-  "interface": "wlan0",
-  "description": "Quick scan of common channels"
+    "scan_type": "passive",
+    "duration": 60,
+    "channels": [1, 6, 11],
+    "interface": "wlan0",
+    "description": "Quick scan of common channels"
 }
 ```
 
@@ -131,16 +131,16 @@ curl -X POST "http://localhost:8080/token" \
 
 ```json
 {
-  "scan_id": "scan_20250630_120000",
-  "status": "started",
-  "started_at": "2025-06-30T12:00:00Z",
-  "estimated_completion": "2025-06-30T12:01:00Z",
-  "scan_params": {
-    "scan_type": "passive",
-    "duration": 60,
-    "channels": [1, 6, 11],
-    "interface": "wlan0"
-  }
+    "scan_id": "scan_20250630_120000",
+    "status": "started",
+    "started_at": "2025-06-30T12:00:00Z",
+    "estimated_completion": "2025-06-30T12:01:00Z",
+    "scan_params": {
+        "scan_type": "passive",
+        "duration": 60,
+        "channels": [1, 6, 11],
+        "interface": "wlan0"
+    }
 }
 ```
 
@@ -150,37 +150,37 @@ curl -X POST "http://localhost:8080/token" \
 
 **Path Parameters:**
 
-- `scan_id`: Unique scan identifier
+-   `scan_id`: Unique scan identifier
 
 **Response:**
 
 ```json
 {
-  "scan_id": "scan_20250630_120000",
-  "status": "completed",
-  "started_at": "2025-06-30T12:00:00Z",
-  "completed_at": "2025-06-30T12:01:00Z",
-  "access_points": [
-    {
-      "ssid": "HomeNetwork",
-      "bssid": "AA:BB:CC:DD:EE:FF",
-      "channel": 6,
-      "frequency": 2437,
-      "signal_strength": -45,
-      "encryption": "WPA2-PSK",
-      "vendor": "Cisco Systems",
-      "first_seen": "2025-06-30T12:00:15Z",
-      "last_seen": "2025-06-30T12:00:55Z",
-      "beacon_count": 40
+    "scan_id": "scan_20250630_120000",
+    "status": "completed",
+    "started_at": "2025-06-30T12:00:00Z",
+    "completed_at": "2025-06-30T12:01:00Z",
+    "access_points": [
+        {
+            "ssid": "HomeNetwork",
+            "bssid": "AA:BB:CC:DD:EE:FF",
+            "channel": 6,
+            "frequency": 2437,
+            "signal_strength": -45,
+            "encryption": "WPA2-PSK",
+            "vendor": "Cisco Systems",
+            "first_seen": "2025-06-30T12:00:15Z",
+            "last_seen": "2025-06-30T12:00:55Z",
+            "beacon_count": 40
+        }
+    ],
+    "total_count": 15,
+    "scan_params": {
+        "scan_type": "passive",
+        "duration": 60,
+        "channels": [1, 6, 11],
+        "interface": "wlan0"
     }
-  ],
-  "total_count": 15,
-  "scan_params": {
-    "scan_type": "passive",
-    "duration": 60,
-    "channels": [1, 6, 11],
-    "interface": "wlan0"
-  }
 }
 ```
 
@@ -190,29 +190,29 @@ curl -X POST "http://localhost:8080/token" \
 
 **Query Parameters:**
 
-- `status` (optional): Filter by scan status (started, completed, failed)
-- `limit` (optional): Number of scans to return (default: 20)
-- `offset` (optional): Number of scans to skip (default: 0)
-- `order_by` (optional): Sort field (started_at, duration, status)
+-   `status` (optional): Filter by scan status (started, completed, failed)
+-   `limit` (optional): Number of scans to return (default: 20)
+-   `offset` (optional): Number of scans to skip (default: 0)
+-   `order_by` (optional): Sort field (started_at, duration, status)
 
 **Response:**
 
 ```json
 {
-  "scans": [
-    {
-      "scan_id": "scan_20250630_120000",
-      "status": "completed",
-      "started_at": "2025-06-30T12:00:00Z",
-      "completed_at": "2025-06-30T12:01:00Z",
-      "access_points_count": 15,
-      "scan_type": "passive",
-      "duration": 60
-    }
-  ],
-  "total": 1,
-  "limit": 20,
-  "offset": 0
+    "scans": [
+        {
+            "scan_id": "scan_20250630_120000",
+            "status": "completed",
+            "started_at": "2025-06-30T12:00:00Z",
+            "completed_at": "2025-06-30T12:01:00Z",
+            "access_points_count": 15,
+            "scan_type": "passive",
+            "duration": 60
+        }
+    ],
+    "total": 1,
+    "limit": 20,
+    "offset": 0
 }
 ```
 
@@ -222,15 +222,15 @@ curl -X POST "http://localhost:8080/token" \
 
 **Path Parameters:**
 
-- `scan_id`: Unique scan identifier
+-   `scan_id`: Unique scan identifier
 
 **Response:**
 
 ```json
 {
-  "scan_id": "scan_20250630_120000",
-  "status": "cancelled",
-  "message": "Scan cancelled successfully"
+    "scan_id": "scan_20250630_120000",
+    "status": "cancelled",
+    "message": "Scan cancelled successfully"
 }
 ```
 
@@ -240,7 +240,7 @@ curl -X POST "http://localhost:8080/token" \
 
 **Path Parameters:**
 
-- `scan_id`: Unique scan identifier
+-   `scan_id`: Unique scan identifier
 
 **Response:** Server-Sent Events stream
 
@@ -260,18 +260,18 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "interfaces": [
-    {
-      "name": "wlan0",
-      "mac_address": "AA:BB:CC:DD:EE:FF",
-      "driver": "ath9k_htc",
-      "monitor_mode_capable": true,
-      "current_mode": "managed",
-      "supported_channels": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      "current_channel": 6,
-      "power_management": false
-    }
-  ]
+    "interfaces": [
+        {
+            "name": "wlan0",
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "driver": "ath9k_htc",
+            "monitor_mode_capable": true,
+            "current_mode": "managed",
+            "supported_channels": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+            "current_channel": 6,
+            "power_management": false
+        }
+    ]
 }
 ```
 
@@ -281,14 +281,14 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 **Path Parameters:**
 
-- `interface`: Interface name (e.g., "wlan0")
+-   `interface`: Interface name (e.g., "wlan0")
 
 **Request Body:**
 
 ```json
 {
-  "mode": "monitor",
-  "channel": 6
+    "mode": "monitor",
+    "channel": 6
 }
 ```
 
@@ -296,11 +296,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "interface": "wlan0",
-  "previous_mode": "managed",
-  "new_mode": "monitor",
-  "channel": 6,
-  "success": true
+    "interface": "wlan0",
+    "previous_mode": "managed",
+    "new_mode": "monitor",
+    "channel": 6,
+    "success": true
 }
 ```
 
@@ -314,16 +314,16 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "status": "healthy",
-  "timestamp": "2025-06-30T12:00:00Z",
-  "version": "1.0.0",
-  "uptime": 86400,
-  "checks": {
-    "database": { "status": "healthy" },
-    "wifi_adapter": { "status": "healthy" },
-    "disk_space": { "status": "healthy" },
-    "memory": { "status": "healthy" }
-  }
+    "status": "healthy",
+    "timestamp": "2025-06-30T12:00:00Z",
+    "version": "1.0.0",
+    "uptime": 86400,
+    "checks": {
+        "database": { "status": "healthy" },
+        "wifi_adapter": { "status": "healthy" },
+        "disk_space": { "status": "healthy" },
+        "memory": { "status": "healthy" }
+    }
 }
 ```
 
@@ -335,22 +335,22 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "cpu_usage": 25.5,
-  "memory_usage": 68.2,
-  "disk_usage": 45.8,
-  "temperature": 42.5,
-  "uptime": 86400,
-  "load_average": [0.5, 0.3, 0.2],
-  "network_interfaces": {
-    "wlan0": {
-      "bytes_sent": 1024000,
-      "bytes_recv": 2048000,
-      "packets_sent": 1000,
-      "packets_recv": 1500,
-      "errors_in": 0,
-      "errors_out": 0
+    "cpu_usage": 25.5,
+    "memory_usage": 68.2,
+    "disk_usage": 45.8,
+    "temperature": 42.5,
+    "uptime": 86400,
+    "load_average": [0.5, 0.3, 0.2],
+    "network_interfaces": {
+        "wlan0": {
+            "bytes_sent": 1024000,
+            "bytes_recv": 2048000,
+            "packets_sent": 1000,
+            "packets_recv": 1500,
+            "errors_in": 0,
+            "errors_out": 0
+        }
     }
-  }
 }
 ```
 
@@ -362,25 +362,25 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "hostname": "piwardrive-001",
-  "platform": "Linux",
-  "architecture": "armv7l",
-  "kernel_version": "5.10.17-v7l+",
-  "python_version": "3.9.2",
-  "piwardrive_version": "1.0.0",
-  "hardware": {
-    "model": "Raspberry Pi 4 Model B Rev 1.4",
-    "serial": "10000000a1b2c3d4",
-    "memory_total": 4294967296,
-    "cpu_count": 4,
-    "cpu_model": "ARMv7 Processor rev 3 (v7l)"
-  },
-  "capabilities": {
-    "wifi_monitor_mode": true,
-    "gps": false,
-    "bluetooth": true,
-    "gpio": true
-  }
+    "hostname": "piwardrive-001",
+    "platform": "Linux",
+    "architecture": "armv7l",
+    "kernel_version": "5.10.17-v7l+",
+    "python_version": "3.9.2",
+    "piwardrive_version": "1.0.0",
+    "hardware": {
+        "model": "Raspberry Pi 4 Model B Rev 1.4",
+        "serial": "10000000a1b2c3d4",
+        "memory_total": 4294967296,
+        "cpu_count": 4,
+        "cpu_model": "ARMv7 Processor rev 3 (v7l)"
+    },
+    "capabilities": {
+        "wifi_monitor_mode": true,
+        "gps": false,
+        "bluetooth": true,
+        "gpio": true
+    }
 }
 ```
 
@@ -394,25 +394,25 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "app": {
-    "debug": false,
-    "log_level": "INFO"
-  },
-  "wifi": {
-    "default_interface": "wlan0",
-    "scan_interval": 60,
-    "monitor_mode": true
-  },
-  "monitoring": {
-    "interval": 30,
-    "enabled_metrics": ["cpu", "memory", "disk", "temperature"]
-  },
-  "api": {
-    "rate_limiting": {
-      "enabled": true,
-      "requests_per_minute": 100
+    "app": {
+        "debug": false,
+        "log_level": "INFO"
+    },
+    "wifi": {
+        "default_interface": "wlan0",
+        "scan_interval": 60,
+        "monitor_mode": true
+    },
+    "monitoring": {
+        "interval": 30,
+        "enabled_metrics": ["cpu", "memory", "disk", "temperature"]
+    },
+    "api": {
+        "rate_limiting": {
+            "enabled": true,
+            "requests_per_minute": 100
+        }
     }
-  }
 }
 ```
 
@@ -424,12 +424,12 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "wifi": {
-    "scan_interval": 120
-  },
-  "monitoring": {
-    "interval": 15
-  }
+    "wifi": {
+        "scan_interval": 120
+    },
+    "monitoring": {
+        "interval": 15
+    }
 }
 ```
 
@@ -437,9 +437,9 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "message": "Configuration updated successfully",
-  "updated_fields": ["wifi.scan_interval", "monitoring.interval"],
-  "restart_required": false
+    "message": "Configuration updated successfully",
+    "updated_fields": ["wifi.scan_interval", "monitoring.interval"],
+    "restart_required": false
 }
 ```
 
@@ -451,8 +451,8 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "message": "Configuration reset to defaults",
-  "restart_required": true
+    "message": "Configuration reset to defaults",
+    "restart_required": true
 }
 ```
 
@@ -464,11 +464,11 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 **Query Parameters:**
 
-- `format`: Export format (json, csv, xml, geojson)
-- `scan_ids` (optional): Comma-separated scan IDs
-- `start_date` (optional): Start date filter (ISO 8601)
-- `end_date` (optional): End date filter (ISO 8601)
-- `include_raw_data` (optional): Include raw packet data (default: false)
+-   `format`: Export format (json, csv, xml, geojson)
+-   `scan_ids` (optional): Comma-separated scan IDs
+-   `start_date` (optional): Start date filter (ISO 8601)
+-   `end_date` (optional): End date filter (ISO 8601)
+-   `include_raw_data` (optional): Include raw packet data (default: false)
 
 **Response:** File download in requested format
 
@@ -478,10 +478,10 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 **Query Parameters:**
 
-- `format`: Export format (json, csv, xml, geojson, kml)
-- `min_signal_strength` (optional): Minimum signal strength filter
-- `encryption_types` (optional): Comma-separated encryption types
-- `include_location` (optional): Include GPS coordinates (default: true)
+-   `format`: Export format (json, csv, xml, geojson, kml)
+-   `min_signal_strength` (optional): Minimum signal strength filter
+-   `encryption_types` (optional): Comma-separated encryption types
+-   `include_location` (optional): Include GPS coordinates (default: true)
 
 **Response:** File download in requested format
 
@@ -491,10 +491,10 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 **Query Parameters:**
 
-- `format`: Export format (json, csv, xml)
-- `start_date` (optional): Start date filter
-- `end_date` (optional): End date filter
-- `metrics` (optional): Comma-separated metric names
+-   `format`: Export format (json, csv, xml)
+-   `start_date` (optional): Start date filter
+-   `end_date` (optional): End date filter
+-   `metrics` (optional): Comma-separated metric names
 
 **Response:** File download in requested format
 
@@ -508,14 +508,14 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "name": "office_location_1",
-  "description": "Fingerprint for office area",
-  "scan_duration": 300,
-  "location": {
-    "lat": 40.7128,
-    "lon": -74.006,
-    "accuracy": 5.0
-  }
+    "name": "office_location_1",
+    "description": "Fingerprint for office area",
+    "scan_duration": 300,
+    "location": {
+        "lat": 40.7128,
+        "lon": -74.006,
+        "accuracy": 5.0
+    }
 }
 ```
 
@@ -523,17 +523,17 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "fingerprint_id": "fp_20250630_120000",
-  "name": "office_location_1",
-  "created_at": "2025-06-30T12:00:00Z",
-  "scan_id": "scan_20250630_120000",
-  "access_points_count": 25,
-  "unique_networks": 18,
-  "location": {
-    "lat": 40.7128,
-    "lon": -74.006,
-    "accuracy": 5.0
-  }
+    "fingerprint_id": "fp_20250630_120000",
+    "name": "office_location_1",
+    "created_at": "2025-06-30T12:00:00Z",
+    "scan_id": "scan_20250630_120000",
+    "access_points_count": 25,
+    "unique_networks": 18,
+    "location": {
+        "lat": 40.7128,
+        "lon": -74.006,
+        "accuracy": 5.0
+    }
 }
 ```
 
@@ -545,9 +545,9 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "scan_duration": 30,
-  "fingerprint_database": "all",
-  "min_confidence": 0.7
+    "scan_duration": 30,
+    "fingerprint_database": "all",
+    "min_confidence": 0.7
 }
 ```
 
@@ -555,21 +555,21 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "estimated_location": {
-    "lat": 40.7128,
-    "lon": -74.006,
-    "accuracy": 10.0,
-    "confidence": 0.85
-  },
-  "matched_fingerprints": [
-    {
-      "fingerprint_id": "fp_20250630_120000",
-      "name": "office_location_1",
-      "similarity": 0.92,
-      "distance": 5.2
-    }
-  ],
-  "scan_used": "scan_20250630_123000"
+    "estimated_location": {
+        "lat": 40.7128,
+        "lon": -74.006,
+        "accuracy": 10.0,
+        "confidence": 0.85
+    },
+    "matched_fingerprints": [
+        {
+            "fingerprint_id": "fp_20250630_120000",
+            "name": "office_location_1",
+            "similarity": 0.92,
+            "distance": 5.2
+        }
+    ],
+    "scan_used": "scan_20250630_123000"
 }
 ```
 
@@ -579,30 +579,30 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 **Query Parameters:**
 
-- `scan_id` (optional): Use specific scan data
-- `channels` (optional): Comma-separated channel list to analyze
+-   `scan_id` (optional): Use specific scan data
+-   `channels` (optional): Comma-separated channel list to analyze
 
 **Response:**
 
 ```json
 {
-  "analysis_timestamp": "2025-06-30T12:00:00Z",
-  "channel_analysis": [
-    {
-      "channel": 6,
-      "frequency": 2437,
-      "access_points_count": 8,
-      "interference_level": "high",
-      "congestion_score": 0.85,
-      "recommended": false,
-      "overlapping_channels": [1, 11]
+    "analysis_timestamp": "2025-06-30T12:00:00Z",
+    "channel_analysis": [
+        {
+            "channel": 6,
+            "frequency": 2437,
+            "access_points_count": 8,
+            "interference_level": "high",
+            "congestion_score": 0.85,
+            "recommended": false,
+            "overlapping_channels": [1, 11]
+        }
+    ],
+    "recommendations": {
+        "best_channels": [1, 11],
+        "avoid_channels": [6, 7],
+        "optimal_channel": 1
     }
-  ],
-  "recommendations": {
-    "best_channels": [1, 11],
-    "avoid_channels": [6, 7],
-    "optimal_channel": 1
-  }
 }
 ```
 
@@ -681,18 +681,18 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 ```json
 {
-  "type": "system_metrics",
-  "timestamp": "2025-06-30T12:00:00Z",
-  "data": {
-    "cpu_usage": 25.5,
-    "memory_usage": 68.2,
-    "disk_usage": 45.8,
-    "temperature": 42.5,
-    "network_io": {
-      "bytes_sent": 1024,
-      "bytes_recv": 2048
+    "type": "system_metrics",
+    "timestamp": "2025-06-30T12:00:00Z",
+    "data": {
+        "cpu_usage": 25.5,
+        "memory_usage": 68.2,
+        "disk_usage": 45.8,
+        "temperature": 42.5,
+        "network_io": {
+            "bytes_sent": 1024,
+            "bytes_recv": 2048
+        }
     }
-  }
 }
 ```
 
@@ -704,8 +704,8 @@ data: {"event": "scan_completed", "data": {"total_access_points": 15, "duration"
 
 **Query Parameters:**
 
-- `scan_types` (optional): Filter by scan types
-- `include_progress` (optional): Include progress updates (default: true)
+-   `scan_types` (optional): Filter by scan types
+-   `include_progress` (optional): Include progress updates (default: true)
 
 **Content-Type:** `text/event-stream`
 
@@ -778,15 +778,15 @@ async for update in client.wifi.stream_scan_updates(scan.scan_id):
 import { PiWardriveClient } from "@piwardrive/client";
 
 const client = new PiWardriveClient({
-  baseURL: "http://localhost:8080",
-  apiKey: "your-api-key",
+    baseURL: "http://localhost:8080",
+    apiKey: "your-api-key",
 });
 
 // Start scan
 const scan = await client.wifi.startScan({
-  scanType: "passive",
-  duration: 60,
-  channels: [1, 6, 11],
+    scanType: "passive",
+    duration: 60,
+    channels: [1, 6, 11],
 });
 
 // Get results
@@ -794,7 +794,7 @@ const results = await client.wifi.getScanResults(scan.scanId);
 
 // Real-time updates
 client.wifi.onScanUpdate(scan.scanId, (update) => {
-  console.log("Scan update:", update);
+    console.log("Scan update:", update);
 });
 ```
 
@@ -806,15 +806,15 @@ All API endpoints return errors in a consistent format following RFC 7807 Proble
 
 ```json
 {
-  "error": "ValidationError",
-  "message": "Scan duration must be between 5 and 3600 seconds",
-  "details": {
-    "field": "duration",
-    "constraint": "must be between 5 and 3600",
-    "received_value": 3700
-  },
-  "timestamp": "2025-06-30T12:00:00Z",
-  "request_id": "req_123456789"
+    "error": "ValidationError",
+    "message": "Scan duration must be between 5 and 3600 seconds",
+    "details": {
+        "field": "duration",
+        "constraint": "must be between 5 and 3600",
+        "received_value": 3700
+    },
+    "timestamp": "2025-06-30T12:00:00Z",
+    "request_id": "req_123456789"
 }
 ```
 
@@ -855,10 +855,10 @@ except PiWardriveAPIError as e:
 
 ### Default Limits
 
-- **Unauthenticated requests**: 100 requests per minute
-- **Authenticated requests**: 1000 requests per minute
-- **Scan operations**: 10 requests per minute
-- **Export operations**: 5 requests per minute
+-   **Unauthenticated requests**: 100 requests per minute
+-   **Authenticated requests**: 1000 requests per minute
+-   **Scan operations**: 10 requests per minute
+-   **Export operations**: 5 requests per minute
 
 ### Rate Limit Headers
 
@@ -927,10 +927,10 @@ curl -H "Accept-Encoding: gzip" "http://localhost:8080/api/v1/wifi/scans"
 
 ### API Key Management
 
-- Store API keys securely (environment variables, key vaults)
-- Rotate keys regularly
-- Use different keys for different environments
-- Monitor key usage for anomalies
+-   Store API keys securely (environment variables, key vaults)
+-   Rotate keys regularly
+-   Use different keys for different environments
+-   Monitor key usage for anomalies
 
 ### HTTPS in Production
 
@@ -976,9 +976,9 @@ async def start_scan(request: WiFiScanRequest):
 
 For backward compatibility, some legacy endpoints are still supported:
 
-- `GET /status` → `GET /api/v1/system/health`
-- `POST /token` → `POST /api/v1/auth/token`
-- `GET /cpu` → `GET /api/v1/system/stats` (cpu_usage field)
+-   `GET /status` → `GET /api/v1/system/health`
+-   `POST /token` → `POST /api/v1/auth/token`
+-   `GET /cpu` → `GET /api/v1/system/stats` (cpu_usage field)
 
 ### Migration Guide
 
@@ -993,12 +993,12 @@ When migrating from legacy endpoints:
 
 API behavior can be customized via environment variables:
 
-- `PIWARDRIVE_API_HOST`: Server bind address (default: "0.0.0.0")
-- `PIWARDRIVE_API_PORT`: Server port (default: 8080)
-- `PIWARDRIVE_CORS_ORIGINS`: CORS allowed origins
-- `PIWARDRIVE_RATE_LIMIT_REQUESTS`: Rate limit per minute
-- `PIWARDRIVE_SECRET_KEY`: JWT signing key
-- `PIWARDRIVE_LOG_LEVEL`: API logging level
+-   `PIWARDRIVE_API_HOST`: Server bind address (default: "0.0.0.0")
+-   `PIWARDRIVE_API_PORT`: Server port (default: 8080)
+-   `PIWARDRIVE_CORS_ORIGINS`: CORS allowed origins
+-   `PIWARDRIVE_RATE_LIMIT_REQUESTS`: Rate limit per minute
+-   `PIWARDRIVE_SECRET_KEY`: JWT signing key
+-   `PIWARDRIVE_LOG_LEVEL`: API logging level
 
 Refer to `docs/configuration.md` for complete configuration options.
 
@@ -1008,25 +1008,32 @@ When enabled via configuration (`PW_ENABLE_GRAPHQL=true`), PiWardrive provides a
 
 ```graphql
 query GetScanResults($scanId: String!) {
-  scan(id: $scanId) {
-    id
-    status
-    startedAt
-    accessPoints {
-      ssid
-      bssid
-      signalStrength
-      encryption
+    scan(id: $scanId) {
+        id
+        status
+        startedAt
+        accessPoints {
+            ssid
+            bssid
+            signalStrength
+            encryption
+        }
     }
-  }
 
-  systemStats {
-    cpuUsage
-    memoryUsage
-    temperature
-  }
+    systemStats {
+        cpuUsage
+        memoryUsage
+        temperature
+    }
 }
 ```
+
+### Database Analytics Endpoints
+
+-   `GET /api/v1/analytics-db/fingerprints` – list stored Wi-Fi fingerprints
+-   `POST /api/v1/analytics-db/fingerprints` – add a fingerprint record
+-   `GET /api/v1/analytics-db/networks` – retrieve analytics metrics
+-   `GET /api/v1/security/suspicious` – list suspicious activity records
 
 ## Testing the API
 
@@ -1040,8 +1047,8 @@ curl http://localhost:8080/api/v1/system/health
 
 Visit the interactive documentation:
 
-- Swagger UI: http://localhost:8080/docs
-- Enhanced docs: http://localhost:8080/api-docs
+-   Swagger UI: http://localhost:8080/docs
+-   Enhanced docs: http://localhost:8080/api-docs
 
 ### Example Test Script
 
