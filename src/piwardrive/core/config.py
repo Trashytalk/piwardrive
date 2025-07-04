@@ -2,6 +2,7 @@
 
 import dataclasses
 import json
+import logging
 import os
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -221,6 +222,7 @@ class FileConfigModel(BaseModel):
     influx_org: Optional[str] = None
     influx_bucket: Optional[str] = None
     postgres_dsn: Optional[str] = None
+    extends: Optional[str] = Field(default=None, min_length=1)
 
 
 class ConfigModel(FileConfigModel):
@@ -343,18 +345,27 @@ def load_config(profile: Optional[str] = None) -> Config:
     """Load configuration from ``profile`` or ``CONFIG_PATH``."""
     if profile is None:
         profile = get_active_profile()
-    path = get_config_path(profile)
+    visited: set[str] = set()
 
-    data: Dict[str, Any] = {}
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            loaded = json.load(f)
-        FileConfigModel(**loaded)
-        data = loaded
-    except FileNotFoundError:
-        pass
-    except (json.JSONDecodeError, ValidationError):
-        pass
+    def _load(name: Optional[str]) -> Dict[str, Any]:
+        p = get_config_path(name)
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            FileConfigModel(**raw)
+        except FileNotFoundError:
+            return {}
+        except (json.JSONDecodeError, ValidationError) as exc:
+            logging.error("Invalid config %s: %s", p, exc)
+            return {}
+        parent = raw.pop("extends", None)
+        if parent and parent not in visited:
+            visited.add(parent)
+            parent_data = _load(parent)
+            return {**parent_data, **raw}
+        return raw
+
+    data = _load(profile)
     merged = {**DEFAULTS, **data}
     return Config(**merged)
 
@@ -382,7 +393,7 @@ def export_config(config: Config, path: str) -> None:
             json.dump(data, f, indent=2)
     elif ext in {".yaml", ".yml"}:
         try:
-            import yaml
+            import yaml  # type: ignore
         except Exception as exc:  # pragma: no cover - optional dep
             raise ConfigError("PyYAML required for YAML export") from exc
         with open(path, "w", encoding="utf-8") as f:
@@ -399,12 +410,14 @@ def import_config(path: str) -> Config:
             data = json.load(f)
         elif ext in {".yaml", ".yml"}:
             try:
-                import yaml
+                import yaml  # type: ignore
             except Exception as exc:  # pragma: no cover - optional dep
                 raise ConfigError("PyYAML required for YAML import") from exc
             data = yaml.safe_load(f) or {}
         else:
             raise ConfigError(f"Unsupported config format: {ext}")
+    if data.get("remote_sync_url") == "":
+        data["remote_sync_url"] = None
     FileConfigModel(**data)
     merged = {**DEFAULTS, **data}
     return Config(**merged)

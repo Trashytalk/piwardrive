@@ -7,6 +7,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import questionary
+
 CONFIG_PATH = Path.home() / ".config" / "piwardrive" / "setup.json"
 
 
@@ -14,11 +16,17 @@ def run_wizard() -> None:
     """Prompt for service configuration options and save them."""
     config: dict[str, Any] = {}
     try:
-        config["kismet_host"] = input("Kismet host [localhost]: ") or "localhost"
-        config["kismet_port"] = int(input("Kismet port [2501]: ") or "2501")
-        config["bettercap_iface"] = input("BetterCAP interface [wlan0]: ") or "wlan0"
-        config["gpsd_port"] = int(input("GPSD port [2947]: ") or "2947")
-    except ValueError as exc:
+        config["kismet_host"] = questionary.text(
+            "Kismet host", default="localhost"
+        ).ask()
+        config["kismet_port"] = int(
+            questionary.text("Kismet port", default="2501").ask()
+        )
+        config["bettercap_iface"] = questionary.text(
+            "BetterCAP interface", default="wlan0"
+        ).ask()
+        config["gpsd_port"] = int(questionary.text("GPSD port", default="2947").ask())
+    except Exception as exc:
         logging.error("Invalid input: %s", exc)
         return
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
