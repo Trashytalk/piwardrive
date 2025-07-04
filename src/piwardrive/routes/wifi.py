@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 
-from piwardrive import service
+from piwardrive import persistence, service
 from piwardrive.models import (
     AccessPoint,
     ErrorResponse,
@@ -29,6 +31,49 @@ async def scan_wifi_get(
     """Perform a Wi-Fi scan and return discovered access points."""
     nets = await async_scan_wifi(interface=interface, timeout=timeout)
     aps = [AccessPoint.model_validate(n.model_dump()) for n in nets]
+    timestamp = datetime.utcnow().isoformat()
+    records = [
+        {
+            "scan_session_id": "adhoc",
+            "detection_timestamp": timestamp,
+            "bssid": ap.bssid,
+            "ssid": ap.ssid,
+            "channel": int(ap.channel) if ap.channel else None,
+            "frequency_mhz": int(float(ap.frequency) * 1000) if ap.frequency else None,
+            "signal_strength_dbm": None,
+            "noise_floor_dbm": None,
+            "snr_db": None,
+            "encryption_type": ap.encryption,
+            "cipher_suite": None,
+            "authentication_method": None,
+            "wps_enabled": False,
+            "vendor_oui": ap.bssid[:8].upper() if ap.bssid else None,
+            "vendor_name": ap.vendor,
+            "device_type": None,
+            "latitude": None,
+            "longitude": None,
+            "altitude_meters": None,
+            "accuracy_meters": None,
+            "heading_degrees": ap.heading,
+            "speed_kmh": None,
+            "beacon_interval_ms": None,
+            "dtim_period": None,
+            "ht_capabilities": None,
+            "vht_capabilities": None,
+            "he_capabilities": None,
+            "country_code": None,
+            "regulatory_domain": None,
+            "tx_power_dbm": None,
+            "load_percentage": None,
+            "station_count": None,
+            "data_rates": None,
+            "first_seen": timestamp,
+            "last_seen": timestamp,
+            "detection_count": 1,
+        }
+        for ap in aps
+    ]
+    await persistence.save_wifi_detections(records)
     return WiFiScanResponse(access_points=aps)
 
 
@@ -44,4 +89,47 @@ async def scan_wifi_post(
     """Perform a Wi-Fi scan using parameters in the request body."""
     nets = await async_scan_wifi(interface=req.interface, timeout=req.timeout)
     aps = [AccessPoint.model_validate(n.model_dump()) for n in nets]
+    timestamp = datetime.utcnow().isoformat()
+    records = [
+        {
+            "scan_session_id": "adhoc",
+            "detection_timestamp": timestamp,
+            "bssid": ap.bssid,
+            "ssid": ap.ssid,
+            "channel": int(ap.channel) if ap.channel else None,
+            "frequency_mhz": int(float(ap.frequency) * 1000) if ap.frequency else None,
+            "signal_strength_dbm": None,
+            "noise_floor_dbm": None,
+            "snr_db": None,
+            "encryption_type": ap.encryption,
+            "cipher_suite": None,
+            "authentication_method": None,
+            "wps_enabled": False,
+            "vendor_oui": ap.bssid[:8].upper() if ap.bssid else None,
+            "vendor_name": ap.vendor,
+            "device_type": None,
+            "latitude": None,
+            "longitude": None,
+            "altitude_meters": None,
+            "accuracy_meters": None,
+            "heading_degrees": ap.heading,
+            "speed_kmh": None,
+            "beacon_interval_ms": None,
+            "dtim_period": None,
+            "ht_capabilities": None,
+            "vht_capabilities": None,
+            "he_capabilities": None,
+            "country_code": None,
+            "regulatory_domain": None,
+            "tx_power_dbm": None,
+            "load_percentage": None,
+            "station_count": None,
+            "data_rates": None,
+            "first_seen": timestamp,
+            "last_seen": timestamp,
+            "detection_count": 1,
+        }
+        for ap in aps
+    ]
+    await persistence.save_wifi_detections(records)
     return WiFiScanResponse(access_points=aps)

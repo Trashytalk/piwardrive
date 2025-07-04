@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-import logging
+import hashlib
 import os
 import sqlite3
-import hashlib
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
@@ -180,17 +179,21 @@ async def _migration_4(conn: aiosqlite.Connection) -> None:
         """
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id, started_at)"
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON "
+        "scan_sessions(device_id, started_at)"
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON scan_sessions(scan_type)"
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON "
+        "scan_sessions(scan_type)"
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat, location_start_lon)"
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON "
+        "scan_sessions(location_start_lat, location_start_lon)"
     )
 
 
 _MIGRATIONS.append(_migration_4)
+
 
 async def _create_connection(path: str, key: str | None) -> aiosqlite.Connection:
     """Create a new SQLite connection with performance pragmas."""
@@ -588,7 +591,8 @@ async def get_user_by_token(token_hash: str) -> User | None:
     """Return ``User`` matching ``token_hash`` if found."""
     async with _get_conn() as conn:
         cur = await conn.execute(
-            "SELECT username, password_hash, token_hash FROM users WHERE token_hash = ?",
+            "SELECT username, password_hash, token_hash FROM users "
+            "WHERE token_hash = ?",
             (token_hash,),
         )
         row = await cur.fetchone()
@@ -636,7 +640,9 @@ async def get_scan_session(session_id: str) -> ScanSession | None:
     return ScanSession(**row) if row else None
 
 
-async def iter_scan_sessions(*, limit: int | None = None, offset: int = 0) -> AsyncIterator[ScanSession]:
+async def iter_scan_sessions(
+    *, limit: int | None = None, offset: int = 0
+) -> AsyncIterator[ScanSession]:
     """Yield ``ScanSession`` rows ordered by ``started_at`` descending."""
     async with _get_conn() as conn:
         query = (
@@ -700,6 +706,42 @@ async def load_ap_cache(
 ) -> list[dict[str, Any]]:
     """Return rows from ``ap_cache`` optionally newer than ``after`` with pagination."""
     return [row async for row in iter_ap_cache(after, limit=limit, offset=offset)]
+
+
+async def save_wifi_detections(records: list[dict[str, Any]]) -> None:
+    """Insert ``records`` into the ``wifi_detections`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO wifi_detections (
+                scan_session_id, detection_timestamp, bssid, ssid,
+                channel, frequency_mhz, signal_strength_dbm, noise_floor_dbm,
+                snr_db, encryption_type, cipher_suite, authentication_method,
+                wps_enabled, vendor_oui, vendor_name, device_type,
+                latitude, longitude, altitude_meters, accuracy_meters,
+                heading_degrees, speed_kmh, beacon_interval_ms, dtim_period,
+                ht_capabilities, vht_capabilities, he_capabilities,
+                country_code, regulatory_domain, tx_power_dbm,
+                load_percentage, station_count, data_rates,
+                first_seen, last_seen, detection_count
+            ) VALUES (
+                :scan_session_id, :detection_timestamp, :bssid, :ssid,
+                :channel, :frequency_mhz, :signal_strength_dbm, :noise_floor_dbm,
+                :snr_db, :encryption_type, :cipher_suite, :authentication_method,
+                :wps_enabled, :vendor_oui, :vendor_name, :device_type,
+                :latitude, :longitude, :altitude_meters, :accuracy_meters,
+                :heading_degrees, :speed_kmh, :beacon_interval_ms, :dtim_period,
+                :ht_capabilities, :vht_capabilities, :he_capabilities,
+                :country_code, :regulatory_domain, :tx_power_dbm,
+                :load_percentage, :station_count, :data_rates,
+                :first_seen, :last_seen, :detection_count
+            )
+            """,
+            records,
+        )
+        await conn.commit()
 
 
 async def get_table_counts() -> dict[str, int]:

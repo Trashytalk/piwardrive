@@ -1,9 +1,13 @@
 """Database migration framework."""
 
+from importlib import import_module
+
 from .base import BaseMigration
-from .001_create_scan_sessions import Migration as Migration001
+
+Migration001 = import_module(f"{__name__}.001_create_scan_sessions").Migration
+Migration002 = import_module(f"{__name__}.002_enhance_wifi_detections").Migration
 
 # List of migration instances in version order
-MIGRATIONS: list[BaseMigration] = [Migration001()]
+MIGRATIONS: list[BaseMigration] = [Migration001(), Migration002()]
 
 __all__ = ["BaseMigration", "MIGRATIONS"]
