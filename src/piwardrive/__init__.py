@@ -48,4 +48,6 @@ for _mod in (
     except Exception as exc:
         logger.warning("Failed to import optional module '%s': %s", _mod, exc)
 
-__all__ = ["sigint_suite"]
+from .widget_manager import LazyWidgetManager
+
+__all__ = ["sigint_suite", "LazyWidgetManager"]
