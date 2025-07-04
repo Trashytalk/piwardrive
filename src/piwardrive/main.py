@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import logging
 import os
-import subprocess
 import time
-import argparse
 from dataclasses import asdict, fields
 from pathlib import Path
 from typing import Callable
@@ -28,6 +27,7 @@ from piwardrive.logging import init_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
 from piwardrive.scheduler import PollScheduler
 from piwardrive.security import hash_password
+from piwardrive.services.view_refresher import ViewRefresher
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -78,6 +78,7 @@ class PiWardriveApp:
             limit_mb=512,
             vacuum=True,
         )
+        self.view_refresher = ViewRefresher(self.scheduler)
         if (
             self.config_data.remote_sync_url
             and self.config_data.remote_sync_interval > 0
@@ -225,7 +226,6 @@ class PiWardriveApp:
         except OSError as exc:  # pragma: no cover - save failure
             logging.exception("Failed to save app state: %s", exc)
         utils.shutdown_async_loop()
-
 
 
 async def _run_migrations() -> None:

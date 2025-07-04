@@ -12,6 +12,7 @@ Migration005 = import_module(f"{__name__}.005_create_cellular_detections").Migra
 Migration006 = import_module(f"{__name__}.006_create_network_fingerprints").Migration
 Migration007 = import_module(f"{__name__}.007_create_suspicious_activities").Migration
 Migration008 = import_module(f"{__name__}.008_create_network_analytics").Migration
+Migration009 = import_module(f"{__name__}.009_create_materialized_views").Migration
 
 # List of migration instances in version order
 MIGRATIONS: list[BaseMigration] = [
@@ -23,6 +24,7 @@ MIGRATIONS: list[BaseMigration] = [
     Migration006(),
     Migration007(),
     Migration008(),
+    Migration009(),
 ]
 
 __all__ = ["BaseMigration", "MIGRATIONS"]

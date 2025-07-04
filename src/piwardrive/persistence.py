@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import config
-from .core.persistence import *  # noqa: F401,F403
+from .core.persistence import *  # noqa: F401,F403,F405
 from .core.persistence import (
     ScanSession,
     _acquire_conn,
@@ -22,6 +22,10 @@ from .core.persistence import (
     get_db_metrics,
     get_scan_session,
     iter_scan_sessions,
+    load_daily_detection_stats,
+    load_network_coverage_grid,
+    refresh_daily_detection_stats,
+    refresh_network_coverage_grid,
     save_scan_session,
     shutdown_pool,
 )
@@ -82,7 +86,7 @@ async def update_user_token(*_a, **_k) -> None:
     """Stub for ``service`` imports."""
 
 
-__all__ = [
+__all__ = [  # noqa: F405
     *globals().get("__all__", []),
     "_db_path",
     "_get_conn",
@@ -109,4 +113,8 @@ __all__ = [
     "load_recent_suspicious",
     "save_network_analytics",
     "load_network_analytics",
+    "refresh_daily_detection_stats",
+    "refresh_network_coverage_grid",
+    "load_daily_detection_stats",
+    "load_network_coverage_grid",
 ]

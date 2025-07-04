@@ -989,6 +989,60 @@ async def load_network_analytics(
     return [dict(row) for row in rows]
 
 
+async def load_daily_detection_stats(
+    session_id: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Return rows from ``daily_detection_stats`` filtered by parameters."""
+    async with _get_conn() as conn:
+        query = (
+            "SELECT detection_date, scan_session_id, total_detections, "
+            "unique_networks, avg_signal, min_signal, max_signal, channels_used, "
+            "open_networks, wep_networks, wpa_networks FROM daily_detection_stats"
+        )
+        params: list[object] = []
+        clauses: list[str] = []
+        if session_id:
+            clauses.append("scan_session_id = ?")
+            params.append(session_id)
+        if start:
+            clauses.append("detection_date >= ?")
+            params.append(start)
+        if end:
+            clauses.append("detection_date <= ?")
+            params.append(end)
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY detection_date"
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+        cur = await conn.execute(query, tuple(params))
+        rows = await cur.fetchall()
+    return [dict(row) for row in rows]
+
+
+async def load_network_coverage_grid(
+    *, limit: int | None = None, offset: int = 0
+) -> list[dict[str, Any]]:
+    """Return rows from ``network_coverage_grid`` with optional pagination."""
+    async with _get_conn() as conn:
+        query = (
+            "SELECT lat_grid, lon_grid, detection_count, unique_networks, "
+            "avg_signal, max_signal FROM network_coverage_grid "
+            "ORDER BY lat_grid, lon_grid"
+        )
+        params: list[object] = []
+        if limit is not None:
+            query += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        cur = await conn.execute(query, tuple(params))
+        rows = await cur.fetchall()
+    return [dict(row) for row in rows]
+
+
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
     path = _db_path()
@@ -1020,6 +1074,60 @@ async def vacuum() -> None:
     await flush_health_records()
     async with _get_conn() as conn:
         await conn.execute("VACUUM")
+        await conn.commit()
+
+
+async def refresh_daily_detection_stats() -> None:
+    """Recreate the ``daily_detection_stats`` materialized view table."""
+    async with _get_conn() as conn:
+        await conn.execute("DROP TABLE IF EXISTS daily_detection_stats")
+        await conn.execute(
+            """
+            CREATE TABLE daily_detection_stats AS
+            SELECT
+                DATE(detection_timestamp) AS detection_date,
+                scan_session_id,
+                COUNT(*) AS total_detections,
+                COUNT(DISTINCT bssid) AS unique_networks,
+                AVG(signal_strength_dbm) AS avg_signal,
+                MIN(signal_strength_dbm) AS min_signal,
+                MAX(signal_strength_dbm) AS max_signal,
+                COUNT(DISTINCT channel) AS channels_used,
+                COUNT(
+                    CASE WHEN encryption_type = 'OPEN' THEN 1 END
+                ) AS open_networks,
+                COUNT(
+                    CASE WHEN encryption_type LIKE '%WEP%' THEN 1 END
+                ) AS wep_networks,
+                COUNT(
+                    CASE WHEN encryption_type LIKE '%WPA%' THEN 1 END
+                ) AS wpa_networks
+            FROM wifi_detections
+            GROUP BY DATE(detection_timestamp), scan_session_id
+            """
+        )
+        await conn.commit()
+
+
+async def refresh_network_coverage_grid() -> None:
+    """Recreate the ``network_coverage_grid`` materialized view table."""
+    async with _get_conn() as conn:
+        await conn.execute("DROP TABLE IF EXISTS network_coverage_grid")
+        await conn.execute(
+            """
+            CREATE TABLE network_coverage_grid AS
+            SELECT
+                ROUND(latitude, 4) AS lat_grid,
+                ROUND(longitude, 4) AS lon_grid,
+                COUNT(*) AS detection_count,
+                COUNT(DISTINCT bssid) AS unique_networks,
+                AVG(signal_strength_dbm) AS avg_signal,
+                MAX(signal_strength_dbm) AS max_signal
+            FROM wifi_detections
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+            GROUP BY ROUND(latitude, 4), ROUND(longitude, 4)
+            """
+        )
         await conn.commit()
 
 
