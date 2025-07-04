@@ -911,6 +911,84 @@ async def load_recent_suspicious(limit: int = 10) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+async def save_network_analytics(records: list[dict[str, Any]]) -> None:
+    """Insert or update rows in the ``network_analytics`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO network_analytics (
+                bssid, analysis_date, total_detections,
+                unique_locations, avg_signal_strength, max_signal_strength,
+                min_signal_strength, signal_variance, coverage_radius_meters,
+                mobility_score, encryption_changes, ssid_changes,
+                channel_changes, suspicious_score, last_analyzed
+            ) VALUES (
+                :bssid, :analysis_date, :total_detections,
+                :unique_locations, :avg_signal_strength, :max_signal_strength,
+                :min_signal_strength, :signal_variance, :coverage_radius_meters,
+                :mobility_score, :encryption_changes, :ssid_changes,
+                :channel_changes, :suspicious_score,
+                COALESCE(:last_analyzed, CURRENT_TIMESTAMP)
+            )
+            ON CONFLICT(bssid, analysis_date) DO UPDATE SET
+                total_detections=excluded.total_detections,
+                unique_locations=excluded.unique_locations,
+                avg_signal_strength=excluded.avg_signal_strength,
+                max_signal_strength=excluded.max_signal_strength,
+                min_signal_strength=excluded.min_signal_strength,
+                signal_variance=excluded.signal_variance,
+                coverage_radius_meters=excluded.coverage_radius_meters,
+                mobility_score=excluded.mobility_score,
+                encryption_changes=excluded.encryption_changes,
+                ssid_changes=excluded.ssid_changes,
+                channel_changes=excluded.channel_changes,
+                suspicious_score=excluded.suspicious_score,
+                last_analyzed=CURRENT_TIMESTAMP
+            """,
+            records,
+        )
+        await conn.commit()
+
+
+async def load_network_analytics(
+    bssid: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Return rows from ``network_analytics`` filtered by parameters."""
+    async with _get_conn() as conn:
+        query = (
+            "SELECT bssid, analysis_date, total_detections, unique_locations,"
+            " avg_signal_strength, max_signal_strength, min_signal_strength,"
+            " signal_variance, coverage_radius_meters, mobility_score,"
+            " encryption_changes, ssid_changes, channel_changes,"
+            " suspicious_score, last_analyzed FROM network_analytics"
+        )
+        params: list[object] = []
+        clauses: list[str] = []
+        if bssid:
+            clauses.append("bssid = ?")
+            params.append(bssid)
+        if start:
+            clauses.append("analysis_date >= ?")
+            params.append(start)
+        if end:
+            clauses.append("analysis_date <= ?")
+            params.append(end)
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY analysis_date"
+        if limit is not None:
+            query += " LIMIT ?"
+            params.append(limit)
+        cur = await conn.execute(query, tuple(params))
+        rows = await cur.fetchall()
+    return [dict(row) for row in rows]
+
+
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
     path = _db_path()

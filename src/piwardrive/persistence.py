@@ -107,4 +107,6 @@ __all__ = [
     "save_suspicious_activities",
     "count_suspicious_activities",
     "load_recent_suspicious",
+    "save_network_analytics",
+    "load_network_analytics",
 ]
