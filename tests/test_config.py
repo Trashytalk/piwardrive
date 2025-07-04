@@ -2,7 +2,6 @@
 
 import builtins
 import json
-import os
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -20,6 +19,12 @@ def setup_temp_config(tmp_path: Path) -> Path:
     config.CONFIG_PATH = str(config_path)
     config.PROFILES_DIR = str(tmp_path / "profiles")
     config.ACTIVE_PROFILE_FILE = str(tmp_path / "active_profile")
+    import piwardrive.core.config as core
+
+    core.CONFIG_DIR = config.CONFIG_DIR
+    core.CONFIG_PATH = config.CONFIG_PATH
+    core.PROFILES_DIR = config.PROFILES_DIR
+    core.ACTIVE_PROFILE_FILE = config.ACTIVE_PROFILE_FILE
     return config_path
 
 
@@ -309,3 +314,16 @@ def test_save_load_webhooks(tmp_path: Path) -> None:
     assert Path(cfg_file).is_file()
     loaded = config.load_config()
     assert loaded.notification_webhooks == ["http://x"]
+
+
+def test_profile_inheritance(tmp_path: Path) -> None:
+    setup_temp_config(tmp_path)
+    base = config.Config(mysql_host="db")
+    config.save_config(base, profile="base")
+    child_path = Path(config.PROFILES_DIR) / "child.json"
+    child_path.parent.mkdir(parents=True, exist_ok=True)
+    child_path.write_text('{"extends": "base", "mysql_user": "user"}')
+    config.set_active_profile("child")
+    loaded = config.load_config()
+    assert loaded.mysql_host == "db"
+    assert loaded.mysql_user == "user"

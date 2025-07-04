@@ -1,10 +1,37 @@
 version: "3.9"
 services:
-  piwardrive:
-    build: .
-    ports:
-      - "8000:8000"
-    command: piwardrive-webui
-    volumes:
-      - ~/.config/piwardrive:/root/.config/piwardrive
-      - ./webui/dist:/app/webui/dist
+    piwardrive:
+        build: .
+        ports:
+            - "8000:8000"
+        command: piwardrive-webui
+        depends_on:
+            - postgres
+            - redis
+            - grafana
+        volumes:
+            - ~/.config/piwardrive:/root/.config/piwardrive
+            - ./webui/dist:/app/webui/dist
+
+    postgres:
+        image: postgres:16
+        environment:
+            POSTGRES_DB: piwardrive
+            POSTGRES_USER: piwardrive
+            POSTGRES_PASSWORD: piwardrive
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+    redis:
+        image: redis:7
+        volumes:
+            - redis_data:/data
+
+    grafana:
+        image: grafana/grafana
+        ports:
+            - "3000:3000"
+
+volumes:
+    postgres_data:
+    redis_data:
