@@ -59,6 +59,9 @@ class DatabaseService:
     async def load_fingerprint_info(self) -> List[FingerprintInfo]:
         return await persistence.load_fingerprint_info()
 
+    async def save_gps_tracks(self, records: List[dict[str, Any]]) -> None:
+        await persistence.save_gps_tracks(records)
+
     async def get_table_counts(self) -> dict[str, int]:
         return await persistence.get_table_counts()
 

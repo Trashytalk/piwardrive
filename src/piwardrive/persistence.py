@@ -6,24 +6,24 @@ database-related helpers in a consistent namespace while allowing the core
 implementation to reside in the ``core`` package.
 """
 
-from dataclasses import asdict, dataclass
 import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import config
 from .core.persistence import *  # noqa: F401,F403
 from .core.persistence import (
+    ScanSession,
+    _acquire_conn,
     _db_path,
     _get_conn,
-    _acquire_conn,
     _release_conn,
-    shutdown_pool,
     backup_database,
     get_db_metrics,
-    ScanSession,
-    save_scan_session,
     get_scan_session,
     iter_scan_sessions,
+    save_scan_session,
+    shutdown_pool,
 )
 
 
@@ -103,4 +103,5 @@ __all__ = [
     "save_scan_session",
     "get_scan_session",
     "iter_scan_sessions",
+    "save_gps_tracks",
 ]

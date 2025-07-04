@@ -772,6 +772,28 @@ async def save_bluetooth_detections(records: list[dict[str, Any]]) -> None:
         await conn.commit()
 
 
+async def save_gps_tracks(records: list[dict[str, Any]]) -> None:
+    """Insert ``records`` into the ``gps_tracks`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO gps_tracks (
+                scan_session_id, timestamp, latitude, longitude,
+                altitude_meters, accuracy_meters, heading_degrees, speed_kmh,
+                satellite_count, hdop, vdop, pdop, fix_type
+            ) VALUES (
+                :scan_session_id, :timestamp, :latitude, :longitude,
+                :altitude_meters, :accuracy_meters, :heading_degrees, :speed_kmh,
+                :satellite_count, :hdop, :vdop, :pdop, :fix_type
+            )
+            """,
+            records,
+        )
+        await conn.commit()
+
+
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
     path = _db_path()
