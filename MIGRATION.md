@@ -13,5 +13,7 @@ imports continue to work.
 - `piwardrive/api/websockets` – WebSocket and SSE handlers
 
 The main `service.py` now imports these routers and includes them on the FastAPI
-application. Any custom integrations should switch to importing routes from the
-new packages, though old names remain for backward compatibility.
+application.  Authentication helpers and common utility functions moved to
+`api/auth/dependencies.py` and `api/common.py`.  Any custom integrations should
+switch to importing routes from the new packages, though old names remain for
+backward compatibility.
