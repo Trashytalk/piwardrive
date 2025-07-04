@@ -153,5 +153,49 @@ menu exposes the ``log_paths`` list from configuration so different logs can be 
 fly.  A helper
 ``jump_to_latest_error`` scrolls to the most recent line matching ``error_regex``.
 
+DetectionRateWidget
+~~~~~~~~~~~~~~~~~~~
+Displays the rate of detections collected by the analytics module.
+
+ThreatLevelWidget
+~~~~~~~~~~~~~~~~~
+Shows an overall threat level indicator derived from recent alerts.
+
+NetworkDensityWidget
+~~~~~~~~~~~~~~~~~~~~
+Visualizes the density of networks seen in the last scan window.
+
+DeviceClassificationWidget
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+Presents a small summary of device classification statistics.
+
+SuspiciousActivityWidget
+~~~~~~~~~~~~~~~~~~~~~~~~
+Lists recently detected suspicious activity records.
+
+AlertSummaryWidget
+~~~~~~~~~~~~~~~~~~
+Shows a simple count of alerts grouped by severity.
+
+ThreatMapWidget
+~~~~~~~~~~~~~~~
+Renders a miniature heatmap of threat locations.
+
+SecurityScoreWidget
+~~~~~~~~~~~~~~~~~~~
+Displays an aggregate security score based on analytics data.
+
+DatabaseHealthWidget
+~~~~~~~~~~~~~~~~~~~~
+Indicates whether the database is responding normally.
+
+ScannerStatusWidget
+~~~~~~~~~~~~~~~~~~~
+Reports if the local scanner service is running.
+
+SystemResourceWidget
+~~~~~~~~~~~~~~~~~~~~
+Shows current CPU, memory and disk utilization.
+
 .. note::
    Screenshots are not yet available for these widgets.

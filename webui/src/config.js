@@ -21,6 +21,17 @@ export const DEFAULT_CONFIG = {
   route_prefetch_interval: 3600,
   route_prefetch_lookahead: 5,
   widget_battery_status: false,
+  widget_detection_rate: false,
+  widget_threat_level: false,
+  widget_network_density: false,
+  widget_device_classification: false,
+  widget_suspicious_activity: false,
+  widget_alert_summary: false,
+  widget_threat_map: false,
+  widget_security_score: false,
+  widget_database_health: false,
+  widget_scanner_status: false,
+  widget_system_resource: false,
   health_poll_interval: 10,
   gps_movement_threshold: 1.0,
   db_cache_size: 128,
@@ -47,9 +58,10 @@ function _profilePath(name) {
 
 export function listProfiles() {
   try {
-    return fs.readdirSync(PROFILES_DIR)
-      .filter(f => f.endsWith('.json'))
-      .map(f => path.basename(f, '.json'));
+    return fs
+      .readdirSync(PROFILES_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => path.basename(f, '.json'));
   } catch {
     return [];
   }

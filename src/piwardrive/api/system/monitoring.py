@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
+
 import psutil
 
-from piwardrive import vehicle_sensors
-from piwardrive import service
+from piwardrive import service, vehicle_sensors
 from piwardrive.database_service import db_service
 from piwardrive.utils import MetricsResult
 
@@ -31,6 +31,13 @@ async def collect_widget_metrics() -> service.WidgetMetrics:
     except Exception:  # pragma: no cover - optional dependency
         service.logging.debug("battery info unavailable", exc_info=True)
 
+    detection_rate = handshakes / max(len(aps), 1)
+    threat_level = (
+        "high" if suspicious_count > 10 else "medium" if suspicious_count > 0 else "low"
+    )
+    network_density = len(aps)
+    security_score = max(0.0, 100 - suspicious_count * 5)
+
     return {
         "cpu_temp": service.get_cpu_temp(),
         "bssid_count": len(aps),
@@ -42,6 +49,10 @@ async def collect_widget_metrics() -> service.WidgetMetrics:
         "rx_kbps": rx,
         "tx_kbps": tx,
         "suspicious_activity_count": suspicious_count,
+        "detection_rate": detection_rate,
+        "threat_level": threat_level,
+        "network_density": network_density,
+        "security_score": security_score,
         "battery_percent": batt_percent,
         "battery_plugged": batt_plugged,
         "vehicle_speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),

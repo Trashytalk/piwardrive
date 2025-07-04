@@ -102,6 +102,17 @@ class Config:
     route_prefetch_interval: int = ROUTE_PREFETCH_INTERVAL  # noqa: V107
     route_prefetch_lookahead: int = ROUTE_PREFETCH_LOOKAHEAD  # noqa: V107
     widget_battery_status: bool = False  # noqa: V107
+    widget_detection_rate: bool = False  # noqa: V107
+    widget_threat_level: bool = False  # noqa: V107
+    widget_network_density: bool = False  # noqa: V107
+    widget_device_classification: bool = False  # noqa: V107
+    widget_suspicious_activity: bool = False  # noqa: V107
+    widget_alert_summary: bool = False  # noqa: V107
+    widget_threat_map: bool = False  # noqa: V107
+    widget_security_score: bool = False  # noqa: V107
+    widget_database_health: bool = False  # noqa: V107
+    widget_scanner_status: bool = False  # noqa: V107
+    widget_system_resource: bool = False  # noqa: V107
     ui_font_size: int = 16  # noqa: V107
     admin_password_hash: str = ""  # noqa: V107
     remote_sync_url: str = ""  # noqa: V107
@@ -187,6 +198,17 @@ class FileConfigModel(BaseModel):
     route_prefetch_interval: Optional[int] = Field(default=None, ge=1)
     route_prefetch_lookahead: Optional[int] = Field(default=None, ge=1)
     widget_battery_status: Optional[bool] = None
+    widget_detection_rate: Optional[bool] = None
+    widget_threat_level: Optional[bool] = None
+    widget_network_density: Optional[bool] = None
+    widget_device_classification: Optional[bool] = None
+    widget_suspicious_activity: Optional[bool] = None
+    widget_alert_summary: Optional[bool] = None
+    widget_threat_map: Optional[bool] = None
+    widget_security_score: Optional[bool] = None
+    widget_database_health: Optional[bool] = None
+    widget_scanner_status: Optional[bool] = None
+    widget_system_resource: Optional[bool] = None
     log_paths: List[str] = Field(default_factory=list)
     restart_services: List[str] = Field(default_factory=list)
     ui_font_size: Optional[int] = Field(default=None, ge=1)
@@ -252,6 +274,17 @@ class ConfigModel(FileConfigModel):
     notify_disk_percent: float = Field(default=DEFAULTS["notify_disk_percent"], ge=0)
     baseline_history_days: int = Field(default=DEFAULTS["baseline_history_days"], ge=1)
     baseline_threshold: float = Field(default=DEFAULTS["baseline_threshold"], ge=0)
+    widget_detection_rate: bool = DEFAULTS["widget_detection_rate"]
+    widget_threat_level: bool = DEFAULTS["widget_threat_level"]
+    widget_network_density: bool = DEFAULTS["widget_network_density"]
+    widget_device_classification: bool = DEFAULTS["widget_device_classification"]
+    widget_suspicious_activity: bool = DEFAULTS["widget_suspicious_activity"]
+    widget_alert_summary: bool = DEFAULTS["widget_alert_summary"]
+    widget_threat_map: bool = DEFAULTS["widget_threat_map"]
+    widget_security_score: bool = DEFAULTS["widget_security_score"]
+    widget_database_health: bool = DEFAULTS["widget_database_health"]
+    widget_scanner_status: bool = DEFAULTS["widget_scanner_status"]
+    widget_system_resource: bool = DEFAULTS["widget_system_resource"]
     mysql_host: str = DEFAULTS["mysql_host"]
     mysql_port: int = Field(default=DEFAULTS["mysql_port"], ge=1)
     mysql_user: str = DEFAULTS["mysql_user"]
@@ -466,6 +499,17 @@ class AppConfig:
     route_prefetch_interval: int = DEFAULTS["route_prefetch_interval"]
     route_prefetch_lookahead: int = DEFAULTS["route_prefetch_lookahead"]
     widget_battery_status: bool = DEFAULTS["widget_battery_status"]
+    widget_detection_rate: bool = DEFAULTS["widget_detection_rate"]
+    widget_threat_level: bool = DEFAULTS["widget_threat_level"]
+    widget_network_density: bool = DEFAULTS["widget_network_density"]
+    widget_device_classification: bool = DEFAULTS["widget_device_classification"]
+    widget_suspicious_activity: bool = DEFAULTS["widget_suspicious_activity"]
+    widget_alert_summary: bool = DEFAULTS["widget_alert_summary"]
+    widget_threat_map: bool = DEFAULTS["widget_threat_map"]
+    widget_security_score: bool = DEFAULTS["widget_security_score"]
+    widget_database_health: bool = DEFAULTS["widget_database_health"]
+    widget_scanner_status: bool = DEFAULTS["widget_scanner_status"]
+    widget_system_resource: bool = DEFAULTS["widget_system_resource"]
     ui_font_size: int = DEFAULTS["ui_font_size"]
     admin_password_hash: str = DEFAULTS.get("admin_password_hash", "")
     remote_sync_url: str = DEFAULTS["remote_sync_url"]

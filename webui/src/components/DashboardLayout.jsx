@@ -3,7 +3,24 @@ import BatteryStatus from './BatteryStatus.jsx';
 import ServiceStatus from './ServiceStatus.jsx';
 import HandshakeCount from './HandshakeCount.jsx';
 import SignalStrength from './SignalStrength.jsx';
-import NetworkThroughput from './NetworkThroughput.jsx';
+import {
+  DatabaseHealthWidget,
+  ScannerStatusWidget,
+  SystemResourceWidget,
+  NetworkThroughputWidget,
+} from './PerformanceWidgets.jsx';
+import {
+  DetectionRateWidget,
+  ThreatLevelWidget,
+  NetworkDensityWidget,
+  DeviceClassificationWidget,
+} from './AnalyticsWidgets.jsx';
+import {
+  SuspiciousActivityWidget,
+  AlertSummaryWidget,
+  ThreatMapWidget,
+  SecurityScoreWidget,
+} from './SecurityWidgets.jsx';
 import CPUTempGraph from './CPUTempGraph.jsx';
 import LoRaScan from './LoRaScan.jsx';
 import DBStats from './DBStats.jsx';
@@ -22,7 +39,18 @@ const COMPONENTS = {
   ServiceStatusWidget: ServiceStatus,
   HandshakeCounterWidget: HandshakeCount,
   SignalStrengthWidget: SignalStrength,
-  NetworkThroughputWidget: NetworkThroughput,
+  NetworkThroughputWidget: NetworkThroughputWidget,
+  DatabaseHealthWidget: DatabaseHealthWidget,
+  ScannerStatusWidget: ScannerStatusWidget,
+  SystemResourceWidget: SystemResourceWidget,
+  DetectionRateWidget: DetectionRateWidget,
+  ThreatLevelWidget: ThreatLevelWidget,
+  NetworkDensityWidget: NetworkDensityWidget,
+  DeviceClassificationWidget: DeviceClassificationWidget,
+  SuspiciousActivityWidget: SuspiciousActivityWidget,
+  AlertSummaryWidget: AlertSummaryWidget,
+  ThreatMapWidget: ThreatMapWidget,
+  SecurityScoreWidget: SecurityScoreWidget,
   CPUTempGraphWidget: CPUTempGraph,
   LoRaScanWidget: LoRaScan,
   GPSStatusWidget: GPSStatus,

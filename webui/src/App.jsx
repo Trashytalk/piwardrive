@@ -1,28 +1,27 @@
 // Vite will bundle any components that match this glob so plugin widgets can be
 // loaded dynamically by name. Plugin authors should place React components under
 // `webui/src/components` with file names matching the Python class names.
-import { useEffect, useState } from "react";
-import { reportError } from "./exceptionHandler.js";
-import BatteryStatus from "./components/BatteryStatus.jsx";
-import ServiceStatus from "./components/ServiceStatus.jsx";
-import HandshakeCount from "./components/HandshakeCount.jsx";
-import SignalStrength from "./components/SignalStrength.jsx";
-import NetworkThroughput from "./components/NetworkThroughput.jsx";
-import CPUTempGraph from "./components/CPUTempGraph.jsx";
-import StatsDashboard from "./components/StatsDashboard.jsx";
-import VehicleStats from "./components/VehicleStats.jsx";
-import GeofenceEditor from "./components/GeofenceEditor.jsx";
-import SettingsScreen from "./components/SettingsScreen.jsx";
-import MapScreen from "./components/MapScreen.jsx";
-import Orientation from "./components/Orientation.jsx";
-import VehicleInfo from "./components/VehicleInfo.jsx";
-import VectorTileCustomizer from "./components/VectorTileCustomizer.jsx";
-
+import { useEffect, useState } from 'react';
+import { reportError } from './exceptionHandler.js';
+import BatteryStatus from './components/BatteryStatus.jsx';
+import ServiceStatus from './components/ServiceStatus.jsx';
+import HandshakeCount from './components/HandshakeCount.jsx';
+import SignalStrength from './components/SignalStrength.jsx';
+import { NetworkThroughputWidget as NetworkThroughput } from './components/PerformanceWidgets.jsx';
+import CPUTempGraph from './components/CPUTempGraph.jsx';
+import StatsDashboard from './components/StatsDashboard.jsx';
+import VehicleStats from './components/VehicleStats.jsx';
+import GeofenceEditor from './components/GeofenceEditor.jsx';
+import SettingsScreen from './components/SettingsScreen.jsx';
+import MapScreen from './components/MapScreen.jsx';
+import Orientation from './components/Orientation.jsx';
+import VehicleInfo from './components/VehicleInfo.jsx';
+import VectorTileCustomizer from './components/VectorTileCustomizer.jsx';
 
 export default function App() {
   const [status, setStatus] = useState([]);
   const [metrics, setMetrics] = useState(null);
-  const [logs, setLogs] = useState("");
+  const [logs, setLogs] = useState('');
   const [plugins, setPlugins] = useState([]);
   const [widgets, setWidgets] = useState([]);
   const [orientationData, setOrientationData] = useState(null);
@@ -30,7 +29,7 @@ export default function App() {
   const [configData, setConfigData] = useState(null);
 
   const handleChange = (key, value) => {
-    setConfigData(prev => ({ ...prev, [key]: value }));
+    setConfigData((prev) => ({ ...prev, [key]: value }));
   };
 
   const saveConfig = () => {
@@ -39,13 +38,13 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(configData),
     })
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setConfigData)
       .catch(() => {});
   };
 
   useEffect(() => {
-    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     let ws;
     let es;
     let ping;
@@ -61,7 +60,7 @@ export default function App() {
     };
 
     const startSse = () => {
-      es = new EventSource("/sse/status");
+      es = new EventSource('/sse/status');
       es.onmessage = (ev) => handleData(ev.data);
       es.onerror = () => {
         es.close();
@@ -77,7 +76,7 @@ export default function App() {
           if (ping) clearInterval(ping);
           ping = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
-              ws.send("ping");
+              ws.send('ping');
             }
           }, 15000);
         };
@@ -107,18 +106,18 @@ export default function App() {
       startSse();
     }
 
-    fetch("/status")
+    fetch('/status')
       .then((r) => r.json())
       .then(setStatus);
-    fetch("/widget-metrics")
+    fetch('/widget-metrics')
       .then((r) => r.json())
       .then(setMetrics);
-    fetch("/api/plugins")
+    fetch('/api/plugins')
       .then((r) => r.json())
       .then(setPlugins);
-    fetch("/logs?lines=20")
+    fetch('/logs?lines=20')
       .then((r) => r.json())
-      .then((d) => setLogs(d.lines.join("\n")));
+      .then((d) => setLogs(d.lines.join('\n')));
     return () => {
       if (ping) clearInterval(ping);
       if (ws) ws.close();
