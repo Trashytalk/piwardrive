@@ -557,6 +557,12 @@ async def custom_docs(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("api-docs.html", {"request": request})
 
 
+@app.get("/redoc", include_in_schema=False)
+async def redoc_docs(request: Request) -> HTMLResponse:
+    """Serve ReDoc documentation for the API."""
+    return templates.TemplateResponse("redoc.html", {"request": request})
+
+
 def custom_openapi() -> dict[str, typing.Any]:
     """Return customized OpenAPI schema with security settings."""
     if app.openapi_schema:
@@ -688,7 +694,28 @@ async def _check_auth(token: str = SECURITY_DEP) -> None:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
 
 
-@POST("/token")
+@POST(
+    "/token",
+    response_model=TokenResponse,
+    summary="Obtain bearer token",
+    description=(
+        "Authenticate using the OAuth2 password flow and return a short lived "
+        "bearer token."
+    ),
+    responses={
+        200: {
+            "description": "Bearer token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "<token>",
+                        "token_type": "bearer",
+                    }
+                }
+            },
+        }
+    },
+)
 async def token_login(
     form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
 ) -> TokenResponse:
@@ -733,7 +760,29 @@ async def logout(token: str = SECURITY_DEP) -> LogoutResponse:
     return {"logout": True}
 
 
-@GET("/status")
+@GET(
+    "/status",
+    response_model=list[HealthRecordDict],
+    summary="Recent health records",
+    description="Return the most recent CPU and memory usage metrics.",
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "timestamp": "2024-01-01T00:00:00Z",
+                            "cpu_temp": 55.2,
+                            "cpu_percent": 12.5,
+                            "memory_percent": 35.0,
+                            "disk_percent": 40.0,
+                        }
+                    ]
+                }
+            }
+        }
+    },
+)
 async def get_status(
     limit: int = 5, _auth: User | None = AUTH_DEP
 ) -> list[HealthRecordDict]:
