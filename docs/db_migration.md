@@ -3,6 +3,14 @@
 The new persistence layer introduces connection pooling and optional sharding.
 Existing databases remain compatible.
 
+## Connection Pool Migration
+
+`DatabaseManager` now manages pooled adapters for SQLite, PostgreSQL and MySQL.
+Existing code using the old single-connection pattern should simply call
+``DatabaseManager.connect()`` once during startup and ``close()`` on shutdown.
+Adapters will handle connection reuse transparently. Metrics are available via
+``DatabaseManager.get_metrics()`` for monitoring pool health.
+
 ## Migrating Existing Installations
 
 1. Stop all running PiWardrive services to flush buffers:

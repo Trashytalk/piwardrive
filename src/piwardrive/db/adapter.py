@@ -24,3 +24,7 @@ class DatabaseAdapter:
     async def transaction(self) -> AsyncIterator[None]:
         """Context manager for transactions."""
         raise NotImplementedError
+
+    def get_metrics(self) -> dict[str, int]:
+        """Return connection metrics if available."""
+        return {}
