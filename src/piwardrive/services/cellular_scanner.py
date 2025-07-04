@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Iterable, List
 
 from piwardrive import persistence, utils
+from piwardrive.services.stream_processor import stream_processor
 from piwardrive.sigint_suite.cellular.tower_scanner import async_scan_towers
 
 
@@ -69,6 +70,7 @@ async def record_cellular_detections(towers: Iterable[object]) -> None:
         for t in towers
     ]
     await persistence.save_cellular_detections(records)
+    stream_processor.publish_cellular(records)
 
 
 async def scan_and_save(timeout: int | None = None) -> List[object]:

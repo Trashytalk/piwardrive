@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Iterable, List
 
 from piwardrive import persistence, utils
+from piwardrive.services.stream_processor import stream_processor
 from piwardrive.sigint_suite.bluetooth.scanner import async_scan_bluetooth
 from piwardrive.sigint_suite.models import BluetoothDevice
 
@@ -70,6 +71,7 @@ async def record_bluetooth_detections(devices: Iterable[BluetoothDevice]) -> Non
         for dev in devices
     ]
     await persistence.save_bluetooth_detections(records)
+    stream_processor.publish_bluetooth(records)
 
 
 async def scan_and_save(timeout: int | None = None) -> List[BluetoothDevice]:

@@ -7,13 +7,14 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 
 from piwardrive import persistence, service
-from piwardrive.services import network_fingerprinting, security_analyzer
 from piwardrive.models import (
     AccessPoint,
     ErrorResponse,
     WiFiScanRequest,
     WiFiScanResponse,
 )
+from piwardrive.services import network_fingerprinting, security_analyzer
+from piwardrive.services.stream_processor import stream_processor
 from piwardrive.sigint_suite.wifi.scanner import async_scan_wifi
 
 router = APIRouter(prefix="/wifi", tags=["wifi"])
@@ -102,6 +103,7 @@ async def scan_wifi_get(
     await persistence.save_wifi_detections(records)
     await network_fingerprinting.fingerprint_wifi_records(records)
     await security_analyzer.analyze_wifi_records(records)
+    stream_processor.publish_wifi(records)
     return WiFiScanResponse(access_points=aps)
 
 
@@ -187,4 +189,5 @@ async def scan_wifi_post(
     await persistence.save_wifi_detections(records)
     await network_fingerprinting.fingerprint_wifi_records(records)
     await security_analyzer.analyze_wifi_records(records)
+    stream_processor.publish_wifi(records)
     return WiFiScanResponse(access_points=aps)
