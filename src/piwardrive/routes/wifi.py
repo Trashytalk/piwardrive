@@ -32,6 +32,31 @@ async def scan_wifi_get(
     nets = await async_scan_wifi(interface=interface, timeout=timeout)
     aps = [AccessPoint.model_validate(n.model_dump()) for n in nets]
     timestamp = datetime.utcnow().isoformat()
+    pos = service.gps_client.get_position()
+    acc = service.get_gps_accuracy()
+    fix = service.get_gps_fix_quality()
+    lat = lon = None
+    if pos:
+        lat, lon = pos
+        await persistence.save_gps_tracks(
+            [
+                {
+                    "scan_session_id": "adhoc",
+                    "timestamp": timestamp,
+                    "latitude": float(lat),
+                    "longitude": float(lon),
+                    "altitude_meters": None,
+                    "accuracy_meters": acc,
+                    "heading_degrees": None,
+                    "speed_kmh": None,
+                    "satellite_count": None,
+                    "hdop": None,
+                    "vdop": None,
+                    "pdop": None,
+                    "fix_type": fix,
+                }
+            ]
+        )
     records = [
         {
             "scan_session_id": "adhoc",
@@ -50,8 +75,8 @@ async def scan_wifi_get(
             "vendor_oui": ap.bssid[:8].upper() if ap.bssid else None,
             "vendor_name": ap.vendor,
             "device_type": None,
-            "latitude": None,
-            "longitude": None,
+            "latitude": lat,
+            "longitude": lon,
             "altitude_meters": None,
             "accuracy_meters": None,
             "heading_degrees": ap.heading,
@@ -90,6 +115,31 @@ async def scan_wifi_post(
     nets = await async_scan_wifi(interface=req.interface, timeout=req.timeout)
     aps = [AccessPoint.model_validate(n.model_dump()) for n in nets]
     timestamp = datetime.utcnow().isoformat()
+    pos = service.gps_client.get_position()
+    acc = service.get_gps_accuracy()
+    fix = service.get_gps_fix_quality()
+    lat = lon = None
+    if pos:
+        lat, lon = pos
+        await persistence.save_gps_tracks(
+            [
+                {
+                    "scan_session_id": "adhoc",
+                    "timestamp": timestamp,
+                    "latitude": float(lat),
+                    "longitude": float(lon),
+                    "altitude_meters": None,
+                    "accuracy_meters": acc,
+                    "heading_degrees": None,
+                    "speed_kmh": None,
+                    "satellite_count": None,
+                    "hdop": None,
+                    "vdop": None,
+                    "pdop": None,
+                    "fix_type": fix,
+                }
+            ]
+        )
     records = [
         {
             "scan_session_id": "adhoc",
@@ -108,8 +158,8 @@ async def scan_wifi_post(
             "vendor_oui": ap.bssid[:8].upper() if ap.bssid else None,
             "vendor_name": ap.vendor,
             "device_type": None,
-            "latitude": None,
-            "longitude": None,
+            "latitude": lat,
+            "longitude": lon,
             "altitude_meters": None,
             "accuracy_meters": None,
             "heading_degrees": ap.heading,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Iterable, List
 
-from piwardrive import persistence
+from piwardrive import persistence, utils
 from piwardrive.sigint_suite.bluetooth.scanner import async_scan_bluetooth
 from piwardrive.sigint_suite.models import BluetoothDevice
 
@@ -16,6 +16,31 @@ async def scan_bluetooth_devices(timeout: int | None = None) -> List[BluetoothDe
 async def record_bluetooth_detections(devices: Iterable[BluetoothDevice]) -> None:
     """Persist ``devices`` to the ``bluetooth_detections`` table."""
     timestamp = datetime.utcnow().isoformat()
+    pos = utils.gps_client.get_position()
+    acc = utils.get_gps_accuracy()
+    fix = utils.get_gps_fix_quality()
+    lat = lon = None
+    if pos:
+        lat, lon = pos
+        await persistence.save_gps_tracks(
+            [
+                {
+                    "scan_session_id": "adhoc",
+                    "timestamp": timestamp,
+                    "latitude": float(lat),
+                    "longitude": float(lon),
+                    "altitude_meters": None,
+                    "accuracy_meters": acc,
+                    "heading_degrees": None,
+                    "speed_kmh": None,
+                    "satellite_count": None,
+                    "hdop": None,
+                    "vdop": None,
+                    "pdop": None,
+                    "fix_type": fix,
+                }
+            ]
+        )
     records = [
         {
             "scan_session_id": "adhoc",
@@ -32,8 +57,8 @@ async def record_bluetooth_detections(devices: Iterable[BluetoothDevice]) -> Non
             "supported_services": None,
             "is_connectable": False,
             "is_paired": False,
-            "latitude": getattr(dev, "lat", None),
-            "longitude": getattr(dev, "lon", None),
+            "latitude": getattr(dev, "lat", lat),
+            "longitude": getattr(dev, "lon", lon),
             "altitude_meters": None,
             "accuracy_meters": None,
             "heading_degrees": None,
