@@ -28,6 +28,7 @@ from piwardrive.api.common import (
 )
 from piwardrive.api.health import router as health_router
 from piwardrive.api.maintenance_jobs import router as maintenance_jobs_router
+from piwardrive.api.monitoring import router as monitoring_router
 from piwardrive.api.system import collect_widget_metrics as _collect_widget_metrics
 from piwardrive.api.system import router as system_router
 from piwardrive.api.websockets import router as ws_router
@@ -64,6 +65,7 @@ app.include_router(cellular_routes.router)
 app.include_router(analytics_routes.router)
 app.include_router(jobs_router)
 app.include_router(maintenance_jobs_router)
+app.include_router(monitoring_router)
 app.include_router(security_routes.router)
 app.include_router(auth_router)
 app.include_router(health_router)
