@@ -13,3 +13,8 @@ Common endpoints include:
 | `/export/scans`        | GET     | Export scan data                 |
 
 See `docs/api.md` for the complete OpenAPI specification and advanced examples.
+
+Interactive API documentation is available when running the server:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
