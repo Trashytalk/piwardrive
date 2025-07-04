@@ -104,4 +104,7 @@ __all__ = [
     "get_scan_session",
     "iter_scan_sessions",
     "save_gps_tracks",
+    "save_suspicious_activities",
+    "count_suspicious_activities",
+    "load_recent_suspicious",
 ]

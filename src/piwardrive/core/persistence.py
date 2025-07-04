@@ -857,6 +857,60 @@ async def save_network_fingerprints(records: list[dict[str, Any]]) -> None:
         await conn.commit()
 
 
+async def save_suspicious_activities(records: list[dict[str, Any]]) -> None:
+    """Insert ``records`` into the ``suspicious_activities`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO suspicious_activities (
+                scan_session_id, activity_type, severity,
+                target_bssid, target_ssid, evidence, description,
+                detected_at, latitude, longitude, false_positive, analyst_notes
+            ) VALUES (
+                :scan_session_id, :activity_type, :severity,
+                :target_bssid, :target_ssid, :evidence, :description,
+                :detected_at, :latitude, :longitude, :false_positive, :analyst_notes
+            )
+            """,
+            records,
+        )
+        await conn.commit()
+
+
+async def count_suspicious_activities(since: str | None = None) -> int:
+    """Return number of suspicious activities optionally since ``since``."""
+    async with _get_conn() as conn:
+        if since:
+            cur = await conn.execute(
+                "SELECT COUNT(*) FROM suspicious_activities WHERE detected_at >= ?",
+                (since,),
+            )
+        else:
+            cur = await conn.execute("SELECT COUNT(*) FROM suspicious_activities")
+        row = await cur.fetchone()
+    return int(row[0]) if row else 0
+
+
+async def load_recent_suspicious(limit: int = 10) -> list[dict[str, Any]]:
+    """Return most recent suspicious activity rows."""
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            """
+            SELECT id, scan_session_id, activity_type, severity,
+                   target_bssid, target_ssid, evidence, description,
+                   detected_at, latitude, longitude, false_positive, analyst_notes
+            FROM suspicious_activities
+            ORDER BY detected_at DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+        rows = await cur.fetchall()
+    return [dict(row) for row in rows]
+
+
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
     path = _db_path()
