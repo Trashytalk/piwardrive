@@ -3,6 +3,7 @@
 import base64
 import binascii
 import hashlib
+import bcrypt
 import os
 import re
 import secrets
@@ -43,14 +44,17 @@ def sanitize_filename(filename: str) -> str:
 
 
 def hash_password(password: str) -> str:
-    """Return a PBKDF2-HMAC-SHA256 hash of ``password``."""
-    salt = os.urandom(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100_000)
-    return base64.b64encode(salt + digest).decode()
+    """Return a bcrypt hash of ``password``."""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Return ``True`` if ``password`` matches ``hashed``."""
+    """Return ``True`` if ``password`` matches ``hashed``. Supports legacy PBKDF2 hashes."""
+    if hashed.startswith("$2"):
+        try:
+            return bcrypt.checkpw(password.encode(), hashed.encode())
+        except ValueError:
+            return False
     try:
         data = base64.b64decode(hashed)
         salt, digest = data[:16], data[16:]
