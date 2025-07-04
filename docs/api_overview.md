@@ -11,6 +11,9 @@ Common endpoints include:
 | `/wifi/scan/{scan_id}` | GET     | Retrieve results for a scan      |
 | `/config`              | GET/PUT | Read or update configuration     |
 | `/export/scans`        | GET     | Export scan data                 |
+| `/analytics/daily-stats` | GET | Daily detection statistics |
+| `/analytics/coverage-grid` | GET | Network coverage grid |
+| `/security/suspicious` | GET | List suspicious activities |
 
 See `docs/api.md` for the complete OpenAPI specification and advanced examples.
 
@@ -18,3 +21,6 @@ Interactive API documentation is available when running the server:
 
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
+
+For a simple demonstration of the detection services see
+`examples/security_analysis_example.py`.

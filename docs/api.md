@@ -1034,6 +1034,8 @@ query GetScanResults($scanId: String!) {
 -   `POST /api/v1/analytics-db/fingerprints` – add a fingerprint record
 -   `GET /api/v1/analytics-db/networks` – retrieve analytics metrics
 -   `GET /api/v1/security/suspicious` – list suspicious activity records
+-   `GET /api/v1/analytics/coverage-grid` – spatial coverage grid
+-   `GET /api/v1/analytics/daily-stats` – daily detection stats
 
 ## Testing the API
 
