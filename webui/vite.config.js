@@ -18,11 +18,20 @@ export default defineConfig({
           {
             src: 'favicon.svg',
             sizes: 'any',
-            type: 'image/svg+xml'
-          }
-        ]
-      }
-    })
+            type: 'image/svg+xml',
+          },
+        ],
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*tile\.openstreetmap\.org\/.*$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'tiles' },
+          },
+        ],
+      },
+    }),
   ],
   server: {
     proxy: {
@@ -36,18 +45,18 @@ export default defineConfig({
       '/service': 'http://localhost:8000',
       '/ws': {
         target: 'ws://localhost:8000',
-        ws: true
-      }
-    }
+        ws: true,
+      },
+    },
   },
   build: {
-    sourcemap: true
+    sourcemap: true,
   },
   test: {
     environment: 'jsdom',
     globals: true,
     coverage: {
-      reporter: ['text', 'lcov', 'json-summary']
-    }
-  }
+      reporter: ['text', 'lcov', 'json-summary'],
+    },
+  },
 });
