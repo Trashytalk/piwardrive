@@ -36,6 +36,7 @@ from piwardrive.routes import analytics as analytics_routes
 from piwardrive.routes import bluetooth as bluetooth_routes
 from piwardrive.routes import cellular as cellular_routes
 from piwardrive.routes import security as security_routes
+from piwardrive.routes import websocket as websocket_routes
 from piwardrive.routes import wifi as wifi_routes
 
 app = FastAPI()
@@ -69,6 +70,7 @@ app.include_router(system_router)
 app.include_router(analytics_router)
 app.include_router(analysis_queries_router)
 app.include_router(ws_router)
+app.include_router(websocket_routes.router)
 
 __all__ = [
     "app",
