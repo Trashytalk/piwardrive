@@ -202,3 +202,76 @@ class CellularScanResponse(BaseModel):
             }
         },
     )
+
+
+class BluetoothDetection(BaseModel):
+    """Row in ``bluetooth_detections`` table."""
+
+    id: int | None = Field(None, description="Row ID")
+    scan_session_id: str = Field(..., description="Scan session ID")
+    detection_timestamp: str = Field(..., description="Timestamp ISO format")
+    mac_address: str = Field(..., description="Device MAC address")
+    device_name: str | None = Field(None, description="Bluetooth name")
+    rssi_dbm: int | None = Field(None, description="Signal strength")
+    latitude: float | None = Field(None, description="Latitude")
+    longitude: float | None = Field(None, description="Longitude")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CellularDetection(BaseModel):
+    """Row in ``cellular_detections`` table."""
+
+    id: int | None = Field(None, description="Row ID")
+    scan_session_id: str = Field(..., description="Scan session ID")
+    detection_timestamp: str = Field(..., description="Timestamp ISO format")
+    cell_id: int | None = Field(None, description="Cell ID")
+    lac: int | None = Field(None, description="Location area code")
+    mcc: int | None = Field(None, description="Mobile country code")
+    mnc: int | None = Field(None, description="Mobile network code")
+    signal_strength_dbm: int | None = Field(None, description="Signal strength")
+    latitude: float | None = Field(None, description="Latitude")
+    longitude: float | None = Field(None, description="Longitude")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NetworkFingerprint(BaseModel):
+    """Fingerprint entry for a Wi-Fi network."""
+
+    id: int | None = Field(None, description="Row ID")
+    bssid: str = Field(..., description="BSSID")
+    fingerprint_hash: str = Field(..., description="Fingerprint hash")
+    classification: str | None = Field(None, description="Classification")
+    risk_level: str | None = Field(None, description="Risk level")
+    tags: str | None = Field(None, description="Tags JSON")
+    created_at: str | None = Field(None, description="Creation time")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SuspiciousActivity(BaseModel):
+    """Recorded suspicious network activity."""
+
+    id: int | None = Field(None, description="Row ID")
+    scan_session_id: str = Field(..., description="Scan session ID")
+    activity_type: str = Field(..., description="Type of activity")
+    severity: str = Field(..., description="Severity level")
+    description: str | None = Field(None, description="Description")
+    detected_at: str = Field(..., description="Timestamp ISO format")
+    latitude: float | None = Field(None, description="Latitude")
+    longitude: float | None = Field(None, description="Longitude")
+    analyst_notes: str | None = Field(None, description="Analyst notes")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NetworkAnalyticsRecord(BaseModel):
+    """Daily analytics metrics for a BSSID."""
+
+    bssid: str = Field(..., description="BSSID")
+    analysis_date: str = Field(..., description="Date")
+    total_detections: int | None = Field(None, description="Number of detections")
+    suspicious_score: float | None = Field(None, description="Suspicious score")
+
+    model_config = ConfigDict(from_attributes=True)
