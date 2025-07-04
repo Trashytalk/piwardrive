@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "piwardrive.fullname" . }}
+  labels:
+    app: {{ include "piwardrive.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "piwardrive.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "piwardrive.name" . }}
+    spec:
+      containers:
+        - name: piwardrive
+          image: {{ .Values.image }}
+          ports:
+            - containerPort: 8000
