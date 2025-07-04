@@ -40,6 +40,12 @@ names).
 Use :func:`utils.report_error` to surface exceptions consistently. It logs the
 message and displays a dialog via the running application if available.
 
+The diagnostics module now integrates with the unified error handling system.
+Failures raise subclasses of :class:`piwardrive.exceptions.PiWardriveError` and
+are logged using the structured logger with a correlation identifier. This
+enables easier debugging of background tasks such as log uploads or database
+maintenance.
+
 Profiling can be enabled by setting ``PW_PROFILE=1``. When active, a
 ``profile`` section is added to the system report and a summary is
 logged on exit.  Set ``PW_PROFILE_CALLGRIND=/tmp/out.callgrind`` to

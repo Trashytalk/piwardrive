@@ -599,6 +599,12 @@ async def custom_docs(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("api-docs.html", {"request": request})
 
 
+@app.get("/redoc", include_in_schema=False)
+async def redoc_docs(request: Request) -> HTMLResponse:
+    """Serve ReDoc documentation for the API."""
+    return templates.TemplateResponse("redoc.html", {"request": request})
+
+
 def custom_openapi() -> dict[str, typing.Any]:
     """Return customized OpenAPI schema with security settings."""
     if app.openapi_schema:
@@ -737,7 +743,28 @@ async def _check_auth(token: str = SECURITY_DEP) -> User:
     return user
 
 
-@POST("/token")
+@POST(
+    "/token",
+    response_model=TokenResponse,
+    summary="Obtain bearer token",
+    description=(
+        "Authenticate using the OAuth2 password flow and return a short lived "
+        "bearer token."
+    ),
+    responses={
+        200: {
+            "description": "Bearer token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "<token>",
+                        "token_type": "bearer",
+                    }
+                }
+            },
+        }
+    },
+)
 async def token_login(
     form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
 ) -> TokenResponse:
