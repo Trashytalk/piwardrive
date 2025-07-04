@@ -151,3 +151,54 @@ class ErrorResponse(BaseModel):
         from_attributes=True,
         json_schema_extra={"example": {"code": "404", "message": "Not found"}},
     )
+
+
+class CellularScanRequest(BaseModel):
+    """Parameters for initiating a cellular scan."""
+
+    timeout: int | None = Field(
+        None,
+        description="Optional timeout in seconds for the scan process",
+        examples=[10],
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CellTower(BaseModel):
+    """Information about a discovered cellular tower."""
+
+    tower_id: str = Field(..., description="Tower identifier")
+    rssi: str | None = Field(None, description="Signal strength")
+    lat: float | None = Field(None, description="Latitude")
+    lon: float | None = Field(None, description="Longitude")
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "tower_id": "12345",
+                "rssi": "-60",
+                "lat": 51.5,
+                "lon": -0.1,
+            }
+        },
+    )
+
+
+class CellularScanResponse(BaseModel):
+    """Cellular scan result."""
+
+    towers: list[CellTower] = Field(
+        default_factory=list,
+        description="List of discovered cell towers",
+    )
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "towers": [CellTower.model_config["json_schema_extra"]["example"]]
+            }
+        },
+    )
