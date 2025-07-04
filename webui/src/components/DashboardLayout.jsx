@@ -33,6 +33,9 @@ import HealthAnalysis from './HealthAnalysis.jsx';
 import LogViewer from './LogViewer.jsx';
 import FingerprintSummary from './FingerprintSummary.jsx';
 import BaselineAnalysis from './BaselineAnalysis.jsx';
+import DemographicAnalytics from './DemographicAnalytics.jsx';
+import TechnologyAdoption from './TechnologyAdoption.jsx';
+import DigitalEquity from './DigitalEquity.jsx';
 
 const COMPONENTS = {
   BatteryStatusWidget: BatteryStatus,
@@ -63,6 +66,9 @@ const COMPONENTS = {
   LogViewer: LogViewer,
   DBStatsWidget: DBStats,
   FingerprintSummaryWidget: FingerprintSummary,
+  DemographicAnalyticsWidget: DemographicAnalytics,
+  TechnologyAdoptionWidget: TechnologyAdoption,
+  DigitalEquityWidget: DigitalEquity,
 };
 
 export default function DashboardLayout({ metrics, tableStyle }) {

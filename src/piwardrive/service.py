@@ -34,6 +34,7 @@ from piwardrive.api.system import router as system_router
 from piwardrive.api.websockets import router as ws_router
 from piwardrive.api.widget_marketplace import router as marketplace_router
 from piwardrive.api.widgets import router as widgets_router
+from piwardrive.api.demographics import router as demographics_router
 from piwardrive.error_middleware import add_error_middleware
 from piwardrive.routes import analytics as analytics_routes
 from piwardrive.routes import bluetooth as bluetooth_routes
@@ -64,6 +65,7 @@ app.include_router(wifi_routes.router)
 app.include_router(bluetooth_routes.router)
 app.include_router(cellular_routes.router)
 app.include_router(analytics_routes.router)
+app.include_router(demographics_router)
 app.include_router(jobs_router)
 app.include_router(maintenance_jobs_router)
 app.include_router(monitoring_router)
