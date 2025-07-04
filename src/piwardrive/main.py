@@ -23,7 +23,7 @@ from piwardrive.config import (
 )
 from piwardrive.config_watcher import watch_config
 from piwardrive.di import Container
-from piwardrive.jobs import analytics_jobs
+from piwardrive.jobs import analytics_jobs, maintenance_jobs
 from piwardrive.logging import init_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
 from piwardrive.scheduler import AsyncScheduler, PollScheduler
@@ -83,10 +83,16 @@ class PiWardriveApp:
         self.view_refresher = ViewRefresher(self.scheduler)
         self.analytics_queue = BackgroundTaskQueue(workers=2)
         self.analytics_scheduler = AsyncScheduler()
+        self.maintenance_queue = BackgroundTaskQueue()
+        self.maintenance_scheduler = AsyncScheduler()
 
         async def _start_jobs() -> None:
             analytics_jobs.init_jobs(self.analytics_scheduler, self.analytics_queue)
+            maintenance_jobs.init_jobs(
+                self.maintenance_scheduler, self.maintenance_queue
+            )
             await self.analytics_queue.start()
+            await self.maintenance_queue.start()
 
         utils.run_async_task(_start_jobs())
         if (
@@ -239,6 +245,10 @@ class PiWardriveApp:
             utils.run_async_task(self.analytics_scheduler.cancel_all())
         if hasattr(self, "analytics_queue"):
             utils.run_async_task(self.analytics_queue.stop())
+        if hasattr(self, "maintenance_scheduler"):
+            utils.run_async_task(self.maintenance_scheduler.cancel_all())
+        if hasattr(self, "maintenance_queue"):
+            utils.run_async_task(self.maintenance_queue.stop())
         utils.shutdown_async_loop()
 
 
