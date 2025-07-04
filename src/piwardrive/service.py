@@ -32,6 +32,7 @@ from piwardrive.api.monitoring import router as monitoring_router
 from piwardrive.api.system import collect_widget_metrics as _collect_widget_metrics
 from piwardrive.api.system import router as system_router
 from piwardrive.api.websockets import router as ws_router
+from piwardrive.api.widget_marketplace import router as marketplace_router
 from piwardrive.api.widgets import router as widgets_router
 from piwardrive.error_middleware import add_error_middleware
 from piwardrive.routes import analytics as analytics_routes
@@ -66,6 +67,7 @@ app.include_router(analytics_routes.router)
 app.include_router(jobs_router)
 app.include_router(maintenance_jobs_router)
 app.include_router(monitoring_router)
+app.include_router(marketplace_router)
 app.include_router(security_routes.router)
 app.include_router(auth_router)
 app.include_router(health_router)

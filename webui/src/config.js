@@ -21,8 +21,35 @@ export const DEFAULT_CONFIG = {
   route_prefetch_interval: 3600,
   route_prefetch_lookahead: 5,
   widget_battery_status: false,
+  widget_detection_rate: false,
+  widget_threat_level: false,
+  widget_network_density: false,
+  widget_device_classification: false,
+  widget_suspicious_activity: false,
+  widget_alert_summary: false,
+  widget_threat_map: false,
+  widget_security_score: false,
+  widget_database_health: false,
+  widget_scanner_status: false,
+  widget_system_resource: false,
   health_poll_interval: 10,
   gps_movement_threshold: 1.0,
+  db_cache_size: 128,
+  retention_days: 30,
+  backup_enabled: false,
+  migration_running: false,
+  ml_training_epochs: 10,
+  analytics_schedule: '0 0 * * *',
+  analytics_alert_threshold: 0.8,
+  custom_analysis_rules: '',
+  threat_sensitivity: 5,
+  alert_escalation_policy: 'Immediate',
+  security_rule_version: '1.0',
+  whitelist: '',
+  export_format: 'json',
+  integration_enabled: false,
+  integration_endpoint: '',
+  integration_api_key: '',
 };
 
 function _profilePath(name) {
@@ -31,9 +58,10 @@ function _profilePath(name) {
 
 export function listProfiles() {
   try {
-    return fs.readdirSync(PROFILES_DIR)
-      .filter(f => f.endsWith('.json'))
-      .map(f => path.basename(f, '.json'));
+    return fs
+      .readdirSync(PROFILES_DIR)
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => path.basename(f, '.json'));
   } catch {
     return [];
   }
@@ -72,6 +100,11 @@ export function loadConfig(profile) {
 function validate(cfg) {
   if (cfg.map_poll_gps <= 0) throw new Error('map_poll_gps must be >0');
   if (cfg.ui_font_size <= 0) throw new Error('ui_font_size must be >0');
+  if (cfg.db_cache_size < 0) throw new Error('db_cache_size must be >=0');
+  if (cfg.retention_days < 0) throw new Error('retention_days must be >=0');
+  if (cfg.ml_training_epochs < 1) throw new Error('ml_training_epochs must be >0');
+  if (cfg.analytics_alert_threshold < 0) throw new Error('analytics_alert_threshold must be >=0');
+  if (cfg.threat_sensitivity <= 0) throw new Error('threat_sensitivity must be >0');
 }
 
 export function saveConfig(cfg, profile) {

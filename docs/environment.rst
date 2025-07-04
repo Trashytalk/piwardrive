@@ -284,6 +284,28 @@ All available overrides are summarised below.
      - ``ui_font_size``
    * - ``PW_WIDGET_BATTERY_STATUS``
      - ``widget_battery_status``
+   * - ``PW_WIDGET_DETECTION_RATE``
+     - ``widget_detection_rate``
+   * - ``PW_WIDGET_THREAT_LEVEL``
+     - ``widget_threat_level``
+   * - ``PW_WIDGET_NETWORK_DENSITY``
+     - ``widget_network_density``
+   * - ``PW_WIDGET_DEVICE_CLASSIFICATION``
+     - ``widget_device_classification``
+   * - ``PW_WIDGET_SUSPICIOUS_ACTIVITY``
+     - ``widget_suspicious_activity``
+   * - ``PW_WIDGET_ALERT_SUMMARY``
+     - ``widget_alert_summary``
+   * - ``PW_WIDGET_THREAT_MAP``
+     - ``widget_threat_map``
+   * - ``PW_WIDGET_SECURITY_SCORE``
+     - ``widget_security_score``
+   * - ``PW_WIDGET_DATABASE_HEALTH``
+     - ``widget_database_health``
+   * - ``PW_WIDGET_SCANNER_STATUS``
+     - ``widget_scanner_status``
+   * - ``PW_WIDGET_SYSTEM_RESOURCE``
+     - ``widget_system_resource``
    * - ``PW_WIGLE_API_KEY``
      - ``wigle_api_key``
    * - ``PW_WIGLE_API_NAME``

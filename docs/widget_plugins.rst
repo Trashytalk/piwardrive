@@ -85,3 +85,11 @@ Example layout::
 
 Running ``pip install .`` installs the package and registers
 ``DashboardWidget`` automatically.
+
+Widget Marketplace
+------------------
+The widget marketplace provides a curated list of third party widgets that can
+be installed with a single click.  The API endpoint ``/widget-marketplace``
+returns available entries while ``POST /widget-marketplace/install`` installs a
+selected plugin.  Uploaded widgets are shared through the same interface so
+others can discover them easily.

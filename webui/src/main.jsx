@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import App from './App.jsx';
 import ConsoleView from './components/ConsoleView.jsx';
 import SplitScreen from './components/SplitScreen.jsx';
+import MobileLayout from './components/MobileLayout.jsx';
+import { initMobileFeatures } from './mobileFeatures.js';
 
 let Root = App;
 const path = window.location.pathname;
@@ -17,6 +19,7 @@ import NavBar from './components/NavBar.jsx';
 import HealthImport from './components/HealthImport.jsx';
 
 install();
+initMobileFeatures();
 
 const origFetch = window.fetch;
 window.fetch = (url, opts = {}) => {
@@ -40,6 +43,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/settings" element={<SettingsForm />} />
         <Route path="/import-health" element={<HealthImport />} />
         <Route path="/split" element={<SplitView />} />
+        <Route path="/mobile/*" element={<MobileLayout />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

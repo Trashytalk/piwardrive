@@ -41,6 +41,17 @@ _MODULE_MAP: Dict[str, str] = {
     "OrientationWidget": "orientation_widget",
     "VehicleSpeedWidget": "vehicle_speed",
     "LoRaScanWidget": "lora_scan_widget",
+    "DetectionRateWidget": "detection_rate",
+    "ThreatLevelWidget": "threat_level",
+    "NetworkDensityWidget": "network_density",
+    "DeviceClassificationWidget": "device_classification",
+    "SuspiciousActivityWidget": "suspicious_activity",
+    "AlertSummaryWidget": "alert_summary",
+    "ThreatMapWidget": "threat_map",
+    "SecurityScoreWidget": "security_score",
+    "DatabaseHealthWidget": "database_health",
+    "ScannerStatusWidget": "scanner_status",
+    "SystemResourceWidget": "system_resource",
 }
 
 _PLUGIN_LOADERS: Dict[str, Callable[[], type]] = {}
@@ -66,6 +77,17 @@ __all__: list[str] = [
     "OrientationWidget",
     "VehicleSpeedWidget",
     "LoRaScanWidget",
+    "DetectionRateWidget",
+    "ThreatLevelWidget",
+    "NetworkDensityWidget",
+    "DeviceClassificationWidget",
+    "SuspiciousActivityWidget",
+    "AlertSummaryWidget",
+    "ThreatMapWidget",
+    "SecurityScoreWidget",
+    "DatabaseHealthWidget",
+    "ScannerStatusWidget",
+    "SystemResourceWidget",
 ]
 
 
@@ -114,10 +136,7 @@ def _extract_class_names(path: Path) -> list[str]:
             for base in node.bases:
                 if isinstance(base, ast.Name) and base.id == "DashboardWidget":
                     names.append(node.name)
-                elif (
-                    isinstance(base, ast.Attribute)
-                    and base.attr == "DashboardWidget"
-                ):
+                elif isinstance(base, ast.Attribute) and base.attr == "DashboardWidget":
                     names.append(node.name)
     return names
 
@@ -162,6 +181,7 @@ def _load_plugins() -> None:
     for mod_name, path in iter_plugin_paths(plugin_dir):
         if path.suffix == ".py":
             for cls_name in _extract_class_names(path):
+
                 def _loader(m=mod_name, p=path, c=cls_name) -> type:
                     return load_plugin(m, p, c)  # type: ignore[return-value]
 

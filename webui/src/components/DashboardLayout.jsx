@@ -3,7 +3,24 @@ import BatteryStatus from './BatteryStatus.jsx';
 import ServiceStatus from './ServiceStatus.jsx';
 import HandshakeCount from './HandshakeCount.jsx';
 import SignalStrength from './SignalStrength.jsx';
-import NetworkThroughput from './NetworkThroughput.jsx';
+import {
+  DatabaseHealthWidget,
+  ScannerStatusWidget,
+  SystemResourceWidget,
+  NetworkThroughputWidget,
+} from './PerformanceWidgets.jsx';
+import {
+  DetectionRateWidget,
+  ThreatLevelWidget,
+  NetworkDensityWidget,
+  DeviceClassificationWidget,
+} from './AnalyticsWidgets.jsx';
+import {
+  SuspiciousActivityWidget,
+  AlertSummaryWidget,
+  ThreatMapWidget,
+  SecurityScoreWidget,
+} from './SecurityWidgets.jsx';
 import CPUTempGraph from './CPUTempGraph.jsx';
 import LoRaScan from './LoRaScan.jsx';
 import DBStats from './DBStats.jsx';
@@ -22,7 +39,18 @@ const COMPONENTS = {
   ServiceStatusWidget: ServiceStatus,
   HandshakeCounterWidget: HandshakeCount,
   SignalStrengthWidget: SignalStrength,
-  NetworkThroughputWidget: NetworkThroughput,
+  NetworkThroughputWidget: NetworkThroughputWidget,
+  DatabaseHealthWidget: DatabaseHealthWidget,
+  ScannerStatusWidget: ScannerStatusWidget,
+  SystemResourceWidget: SystemResourceWidget,
+  DetectionRateWidget: DetectionRateWidget,
+  ThreatLevelWidget: ThreatLevelWidget,
+  NetworkDensityWidget: NetworkDensityWidget,
+  DeviceClassificationWidget: DeviceClassificationWidget,
+  SuspiciousActivityWidget: SuspiciousActivityWidget,
+  AlertSummaryWidget: AlertSummaryWidget,
+  ThreatMapWidget: ThreatMapWidget,
+  SecurityScoreWidget: SecurityScoreWidget,
   CPUTempGraphWidget: CPUTempGraph,
   LoRaScanWidget: LoRaScan,
   GPSStatusWidget: GPSStatus,
@@ -37,15 +65,15 @@ const COMPONENTS = {
   FingerprintSummaryWidget: FingerprintSummary,
 };
 
-export default function DashboardLayout({ metrics }) {
+export default function DashboardLayout({ metrics, tableStyle }) {
   const [order, setOrder] = useState([]);
 
   useEffect(() => {
     fetch('/dashboard-settings')
-      .then(r => r.json())
-      .then(d => {
+      .then((r) => r.json())
+      .then((d) => {
         if (d.layout && d.layout.length > 0) {
-          setOrder(d.layout.map(w => w.cls));
+          setOrder(d.layout.map((w) => w.cls));
         } else if (d.widgets) {
           setOrder(d.widgets);
         }
@@ -54,7 +82,7 @@ export default function DashboardLayout({ metrics }) {
 
   const save = (items) => {
     setOrder(items);
-    const layout = items.map(cls => ({ cls }));
+    const layout = items.map((cls) => ({ cls }));
     fetch('/dashboard-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -78,6 +106,25 @@ export default function DashboardLayout({ metrics }) {
 
   const onDragOver = (e) => e.preventDefault();
 
+  if (tableStyle) {
+    return (
+      <table style={tableStyle}>
+        <tbody>
+          {order.map((name) => {
+            const Comp = COMPONENTS[name];
+            return (
+              <tr key={name}>
+                <td style={{ border: '1px solid #ccc', padding: '4px' }}>
+                  {Comp ? <Comp metrics={metrics} /> : <div>{name}</div>}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
+
   return (
     <div>
       {order.map((name, idx) => {
@@ -86,10 +133,14 @@ export default function DashboardLayout({ metrics }) {
           <div
             key={name}
             draggable
-            onDragStart={e => onDragStart(e, idx)}
-            onDrop={e => onDrop(e, idx)}
+            onDragStart={(e) => onDragStart(e, idx)}
+            onDrop={(e) => onDrop(e, idx)}
             onDragOver={onDragOver}
-            style={{ border: '1px solid #ccc', padding: '4px', marginBottom: '4px' }}
+            style={{
+              border: '1px solid #ccc',
+              padding: '4px',
+              marginBottom: '4px',
+            }}
           >
             {Comp ? <Comp metrics={metrics} /> : <div>{name}</div>}
           </div>
