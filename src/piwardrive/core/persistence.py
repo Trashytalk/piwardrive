@@ -73,7 +73,7 @@ _BUFFER_LIMIT = int(os.getenv("PW_DB_BUFFER_LIMIT", "50"))
 _FLUSH_INTERVAL = float(os.getenv("PW_DB_FLUSH_INTERVAL", "30.0"))
 
 # Schema versioning
-LATEST_VERSION = 3
+LATEST_VERSION = 4
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
 
@@ -156,6 +156,41 @@ async def _migration_3(conn: aiosqlite.Connection) -> None:
 
 _MIGRATIONS.append(_migration_3)
 
+
+async def _migration_4(conn: aiosqlite.Connection) -> None:
+    """Create scan_sessions table."""
+    await conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scan_sessions (
+            id TEXT PRIMARY KEY,
+            device_id TEXT NOT NULL,
+            scan_type TEXT NOT NULL,
+            started_at TIMESTAMP NOT NULL,
+            completed_at TIMESTAMP,
+            duration_seconds INTEGER,
+            location_start_lat REAL,
+            location_start_lon REAL,
+            location_end_lat REAL,
+            location_end_lon REAL,
+            interface_used TEXT,
+            scan_parameters TEXT,
+            total_detections INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id, started_at)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON scan_sessions(scan_type)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat, location_start_lon)"
+    )
+
+
+_MIGRATIONS.append(_migration_4)
 
 async def _create_connection(path: str, key: str | None) -> aiosqlite.Connection:
     """Create a new SQLite connection with performance pragmas."""
@@ -308,6 +343,26 @@ class User:
     username: str
     password_hash: str
     token_hash: str | None = None
+
+
+@dataclass
+class ScanSession:
+    """Metadata about a scanning session."""
+
+    id: str
+    device_id: str
+    scan_type: str
+    started_at: str
+    completed_at: str | None = None
+    duration_seconds: int | None = None
+    location_start_lat: float | None = None
+    location_start_lon: float | None = None
+    location_end_lat: float | None = None
+    location_end_lon: float | None = None
+    interface_used: str | None = None
+    scan_parameters: str | None = None
+    total_detections: int = 0
+    created_at: str | None = None
 
 
 async def _init_db(conn: aiosqlite.Connection) -> None:
@@ -538,6 +593,66 @@ async def get_user_by_token(token_hash: str) -> User | None:
         )
         row = await cur.fetchone()
     return User(**row) if row else None
+
+
+async def save_scan_session(session: ScanSession) -> None:
+    """Insert or update a :class:`ScanSession` row."""
+    values = asdict(session)
+    async with _get_conn() as conn:
+        await conn.execute(
+            """
+            INSERT OR REPLACE INTO scan_sessions (
+                id, device_id, scan_type, started_at, completed_at,
+                duration_seconds, location_start_lat, location_start_lon,
+                location_end_lat, location_end_lon, interface_used,
+                scan_parameters, total_detections, created_at
+            ) VALUES (
+                :id, :device_id, :scan_type, :started_at, :completed_at,
+                :duration_seconds, :location_start_lat, :location_start_lon,
+                :location_end_lat, :location_end_lon, :interface_used,
+                :scan_parameters, :total_detections,
+                COALESCE(:created_at, CURRENT_TIMESTAMP)
+            )
+            """,
+            values,
+        )
+        await conn.commit()
+
+
+async def get_scan_session(session_id: str) -> ScanSession | None:
+    """Return ``ScanSession`` with ``session_id`` if found."""
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            """
+            SELECT id, device_id, scan_type, started_at, completed_at,
+                   duration_seconds, location_start_lat, location_start_lon,
+                   location_end_lat, location_end_lon, interface_used,
+                   scan_parameters, total_detections, created_at
+            FROM scan_sessions WHERE id = ?
+            """,
+            (session_id,),
+        )
+        row = await cur.fetchone()
+    return ScanSession(**row) if row else None
+
+
+async def iter_scan_sessions(*, limit: int | None = None, offset: int = 0) -> AsyncIterator[ScanSession]:
+    """Yield ``ScanSession`` rows ordered by ``started_at`` descending."""
+    async with _get_conn() as conn:
+        query = (
+            "SELECT id, device_id, scan_type, started_at, completed_at, "
+            "duration_seconds, location_start_lat, location_start_lon, "
+            "location_end_lat, location_end_lon, interface_used, "
+            "scan_parameters, total_detections, created_at "
+            "FROM scan_sessions ORDER BY started_at DESC"
+        )
+        params: list[object] = []
+        if limit is not None:
+            query += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        cur = await conn.execute(query, tuple(params))
+        async for row in cur:
+            yield ScanSession(**dict(row))
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
