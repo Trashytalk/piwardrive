@@ -29,6 +29,7 @@ from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_
 from piwardrive.scheduler import AsyncScheduler, PollScheduler
 from piwardrive.security import hash_password
 from piwardrive.services.view_refresher import ViewRefresher
+from piwardrive.services.model_trainer import ModelTrainer
 from piwardrive.task_queue import BackgroundTaskQueue
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -81,6 +82,7 @@ class PiWardriveApp:
             vacuum=True,
         )
         self.view_refresher = ViewRefresher(self.scheduler)
+        self.model_trainer = ModelTrainer(self.scheduler)
         self.analytics_queue = BackgroundTaskQueue(workers=2)
         self.analytics_scheduler = AsyncScheduler()
         self.maintenance_queue = BackgroundTaskQueue()
