@@ -11,8 +11,9 @@ from dataclasses import asdict
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
-from piwardrive.logging import init_logging
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from piwardrive.logging import init_logging
 
 try:  # pragma: no cover - optional FastAPI dependency
     from fastapi import (
@@ -113,6 +114,7 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
 
 import asyncio
 import functools
+import hmac
 import importlib
 import json
 import secrets
@@ -132,7 +134,12 @@ except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.database_service import db_service
     from piwardrive.persistence import DashboardSettings, FingerprintInfo, User
 
-from piwardrive.security import hash_secret, sanitize_path, verify_password
+from piwardrive.security import (
+    hash_secret,
+    sanitize_path,
+    validate_service_name,
+    verify_password,
+)
 
 try:  # allow tests to provide a simplified utils module
     import utils as _utils
@@ -185,41 +192,59 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         response = await call_next(request)
         response.headers.setdefault("Content-Security-Policy", self.csp)
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=63072000; includeSubDomains; preload",
+        )
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
         return response
 
 
+class _TokenBucket:
+    def __init__(self, capacity: int, rate: float) -> None:
+        self.capacity = capacity
+        self.rate = rate
+        self.tokens = float(capacity)
+        self.updated = time.monotonic()
+
+    def consume(self, amount: int = 1) -> bool:
+        now = time.monotonic()
+        elapsed = now - self.updated
+        self.updated = now
+        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+        if self.tokens >= amount:
+            self.tokens -= amount
+            return True
+        return False
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Basic in-memory rate limiting per client IP."""
+    """Token bucket rate limiting per client IP."""
 
     def __init__(self, app: FastAPI, max_requests: int, window_seconds: int) -> None:
         super().__init__(app)
-        self.max_requests = max_requests
+        self.capacity = max_requests
         self.window_seconds = window_seconds
-        self.records: defaultdict[str, deque[float]] = defaultdict(deque)
+        self.rate = max_requests / window_seconds
+        self.buckets: dict[str, _TokenBucket] = {}
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         host = request.client.host if request.client else "anonymous"
-        now = time.time()
-        q = self.records[host]
-        cutoff = now - self.window_seconds
-        while q and q[0] < cutoff:
-            q.popleft()
-        if len(q) >= self.max_requests:
-            retry_after = int(self.window_seconds - (now - q[0]))
+        bucket = self.buckets.setdefault(host, _TokenBucket(self.capacity, self.rate))
+        if not bucket.consume():
+            retry_after = max(1, int(1 / self.rate))
             headers = {
-                "X-RateLimit-Limit": str(self.max_requests),
+                "X-RateLimit-Limit": str(self.capacity),
                 "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(int(q[0] + self.window_seconds)),
                 "X-RateLimit-Window": str(self.window_seconds),
                 "Retry-After": str(retry_after),
             }
             return Response("rate limit exceeded", status_code=429, headers=headers)
-        q.append(now)
         response = await call_next(request)
-        remaining = self.max_requests - len(q)
-        response.headers["X-RateLimit-Limit"] = str(self.max_requests)
+        remaining = int(bucket.tokens)
+        response.headers["X-RateLimit-Limit"] = str(self.capacity)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
-        response.headers["X-RateLimit-Reset"] = str(int(q[0] + self.window_seconds))
         response.headers["X-RateLimit-Window"] = str(self.window_seconds)
         return response
 
@@ -656,9 +681,85 @@ async def _check_auth(token: str = SECURITY_DEP) -> None:
     await _ensure_default_user()
     if not token:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
-    user = await db_service.get_user_by_token(hash_secret(token))
-    if user is None:
+    token_hash = hash_secret(token)
+    user = await db_service.get_user_by_token(token_hash)
+    if user is None or not hmac.compare_digest(user.token_hash or "", token_hash):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+
+
+@POST("/token")
+async def token_login(
+    form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
+) -> TokenResponse:
+    """Return bearer token for valid credentials."""
+    await _ensure_default_user()
+    user = await db_service.get_user(form.username)
+    if (
+        not user
+        or not hmac.compare_digest(user.username, form.username)
+        or not verify_password(form.password, user.password_hash)
+    ):
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    token = secrets.token_urlsafe(32)
+    await db_service.update_user_token(user.username, hash_secret(token))
+    return {"access_token": token, "token_type": "bearer"}
+
+
+AUTH_DEP = Depends(_check_auth)
+
+
+@POST("/auth/login")
+async def login(
+    form: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
+) -> AuthLoginResponse:
+    """Validate credentials and return a bearer token."""
+    user = await db_service.get_user(form.username)
+    if (
+        not user
+        or not hmac.compare_digest(user.username, form.username)
+        or not verify_password(form.password, user.password_hash)
+    ):
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    token = secrets.token_urlsafe(32)
+    TOKENS[token] = user.username
+    return {"access_token": token, "token_type": "bearer", "role": user.role}
+
+
+@POST("/auth/logout")
+async def logout(token: str = SECURITY_DEP) -> LogoutResponse:
+    """Invalidate the current token."""
+    TOKENS.pop(token, None)
+    return {"logout": True}
+
+
+@GET("/status")
+async def get_status(
+    limit: int = 5, _auth: User | None = AUTH_DEP
+) -> list[HealthRecordDict]:
+    """Return ``limit`` most recent :class:`HealthRecord` entries."""
+    records = db_service.load_recent_health(limit)
+    if inspect.isawaitable(records):
+        records = await records
+
+    return [asdict(rec) for rec in records]
+
+
+@GET("/baseline-analysis")
+async def baseline_analysis_endpoint(
+    limit: int = 10,
+    days: int = 30,
+    threshold: float = 5.0,
+    _auth: None = AUTH_DEP,
+) -> BaselineAnalysisResult:
+    """Compare recent metrics to historical averages."""
+    recent = db_service.load_recent_health(limit)
+    if inspect.isawaitable(recent):
+        recent = await recent
+    baseline = load_baseline_health(days, limit)
+    if inspect.isawaitable(baseline):
+        baseline = await baseline
+    return analyze_health_baseline(recent, baseline, threshold)
+
 
 async def _collect_widget_metrics() -> WidgetMetrics:
     """Return basic metrics used by dashboard widgets."""
@@ -691,6 +792,342 @@ async def _collect_widget_metrics() -> WidgetMetrics:
         "vehicle_rpm": await asyncio.to_thread(vehicle_sensors.read_rpm_obd),
         "engine_load": await asyncio.to_thread(vehicle_sensors.read_engine_load_obd),
     }
+
+
+@GET("/api/widgets")
+async def list_widgets(_auth: User | None = AUTH_DEP) -> WidgetsListResponse:
+    """Return available dashboard widget class names."""
+    widgets_mod = importlib.import_module("piwardrive.widgets")
+    return {"widgets": list(getattr(widgets_mod, "__all__", []))}
+
+
+@GET("/widget-metrics")
+async def get_widget_metrics(_auth: User | None = AUTH_DEP) -> WidgetMetrics:
+    """Return basic metrics used by dashboard widgets."""
+    return await _collect_widget_metrics()
+
+
+@GET("/plugins")
+async def get_plugins(_auth: User | None = AUTH_DEP) -> list[str]:
+    """Return discovered plugin widget class names."""
+    from piwardrive import widgets
+
+    return typing.cast(list[str], widgets.list_plugins())
+
+
+@GET("/cpu")
+async def get_cpu(_auth: User | None = AUTH_DEP) -> CPUInfo:
+    """Return CPU temperature and usage percentage."""
+    return {
+        "temp": get_cpu_temp(),
+        "percent": await asyncio.to_thread(psutil.cpu_percent, interval=None),
+    }
+
+
+@GET("/ram")
+async def get_ram(_auth: User | None = AUTH_DEP) -> RAMInfo:
+    """Return system memory usage percentage."""
+    return {"percent": get_mem_usage()}
+
+
+@GET("/storage")
+async def get_storage(
+    path: str = "/mnt/ssd",
+    _auth: User | None = AUTH_DEP,
+) -> StorageInfo:
+    """Return disk usage percentage for ``path``."""
+    return {"percent": get_disk_usage(path)}
+
+
+@GET("/orientation")
+async def get_orientation_endpoint(
+    _auth: User | None = AUTH_DEP,
+) -> OrientationInfo:
+    """Return device orientation and raw sensor data."""
+    orient = await asyncio.to_thread(orientation_sensors.get_orientation_dbus)
+    angle = None
+    accel = gyro = None
+    if orient:
+        angle = orientation_sensors.orientation_to_angle(orient)
+    else:
+        data = await asyncio.to_thread(orientation_sensors.read_mpu6050)
+        if data:
+            accel = data.get("accelerometer")
+            gyro = data.get("gyroscope")
+    return {
+        "orientation": orient,
+        "angle": angle,
+        "accelerometer": accel,
+        "gyroscope": gyro,
+    }
+
+
+@GET("/vehicle")
+async def get_vehicle_endpoint(_auth: User | None = AUTH_DEP) -> VehicleInfo:
+    """Return vehicle metrics from OBD-II sensors."""
+    return {
+        "speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),
+        "rpm": await asyncio.to_thread(vehicle_sensors.read_rpm_obd),
+        "engine_load": await asyncio.to_thread(vehicle_sensors.read_engine_load_obd),
+    }
+
+
+@GET("/gps")
+async def get_gps_endpoint(_auth: User | None = AUTH_DEP) -> GPSInfo:
+    """Return current GPS position."""
+    try:
+        pos = await asyncio.to_thread(gps_client.get_position)
+    except Exception as exc:
+        logging.exception("GPS read failed: %s", exc)
+        pos = None
+    lat = lon = None
+    if pos:
+        lat, lon = pos
+    return {
+        "lat": lat,
+        "lon": lon,
+        "accuracy": get_gps_accuracy(),
+        "fix": get_gps_fix_quality(),
+    }
+
+
+@GET("/logs")
+async def get_logs(
+    lines: int = 200,
+    path: str = DEFAULT_LOG_PATH,
+    _auth: User | None = AUTH_DEP,
+) -> LogsResponse:
+    """Return last ``lines`` from ``path``."""
+    safe = sanitize_path(path)
+    if safe not in ALLOWED_LOG_PATHS:
+        raise HTTPException(status_code=400, detail=error_json(400, "Invalid log path"))
+    data = async_tail_file(safe, lines)
+    if inspect.isawaitable(data):
+        lines_out = await data
+    else:
+        lines_out = data
+    return {"path": safe, "lines": lines_out}
+
+
+@GET("/db-stats")
+async def get_db_stats_endpoint(_auth: User | None = AUTH_DEP) -> DBStatsResponse:
+    """Return SQLite table counts and database size."""
+    counts = await db_service.get_table_counts()
+    try:
+        size_kb = os.path.getsize(db_service.db_path()) / 1024
+    except OSError:
+        size_kb = None
+    return {"size_kb": size_kb, "tables": counts}
+
+
+@GET("/lora-scan")
+async def lora_scan_endpoint(
+    iface: str = "lora0", _auth: User | None = AUTH_DEP
+) -> LoraScanResponse:
+    """Run ``lora-scan`` on ``iface`` and return output lines."""
+    lines = await async_scan_lora(iface)
+    return {"count": len(lines), "lines": lines}
+
+
+@POST("/service/{name}/{action}")
+async def control_service_endpoint(
+    name: str,
+    action: str,
+    _auth: User | None = AUTH_DEP,
+) -> ServiceControlResponse:
+    """Start or stop a systemd service."""
+    validate_service_name(name)
+    if action not in {"start", "stop", "restart"}:
+        raise HTTPException(status_code=400, detail=error_json(400, "Invalid action"))
+    result = run_service_cmd(name, action) or (False, "", "")
+    success, _out, err = result
+    if not success:
+        msg = err.strip() if isinstance(err, str) else str(err)
+        raise HTTPException(
+            status_code=500, detail=error_json(500, msg or "command failed")
+        )
+    return {"service": name, "action": action, "success": True}
+
+
+@GET("/service/{name}")
+async def get_service_status_endpoint(
+    name: str, _auth: User | None = AUTH_DEP
+) -> ServiceStatusResponse:
+    """Return whether a ``systemd`` service is active."""
+    validate_service_name(name)
+    active = await service_status_async(name)
+    return {"service": name, "active": active}
+
+
+@GET("/config")
+async def get_config_endpoint(_auth: User | None = AUTH_DEP) -> ConfigResponse:
+    """Return the current configuration from ``config.json``."""
+    return asdict(config.load_config())
+
+
+@POST("/config")
+async def update_config_endpoint(
+    updates: dict[str, Any] = BODY,
+    _auth: User | None = AUTH_DEP,
+) -> ConfigResponse:
+    """Update configuration values and persist them."""
+    cfg = config.load_config()
+    data = asdict(cfg)
+    for key, value in updates.items():
+        if key not in data:
+            raise HTTPException(
+                status_code=400, detail=error_json(400, f"Unknown field: {key}")
+            )
+        data[key] = value
+    if data.get("remote_sync_url", "") == "":
+        data["remote_sync_url"] = None
+    try:
+        config.validate_config_data(data)
+    except Exception as exc:  # pragma: no cover - validation tested separately
+        raise HTTPException(status_code=400, detail=error_json(400, str(exc)))
+    config.save_config(config.Config(**data))
+    return data
+
+
+@GET("/webhooks")
+async def get_webhooks_endpoint(_auth: None = AUTH_DEP) -> WebhooksResponse:
+    """Return configured notification webhook URLs."""
+    cfg = config.load_config()
+    return {"webhooks": list(cfg.notification_webhooks)}
+
+
+@POST("/webhooks")
+async def update_webhooks_endpoint(
+    urls: list[str] = BODY, _auth: None = AUTH_DEP
+) -> WebhooksResponse:
+    """Update notification webhook URL list."""
+    cfg = config.load_config()
+    cfg.notification_webhooks = list(urls)
+    config.save_config(cfg)
+    return {"webhooks": cfg.notification_webhooks}
+
+
+@GET("/dashboard-settings")
+async def get_dashboard_settings_endpoint(
+    _auth: User | None = AUTH_DEP,
+) -> DashboardSettingsResponse:
+    """Return persisted dashboard layout and widget list."""
+    settings = await db_service.load_dashboard_settings()
+    return {"layout": settings.layout, "widgets": settings.widgets}
+
+
+@POST("/dashboard-settings")
+async def update_dashboard_settings_endpoint(
+    data: dict[str, Any] = BODY,
+    _auth: User | None = AUTH_DEP,
+) -> DashboardSettingsResponse:
+    """Persist dashboard layout and widget list."""
+    layout = data.get("layout", [])
+    widgets = data.get("widgets", [])
+    await db_service.save_dashboard_settings(
+        DashboardSettings(layout=layout, widgets=widgets)
+    )
+    return {"layout": layout, "widgets": widgets}
+
+
+@GET("/fingerprints")
+async def list_fingerprints_endpoint(
+    _auth: None = AUTH_DEP,
+) -> dict[str, list[FingerprintInfoDict]]:
+    """Return stored fingerprint metadata."""
+    items = await db_service.load_fingerprint_info()
+    return {"fingerprints": [asdict(i) for i in items]}
+
+
+@POST("/fingerprints")
+async def add_fingerprint_endpoint(
+    data: dict[str, Any] = BODY, _auth: None = AUTH_DEP
+) -> FingerprintInfoDict:
+    """Store fingerprint metadata in the database."""
+    info = FingerprintInfo(
+        environment=data.get("environment", ""),
+        source=data.get("source", ""),
+        record_count=int(data.get("record_count", 0)),
+    )
+    await db_service.save_fingerprint_info(info)
+    return asdict(info)
+
+
+@GET("/geofences")
+async def list_geofences_endpoint(
+    _auth: User | None = AUTH_DEP,
+) -> list[Geofence]:
+    """Return saved geofence polygons."""
+    return _load_geofences()
+
+
+@POST("/geofences")
+async def add_geofence_endpoint(
+    data: dict[str, Any] = BODY, _auth: User | None = AUTH_DEP
+) -> list[Geofence]:
+    """Add a new polygon to ``geofences.json``."""
+    polys = _load_geofences()
+    polys.append(
+        {
+            "name": data.get("name", "geofence"),
+            "points": data.get("points", []),
+            "enter_message": data.get("enter_message"),
+            "exit_message": data.get("exit_message"),
+        }
+    )
+    _save_geofences(polys)
+    return polys
+
+
+@PUT("/geofences/{name}")
+async def update_geofence_endpoint(
+    name: str,
+    updates: dict[str, Any] = BODY,
+    _auth: User | None = AUTH_DEP,
+) -> Geofence:
+    """Modify a saved polygon."""
+    polys = _load_geofences()
+    for poly in polys:
+        if poly.get("name") == name:
+            if "name" in updates:
+                poly["name"] = updates["name"]
+            if "points" in updates:
+                poly["points"] = updates["points"]
+            if "enter_message" in updates:
+                poly["enter_message"] = updates["enter_message"]
+            if "exit_message" in updates:
+                poly["exit_message"] = updates["exit_message"]
+            _save_geofences(polys)
+            return poly
+    raise HTTPException(status_code=404, detail=error_json(404, "Not found"))
+
+
+@DELETE("/geofences/{name}")
+async def remove_geofence_endpoint(
+    name: str, _auth: User | None = AUTH_DEP
+) -> RemoveResponse:
+    """Delete ``name`` from ``geofences.json``."""
+    validate_service_name(name)
+    polys = _load_geofences()
+    for idx, poly in enumerate(polys):
+        if poly.get("name") == name:
+            polys.pop(idx)
+            _save_geofences(polys)
+            return {"removed": True}
+    raise HTTPException(status_code=404, detail=error_json(404, "Not found"))
+
+
+@POST("/sync")
+async def sync_records(limit: int = 100, _auth: User | None = AUTH_DEP) -> SyncResponse:
+    """Upload recent health records to the configured sync endpoint."""
+    records = db_service.load_recent_health(limit)
+    if inspect.isawaitable(records):
+        records = await records
+    success = await upload_data([asdict(r) for r in records])
+    if not success:
+        raise HTTPException(status_code=502, detail=error_json(502, "Upload failed"))
+    return {"uploaded": len(records)}
+
 
 EXPORT_CONTENT_TYPES = {
     "csv": "text/csv",

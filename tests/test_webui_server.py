@@ -45,6 +45,7 @@ def test_webui_authentication(tmp_path, monkeypatch):
 
     pw_hash = security.hash_password("pw")
     monkeypatch.setenv("PW_API_PASSWORD_HASH", pw_hash)
+    monkeypatch.setenv("PW_API_USER", "u")
 
     stub_widgets = SimpleNamespace(__all__=["W"])
     monkeypatch.setattr(service.importlib, "import_module", lambda n: stub_widgets)
