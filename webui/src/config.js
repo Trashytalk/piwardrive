@@ -23,6 +23,22 @@ export const DEFAULT_CONFIG = {
   widget_battery_status: false,
   health_poll_interval: 10,
   gps_movement_threshold: 1.0,
+  db_cache_size: 128,
+  retention_days: 30,
+  backup_enabled: false,
+  migration_running: false,
+  ml_training_epochs: 10,
+  analytics_schedule: '0 0 * * *',
+  analytics_alert_threshold: 0.8,
+  custom_analysis_rules: '',
+  threat_sensitivity: 5,
+  alert_escalation_policy: 'Immediate',
+  security_rule_version: '1.0',
+  whitelist: '',
+  export_format: 'json',
+  integration_enabled: false,
+  integration_endpoint: '',
+  integration_api_key: '',
 };
 
 function _profilePath(name) {
@@ -72,6 +88,11 @@ export function loadConfig(profile) {
 function validate(cfg) {
   if (cfg.map_poll_gps <= 0) throw new Error('map_poll_gps must be >0');
   if (cfg.ui_font_size <= 0) throw new Error('ui_font_size must be >0');
+  if (cfg.db_cache_size < 0) throw new Error('db_cache_size must be >=0');
+  if (cfg.retention_days < 0) throw new Error('retention_days must be >=0');
+  if (cfg.ml_training_epochs < 1) throw new Error('ml_training_epochs must be >0');
+  if (cfg.analytics_alert_threshold < 0) throw new Error('analytics_alert_threshold must be >=0');
+  if (cfg.threat_sensitivity <= 0) throw new Error('threat_sensitivity must be >0');
 }
 
 export function saveConfig(cfg, profile) {
