@@ -27,6 +27,7 @@ from piwardrive.api.health import router as health_router
 from piwardrive.api.system import collect_widget_metrics as _collect_widget_metrics
 from piwardrive.api.system import router as system_router
 from piwardrive.api.analytics import router as analytics_router
+from piwardrive.api.analysis_queries import router as analysis_queries_router
 from piwardrive.api.websockets import router as ws_router
 from piwardrive.api.widgets import router as widgets_router
 from piwardrive.error_middleware import add_error_middleware
@@ -60,6 +61,7 @@ app.include_router(health_router)
 app.include_router(widgets_router)
 app.include_router(system_router)
 app.include_router(analytics_router)
+app.include_router(analysis_queries_router)
 app.include_router(ws_router)
 
 __all__ = [
