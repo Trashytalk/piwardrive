@@ -33,3 +33,4 @@ advantage of lazy loading use::
 The manager registers widgets with `ResourceManager` so `deactivate()`
 methods run when instances are garbage collected or explicitly
 released.
+
