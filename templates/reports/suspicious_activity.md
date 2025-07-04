@@ -1,0 +1,3 @@
+# Suspicious Activities - {date}
+
+{activities}
