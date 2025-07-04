@@ -1,16 +1,20 @@
-import os
-import base64
 import asyncio
+import base64
+import os
+
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from piwardrive.service import app as api_app
-from piwardrive.service import list_widgets, _collect_widget_metrics
+from piwardrive.error_middleware import add_error_middleware
 from piwardrive.security import verify_password
+from piwardrive.service import _collect_widget_metrics
+from piwardrive.service import app as api_app
+from piwardrive.service import list_widgets
 
 DEF_BUILD_DIR = os.path.join(os.path.dirname(__file__), os.pardir, "webui", "dist")
+
 
 class BasicAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -28,9 +32,11 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
                 return Response(status_code=401, headers={"WWW-Authenticate": "Basic"})
         return await call_next(request)
 
+
 def create_app() -> FastAPI:
     app = FastAPI()
     app.add_middleware(BasicAuthMiddleware)
+    add_error_middleware(app)
     app.mount("/api", api_app)
     app.add_api_route("/api/widgets", list_widgets, methods=["GET"])
 
@@ -54,10 +60,13 @@ def create_app() -> FastAPI:
         )
     return app
 
+
 def main() -> None:
     import uvicorn
+
     port = int(os.environ.get("PW_WEBUI_PORT", 8000))
     uvicorn.run(create_app(), host="127.0.0.1", port=port)
+
 
 if __name__ == "__main__":
     main()

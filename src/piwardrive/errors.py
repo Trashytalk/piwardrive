@@ -1,14 +1,27 @@
-class PiWardriveError(Exception):
-    """Base class for PiWardrive domain errors."""
+"""Deprecated module; maintained for backward compatibility."""
+
+from __future__ import annotations
+
+from .exceptions import ConfigurationError, DatabaseError, PiWardriveError, ServiceError
 
 
-class ConfigError(PiWardriveError):
-    """Raised when configuration validation fails."""
+class ConfigError(ConfigurationError):
+    """Alias of :class:`ConfigurationError`."""
 
 
-class ExportError(PiWardriveError):
+class ExportError(ServiceError):
     """Raised when exporting data fails."""
 
 
-class GeofenceError(PiWardriveError):
+class GeofenceError(ServiceError):
     """Raised for geofence load/save issues."""
+
+
+__all__ = [
+    "PiWardriveError",
+    "ConfigError",
+    "ExportError",
+    "GeofenceError",
+    "DatabaseError",
+    "ServiceError",
+]
