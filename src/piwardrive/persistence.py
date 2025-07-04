@@ -20,6 +20,10 @@ from .core.persistence import (
     shutdown_pool,
     backup_database,
     get_db_metrics,
+    ScanSession,
+    save_scan_session,
+    get_scan_session,
+    iter_scan_sessions,
 )
 
 
@@ -95,4 +99,8 @@ __all__ = [
     "get_user_by_token",
     "save_user",
     "update_user_token",
+    "ScanSession",
+    "save_scan_session",
+    "get_scan_session",
+    "iter_scan_sessions",
 ]
