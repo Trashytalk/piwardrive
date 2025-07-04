@@ -744,6 +744,34 @@ async def save_wifi_detections(records: list[dict[str, Any]]) -> None:
         await conn.commit()
 
 
+async def save_bluetooth_detections(records: list[dict[str, Any]]) -> None:
+    """Insert ``records`` into the ``bluetooth_detections`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO bluetooth_detections (
+                scan_session_id, detection_timestamp, mac_address, device_name,
+                device_class, device_type, manufacturer_id, manufacturer_name,
+                rssi_dbm, tx_power_dbm, bluetooth_version, supported_services,
+                is_connectable, is_paired, latitude, longitude, altitude_meters,
+                accuracy_meters, heading_degrees, speed_kmh, first_seen,
+                last_seen, detection_count
+            ) VALUES (
+                :scan_session_id, :detection_timestamp, :mac_address, :device_name,
+                :device_class, :device_type, :manufacturer_id, :manufacturer_name,
+                :rssi_dbm, :tx_power_dbm, :bluetooth_version, :supported_services,
+                :is_connectable, :is_paired, :latitude, :longitude, :altitude_meters,
+                :accuracy_meters, :heading_degrees, :speed_kmh, :first_seen,
+                :last_seen, :detection_count
+            )
+            """,
+            records,
+        )
+        await conn.commit()
+
+
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
     path = _db_path()

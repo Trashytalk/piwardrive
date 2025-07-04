@@ -71,6 +71,52 @@ class WiFiScanResponse(BaseModel):
     )
 
 
+class BluetoothScanRequest(BaseModel):
+    """Parameters for initiating a Bluetooth scan."""
+
+    timeout: int | None = Field(
+        None,
+        description="Optional timeout in seconds for the scan process",
+        examples=[10],
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BluetoothDevice(BaseModel):
+    """Information about a discovered Bluetooth device."""
+
+    address: str = Field(..., description="Device MAC address")
+    name: str | None = Field(None, description="Reported device name")
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {"address": "AA:BB:CC:DD:EE:FF", "name": "Phone"}
+        },
+    )
+
+
+class BluetoothScanResponse(BaseModel):
+    """Bluetooth scan result."""
+
+    devices: list[BluetoothDevice] = Field(
+        default_factory=list,
+        description="List of discovered Bluetooth devices",
+    )
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "devices": [
+                    BluetoothDevice.model_config["json_schema_extra"]["example"]
+                ]
+            }
+        },
+    )
+
+
 class SystemStats(BaseModel):
     """System resource utilization metrics."""
 

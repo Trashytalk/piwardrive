@@ -27,15 +27,21 @@ from piwardrive.api.common import (
 )
 from piwardrive.api.auth import router as auth_router, AuthMiddleware, AUTH_DEP
 from piwardrive.api.health import router as health_router
-from piwardrive.api.system import router as system_router, collect_widget_metrics as _collect_widget_metrics
+from piwardrive.api.system import (
+    router as system_router,
+    collect_widget_metrics as _collect_widget_metrics,
+)
 from piwardrive.api.websockets import router as ws_router
 from piwardrive.api.widgets import router as widgets_router
 from piwardrive.routes import wifi as wifi_routes
+from piwardrive.routes import bluetooth as bluetooth_routes
 
 
 app = FastAPI()
 
-cors_origins = [o.strip() for o in os.getenv("PW_CORS_ORIGINS", "").split(",") if o.strip()]
+cors_origins = [
+    o.strip() for o in os.getenv("PW_CORS_ORIGINS", "").split(",") if o.strip()
+]
 if cors_origins:
     app.add_middleware(
         CORSMiddleware,
@@ -50,6 +56,7 @@ add_error_middleware(app)
 
 
 app.include_router(wifi_routes.router)
+app.include_router(bluetooth_routes.router)
 app.include_router(auth_router)
 app.include_router(health_router)
 app.include_router(widgets_router)
@@ -73,5 +80,3 @@ __all__ = [
     "run_service_cmd",
     "_collect_widget_metrics",
 ]
-
-

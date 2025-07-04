@@ -2,6 +2,9 @@
 
 from .api_models import (
     AccessPoint,
+    BluetoothDevice,
+    BluetoothScanRequest,
+    BluetoothScanResponse,
     ErrorResponse,
     SystemStats,
     WiFiScanRequest,
@@ -10,6 +13,9 @@ from .api_models import (
 
 __all__ = [
     "AccessPoint",
+    "BluetoothDevice",
+    "BluetoothScanRequest",
+    "BluetoothScanResponse",
     "ErrorResponse",
     "SystemStats",
     "WiFiScanRequest",
