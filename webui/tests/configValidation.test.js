@@ -26,4 +26,10 @@ describe('config validation', () => {
     process.env.PW_THEME = 'Blue';
     expect(() => cfg.AppConfig.load()).toThrow();
   });
+
+  it('invalid db cache size', () => {
+    const cfg = setupTemp();
+    process.env.PW_DB_CACHE_SIZE = '-1';
+    expect(() => cfg.AppConfig.load()).toThrow();
+  });
 });
