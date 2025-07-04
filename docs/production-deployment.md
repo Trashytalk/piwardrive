@@ -38,6 +38,22 @@ This guide covers deploying PiWardrive in production environments, from single-s
 - **Monitoring** (Real-time observability)
 - **Compliance** (Audit trails and data protection)
 
+### Containerized Deployment
+
+The `deploy/` directory contains production-ready configuration for both
+Docker Compose and Kubernetes. The Compose file `docker-compose.production.yml`
+orchestrates PiWardrive with PostgreSQL, Redis, Prometheus, Grafana and an
+Nginx reverse proxy with SSL termination. Kubernetes manifests in
+`deploy/k8s/` provide the same stack along with a Horizontal Pod Autoscaler for
+automatic scaling. A Helm chart under `deploy/charts/piwardrive` simplifies
+cluster deployments and exposes common settings through `values.yaml`.
+
+### Backup and Recovery
+
+Regular database dumps and Redis snapshots are essential for production
+reliability. Example scripts are provided in `docs/backup_recovery.md` and can
+be scheduled via `cron` or Kubernetes `CronJob` resources.
+
 ## Architecture Planning
 
 ### Reference Architectures
