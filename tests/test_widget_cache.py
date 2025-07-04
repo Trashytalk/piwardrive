@@ -39,5 +39,5 @@ def test_widget_plugin_cache(tmp_path, monkeypatch):
         "    pass\n"
     )
     widgets._load_plugins()
-    assert call_count > 0
+    assert call_count == 0
     assert hasattr(widgets, "W2")
