@@ -686,6 +686,14 @@ docker compose run --rm tests
 The Makefile's `coverage` target also runs `pytest` and `npm test` when
 generating coverage reports.
 
+## Security Compliance
+
+All pull requests trigger the [Security Scan](.github/workflows/security.yml)
+workflow which runs Bandit, pip-audit and Safety. Results are uploaded in
+SARIF or JSON format and critical findings block the merge. Weekly scans and
+automated dependency updates keep the project in line with the
+[security compliance](docs/security_compliance.md) policy.
+
 ## Legal Notice
 
 Ensure all wireless and Bluetooth scans comply with local laws and have proper authorization. The authors are not responsible for misuse of this software.
