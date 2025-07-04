@@ -37,6 +37,10 @@ for _mod in (
     "diagnostics",
     "exception_handler",
     "task_queue",
+    "cpu_pool",
+    "cache",
+    "circuit_breaker",
+    "performance",
 ):
     try:  # pragma: no cover - optional imports may fail
         module = import_module(f"piwardrive.{_mod}")

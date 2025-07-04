@@ -165,10 +165,11 @@ except Exception:  # pragma: no cover - fall back to real module
 
 try:  # allow tests to stub out analytics
     from analytics.baseline import analyze_health_baseline  # type: ignore
-    from analytics.baseline import load_baseline_health
+    from analytics.baseline import analyze_health_baseline_async, load_baseline_health
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.analytics.baseline import (
         analyze_health_baseline,
+        analyze_health_baseline_async,
         load_baseline_health,
     )
 
@@ -758,7 +759,7 @@ async def baseline_analysis_endpoint(
     baseline = load_baseline_health(days, limit)
     if inspect.isawaitable(baseline):
         baseline = await baseline
-    return analyze_health_baseline(recent, baseline, threshold)
+    return await analyze_health_baseline_async(recent, baseline, threshold)
 
 
 async def _collect_widget_metrics() -> WidgetMetrics:
