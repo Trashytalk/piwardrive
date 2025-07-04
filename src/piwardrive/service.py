@@ -11,8 +11,9 @@ from dataclasses import asdict
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
-from piwardrive.logging import init_logging
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from piwardrive.logging import init_logging
 
 try:  # pragma: no cover - optional FastAPI dependency
     from fastapi import (
@@ -113,6 +114,7 @@ if TYPE_CHECKING:  # pragma: no cover - type hints only
 
 import asyncio
 import functools
+import hmac
 import importlib
 import json
 import secrets
@@ -132,7 +134,12 @@ except Exception:  # pragma: no cover - fall back to real module
     from piwardrive.database_service import db_service
     from piwardrive.persistence import DashboardSettings, FingerprintInfo, User
 
-from piwardrive.security import hash_secret, sanitize_path, verify_password
+from piwardrive.security import (
+    hash_secret,
+    sanitize_path,
+    validate_service_name,
+    verify_password,
+)
 
 try:  # allow tests to provide a simplified utils module
     import utils as _utils
@@ -185,41 +192,59 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         response = await call_next(request)
         response.headers.setdefault("Content-Security-Policy", self.csp)
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=63072000; includeSubDomains; preload",
+        )
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
         return response
 
 
+class _TokenBucket:
+    def __init__(self, capacity: int, rate: float) -> None:
+        self.capacity = capacity
+        self.rate = rate
+        self.tokens = float(capacity)
+        self.updated = time.monotonic()
+
+    def consume(self, amount: int = 1) -> bool:
+        now = time.monotonic()
+        elapsed = now - self.updated
+        self.updated = now
+        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+        if self.tokens >= amount:
+            self.tokens -= amount
+            return True
+        return False
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Basic in-memory rate limiting per client IP."""
+    """Token bucket rate limiting per client IP."""
 
     def __init__(self, app: FastAPI, max_requests: int, window_seconds: int) -> None:
         super().__init__(app)
-        self.max_requests = max_requests
+        self.capacity = max_requests
         self.window_seconds = window_seconds
-        self.records: defaultdict[str, deque[float]] = defaultdict(deque)
+        self.rate = max_requests / window_seconds
+        self.buckets: dict[str, _TokenBucket] = {}
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         host = request.client.host if request.client else "anonymous"
-        now = time.time()
-        q = self.records[host]
-        cutoff = now - self.window_seconds
-        while q and q[0] < cutoff:
-            q.popleft()
-        if len(q) >= self.max_requests:
-            retry_after = int(self.window_seconds - (now - q[0]))
+        bucket = self.buckets.setdefault(host, _TokenBucket(self.capacity, self.rate))
+        if not bucket.consume():
+            retry_after = max(1, int(1 / self.rate))
             headers = {
-                "X-RateLimit-Limit": str(self.max_requests),
+                "X-RateLimit-Limit": str(self.capacity),
                 "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Reset": str(int(q[0] + self.window_seconds)),
                 "X-RateLimit-Window": str(self.window_seconds),
                 "Retry-After": str(retry_after),
             }
             return Response("rate limit exceeded", status_code=429, headers=headers)
-        q.append(now)
         response = await call_next(request)
-        remaining = self.max_requests - len(q)
-        response.headers["X-RateLimit-Limit"] = str(self.max_requests)
+        remaining = int(bucket.tokens)
+        response.headers["X-RateLimit-Limit"] = str(self.capacity)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
-        response.headers["X-RateLimit-Reset"] = str(int(q[0] + self.window_seconds))
         response.headers["X-RateLimit-Window"] = str(self.window_seconds)
         return response
 
@@ -646,8 +671,9 @@ async def _check_auth(token: str = SECURITY_DEP) -> None:
     await _ensure_default_user()
     if not token:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
-    user = await db_service.get_user_by_token(hash_secret(token))
-    if user is None:
+    token_hash = hash_secret(token)
+    user = await db_service.get_user_by_token(token_hash)
+    if user is None or not hmac.compare_digest(user.token_hash or "", token_hash):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
 
 
@@ -658,7 +684,11 @@ async def token_login(
     """Return bearer token for valid credentials."""
     await _ensure_default_user()
     user = await db_service.get_user(form.username)
-    if not user or not verify_password(form.password, user.password_hash):
+    if (
+        not user
+        or not hmac.compare_digest(user.username, form.username)
+        or not verify_password(form.password, user.password_hash)
+    ):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
     token = secrets.token_urlsafe(32)
     await db_service.update_user_token(user.username, hash_secret(token))
@@ -674,7 +704,11 @@ async def login(
 ) -> AuthLoginResponse:
     """Validate credentials and return a bearer token."""
     user = await db_service.get_user(form.username)
-    if not user or not verify_password(form.password, user.password_hash):
+    if (
+        not user
+        or not hmac.compare_digest(user.username, form.username)
+        or not verify_password(form.password, user.password_hash)
+    ):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
     token = secrets.token_urlsafe(32)
     TOKENS[token] = user.username
@@ -892,6 +926,7 @@ async def control_service_endpoint(
     _auth: User | None = AUTH_DEP,
 ) -> ServiceControlResponse:
     """Start or stop a systemd service."""
+    validate_service_name(name)
     if action not in {"start", "stop", "restart"}:
         raise HTTPException(status_code=400, detail=error_json(400, "Invalid action"))
     result = run_service_cmd(name, action) or (False, "", "")
@@ -909,6 +944,7 @@ async def get_service_status_endpoint(
     name: str, _auth: User | None = AUTH_DEP
 ) -> ServiceStatusResponse:
     """Return whether a ``systemd`` service is active."""
+    validate_service_name(name)
     active = await service_status_async(name)
     return {"service": name, "active": active}
 
@@ -1061,6 +1097,7 @@ async def remove_geofence_endpoint(
     name: str, _auth: User | None = AUTH_DEP
 ) -> RemoveResponse:
     """Delete ``name`` from ``geofences.json``."""
+    validate_service_name(name)
     polys = _load_geofences()
     for idx, poly in enumerate(polys):
         if poly.get("name") == name:
