@@ -710,6 +710,7 @@ def test_auth_login_valid(monkeypatch) -> None:
     monkeypatch.setattr(service, "get_user", fake_get_user)
     monkeypatch.setattr("piwardrive.service.get_user", fake_get_user)
     service.TOKENS.clear()
+    service.REFRESH_TOKENS.clear()
     client = TestClient(service.app)
     resp = client.post(
         "/auth/login",
@@ -719,5 +720,7 @@ def test_auth_login_valid(monkeypatch) -> None:
     assert resp.status_code == 200
     data = resp.json()
     assert data["token_type"] == "bearer"
-    assert data["access_token"] in service.TOKENS
+    assert "access_token" in data
+    assert "refresh_token" in data
+    assert data["refresh_token"] in service.REFRESH_TOKENS
 

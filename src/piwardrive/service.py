@@ -140,6 +140,7 @@ from piwardrive.security import (
     validate_service_name,
     verify_password,
 )
+from piwardrive import jwt_utils
 
 try:  # allow tests to provide a simplified utils module
     import utils as _utils
@@ -199,54 +200,92 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-XSS-Protection", "1; mode=block")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault("Permissions-Policy", "geolocation=()")
+        response.headers.setdefault("Cache-Control", "no-store")
         return response
 
 
-class _TokenBucket:
-    def __init__(self, capacity: int, rate: float) -> None:
-        self.capacity = capacity
-        self.rate = rate
-        self.tokens = float(capacity)
-        self.updated = time.monotonic()
+class CSRFMiddleware(BaseHTTPMiddleware):
+    """Simple double submit CSRF protection."""
 
-    def consume(self, amount: int = 1) -> bool:
+    def __init__(self, app: FastAPI, header: str = "X-CSRF-Token", cookie: str = "csrf_token") -> None:
+        super().__init__(app)
+        self.header = header
+        self.cookie = cookie
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        if request.method not in ("GET", "HEAD", "OPTIONS", "TRACE"):
+            header_token = request.headers.get(self.header)
+            cookie_token = request.cookies.get(self.cookie)
+            if not (
+                header_token
+                and cookie_token
+                and hmac.compare_digest(header_token, cookie_token)
+            ):
+                return Response("CSRF validation failed", status_code=403)
+        response = await call_next(request)
+        if self.cookie not in request.cookies:
+            token = secrets.token_urlsafe(32)
+            response.set_cookie(self.cookie, token, secure=True, httponly=False, samesite="Lax")
+        return response
+
+
+class _SlidingWindow:
+    def __init__(self, capacity: int, window: int) -> None:
+        self.capacity = capacity
+        self.window = window
+        self.events: deque[float] = deque()
+
+    def consume(self) -> bool:
         now = time.monotonic()
-        elapsed = now - self.updated
-        self.updated = now
-        self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
-        if self.tokens >= amount:
-            self.tokens -= amount
-            return True
-        return False
+        cutoff = now - self.window
+        while self.events and self.events[0] <= cutoff:
+            self.events.popleft()
+        if len(self.events) >= self.capacity:
+            return False
+        self.events.append(now)
+        return True
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Token bucket rate limiting per client IP."""
+    """Sliding window rate limiting per client and user."""
 
-    def __init__(self, app: FastAPI, max_requests: int, window_seconds: int) -> None:
+    def __init__(
+        self,
+        app: FastAPI,
+        max_requests: int,
+        window_seconds: int,
+        endpoint_limits: Mapping[str, tuple[int, int]] | None = None,
+    ) -> None:
         super().__init__(app)
         self.capacity = max_requests
         self.window_seconds = window_seconds
-        self.rate = max_requests / window_seconds
-        self.buckets: dict[str, _TokenBucket] = {}
+        self.endpoint_limits = endpoint_limits or {}
+        self.buckets: dict[tuple[str, str], _SlidingWindow] = {}
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[override]
         host = request.client.host if request.client else "anonymous"
-        bucket = self.buckets.setdefault(host, _TokenBucket(self.capacity, self.rate))
+        token = request.headers.get("Authorization", "")
+        key = f"{host}:{hash_secret(token)}" if token else host
+
+        limit, window = self.endpoint_limits.get(request.url.path, (self.capacity, self.window_seconds))
+        bucket = self.buckets.setdefault((key, request.url.path), _SlidingWindow(limit, window))
         if not bucket.consume():
-            retry_after = max(1, int(1 / self.rate))
+            retry_after = window
             headers = {
-                "X-RateLimit-Limit": str(self.capacity),
+                "X-RateLimit-Limit": str(limit),
                 "X-RateLimit-Remaining": "0",
-                "X-RateLimit-Window": str(self.window_seconds),
+                "X-RateLimit-Window": str(window),
                 "Retry-After": str(retry_after),
             }
             return Response("rate limit exceeded", status_code=429, headers=headers)
         response = await call_next(request)
-        remaining = int(bucket.tokens)
-        response.headers["X-RateLimit-Limit"] = str(self.capacity)
+        remaining = max(0, limit - len(bucket.events))
+        response.headers["X-RateLimit-Limit"] = str(limit)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
-        response.headers["X-RateLimit-Window"] = str(self.window_seconds)
+        response.headers["X-RateLimit-Window"] = str(window)
         return response
 
 
@@ -256,6 +295,7 @@ class TokenResponse(typing.TypedDict):
 
     access_token: str
     token_type: str
+    refresh_token: typing.NotRequired[str]
 
 
 class AuthLoginResponse(TokenResponse):
@@ -533,6 +573,7 @@ if cors_origins:
 
 csp_header = os.getenv("PW_CONTENT_SECURITY_POLICY", "default-src 'self'")
 app.add_middleware(SecurityHeadersMiddleware, csp=csp_header)
+app.add_middleware(CSRFMiddleware)
 
 rl_requests = int(os.getenv("PIWARDRIVE_RATE_LIMIT_REQUESTS", "100"))
 rl_window = int(os.getenv("PIWARDRIVE_RATE_LIMIT_WINDOW", "60"))
@@ -541,6 +582,7 @@ if rl_requests > 0:
         RateLimitMiddleware,
         max_requests=rl_requests,
         window_seconds=rl_window,
+        endpoint_limits={"/auth/login": (5, rl_window), "/auth/refresh": (10, rl_window)},
     )
 
 templates = Jinja2Templates(
@@ -642,6 +684,7 @@ ALLOWED_LOG_PATHS = {
 
 # In-memory token store mapping token string to username
 TOKENS: dict[str, str] = {}
+REFRESH_TOKENS: dict[str, str] = {}
 
 # Path storing polygon geofences
 GEOFENCE_FILE = os.path.join(CONFIG_DIR, "geofences.json")
@@ -683,15 +726,21 @@ async def _ensure_default_user() -> None:
         await db_service.save_user(User(username=username, password_hash=pw_hash))
 
 
-async def _check_auth(token: str = SECURITY_DEP) -> None:
+async def _check_auth(token: str = SECURITY_DEP) -> User:
     """Validate bearer token."""
     await _ensure_default_user()
     if not token:
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    username = jwt_utils.verify_token(token)
+    if username:
+        user = await db_service.get_user(username)
+        if user:
+            return user
     token_hash = hash_secret(token)
     user = await db_service.get_user_by_token(token_hash)
     if user is None or not hmac.compare_digest(user.token_hash or "", token_hash):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    return user
 
 
 @POST(
@@ -748,41 +797,38 @@ async def login(
         or not verify_password(form.password, user.password_hash)
     ):
         raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
-    token = secrets.token_urlsafe(32)
-    TOKENS[token] = user.username
-    return {"access_token": token, "token_type": "bearer", "role": user.role}
+    access = jwt_utils.create_access_token(user.username)
+    refresh = jwt_utils.create_refresh_token(user.username)
+    REFRESH_TOKENS[refresh] = user.username
+    return {
+        "access_token": access,
+        "token_type": "bearer",
+        "refresh_token": refresh,
+        "role": user.role,
+    }
 
 
 @POST("/auth/logout")
 async def logout(token: str = SECURITY_DEP) -> LogoutResponse:
     """Invalidate the current token."""
     TOKENS.pop(token, None)
+    REFRESH_TOKENS.pop(token, None)
     return {"logout": True}
 
 
-@GET(
-    "/status",
-    response_model=list[HealthRecordDict],
-    summary="Recent health records",
-    description="Return the most recent CPU and memory usage metrics.",
-    responses={
-        200: {
-            "content": {
-                "application/json": {
-                    "example": [
-                        {
-                            "timestamp": "2024-01-01T00:00:00Z",
-                            "cpu_temp": 55.2,
-                            "cpu_percent": 12.5,
-                            "memory_percent": 35.0,
-                            "disk_percent": 40.0,
-                        }
-                    ]
-                }
-            }
-        }
-    },
-)
+@POST("/auth/refresh")
+async def refresh_token(refresh_token: str = BODY) -> TokenResponse:
+    """Return a new access token from a refresh token."""
+    username = REFRESH_TOKENS.pop(refresh_token, None)
+    if not username:
+        raise HTTPException(status_code=401, detail=error_json(401, "Unauthorized"))
+    new_refresh = jwt_utils.create_refresh_token(username)
+    REFRESH_TOKENS[new_refresh] = username
+    access = jwt_utils.create_access_token(username)
+    return {"access_token": access, "token_type": "bearer", "refresh_token": new_refresh}
+
+
+@GET("/status")
 async def get_status(
     limit: int = 5, _auth: User | None = AUTH_DEP
 ) -> list[HealthRecordDict]:
