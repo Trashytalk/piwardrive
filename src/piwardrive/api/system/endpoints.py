@@ -18,6 +18,7 @@ from piwardrive import service
 from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
 from piwardrive.security import sanitize_path, verify_password
+from piwardrive.services import db_monitor
 
 router = APIRouter()
 
@@ -144,6 +145,23 @@ async def get_db_stats_endpoint(
     except OSError:
         size_kb = None
     return {"size_kb": size_kb, "tables": counts}
+
+
+@router.get("/db-health")
+async def db_health_endpoint(_auth: Any = service.AUTH_DEP) -> dict[str, Any]:
+    healthy = await db_monitor.health_check()
+    return {
+        "healthy": healthy,
+        "pool": db_service.manager.get_metrics(),
+        "queries": db_monitor.get_query_metrics(),
+    }
+
+
+@router.get("/db-index-usage")
+async def db_index_usage_endpoint(
+    _auth: Any = service.AUTH_DEP,
+) -> list[dict[str, Any]]:
+    return await db_monitor.analyze_index_usage()
 
 
 @router.get("/lora-scan")
