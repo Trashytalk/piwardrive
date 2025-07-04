@@ -91,5 +91,12 @@ Several helper scripts are installed alongside the React dashboard. They can be 
     The command prints JSON with ``temp_avg``, ``cpu_avg``, ``mem_avg`` and
     ``disk_avg`` values.
 
+``migrate_sqlite_to_postgres.py``
+    Copy data from a local SQLite database into a PostgreSQL instance::
+
+        python -m scripts.migrate_sqlite_to_postgres ~/.config/piwardrive/app.db postgresql://user:pass@localhost/db
+
+    Use ``validate_migration.py`` to confirm row counts match after migration.
+
 
 See ``--help`` on each command for additional options.

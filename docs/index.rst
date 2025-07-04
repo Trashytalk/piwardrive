@@ -54,5 +54,6 @@ Common issues are answered in the :doc:`faq`.
    notifications
    web_ui
    network_analytics
+   scaling_architecture
    faq
    legal

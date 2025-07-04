@@ -3,11 +3,29 @@ from __future__ import annotations
 from typing import Any, List
 
 from . import persistence
+from .db import (
+    DatabaseAdapter,
+    DatabaseManager,
+    MySQLAdapter,
+    PostgresAdapter,
+    SQLiteAdapter,
+)
 from .persistence import DashboardSettings, FingerprintInfo, HealthRecord, User
 
 
 class DatabaseService:
-    """Wrapper around :mod:`piwardrive.persistence` functions."""
+    """Wrapper around persistence with pluggable database backends."""
+
+    def __init__(self, adapter: DatabaseAdapter | None = None) -> None:
+        if adapter is None:
+            adapter = SQLiteAdapter(persistence._db_path())
+        self.manager = DatabaseManager(adapter)
+
+    async def connect(self) -> None:
+        await self.manager.connect()
+
+    async def close(self) -> None:
+        await self.manager.close()
 
     async def load_recent_health(self, limit: int = 10) -> List[HealthRecord]:
         return await persistence.load_recent_health(limit)
@@ -58,6 +76,10 @@ class DatabaseService:
 
     async def get_user_by_token(self, token_hash: str) -> User | None:
         return await persistence.get_user_by_token(token_hash)
+
+    async def fetch(self, query: str, *args: Any) -> list[dict]:
+        """Run an arbitrary SELECT query using the configured adapter."""
+        return await self.manager.fetchall(query, *args)
 
 
 db_service = DatabaseService()
