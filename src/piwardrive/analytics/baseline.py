@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Iterable, Dict, Any, List
+from typing import Any, Dict, Iterable, List
 
 from ..analysis import compute_health_stats
 from ..persistence import HealthRecord, _get_conn, flush_health_records
@@ -44,3 +44,24 @@ def analyze_health_baseline(
         "delta": delta,
         "anomalies": anomalies,
     }
+
+
+from ..cpu_pool import run_cpu_bound
+
+
+async def analyze_health_baseline_async(
+    recent: Iterable[HealthRecord],
+    baseline: Iterable[HealthRecord],
+    threshold: float = 5.0,
+) -> Dict[str, Any]:
+    """Async wrapper for :func:`analyze_health_baseline`."""
+    return await run_cpu_bound(
+        analyze_health_baseline, list(recent), list(baseline), threshold
+    )
+
+
+__all__ = [
+    "load_baseline_health",
+    "analyze_health_baseline",
+    "analyze_health_baseline_async",
+]
