@@ -20,6 +20,14 @@ General
 
 ``PW_DB_PATH``
     Path to the SQLite database storing health metrics.
+``PW_DB_POOL_SIZE``
+    Maximum number of connections in the SQLite pool (default ``10``).
+``PW_DB_BUFFER_LIMIT``
+    Number of health records buffered before a flush (default ``50``).
+``PW_DB_FLUSH_INTERVAL``
+    Seconds between automatic buffer flushes (default ``30``).
+``PW_DB_SHARDS``
+    Number of database shards for horizontal scaling.
 
 ``PW_HEALTH_FILE``
     JSON file returned by ``/api/status`` when present.

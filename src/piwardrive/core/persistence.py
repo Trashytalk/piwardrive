@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import sqlite3
+import hashlib
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
@@ -21,26 +22,55 @@ except Exception:  # pragma: no cover - optional dependency
 from piwardrive import config
 
 
-def _db_path() -> str:
-    env = os.getenv("PW_DB_PATH")
-    if env:
-        return os.path.expanduser(env)
-    return os.path.join(config.CONFIG_DIR, "app.db")
+class ShardManager:
+    """Simple hash-based shard selector."""
+
+    def __init__(self, shards: int = 1) -> None:
+        self.shards = max(1, shards)
+
+    def db_path(self, key: str = "") -> str:
+        env = os.getenv("PW_DB_PATH")
+        if env:
+            base = os.path.expanduser(env)
+        else:
+            base = os.path.join(config.CONFIG_DIR, "app.db")
+        if self.shards == 1:
+            return base
+        idx = int(hashlib.sha1(key.encode()).hexdigest(), 16) % self.shards
+        root, ext = os.path.splitext(base)
+        return f"{root}_{idx}{ext}"
 
 
-# Reuse a single connection per event loop and config directory
-_DB_CONN: aiosqlite.Connection | None = None
-_DB_LOOP: asyncio.AbstractEventLoop | None = None
+_shard_mgr = ShardManager(int(os.getenv("PW_DB_SHARDS", "1")))
+
+
+def _db_path(key: str = "") -> str:
+    """Return the SQLite database path for ``key``."""
+    return _shard_mgr.db_path(key)
+
+
+# SQLite connection pool
+_POOL_SIZE = int(os.getenv("PW_DB_POOL_SIZE", "10"))
+_DB_POOL: asyncio.Queue[aiosqlite.Connection] | None = None
 _DB_DIR: str | None = None
 _DB_KEY: str | None = None
+_SCHEMA_INITIALISED = False
+_POOL_LOCK = asyncio.Lock()
+
+# Connection metrics
+_METRICS = {
+    "acquired": 0,
+    "released": 0,
+}
 
 # Pending HealthRecord rows for bulk writes
 _HEALTH_BUFFER: list[dict[str, Any]] = []
 _LAST_FLUSH: float = 0.0
+_FLUSH_TASK: asyncio.Task | None = None
 
 # Flush after this many records or seconds
-_BUFFER_LIMIT = 50
-_FLUSH_INTERVAL = 30.0
+_BUFFER_LIMIT = int(os.getenv("PW_DB_BUFFER_LIMIT", "50"))
+_FLUSH_INTERVAL = float(os.getenv("PW_DB_FLUSH_INTERVAL", "30.0"))
 
 # Schema versioning
 LATEST_VERSION = 3
@@ -127,36 +157,120 @@ async def _migration_3(conn: aiosqlite.Connection) -> None:
 _MIGRATIONS.append(_migration_3)
 
 
-async def _get_conn() -> aiosqlite.Connection:
-    """Return a cached SQLite connection initialized with the proper schema."""
-    global _DB_CONN, _DB_LOOP, _DB_DIR, _DB_KEY
-    loop = asyncio.get_running_loop()
-    cur_dir = config.CONFIG_DIR
-    key = os.getenv("PW_DB_KEY")
-    if _DB_CONN is None or _DB_LOOP is not loop or _DB_DIR != cur_dir or _DB_KEY != key:
-        if _DB_CONN is not None:
-            try:
-                await _DB_CONN.close()
-            except Exception:
-                logging.exception("Error closing previous DB connection")
-        if key:
-            if sqlcipher is None:
-                raise RuntimeError("pysqlcipher3 must be installed to use PW_DB_KEY")
-            aiosqlite.core.sqlite3 = sqlcipher
-        else:
-            aiosqlite.core.sqlite3 = sqlite3
+async def _create_connection(path: str, key: str | None) -> aiosqlite.Connection:
+    """Create a new SQLite connection with performance pragmas."""
+    if key:
+        if sqlcipher is None:
+            raise RuntimeError("pysqlcipher3 must be installed to use PW_DB_KEY")
+        aiosqlite.core.sqlite3 = sqlcipher
+    else:
+        aiosqlite.core.sqlite3 = sqlite3
+    conn = await aiosqlite.connect(path)
+    if key:
+        await conn.execute("PRAGMA key = ?", (key,))
+    pragmas = {
+        "journal_mode": "WAL",
+        "synchronous": "NORMAL",
+        "temp_store": "MEMORY",
+        "cache_size": 10000,
+    }
+    for k, v in pragmas.items():
+        await conn.execute(f"PRAGMA {k}={v}")
+    conn.row_factory = aiosqlite.Row
+    return conn
+
+
+async def _init_pool() -> None:
+    """Initialise the connection pool and database schema."""
+    global _DB_POOL, _DB_DIR, _DB_KEY, _SCHEMA_INITIALISED
+    async with _POOL_LOCK:
+        cur_dir = config.CONFIG_DIR
+        key = os.getenv("PW_DB_KEY")
         path = _db_path()
+        if _DB_POOL is not None and _DB_DIR == cur_dir and _DB_KEY == key:
+            return
+        if _DB_POOL is not None:
+            while not _DB_POOL.empty():
+                conn = await _DB_POOL.get()
+                await conn.close()
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        _DB_CONN = await aiosqlite.connect(path)
-        if key:
-            await _DB_CONN.execute("PRAGMA key = ?", (key,))
-        await _DB_CONN.execute("PRAGMA journal_mode=WAL")
-        _DB_CONN.row_factory = aiosqlite.Row
-        await _init_db(_DB_CONN)
-        _DB_LOOP = loop
+        _DB_POOL = asyncio.Queue(maxsize=_POOL_SIZE)
+        for i in range(_POOL_SIZE):
+            conn = await _create_connection(path, key)
+            if not _SCHEMA_INITIALISED:
+                await _init_db(conn)
+                _SCHEMA_INITIALISED = True
+            await _DB_POOL.put(conn)
         _DB_DIR = cur_dir
         _DB_KEY = key
-    return _DB_CONN
+
+
+async def _acquire_conn() -> aiosqlite.Connection:
+    await _init_pool()
+    assert _DB_POOL is not None
+    conn = await _DB_POOL.get()
+    try:
+        await conn.execute("SELECT 1")
+    except Exception:
+        path = _db_path()
+        conn = await _create_connection(path, _DB_KEY)
+    _METRICS["acquired"] += 1
+    return conn
+
+
+async def _release_conn(conn: aiosqlite.Connection) -> None:
+    if _DB_POOL is None:
+        await conn.close()
+        return
+    await _DB_POOL.put(conn)
+    _METRICS["released"] += 1
+
+
+class _ConnCtx:
+    def __init__(self) -> None:
+        self.conn: aiosqlite.Connection | None = None
+
+    async def __aenter__(self) -> aiosqlite.Connection:
+        self.conn = await _acquire_conn()
+        return self.conn
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        assert self.conn is not None
+        await _release_conn(self.conn)
+
+
+def _get_conn() -> _ConnCtx:
+    """Return an async context manager yielding a pooled connection."""
+    return _ConnCtx()
+
+
+async def shutdown_pool() -> None:
+    """Close all pooled connections."""
+    global _DB_POOL
+    if _DB_POOL is None:
+        return
+    await flush_health_records()
+    while not _DB_POOL.empty():
+        conn = await _DB_POOL.get()
+        await conn.close()
+    _DB_POOL = None
+
+
+def get_db_metrics() -> dict[str, int]:
+    """Return connection pool metrics."""
+    return {
+        "pool_size": _POOL_SIZE,
+        "available": _DB_POOL.qsize() if _DB_POOL else 0,
+        **_METRICS,
+    }
+
+
+async def backup_database(dest: str) -> None:
+    """Write a backup of the primary database to ``dest``."""
+    async with _get_conn() as conn:
+        backup_db = await aiosqlite.connect(dest)
+        await conn.backup(backup_db)
+        await backup_db.close()
 
 
 @dataclass
@@ -224,39 +338,55 @@ async def flush_health_records() -> None:
     global _LAST_FLUSH
     if not _HEALTH_BUFFER:
         return
-    conn = await _get_conn()
-    await conn.executemany(
-        """
-        INSERT OR REPLACE INTO health_records
-        (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
-        VALUES (:timestamp, :cpu_temp, :cpu_percent, :memory_percent, :disk_percent)
-        """,
-        _HEALTH_BUFFER,
-    )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT OR REPLACE INTO health_records
+            (timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent)
+            VALUES (:timestamp, :cpu_temp, :cpu_percent, :memory_percent, :disk_percent)
+            """,
+            _HEALTH_BUFFER,
+        )
+        await conn.commit()
     _HEALTH_BUFFER.clear()
     _LAST_FLUSH = time.time()
 
 
 async def save_health_record(rec: HealthRecord) -> None:
     """Queue ``rec`` for insertion into ``health_records``."""
-    await _get_conn()  # ensure DB file exists
+    global _FLUSH_TASK
+    # Ensure database exists and start flush worker
+    async with _get_conn():
+        pass
     _HEALTH_BUFFER.append(asdict(rec))
     now = time.time()
     if len(_HEALTH_BUFFER) >= _BUFFER_LIMIT or now - _LAST_FLUSH >= _FLUSH_INTERVAL:
         await flush_health_records()
+    elif _FLUSH_TASK is None or _FLUSH_TASK.done():
+        _FLUSH_TASK = asyncio.create_task(_flush_worker())
+
+
+async def _flush_worker() -> None:
+    """Background task periodically flushing buffered records."""
+    try:
+        while _HEALTH_BUFFER:
+            await asyncio.sleep(_FLUSH_INTERVAL)
+            await flush_health_records()
+    finally:
+        global _FLUSH_TASK
+        _FLUSH_TASK = None
 
 
 async def load_recent_health(limit: int = 10, offset: int = 0) -> List[HealthRecord]:
     """Return ``limit`` most recent :class:`HealthRecord` entries with ``offset``."""
     await flush_health_records()
-    conn = await _get_conn()
-    cur = await conn.execute(
-        """SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            """SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent
         FROM health_records ORDER BY timestamp DESC LIMIT ? OFFSET ?""",
-        (limit, offset),
-    )
-    rows = await cur.fetchall()
+            (limit, offset),
+        )
+        rows = await cur.fetchall()
     return [HealthRecord(**dict(row)) for row in rows]
 
 
@@ -270,28 +400,28 @@ async def iter_health_history(
     """Yield :class:`HealthRecord` rows between ``start`` and ``end`` with
     pagination."""
     await flush_health_records()
-    conn = await _get_conn()
-    query = (
-        "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
-        " FROM health_records"
-    )
-    params: list[object] = []
-    if start and end:
-        query += " WHERE timestamp >= ? AND timestamp <= ?"
-        params = [start, end]
-    elif start:
-        query += " WHERE timestamp >= ?"
-        params = [start]
-    elif end:
-        query += " WHERE timestamp <= ?"
-        params = [end]
-    query += " ORDER BY timestamp"
-    if limit is not None:
-        query += " LIMIT ? OFFSET ?"
-        params.extend([limit, offset])
-    cur = await conn.execute(query, tuple(params))
-    async for row in cur:
-        yield HealthRecord(**dict(row))
+    async with _get_conn() as conn:
+        query = (
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
+            " FROM health_records"
+        )
+        params: list[object] = []
+        if start and end:
+            query += " WHERE timestamp >= ? AND timestamp <= ?"
+            params = [start, end]
+        elif start:
+            query += " WHERE timestamp >= ?"
+            params = [start]
+        elif end:
+            query += " WHERE timestamp <= ?"
+            params = [end]
+        query += " ORDER BY timestamp"
+        if limit is not None:
+            query += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        cur = await conn.execute(query, tuple(params))
+        async for row in cur:
+            yield HealthRecord(**dict(row))
 
 
 async def load_health_history(
@@ -311,35 +441,35 @@ async def purge_old_health(days: int) -> None:
     """Delete ``health_records`` older than ``days`` days."""
     await flush_health_records()
     cutoff = (datetime.now() - timedelta(days=days)).isoformat()
-    conn = await _get_conn()
-    await conn.execute(
-        "DELETE FROM health_records WHERE timestamp < ?",
-        (cutoff,),
-    )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.execute(
+            "DELETE FROM health_records WHERE timestamp < ?",
+            (cutoff,),
+        )
+        await conn.commit()
 
 
 async def save_app_state(state: AppState) -> None:
     """Persist application ``state``."""
-    conn = await _get_conn()
-    await conn.execute("DELETE FROM app_state WHERE id = 1")
-    await conn.execute(
-        (
-            "INSERT INTO app_state (id, last_screen, last_start, first_run) "
-            "VALUES (1, ?, ?, ?)"
-        ),
-        (state.last_screen, state.last_start, int(state.first_run)),
-    )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.execute("DELETE FROM app_state WHERE id = 1")
+        await conn.execute(
+            (
+                "INSERT INTO app_state (id, last_screen, last_start, first_run) "
+                "VALUES (1, ?, ?, ?)"
+            ),
+            (state.last_screen, state.last_start, int(state.first_run)),
+        )
+        await conn.commit()
 
 
 async def load_app_state() -> AppState:
     """Load persisted :class:`AppState` or defaults."""
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT last_screen, last_start, first_run FROM app_state WHERE id = 1"
-    )
-    row = await cur.fetchone()
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            "SELECT last_screen, last_start, first_run FROM app_state WHERE id = 1"
+        )
+        row = await cur.fetchone()
     if row is None:
         return AppState()
     return AppState(
@@ -368,61 +498,61 @@ async def load_dashboard_settings() -> DashboardSettings:
 
 async def get_user(username: str) -> User | None:
     """Return ``User`` row for ``username`` if it exists."""
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT username, password_hash, token_hash FROM users WHERE username = ?",
-        (username,),
-    )
-    row = await cur.fetchone()
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            "SELECT username, password_hash, token_hash FROM users WHERE username = ?",
+            (username,),
+        )
+        row = await cur.fetchone()
     return User(**row) if row else None
 
 
 async def save_user(user: User) -> None:
     """Insert or replace ``user`` in the database."""
-    conn = await _get_conn()
-    await conn.execute(
-        "INSERT OR REPLACE INTO users (username, password_hash, token_hash) "
-        "VALUES (?, ?, ?)",
-        (user.username, user.password_hash, user.token_hash),
-    )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.execute(
+            "INSERT OR REPLACE INTO users (username, password_hash, token_hash) "
+            "VALUES (?, ?, ?)",
+            (user.username, user.password_hash, user.token_hash),
+        )
+        await conn.commit()
 
 
 async def update_user_token(username: str, token_hash: str) -> None:
     """Set ``token_hash`` for ``username``."""
-    conn = await _get_conn()
-    await conn.execute(
-        "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') "
-        "WHERE username = ?",
-        (token_hash, username),
-    )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.execute(
+            "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') "
+            "WHERE username = ?",
+            (token_hash, username),
+        )
+        await conn.commit()
 
 
 async def get_user_by_token(token_hash: str) -> User | None:
     """Return ``User`` matching ``token_hash`` if found."""
-    conn = await _get_conn()
-    cur = await conn.execute(
-        "SELECT username, password_hash, token_hash FROM users WHERE token_hash = ?",
-        (token_hash,),
-    )
-    row = await cur.fetchone()
+    async with _get_conn() as conn:
+        cur = await conn.execute(
+            "SELECT username, password_hash, token_hash FROM users WHERE token_hash = ?",
+            (token_hash,),
+        )
+        row = await cur.fetchone()
     return User(**row) if row else None
 
 
 async def save_ap_cache(records: list[dict[str, Any]]) -> None:
     """Replace ``ap_cache`` contents with ``records``."""
-    conn = await _get_conn()
-    await conn.execute("DELETE FROM ap_cache")
-    if records:
-        await conn.executemany(
-            """
-            INSERT INTO ap_cache (bssid, ssid, encryption, lat, lon, last_time)
-            VALUES (:bssid, :ssid, :encryption, :lat, :lon, :last_time)
-            """,
-            records,
-        )
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.execute("DELETE FROM ap_cache")
+        if records:
+            await conn.executemany(
+                """
+                INSERT INTO ap_cache (bssid, ssid, encryption, lat, lon, last_time)
+                VALUES (:bssid, :ssid, :encryption, :lat, :lon, :last_time)
+                """,
+                records,
+            )
+        await conn.commit()
 
 
 async def iter_ap_cache(
@@ -432,19 +562,19 @@ async def iter_ap_cache(
     offset: int = 0,
 ) -> AsyncIterator[dict[str, Any]]:
     """Yield rows from ``ap_cache`` optionally newer than ``after`` with pagination."""
-    conn = await _get_conn()
-    params: list[object] = []
-    query = "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
-    if after is not None:
-        query += " WHERE last_time > ?"
-        params.append(after)
-    query += " ORDER BY last_time"
-    if limit is not None:
-        query += " LIMIT ? OFFSET ?"
-        params.extend([limit, offset])
-    cur = await conn.execute(query, tuple(params))
-    async for row in cur:
-        yield dict(row)
+    async with _get_conn() as conn:
+        params: list[object] = []
+        query = "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache"
+        if after is not None:
+            query += " WHERE last_time > ?"
+            params.append(after)
+        query += " ORDER BY last_time"
+        if limit is not None:
+            query += " LIMIT ? OFFSET ?"
+            params.extend([limit, offset])
+        cur = await conn.execute(query, tuple(params))
+        async for row in cur:
+            yield dict(row)
 
 
 async def load_ap_cache(
@@ -486,11 +616,12 @@ async def get_table_counts() -> dict[str, int]:
 async def vacuum() -> None:
     """Run ``VACUUM`` on the active database connection."""
     await flush_health_records()
-    conn = await _get_conn()
-    await conn.execute("VACUUM")
-    await conn.commit()
+    async with _get_conn() as conn:
+        await conn.execute("VACUUM")
+        await conn.commit()
 
 
 async def migrate() -> None:
     """Ensure the database schema is up to date."""
-    await _get_conn()
+    async with _get_conn():
+        pass
