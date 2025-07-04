@@ -1,632 +1,687 @@
 {
-  "$defs": {
-    "Theme": {
-      "description": "Available UI themes.",
-      "enum": ["Dark", "Light", "Green", "Red"],
-      "title": "Theme",
-      "type": "string"
-    }
-  },
-  "description": "Extended validation used by :func:`validate_config_data`.",
-  "properties": {
-    "theme": {
-      "$ref": "#/$defs/Theme"
-    },
-    "map_poll_gps": {
-      "exclusiveMinimum": 0,
-      "title": "Map Poll Gps",
-      "type": "integer"
-    },
-    "map_poll_gps_max": {
-      "anyOf": [
-        {
-          "type": "integer"
-        },
-        {
-          "type": "null"
+    "$defs": {
+        "Theme": {
+            "description": "Available UI themes.",
+            "enum": ["Dark", "Light", "Green", "Red"],
+            "title": "Theme",
+            "type": "string"
         }
-      ],
-      "default": null,
-      "title": "Map Poll Gps Max"
     },
-    "map_poll_aps": {
-      "anyOf": [
-        {
-          "type": "integer"
+    "description": "Extended validation used by :func:`validate_config_data`.",
+    "properties": {
+        "theme": {
+            "$ref": "#/$defs/Theme"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Map Poll Aps"
-    },
-    "map_poll_wigle": {
-      "default": 0,
-      "minimum": 0,
-      "title": "Map Poll Wigle",
-      "type": "integer"
-    },
-    "map_show_gps": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_poll_gps": {
+            "exclusiveMinimum": 0,
+            "title": "Map Poll Gps",
+            "type": "integer"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Map Show Gps"
-    },
-    "map_follow_gps": {
-      "default": true,
-      "title": "Map Follow Gps",
-      "type": "boolean"
-    },
-    "map_show_aps": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_poll_gps_max": {
+            "anyOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Poll Gps Max"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Map Show Aps"
-    },
-    "map_cluster_aps": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_poll_aps": {
+            "anyOf": [
+                {
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Poll Aps"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Map Cluster Aps"
-    },
-    "map_show_heatmap": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_poll_wigle": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Map Poll Wigle",
+            "type": "integer"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Map Show Heatmap"
-    },
-    "map_show_wigle": {
-      "default": false,
-      "title": "Map Show Wigle",
-      "type": "boolean"
-    },
-    "map_cluster_capacity": {
-      "default": 8,
-      "minimum": 1,
-      "title": "Map Cluster Capacity",
-      "type": "integer"
-    },
-    "map_use_offline": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_show_gps": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Show Gps"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Map Use Offline"
-    },
-    "map_auto_prefetch": {
-      "default": false,
-      "title": "Map Auto Prefetch",
-      "type": "boolean"
-    },
-    "disable_scanning": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_follow_gps": {
+            "default": true,
+            "title": "Map Follow Gps",
+            "type": "boolean"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Disable Scanning"
-    },
-    "kismet_logdir": {
-      "anyOf": [
-        {
-          "minLength": 1,
-          "type": "string"
+        "map_show_aps": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Show Aps"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Kismet Logdir"
-    },
-    "bettercap_caplet": {
-      "anyOf": [
-        {
-          "minLength": 1,
-          "type": "string"
+        "map_cluster_aps": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Cluster Aps"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Bettercap Caplet"
-    },
-    "dashboard_layout": {
-      "items": {},
-      "title": "Dashboard Layout",
-      "type": "array"
-    },
-    "debug_mode": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "map_show_heatmap": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Show Heatmap"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Debug Mode"
-    },
-    "offline_tile_path": {
-      "anyOf": [
-        {
-          "minLength": 1,
-          "type": "string"
+        "map_show_wigle": {
+            "default": false,
+            "title": "Map Show Wigle",
+            "type": "boolean"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Offline Tile Path"
-    },
-    "health_poll_interval": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "map_cluster_capacity": {
+            "default": 8,
+            "minimum": 1,
+            "title": "Map Cluster Capacity",
+            "type": "integer"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Health Poll Interval"
-    },
-    "log_rotate_interval": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "map_use_offline": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Map Use Offline"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Log Rotate Interval"
-    },
-    "log_rotate_archives": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "map_auto_prefetch": {
+            "default": false,
+            "title": "Map Auto Prefetch",
+            "type": "boolean"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Log Rotate Archives"
-    },
-    "cleanup_rotated_logs": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "disable_scanning": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Disable Scanning"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Cleanup Rotated Logs"
-    },
-    "reports_dir": {
-      "default": "/root/.config/piwardrive/reports",
-      "title": "Reports Dir",
-      "type": "string"
-    },
-    "health_export_interval": {
-      "default": 6,
-      "minimum": 1,
-      "title": "Health Export Interval",
-      "type": "integer"
-    },
-    "health_export_dir": {
-      "default": "/root/.config/piwardrive/health_exports",
-      "title": "Health Export Dir",
-      "type": "string"
-    },
-    "compress_health_exports": {
-      "default": true,
-      "title": "Compress Health Exports",
-      "type": "boolean"
-    },
-    "health_export_retention": {
-      "default": 7,
-      "minimum": 1,
-      "title": "Health Export Retention",
-      "type": "integer"
-    },
-    "tile_maintenance_interval": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "kismet_logdir": {
+            "anyOf": [
+                {
+                    "minLength": 1,
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Kismet Logdir"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Tile Maintenance Interval"
-    },
-    "tile_max_age_days": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "bettercap_caplet": {
+            "anyOf": [
+                {
+                    "minLength": 1,
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Bettercap Caplet"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Tile Max Age Days"
-    },
-    "tile_cache_limit_mb": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "dashboard_layout": {
+            "items": {},
+            "title": "Dashboard Layout",
+            "type": "array"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Tile Cache Limit Mb"
-    },
-    "compress_offline_tiles": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "debug_mode": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Debug Mode"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Compress Offline Tiles"
-    },
-    "route_prefetch_interval": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "offline_tile_path": {
+            "anyOf": [
+                {
+                    "minLength": 1,
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Offline Tile Path"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Route Prefetch Interval"
-    },
-    "route_prefetch_lookahead": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "health_poll_interval": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Health Poll Interval"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Route Prefetch Lookahead"
-    },
-    "widget_battery_status": {
-      "anyOf": [
-        {
-          "type": "boolean"
+        "log_rotate_interval": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Log Rotate Interval"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Widget Battery Status"
-    },
-    "log_paths": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Log Paths",
-      "type": "array"
-    },
-    "restart_services": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Restart Services",
-      "type": "array"
-    },
-    "ui_font_size": {
-      "default": 16,
-      "minimum": 1,
-      "title": "Ui Font Size",
-      "type": "integer"
-    },
-    "admin_password_hash": {
-      "anyOf": [
-        {
-          "type": "string"
+        "log_rotate_archives": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Log Rotate Archives"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": "",
-      "title": "Admin Password Hash"
-    },
-    "remote_sync_url": {
-      "anyOf": [
-        {
-          "minLength": 1,
-          "type": "string"
+        "cleanup_rotated_logs": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Cleanup Rotated Logs"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Remote Sync Url"
-    },
-    "remote_sync_token": {
-      "anyOf": [
-        {
-          "type": "string"
+        "reports_dir": {
+            "default": "/root/.config/piwardrive/reports",
+            "title": "Reports Dir",
+            "type": "string"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Remote Sync Token"
-    },
-    "remote_sync_timeout": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "health_export_interval": {
+            "default": 6,
+            "minimum": 1,
+            "title": "Health Export Interval",
+            "type": "integer"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Remote Sync Timeout"
-    },
-    "remote_sync_retries": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "health_export_dir": {
+            "default": "/root/.config/piwardrive/health_exports",
+            "title": "Health Export Dir",
+            "type": "string"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Remote Sync Retries"
-    },
-    "remote_sync_interval": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "compress_health_exports": {
+            "default": true,
+            "title": "Compress Health Exports",
+            "type": "boolean"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Remote Sync Interval"
-    },
-    "handshake_cache_seconds": {
-      "default": 10.0,
-      "minimum": 0,
-      "title": "Handshake Cache Seconds",
-      "type": "number"
-    },
-    "log_tail_cache_seconds": {
-      "default": 1.0,
-      "minimum": 0,
-      "title": "Log Tail Cache Seconds",
-      "type": "number"
-    },
-    "notification_webhooks": {
-      "items": {
-        "type": "string"
-      },
-      "title": "Notification Webhooks",
-      "type": "array"
-    },
-    "notify_cpu_temp": {
-      "default": 80.0,
-      "minimum": 0,
-      "title": "Notify Cpu Temp",
-      "type": "number"
-    },
-    "notify_disk_percent": {
-      "default": 90.0,
-      "minimum": 0,
-      "title": "Notify Disk Percent",
-      "type": "number"
-    },
-    "wigle_api_name": {
-      "anyOf": [
-        {
-          "type": "string"
+        "health_export_retention": {
+            "default": 7,
+            "minimum": 1,
+            "title": "Health Export Retention",
+            "type": "integer"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Wigle Api Name"
-    },
-    "wigle_api_key": {
-      "anyOf": [
-        {
-          "type": "string"
+        "tile_maintenance_interval": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Tile Maintenance Interval"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Wigle Api Key"
-    },
-    "gps_movement_threshold": {
-      "anyOf": [
-        {
-          "exclusiveMinimum": 0,
-          "type": "number"
+        "tile_max_age_days": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Tile Max Age Days"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Gps Movement Threshold"
-    },
-    "baseline_history_days": {
-      "anyOf": [
-        {
-          "minimum": 1,
-          "type": "integer"
+        "tile_cache_limit_mb": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Tile Cache Limit Mb"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Baseline History Days"
-    },
-    "baseline_threshold": {
-      "anyOf": [
-        {
-          "minimum": 0,
-          "type": "number"
+        "compress_offline_tiles": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Compress Offline Tiles"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Baseline Threshold"
-    },
-    "cloud_bucket": {
-      "anyOf": [
-        {
-          "type": "string"
+        "route_prefetch_interval": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Route Prefetch Interval"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Cloud Bucket"
-    },
-    "cloud_prefix": {
-      "anyOf": [
-        {
-          "type": "string"
+        "route_prefetch_lookahead": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Route Prefetch Lookahead"
         },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "title": "Cloud Prefix"
-    },
-    "cloud_profile": {
-      "anyOf": [
-        {
-          "type": "string"
+        "widget_battery_status": {
+            "anyOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Widget Battery Status"
         },
-        {
-          "type": "null"
+        "widget_detection_rate": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Detection Rate"
+        },
+        "widget_threat_level": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Threat Level"
+        },
+        "widget_network_density": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Network Density"
+        },
+        "widget_device_classification": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Device Classification"
+        },
+        "widget_suspicious_activity": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Suspicious Activity"
+        },
+        "widget_alert_summary": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Alert Summary"
+        },
+        "widget_threat_map": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Threat Map"
+        },
+        "widget_security_score": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Security Score"
+        },
+        "widget_database_health": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Database Health"
+        },
+        "widget_scanner_status": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget Scanner Status"
+        },
+        "widget_system_resource": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "default": null,
+            "title": "Widget System Resource"
+        },
+        "log_paths": {
+            "items": {
+                "type": "string"
+            },
+            "title": "Log Paths",
+            "type": "array"
+        },
+        "restart_services": {
+            "items": {
+                "type": "string"
+            },
+            "title": "Restart Services",
+            "type": "array"
+        },
+        "ui_font_size": {
+            "default": 16,
+            "minimum": 1,
+            "title": "Ui Font Size",
+            "type": "integer"
+        },
+        "admin_password_hash": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": "",
+            "title": "Admin Password Hash"
+        },
+        "remote_sync_url": {
+            "anyOf": [
+                {
+                    "minLength": 1,
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Remote Sync Url"
+        },
+        "remote_sync_token": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Remote Sync Token"
+        },
+        "remote_sync_timeout": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Remote Sync Timeout"
+        },
+        "remote_sync_retries": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Remote Sync Retries"
+        },
+        "remote_sync_interval": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Remote Sync Interval"
+        },
+        "handshake_cache_seconds": {
+            "default": 10.0,
+            "minimum": 0,
+            "title": "Handshake Cache Seconds",
+            "type": "number"
+        },
+        "log_tail_cache_seconds": {
+            "default": 1.0,
+            "minimum": 0,
+            "title": "Log Tail Cache Seconds",
+            "type": "number"
+        },
+        "notification_webhooks": {
+            "items": {
+                "type": "string"
+            },
+            "title": "Notification Webhooks",
+            "type": "array"
+        },
+        "notify_cpu_temp": {
+            "default": 80.0,
+            "minimum": 0,
+            "title": "Notify Cpu Temp",
+            "type": "number"
+        },
+        "notify_disk_percent": {
+            "default": 90.0,
+            "minimum": 0,
+            "title": "Notify Disk Percent",
+            "type": "number"
+        },
+        "wigle_api_name": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Wigle Api Name"
+        },
+        "wigle_api_key": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Wigle Api Key"
+        },
+        "gps_movement_threshold": {
+            "anyOf": [
+                {
+                    "exclusiveMinimum": 0,
+                    "type": "number"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Gps Movement Threshold"
+        },
+        "baseline_history_days": {
+            "anyOf": [
+                {
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Baseline History Days"
+        },
+        "baseline_threshold": {
+            "anyOf": [
+                {
+                    "minimum": 0,
+                    "type": "number"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Baseline Threshold"
+        },
+        "cloud_bucket": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Cloud Bucket"
+        },
+        "cloud_prefix": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Cloud Prefix"
+        },
+        "cloud_profile": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Cloud Profile"
+        },
+        "mysql_host": {
+            "default": "localhost",
+            "title": "Mysql Host",
+            "type": "string"
+        },
+        "mysql_port": {
+            "default": 3306,
+            "minimum": 1,
+            "title": "Mysql Port",
+            "type": "integer"
+        },
+        "mysql_user": {
+            "default": "piwardrive",
+            "title": "Mysql User",
+            "type": "string"
+        },
+        "mysql_password": {
+            "default": "",
+            "title": "Mysql Password",
+            "type": "string"
+        },
+        "mysql_db": {
+            "default": "piwardrive",
+            "title": "Mysql Db",
+            "type": "string"
+        },
+        "enable_graphql": {
+            "default": false,
+            "title": "Enable Graphql",
+            "type": "boolean"
+        },
+        "enable_mqtt": {
+            "default": false,
+            "title": "Enable Mqtt",
+            "type": "boolean"
         }
-      ],
-      "default": null,
-      "title": "Cloud Profile"
     },
-    "mysql_host": {
-      "default": "localhost",
-      "title": "Mysql Host",
-      "type": "string"
-    },
-    "mysql_port": {
-      "default": 3306,
-      "minimum": 1,
-      "title": "Mysql Port",
-      "type": "integer"
-    },
-    "mysql_user": {
-      "default": "piwardrive",
-      "title": "Mysql User",
-      "type": "string"
-    },
-    "mysql_password": {
-      "default": "",
-      "title": "Mysql Password",
-      "type": "string"
-    },
-    "mysql_db": {
-      "default": "piwardrive",
-      "title": "Mysql Db",
-      "type": "string"
-    },
-    "enable_graphql": {
-      "default": false,
-      "title": "Enable Graphql",
-      "type": "boolean"
-    },
-    "enable_mqtt": {
-      "default": false,
-      "title": "Enable Mqtt",
-      "type": "boolean"
-    }
-  },
-  "required": ["theme", "map_poll_gps"],
-  "title": "ConfigModel",
-  "type": "object"
+    "required": ["theme", "map_poll_gps"],
+    "title": "ConfigModel",
+    "type": "object"
 }
