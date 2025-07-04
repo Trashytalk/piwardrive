@@ -821,6 +821,42 @@ async def save_gps_tracks(records: list[dict[str, Any]]) -> None:
         await conn.commit()
 
 
+async def save_network_fingerprints(records: list[dict[str, Any]]) -> None:
+    """Insert or update records in the ``network_fingerprints`` table."""
+    if not records:
+        return
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT INTO network_fingerprints (
+                bssid, ssid, fingerprint_hash, confidence_score,
+                device_model, firmware_version, characteristics,
+                classification, risk_level, tags,
+                created_at, updated_at
+            ) VALUES (
+                :bssid, :ssid, :fingerprint_hash, :confidence_score,
+                :device_model, :firmware_version, :characteristics,
+                :classification, :risk_level, :tags,
+                COALESCE(:created_at, CURRENT_TIMESTAMP),
+                COALESCE(:updated_at, CURRENT_TIMESTAMP)
+            )
+            ON CONFLICT(bssid) DO UPDATE SET
+                ssid=excluded.ssid,
+                fingerprint_hash=excluded.fingerprint_hash,
+                confidence_score=excluded.confidence_score,
+                device_model=excluded.device_model,
+                firmware_version=excluded.firmware_version,
+                characteristics=excluded.characteristics,
+                classification=excluded.classification,
+                risk_level=excluded.risk_level,
+                tags=excluded.tags,
+                updated_at=CURRENT_TIMESTAMP
+            """,
+            records,
+        )
+        await conn.commit()
+
+
 async def get_table_counts() -> dict[str, int]:
     """Return row counts for all user tables."""
     path = _db_path()
