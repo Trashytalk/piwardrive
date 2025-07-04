@@ -615,8 +615,18 @@ def WEBSOCKET(*args: typing.Any, **kwargs: typing.Any) -> typing.Callable[[F], F
 # Include route modules
 from piwardrive.routes import wifi as wifi_routes
 
+from piwardrive.api.auth import router as auth_router, token_login, login, logout, AUTH_DEP
+from piwardrive.api.health import router as health_router, get_status, baseline_analysis_endpoint, sync_records, sse_history
+from piwardrive.api.widgets import router as widgets_router, get_widget_metrics, list_widgets, get_plugins, get_dashboard_settings_endpoint, update_dashboard_settings_endpoint
+from piwardrive.api.system import router as system_router
+from piwardrive.api.websockets import router as ws_router
 app.include_router(wifi_routes.router)
 
+app.include_router(auth_router)
+app.include_router(health_router)
+app.include_router(widgets_router)
+app.include_router(system_router)
+app.include_router(ws_router)
 
 # Allowed log file paths for the /logs endpoint
 ALLOWED_LOG_PATHS = {
@@ -1151,201 +1161,6 @@ async def _export_layer(
     return _make_export_response(data, fmt, name)
 
 
-@GET("/export/aps")
-async def export_access_points(
-    fmt: str = "geojson", _auth: User | None = AUTH_DEP
-) -> Response:
-    """Return saved Wi-Fi access points in the specified format."""
-    records = db_service.load_ap_cache()
-    if inspect.isawaitable(records):
-        records = await records
-    try:
-        from sigint_integration import load_sigint_data
-
-        records.extend(load_sigint_data("wifi"))
-    except Exception:
-        logging.debug("sigint integration failed", exc_info=True)
-    return await _export_layer(records, fmt.lower(), "aps")
-
-
-@GET("/export/bt")
-async def export_bluetooth(
-    fmt: str = "geojson", _auth: User | None = AUTH_DEP
-) -> Response:
-    """Return saved Bluetooth device data in the specified format."""
-    try:
-        from sigint_integration import load_sigint_data
-
-        records = load_sigint_data("bluetooth")
-    except Exception:
-        records = []
-    return await _export_layer(records, fmt.lower(), "bt")
-
-
-@WEBSOCKET("/ws/aps")
-async def ws_aps(websocket: WebSocket) -> None:
-    """Stream new access points over WebSocket."""
-    await websocket.accept()
-    seq = 0
-    last_time = 0.0
-    error_count = 0
-    try:
-        while True:
-            start = time.perf_counter()
-            records = db_service.load_ap_cache(last_time)
-            if inspect.isawaitable(records):
-                records = await records
-            load_time = time.perf_counter() - start
-            new = records
-            logger.debug("ws_aps: fetched %d aps in %.6fs", len(new), load_time)
-            if new:
-                last_time = max(r["last_time"] for r in new)
-            data = {
-                "seq": seq,
-                "timestamp": time.time(),
-                "aps": new,
-                "load_time": load_time,
-                "errors": error_count,
-            }
-            try:
-                await asyncio.wait_for(
-                    websocket.send_json(data), timeout=WEBSOCKET_SEND_TIMEOUT
-                )
-            except (asyncio.TimeoutError, Exception):
-                error_count += 1
-                await websocket.close()
-                break
-            seq += 1
-            await asyncio.sleep(STREAM_SLEEP)
-    except WebSocketDisconnect:
-        pass
-
-
-@GET("/sse/aps")
-async def sse_aps(request: Request) -> StreamingResponse:
-    """Stream new access points via Server-Sent Events."""
-
-    async def _event_gen() -> typing.AsyncGenerator[str, None]:
-        seq = 0
-        last_time = 0.0
-        error_count = 0
-        while True:
-            if await request.is_disconnected():
-                break
-            start = time.perf_counter()
-            records = db_service.load_ap_cache(last_time)
-            if inspect.isawaitable(records):
-                records = await records
-            load_time = time.perf_counter() - start
-            new = records
-            logger.debug("sse_aps: fetched %d aps in %.6fs", len(new), load_time)
-            if new:
-                last_time = max(r["last_time"] for r in new)
-            data = {
-                "seq": seq,
-                "timestamp": time.time(),
-                "aps": new,
-                "load_time": load_time,
-                "errors": error_count,
-            }
-            yield f"data: {json.dumps(data)}\n\n"
-            seq += 1
-            await asyncio.sleep(STREAM_SLEEP)
-
-    headers = {
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-    }
-    return StreamingResponse(
-        _event_gen(), media_type="text/event-stream", headers=headers
-    )
-
-
-@WEBSOCKET("/ws/status")
-async def ws_status(websocket: WebSocket) -> None:
-    """Stream status and widget metrics periodically over WebSocket."""
-    await websocket.accept()
-    seq = 0
-    error_count = 0
-    try:
-        while True:
-            data = {
-                "seq": seq,
-                "timestamp": time.time(),
-                "status": await get_status(),
-                "metrics": await _collect_widget_metrics(),
-                "errors": error_count,
-            }
-            try:
-                await asyncio.wait_for(
-                    websocket.send_json(data), timeout=WEBSOCKET_SEND_TIMEOUT
-                )
-            except (asyncio.TimeoutError, Exception):
-                error_count += 1
-                await websocket.close()
-                break
-            seq += 1
-            await asyncio.sleep(STREAM_SLEEP)
-    except WebSocketDisconnect:
-        pass
-
-
-@GET("/sse/status")
-async def sse_status(request: Request) -> StreamingResponse:
-    """Stream status and widget metrics via Server-Sent Events."""
-
-    async def _event_gen() -> typing.AsyncGenerator[str, None]:
-        seq = 0
-        error_count = 0
-        while True:
-            if await request.is_disconnected():
-                break
-            data = {
-                "seq": seq,
-                "timestamp": time.time(),
-                "status": await get_status(),
-                "metrics": await _collect_widget_metrics(),
-                "errors": error_count,
-            }
-            yield f"data: {json.dumps(data)}\n\n"
-            seq += 1
-            await asyncio.sleep(STREAM_SLEEP)
-
-    headers = {
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-    }
-    return StreamingResponse(
-        _event_gen(), media_type="text/event-stream", headers=headers
-    )
-
-
-@GET("/sse/history")
-async def sse_history(
-    request: Request, limit: int = 100, interval: float = 1.0
-) -> StreamingResponse:
-    """Stream historical health records for playback."""
-    records = await db_service.load_health_history()
-    if limit:
-        records = records[-limit:]
-
-    async def _event_gen() -> typing.AsyncGenerator[str, None]:
-        seq = 0
-        for rec in records:
-            if await request.is_disconnected():
-                break
-            data = {"seq": seq, "record": asdict(rec)}
-            yield f"data: {json.dumps(data)}\n\n"
-            seq += 1
-            await asyncio.sleep(max(interval, MIN_EVENT_INTERVAL))
-
-    headers = {
-        "Cache-Control": "no-cache",
-        "X-Accel-Buffering": "no",
-    }
-    return StreamingResponse(
-        _event_gen(), media_type="text/event-stream", headers=headers
-    )
 
 
 async def main() -> None:

@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-
+from piwardrive.error_middleware import add_error_middleware
 from piwardrive.security import verify_password
 from piwardrive.service import _collect_widget_metrics
 from piwardrive.service import app as api_app
@@ -44,6 +44,7 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 def create_app() -> FastAPI:
     app = FastAPI()
     app.add_middleware(BasicAuthMiddleware)
+    add_error_middleware(app)
     app.mount("/api", api_app)
     app.add_api_route("/api/widgets", list_widgets, methods=["GET"])
 
