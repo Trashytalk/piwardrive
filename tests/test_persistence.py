@@ -93,14 +93,16 @@ def test_vacuum(tmp_path: Path) -> None:
 def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
     loop1 = asyncio.new_event_loop()
-    conn1 = loop1.run_until_complete(persistence._get_conn())
+    conn1 = loop1.run_until_complete(persistence._acquire_conn())
     loop1.run_until_complete(conn1.execute("SELECT 1"))
+    loop1.run_until_complete(persistence._release_conn(conn1))
     loop1.run_until_complete(loop1.shutdown_asyncgens())
     loop1.close()
 
     loop2 = asyncio.new_event_loop()
-    conn2 = loop2.run_until_complete(persistence._get_conn())
+    conn2 = loop2.run_until_complete(persistence._acquire_conn())
     loop2.run_until_complete(conn2.execute("SELECT 1"))
+    loop2.run_until_complete(persistence._release_conn(conn2))
     loop2.run_until_complete(loop2.shutdown_asyncgens())
     loop2.close()
 
@@ -111,7 +113,8 @@ def test_conn_closed_on_loop_switch(tmp_path: Path) -> None:
 def test_schema_version(tmp_path: Path) -> None:
     setup_tmp(tmp_path)
     asyncio.run(persistence.migrate())
-    conn = asyncio.run(persistence._get_conn())
+    conn = asyncio.run(persistence._acquire_conn())
     cur = asyncio.run(conn.execute("SELECT version FROM schema_version"))
     row = asyncio.run(cur.fetchone())
+    asyncio.run(persistence._release_conn(conn))
     assert row["version"] == persistence.LATEST_VERSION

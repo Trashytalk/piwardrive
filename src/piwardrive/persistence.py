@@ -12,7 +12,15 @@ from pathlib import Path
 
 from . import config
 from .core.persistence import *  # noqa: F401,F403
-from .core.persistence import _db_path, _get_conn
+from .core.persistence import (
+    _db_path,
+    _get_conn,
+    _acquire_conn,
+    _release_conn,
+    shutdown_pool,
+    backup_database,
+    get_db_metrics,
+)
 
 
 @dataclass
@@ -74,6 +82,11 @@ __all__ = [
     *globals().get("__all__", []),
     "_db_path",
     "_get_conn",
+    "_acquire_conn",
+    "_release_conn",
+    "shutdown_pool",
+    "backup_database",
+    "get_db_metrics",
     "FingerprintInfo",
     "save_fingerprint_info",
     "load_fingerprint_info",
