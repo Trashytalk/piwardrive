@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 
 from piwardrive import persistence, service
-from piwardrive.services import network_fingerprinting
+from piwardrive.services import network_fingerprinting, security_analyzer
 from piwardrive.models import (
     AccessPoint,
     ErrorResponse,
@@ -101,6 +101,7 @@ async def scan_wifi_get(
     ]
     await persistence.save_wifi_detections(records)
     await network_fingerprinting.fingerprint_wifi_records(records)
+    await security_analyzer.analyze_wifi_records(records)
     return WiFiScanResponse(access_points=aps)
 
 
@@ -185,4 +186,5 @@ async def scan_wifi_post(
     ]
     await persistence.save_wifi_detections(records)
     await network_fingerprinting.fingerprint_wifi_records(records)
+    await security_analyzer.analyze_wifi_records(records)
     return WiFiScanResponse(access_points=aps)

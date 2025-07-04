@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta
 import psutil
 
 from piwardrive import vehicle_sensors
 from piwardrive import service
+from piwardrive.database_service import db_service
 from piwardrive.utils import MetricsResult
 
 
@@ -14,6 +16,12 @@ async def collect_widget_metrics() -> service.WidgetMetrics:
     aps = metrics.aps
     handshakes = metrics.handshake_count
     rx, tx = service.get_network_throughput()
+    try:
+        since = (datetime.utcnow() - timedelta(hours=1)).isoformat()
+        suspicious_count = await db_service.count_suspicious_activities(since)
+    except Exception:  # pragma: no cover - database errors
+        service.logging.debug("suspicious activity count failed", exc_info=True)
+        suspicious_count = 0
     batt_percent = batt_plugged = None
     try:
         batt = await asyncio.to_thread(psutil.sensors_battery)
@@ -33,6 +41,7 @@ async def collect_widget_metrics() -> service.WidgetMetrics:
         "gps_fix": service.get_gps_fix_quality(),
         "rx_kbps": rx,
         "tx_kbps": tx,
+        "suspicious_activity_count": suspicious_count,
         "battery_percent": batt_percent,
         "battery_plugged": batt_plugged,
         "vehicle_speed": await asyncio.to_thread(vehicle_sensors.read_speed_obd),

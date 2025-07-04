@@ -62,6 +62,15 @@ class DatabaseService:
     async def save_gps_tracks(self, records: List[dict[str, Any]]) -> None:
         await persistence.save_gps_tracks(records)
 
+    async def save_suspicious_activities(self, records: List[dict[str, Any]]) -> None:
+        await persistence.save_suspicious_activities(records)
+
+    async def count_suspicious_activities(self, since: str | None = None) -> int:
+        return await persistence.count_suspicious_activities(since)
+
+    async def load_recent_suspicious(self, limit: int = 10) -> List[dict[str, Any]]:
+        return await persistence.load_recent_suspicious(limit)
+
     async def get_table_counts(self) -> dict[str, int]:
         return await persistence.get_table_counts()
 
