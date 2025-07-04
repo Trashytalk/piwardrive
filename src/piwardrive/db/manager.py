@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Dict, Callable
+from typing import AsyncIterator, Callable, Dict
 
 from ..resource_manager import ResourceManager
-
+from ..services import db_monitor
 from .adapter import DatabaseAdapter
 
 
@@ -53,13 +54,25 @@ class DatabaseManager:
         return self.adapters[shard]
 
     async def execute(self, query: str, *args, key: str | None = None) -> None:
-        await self._get_adapter(key).execute(query, *args)
+        start = time.perf_counter()
+        try:
+            await self._get_adapter(key).execute(query, *args)
+        finally:
+            db_monitor.record_query(query, time.perf_counter() - start)
 
     async def executemany(self, query: str, args_iter, key: str | None = None) -> None:
-        await self._get_adapter(key).executemany(query, args_iter)
+        start = time.perf_counter()
+        try:
+            await self._get_adapter(key).executemany(query, args_iter)
+        finally:
+            db_monitor.record_query(query, time.perf_counter() - start)
 
     async def fetchall(self, query: str, *args, key: str | None = None) -> list[Dict]:
-        return await self._get_adapter(key).fetchall(query, *args)
+        start = time.perf_counter()
+        try:
+            return await self._get_adapter(key).fetchall(query, *args)
+        finally:
+            db_monitor.record_query(query, time.perf_counter() - start)
 
     def get_metrics(self) -> dict[str, Dict[str, int]]:
         return {name: adapter.get_metrics() for name, adapter in self.adapters.items()}
