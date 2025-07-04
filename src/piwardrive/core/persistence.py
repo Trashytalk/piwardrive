@@ -9,7 +9,7 @@ import sqlite3
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional
+from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional, Sequence
 
 import aiosqlite
 
@@ -75,6 +75,13 @@ _FLUSH_INTERVAL = float(os.getenv("PW_DB_FLUSH_INTERVAL", "30.0"))
 LATEST_VERSION = 4
 Migration = Callable[[aiosqlite.Connection], Awaitable[None]]
 _MIGRATIONS: list[Migration] = []
+
+
+def _filter_invalid(
+    records: list[dict[str, Any]], required: Sequence[str]
+) -> list[dict[str, Any]]:
+    """Return only records containing all ``required`` keys with non-``None`` values."""
+    return [r for r in records if all(r.get(k) is not None for k in required)]
 
 
 async def _migration_1(conn: aiosqlite.Connection) -> None:
@@ -710,6 +717,10 @@ async def load_ap_cache(
 
 async def save_wifi_detections(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``wifi_detections`` table."""
+    records = _filter_invalid(
+        records,
+        ["scan_session_id", "detection_timestamp", "bssid"],
+    )
     if not records:
         return
     async with _get_conn() as conn:
@@ -746,6 +757,10 @@ async def save_wifi_detections(records: list[dict[str, Any]]) -> None:
 
 async def save_bluetooth_detections(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``bluetooth_detections`` table."""
+    records = _filter_invalid(
+        records,
+        ["scan_session_id", "detection_timestamp", "mac_address"],
+    )
     if not records:
         return
     async with _get_conn() as conn:
@@ -774,6 +789,10 @@ async def save_bluetooth_detections(records: list[dict[str, Any]]) -> None:
 
 async def save_cellular_detections(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``cellular_detections`` table."""
+    records = _filter_invalid(
+        records,
+        ["scan_session_id", "detection_timestamp"],
+    )
     if not records:
         return
     async with _get_conn() as conn:
@@ -801,6 +820,10 @@ async def save_cellular_detections(records: list[dict[str, Any]]) -> None:
 
 async def save_gps_tracks(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``gps_tracks`` table."""
+    records = _filter_invalid(
+        records,
+        ["scan_session_id", "timestamp", "latitude", "longitude"],
+    )
     if not records:
         return
     async with _get_conn() as conn:
@@ -823,6 +846,7 @@ async def save_gps_tracks(records: list[dict[str, Any]]) -> None:
 
 async def save_network_fingerprints(records: list[dict[str, Any]]) -> None:
     """Insert or update records in the ``network_fingerprints`` table."""
+    records = _filter_invalid(records, ["bssid", "fingerprint_hash"])
     if not records:
         return
     async with _get_conn() as conn:
@@ -859,6 +883,9 @@ async def save_network_fingerprints(records: list[dict[str, Any]]) -> None:
 
 async def save_suspicious_activities(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``suspicious_activities`` table."""
+    records = _filter_invalid(
+        records, ["scan_session_id", "activity_type", "detected_at"]
+    )
     if not records:
         return
     async with _get_conn() as conn:
