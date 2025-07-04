@@ -1,0 +1,5 @@
+[
+  {"region": "Area1", "population": 10000, "median_income": 50000, "tech_access": 0.8, "latitude": 40.7128, "longitude": -74.0060},
+  {"region": "Area2", "population": 8000, "median_income": 42000, "tech_access": 0.6, "latitude": 40.7138, "longitude": -74.0020},
+  {"region": "Area3", "population": 12000, "median_income": 55000, "tech_access": 0.9, "latitude": 40.7158, "longitude": -74.0050}
+]
