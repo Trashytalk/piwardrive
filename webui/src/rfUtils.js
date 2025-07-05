@@ -7,8 +7,8 @@ export function spectrumScan(centerFreq, { sampleRate = 2.4, numSamples = 256 } 
   return [freqs, power];
 }
 
-export function demodulateFm(centerFreq, { sampleRate = 2.4, audioRate = 1.0, duration = 1.0 } = {}) {
+export function demodulateFm(centerFreq, { audioRate = 1.0, duration = 1.0 } = {}) {
   const samples = Math.floor(duration * audioRate);
   const step = Math.PI / 2;
-  return Array.from({ length: samples }, (_, i) => step);
+  return Array.from({ length: samples }, () => step);
 }

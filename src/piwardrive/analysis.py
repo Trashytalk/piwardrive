@@ -3,9 +3,13 @@
 import math
 from dataclasses import asdict
 from statistics import fmean
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 from piwardrive.persistence import HealthRecord
+
+import os
+import sys
+
 
 try:  # optional dependency
     import pandas as pd
@@ -92,14 +96,16 @@ def plot_cpu_temp(
 # ─────────────────────────────────────────────────────────────
 # External ML hooks
 
-import os
-import sys
-from typing import Callable
-
 try:
     from .analytics.anomaly import HealthAnomalyDetector
 except Exception:  # pragma: no cover - optional dependency
     HealthAnomalyDetector = None
+
+
+def register_ml_hook(func: Callable[[HealthRecord], None]) -> None:
+    """Register ``func`` to be called with each new :class:`HealthRecord`."""
+    _ML_HOOKS.append(func)
+
 
 _ML_HOOKS: list[Callable[[HealthRecord], None]] = []
 
@@ -117,11 +123,6 @@ if (
 ):
     _ANOMALY_DETECTOR = HealthAnomalyDetector()
     register_ml_hook(_ANOMALY_DETECTOR)
-
-
-def register_ml_hook(func: Callable[[HealthRecord], None]) -> None:
-    """Register ``func`` to be called with each new :class:`HealthRecord`."""
-    _ML_HOOKS.append(func)
 
 
 def process_new_record(record: HealthRecord) -> None:

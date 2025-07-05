@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+/* global process */
+
 export let CONFIG_DIR = process.cwd();
 export let CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');
 export let PROFILES_DIR = path.join(CONFIG_DIR, 'profiles');
@@ -220,5 +222,7 @@ export function importProfile(src, name) {
 export function deleteProfile(name) {
   try {
     fs.unlinkSync(_profilePath(name));
-  } catch {}
+  } catch (e) {
+    // ignore missing file
+  }
 }

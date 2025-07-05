@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+/* global process, require */
+
 const PLUGIN_DIR = path.join(process.env.HOME || '', '.config', 'piwardrive', 'plugins');
 let PLUGIN_STAMP = null;
 const PLUGINS = {};
@@ -9,7 +11,8 @@ function loadPlugins() {
   let stat;
   try {
     stat = fs.statSync(PLUGIN_DIR);
-  } catch {
+  } catch (e) {
+    // ignore missing plugin directory
     return;
   }
   const stamp = stat.mtimeMs;
@@ -27,7 +30,9 @@ function loadPlugins() {
             PLUGINS[name] = obj;
           }
         }
-      } catch {}
+      } catch (e) {
+        // ignore plugin load errors
+      }
     }
   }
   PLUGIN_STAMP = stamp;

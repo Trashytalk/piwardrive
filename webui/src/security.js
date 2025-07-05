@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import path from 'path';
 
+/* global Buffer */
+
 export function sanitizePath(p) {
   const normalized = path.normalize(p);
   if (normalized.split(path.sep).includes('..')) {

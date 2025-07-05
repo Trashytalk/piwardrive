@@ -1,3 +1,5 @@
+/* global global */
+
 export async function scanBluetooth(timeout = 10) {
   if (typeof global.bleakDiscover === 'function') {
     const devices = await global.bleakDiscover(timeout);

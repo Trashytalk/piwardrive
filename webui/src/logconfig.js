@@ -1,5 +1,7 @@
 import fs from 'fs';
 
+/* global process */
+
 const LEVELS = { DEBUG: 10, INFO: 20, WARNING: 30, ERROR: 40 };
 
 export function setupLogging({ logFile, level = 'INFO', stdout = false } = {}) {

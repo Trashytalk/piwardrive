@@ -1,4 +1,5 @@
 export function cachedLookupVendor(_bssid) {
+  void _bssid;
   return 'Vendor';
 }
 
