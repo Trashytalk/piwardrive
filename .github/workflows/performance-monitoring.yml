@@ -1,0 +1,477 @@
+name: Performance Monitoring and Regression Testing
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run performance tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      performance_test_type:
+        description: 'Type of performance test to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'load'
+          - 'stress'
+          - 'endurance'
+          - 'baseline'
+      concurrent_users:
+        description: 'Number of concurrent users for load testing'
+        required: false
+        default: '50'
+        type: string
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+  PERFORMANCE_THRESHOLD: 10  # 10% performance degradation threshold
+
+jobs:
+  performance-baseline:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.performance_test_type == 'baseline' || github.event.inputs.performance_test_type == 'all'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+      
+      - name: Start application for testing
+        run: |
+          python -m src.main &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          
+          # Wait for application to start
+          sleep 30
+          
+          # Health check
+          curl -f http://localhost:8080/health || exit 1
+      
+      - name: Create performance baseline
+        run: |
+          python scripts/create_performance_baseline.py \
+            --output baseline_results.json \
+            --base-url http://localhost:8080 \
+            --duration 300 \
+            --concurrent-users 20
+      
+      - name: Upload baseline results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baseline
+          path: baseline_results.json
+          retention-days: 90
+      
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -n "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+  performance-load-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event.inputs.performance_test_type == 'load' || github.event.inputs.performance_test_type == 'all'
+    
+    strategy:
+      matrix:
+        test_scenario:
+          - name: "light_load"
+            users: 10
+            duration: 60
+          - name: "medium_load"
+            users: 25
+            duration: 120
+          - name: "heavy_load"
+            users: 50
+            duration: 180
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history for comparison
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+      
+      - name: Start application for testing
+        run: |
+          python -m src.main &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          
+          # Wait for application to start
+          sleep 30
+          
+          # Health check
+          curl -f http://localhost:8080/health || exit 1
+      
+      - name: Download baseline results
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-baseline
+          path: baseline/
+        continue-on-error: true
+      
+      - name: Run performance load test
+        run: |
+          python -m pytest tests/performance/test_performance_infrastructure.py::TestPerformance::test_concurrent_user_handling \
+            -v \
+            --tb=short \
+            --maxfail=3 \
+            -k "not slow" \
+            --html=performance_report_${{ matrix.test_scenario.name }}.html \
+            --self-contained-html
+        env:
+          CONCURRENT_USERS: ${{ matrix.test_scenario.users }}
+          TEST_DURATION: ${{ matrix.test_scenario.duration }}
+          TEST_BASE_URL: http://localhost:8080
+      
+      - name: Run performance benchmarks
+        run: |
+          python scripts/compare_performance.py \
+            --current current_performance.json \
+            --baseline baseline/baseline_results.json \
+            --threshold ${{ env.PERFORMANCE_THRESHOLD }} \
+            --output performance_comparison_${{ matrix.test_scenario.name }}.json
+        continue-on-error: true
+      
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results-${{ matrix.test_scenario.name }}
+          path: |
+            performance_report_${{ matrix.test_scenario.name }}.html
+            performance_comparison_${{ matrix.test_scenario.name }}.json
+            current_performance.json
+          retention-days: 30
+      
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -n "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+  performance-stress-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.performance_test_type == 'stress' || github.event.inputs.performance_test_type == 'all'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+      
+      - name: Start application for testing
+        run: |
+          python -m src.main &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          
+          # Wait for application to start
+          sleep 30
+          
+          # Health check
+          curl -f http://localhost:8080/health || exit 1
+      
+      - name: Run stress test
+        run: |
+          python -m pytest tests/performance/test_performance_infrastructure.py::TestPerformance::test_stress_breaking_point \
+            -v \
+            --tb=short \
+            --html=stress_test_report.html \
+            --self-contained-html
+        env:
+          TEST_BASE_URL: http://localhost:8080
+      
+      - name: Upload stress test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-test-results
+          path: |
+            stress_test_report.html
+            stress_test_metrics.json
+          retention-days: 30
+      
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -n "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+  performance-endurance-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.performance_test_type == 'endurance' || github.event.inputs.performance_test_type == 'all'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+      
+      - name: Start application for testing
+        run: |
+          python -m src.main &
+          APP_PID=$!
+          echo "APP_PID=$APP_PID" >> $GITHUB_ENV
+          
+          # Wait for application to start
+          sleep 30
+          
+          # Health check
+          curl -f http://localhost:8080/health || exit 1
+      
+      - name: Run endurance test
+        run: |
+          python -m pytest tests/performance/test_performance_infrastructure.py::TestPerformance::test_long_running_stability \
+            -v \
+            --tb=short \
+            -m "slow" \
+            --html=endurance_test_report.html \
+            --self-contained-html
+        env:
+          TEST_BASE_URL: http://localhost:8080
+      
+      - name: Upload endurance test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: endurance-test-results
+          path: |
+            endurance_test_report.html
+            endurance_test_metrics.json
+          retention-days: 30
+      
+      - name: Stop application
+        if: always()
+        run: |
+          if [ -n "$APP_PID" ]; then
+            kill $APP_PID || true
+          fi
+
+  performance-analysis:
+    runs-on: ubuntu-latest
+    needs: [performance-load-test]
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install matplotlib seaborn pandas numpy
+      
+      - name: Download all performance results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: performance-results-*
+          merge-multiple: true
+          path: performance-results/
+      
+      - name: Analyze performance trends
+        run: |
+          python scripts/analyze_performance_trends.py \
+            --input-dir performance-results/ \
+            --output performance_analysis_report.html
+        continue-on-error: true
+      
+      - name: Check for performance regressions
+        run: |
+          python scripts/check_performance_regressions.py \
+            --results-dir performance-results/ \
+            --threshold ${{ env.PERFORMANCE_THRESHOLD }} \
+            --output regression_report.json
+        continue-on-error: true
+      
+      - name: Upload analysis results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-analysis
+          path: |
+            performance_analysis_report.html
+            regression_report.json
+          retention-days: 30
+      
+      - name: Comment on PR with performance results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let comment = '## 🚀 Performance Test Results\n\n';
+            
+            try {
+              const regressionReport = JSON.parse(fs.readFileSync('regression_report.json', 'utf8'));
+              
+              if (regressionReport.regressions && regressionReport.regressions.length > 0) {
+                comment += '### ⚠️ Performance Regressions Detected\n\n';
+                regressionReport.regressions.forEach(regression => {
+                  comment += `- **${regression.metric}**: ${regression.change}% degradation\n`;
+                });
+              } else {
+                comment += '### ✅ No Performance Regressions Detected\n\n';
+              }
+              
+              if (regressionReport.improvements && regressionReport.improvements.length > 0) {
+                comment += '\n### 📈 Performance Improvements\n\n';
+                regressionReport.improvements.forEach(improvement => {
+                  comment += `- **${improvement.metric}**: ${improvement.change}% improvement\n`;
+                });
+              }
+              
+              comment += '\n### 📊 Performance Summary\n\n';
+              comment += `- **Average Response Time**: ${regressionReport.summary.avg_response_time}ms\n`;
+              comment += `- **Throughput**: ${regressionReport.summary.throughput} req/s\n`;
+              comment += `- **Error Rate**: ${regressionReport.summary.error_rate}%\n`;
+              
+            } catch (error) {
+              comment += '❌ Failed to parse performance results\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  performance-monitoring:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+      
+      - name: Start performance monitoring
+        run: |
+          python scripts/performance_monitor.py --duration 300 --output monitoring_results.json
+        env:
+          MONITORING_URL: ${{ secrets.MONITORING_URL }}
+          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Upload monitoring results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-monitoring
+          path: |
+            monitoring_results.json
+            performance_monitor.log
+          retention-days: 7
+      
+      - name: Send performance alert
+        if: failure()
+        run: |
+          curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "text": "🚨 Performance monitoring detected issues in PiWardrive",
+              "attachments": [{
+                "color": "danger",
+                "title": "Performance Alert",
+                "text": "Performance monitoring workflow failed. Please check the logs.",
+                "footer": "PiWardrive CI/CD"
+              }]
+            }'
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [performance-baseline, performance-load-test, performance-stress-test, performance-endurance-test, performance-analysis]
+    if: always()
+    
+    steps:
+      - name: Clean up old artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+            
+            // Keep only the most recent 10 performance artifacts
+            const performanceArtifacts = artifacts.data.artifacts
+              .filter(artifact => artifact.name.includes('performance'))
+              .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            if (performanceArtifacts.length > 10) {
+              const toDelete = performanceArtifacts.slice(10);
+              for (const artifact of toDelete) {
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id
+                });
+              }
+            }

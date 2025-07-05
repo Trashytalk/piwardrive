@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import logging
 import os
 import sqlite3
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, AsyncIterator, Awaitable, Callable, List, Optional, Sequence
+from typing import Any, AsyncIterator, Awaitable, Callable, Dict, List, Optional, Sequence
 
 import aiosqlite
+
+logger = logging.getLogger(__name__)
 
 try:
     from pysqlcipher3 import dbapi2 as sqlcipher
@@ -884,7 +887,7 @@ async def save_network_fingerprints(records: list[dict[str, Any]]) -> None:
 async def save_suspicious_activities(records: list[dict[str, Any]]) -> None:
     """Insert ``records`` into the ``suspicious_activities`` table."""
     records = _filter_invalid(
-        records, ["scan_session_id", "activity_type", "detected_at"]
+        records, ["scan_session_id", "activity_type", "severity", "detected_at"]
     )
     if not records:
         return
@@ -892,13 +895,13 @@ async def save_suspicious_activities(records: list[dict[str, Any]]) -> None:
         await conn.executemany(
             """
             INSERT INTO suspicious_activities (
-                scan_session_id, activity_type, severity,
-                target_bssid, target_ssid, evidence, description,
-                detected_at, latitude, longitude, false_positive, analyst_notes
+                scan_session_id, activity_type, severity, target_bssid,
+                target_ssid, evidence, description, detected_at,
+                latitude, longitude, false_positive, analyst_notes
             ) VALUES (
-                :scan_session_id, :activity_type, :severity,
-                :target_bssid, :target_ssid, :evidence, :description,
-                :detected_at, :latitude, :longitude, :false_positive, :analyst_notes
+                :scan_session_id, :activity_type, :severity, :target_bssid,
+                :target_ssid, :evidence, :description, :detected_at,
+                :latitude, :longitude, :false_positive, :analyst_notes
             )
             """,
             records,
@@ -907,76 +910,143 @@ async def save_suspicious_activities(records: list[dict[str, Any]]) -> None:
 
 
 async def count_suspicious_activities(since: str | None = None) -> int:
-    """Return number of suspicious activities optionally since ``since``."""
+    """Count suspicious activities, optionally since a specific timestamp."""
     async with _get_conn() as conn:
         if since:
-            cur = await conn.execute(
+            cursor = await conn.execute(
                 "SELECT COUNT(*) FROM suspicious_activities WHERE detected_at >= ?",
-                (since,),
+                (since,)
             )
         else:
-            cur = await conn.execute("SELECT COUNT(*) FROM suspicious_activities")
-        row = await cur.fetchone()
-    return int(row[0]) if row else 0
+            cursor = await conn.execute("SELECT COUNT(*) FROM suspicious_activities")
+        
+        result = await cursor.fetchone()
+        return result[0] if result else 0
 
 
-async def load_recent_suspicious(limit: int = 10) -> list[dict[str, Any]]:
-    """Return most recent suspicious activity rows."""
+async def load_recent_suspicious(limit: int = 10) -> List[Dict[str, Any]]:
+    """Load recent suspicious activities."""
     async with _get_conn() as conn:
-        cur = await conn.execute(
+        cursor = await conn.execute(
             """
-            SELECT id, scan_session_id, activity_type, severity,
-                   target_bssid, target_ssid, evidence, description,
-                   detected_at, latitude, longitude, false_positive, analyst_notes
-            FROM suspicious_activities
-            ORDER BY detected_at DESC
+            SELECT 
+                id, scan_session_id, activity_type, severity, target_bssid,
+                target_ssid, evidence, description, detected_at,
+                latitude, longitude, false_positive, analyst_notes
+            FROM suspicious_activities 
+            ORDER BY detected_at DESC 
             LIMIT ?
             """,
-            (limit,),
+            (limit,)
         )
-        rows = await cur.fetchall()
-    return [dict(row) for row in rows]
+        return [dict(row) for row in await cursor.fetchall()]
 
 
-async def save_network_analytics(records: list[dict[str, Any]]) -> None:
-    """Insert or update rows in the ``network_analytics`` table."""
-    if not records:
-        return
+async def get_table_counts() -> Dict[str, int]:
+    """Get row counts for all main tables."""
+    counts = {}
+    
     async with _get_conn() as conn:
-        await conn.executemany(
-            """
-            INSERT INTO network_analytics (
-                bssid, analysis_date, total_detections,
-                unique_locations, avg_signal_strength, max_signal_strength,
-                min_signal_strength, signal_variance, coverage_radius_meters,
-                mobility_score, encryption_changes, ssid_changes,
-                channel_changes, suspicious_score, last_analyzed
-            ) VALUES (
-                :bssid, :analysis_date, :total_detections,
-                :unique_locations, :avg_signal_strength, :max_signal_strength,
-                :min_signal_strength, :signal_variance, :coverage_radius_meters,
-                :mobility_score, :encryption_changes, :ssid_changes,
-                :channel_changes, :suspicious_score,
-                COALESCE(:last_analyzed, CURRENT_TIMESTAMP)
-            )
-            ON CONFLICT(bssid, analysis_date) DO UPDATE SET
-                total_detections=excluded.total_detections,
-                unique_locations=excluded.unique_locations,
-                avg_signal_strength=excluded.avg_signal_strength,
-                max_signal_strength=excluded.max_signal_strength,
-                min_signal_strength=excluded.min_signal_strength,
-                signal_variance=excluded.signal_variance,
-                coverage_radius_meters=excluded.coverage_radius_meters,
-                mobility_score=excluded.mobility_score,
-                encryption_changes=excluded.encryption_changes,
-                ssid_changes=excluded.ssid_changes,
-                channel_changes=excluded.channel_changes,
-                suspicious_score=excluded.suspicious_score,
-                last_analyzed=CURRENT_TIMESTAMP
-            """,
-            records,
+        # Get list of tables
+        cursor = await conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
         )
-        await conn.commit()
+        tables = [row[0] for row in await cursor.fetchall()]
+        
+        # Count rows in each table
+        for table in tables:
+            try:
+                cursor = await conn.execute(f"SELECT COUNT(*) FROM {table}")
+                result = await cursor.fetchone()
+                counts[table] = result[0] if result else 0
+            except Exception as e:
+                counts[table] = 0
+    
+    return counts
+
+
+async def load_daily_detection_stats(
+    session_id: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    limit: int | None = None
+) -> List[Dict[str, Any]]:
+    """Load daily detection statistics."""
+    async with _get_conn() as conn:
+        query = """
+        SELECT 
+            DATE(detection_timestamp) as date,
+            COUNT(*) as total_detections,
+            COUNT(DISTINCT bssid) as unique_networks,
+            AVG(signal_strength_dbm) as avg_signal_strength,
+            MAX(signal_strength_dbm) as max_signal_strength,
+            MIN(signal_strength_dbm) as min_signal_strength
+        FROM wifi_detections
+        WHERE 1=1
+        """
+        params = []
+        
+        if session_id:
+            query += " AND scan_session_id = ?"
+            params.append(session_id)
+        
+        if start:
+            query += " AND detection_timestamp >= ?"
+            params.append(start)
+        
+        if end:
+            query += " AND detection_timestamp < ?"
+            params.append(end)
+        
+        query += " GROUP BY DATE(detection_timestamp) ORDER BY date DESC"
+        
+        if limit:
+            query += " LIMIT ?"
+            params.append(limit)
+        
+        cursor = await conn.execute(query, params)
+        return [dict(row) for row in await cursor.fetchall()]
+
+
+async def load_hourly_detection_stats(
+    session_id: str | None = None,
+    start: str | None = None,
+    end: str | None = None,
+    limit: int | None = None
+) -> List[Dict[str, Any]]:
+    """Load hourly detection statistics."""
+    async with _get_conn() as conn:
+        query = """
+        SELECT 
+            strftime('%Y-%m-%d %H:00:00', detection_timestamp) as hour,
+            COUNT(*) as total_detections,
+            COUNT(DISTINCT bssid) as unique_networks,
+            AVG(signal_strength_dbm) as avg_signal_strength
+        FROM wifi_detections
+        WHERE 1=1
+        """
+        params = []
+        
+        if session_id:
+            query += " AND scan_session_id = ?"
+            params.append(session_id)
+        
+        if start:
+            query += " AND detection_timestamp >= ?"
+            params.append(start)
+        
+        if end:
+            query += " AND detection_timestamp < ?"
+            params.append(end)
+        
+        query += " GROUP BY hour ORDER BY hour DESC"
+        
+        if limit:
+            query += " LIMIT ?"
+            params.append(limit)
+        
+        cursor = await conn.execute(query, params)
+        return [dict(row) for row in await cursor.fetchall()]
 
 
 async def load_network_analytics(
@@ -984,181 +1054,662 @@ async def load_network_analytics(
     start: str | None = None,
     end: str | None = None,
     limit: int | None = None,
-) -> list[dict[str, Any]]:
-    """Return rows from ``network_analytics`` filtered by parameters."""
+    offset: int = 0
+) -> List[Dict[str, Any]]:
+    """Load network analytics records."""
     async with _get_conn() as conn:
-        query = (
-            "SELECT bssid, analysis_date, total_detections, unique_locations,"
-            " avg_signal_strength, max_signal_strength, min_signal_strength,"
-            " signal_variance, coverage_radius_meters, mobility_score,"
-            " encryption_changes, ssid_changes, channel_changes,"
-            " suspicious_score, last_analyzed FROM network_analytics"
-        )
-        params: list[object] = []
-        clauses: list[str] = []
+        query = """
+        SELECT 
+            bssid, analysis_date, total_detections, unique_locations,
+            avg_signal_strength, max_signal_strength, min_signal_strength,
+            signal_variance, coverage_radius_meters, mobility_score,
+            encryption_changes, ssid_changes, channel_changes,
+            suspicious_score, last_analyzed
+        FROM network_analytics
+        WHERE 1=1
+        """
+        params = []
+        
         if bssid:
-            clauses.append("bssid = ?")
+            query += " AND bssid = ?"
             params.append(bssid)
+        
         if start:
-            clauses.append("analysis_date >= ?")
+            query += " AND analysis_date >= ?"
             params.append(start)
+        
         if end:
-            clauses.append("analysis_date <= ?")
+            query += " AND analysis_date < ?"
             params.append(end)
-        if clauses:
-            query += " WHERE " + " AND ".join(clauses)
-        query += " ORDER BY analysis_date"
-        if limit is not None:
+        
+        query += " ORDER BY analysis_date DESC, bssid"
+        
+        if limit:
             query += " LIMIT ?"
             params.append(limit)
-        cur = await conn.execute(query, tuple(params))
-        rows = await cur.fetchall()
-    return [dict(row) for row in rows]
-
-
-async def load_daily_detection_stats(
-    session_id: str | None = None,
-    start: str | None = None,
-    end: str | None = None,
-    limit: int | None = None,
-) -> list[dict[str, Any]]:
-    """Return rows from ``daily_detection_stats`` filtered by parameters."""
-    async with _get_conn() as conn:
-        query = (
-            "SELECT detection_date, scan_session_id, total_detections, "
-            "unique_networks, avg_signal, min_signal, max_signal, channels_used, "
-            "open_networks, wep_networks, wpa_networks FROM daily_detection_stats"
-        )
-        params: list[object] = []
-        clauses: list[str] = []
-        if session_id:
-            clauses.append("scan_session_id = ?")
-            params.append(session_id)
-        if start:
-            clauses.append("detection_date >= ?")
-            params.append(start)
-        if end:
-            clauses.append("detection_date <= ?")
-            params.append(end)
-        if clauses:
-            query += " WHERE " + " AND ".join(clauses)
-        query += " ORDER BY detection_date"
-        if limit is not None:
-            query += " LIMIT ?"
-            params.append(limit)
-        cur = await conn.execute(query, tuple(params))
-        rows = await cur.fetchall()
-    return [dict(row) for row in rows]
+        
+        if offset:
+            query += " OFFSET ?"
+            params.append(offset)
+        
+        cursor = await conn.execute(query, params)
+        return [dict(row) for row in await cursor.fetchall()]
 
 
 async def load_network_coverage_grid(
-    *, limit: int | None = None, offset: int = 0
-) -> list[dict[str, Any]]:
-    """Return rows from ``network_coverage_grid`` with optional pagination."""
+    limit: int | None = None,
+    offset: int = 0
+) -> List[Dict[str, Any]]:
+    """Load network coverage grid data."""
     async with _get_conn() as conn:
-        query = (
-            "SELECT lat_grid, lon_grid, detection_count, unique_networks, "
-            "avg_signal, max_signal FROM network_coverage_grid "
-            "ORDER BY lat_grid, lon_grid"
-        )
-        params: list[object] = []
-        if limit is not None:
-            query += " LIMIT ? OFFSET ?"
-            params.extend([limit, offset])
-        cur = await conn.execute(query, tuple(params))
-        rows = await cur.fetchall()
-    return [dict(row) for row in rows]
+        query = """
+        SELECT 
+            latitude, longitude, COUNT(*) as detection_count,
+            AVG(signal_strength_dbm) as avg_signal_strength,
+            COUNT(DISTINCT bssid) as unique_networks
+        FROM wifi_detections
+        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+        GROUP BY 
+            CAST(latitude * 1000 AS INT),
+            CAST(longitude * 1000 AS INT)
+        ORDER BY detection_count DESC
+        """
+        params = []
+        
+        if limit:
+            query += " LIMIT ?"
+            params.append(limit)
+        
+        if offset:
+            query += " OFFSET ?"
+            params.append(offset)
+        
+        cursor = await conn.execute(query, params)
+        return [dict(row) for row in await cursor.fetchall()]
 
 
-async def get_table_counts() -> dict[str, int]:
-    """Return row counts for all user tables."""
-    path = _db_path()
-
-    def _work() -> dict[str, int]:
-        result: dict[str, int] = {}
-        if not os.path.exists(path):
-            return result
-        import sqlite3
-
-        with sqlite3.connect(path) as db:
-            cur = db.execute(
-                "SELECT name FROM sqlite_master "
-                "WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+async def save_network_analytics(records: List[Dict[str, Any]]) -> None:
+    """Insert or update records in the network_analytics table."""
+    if not records:
+        return
+    
+    async with _get_conn() as conn:
+        await conn.executemany(
+            """
+            INSERT OR REPLACE INTO network_analytics (
+                bssid, analysis_date, total_detections, unique_locations,
+                avg_signal_strength, max_signal_strength, min_signal_strength,
+                signal_variance, coverage_radius_meters, mobility_score,
+                encryption_changes, ssid_changes, channel_changes,
+                suspicious_score, last_analyzed
+            ) VALUES (
+                :bssid, :analysis_date, :total_detections, :unique_locations,
+                :avg_signal_strength, :max_signal_strength, :min_signal_strength,
+                :signal_variance, :coverage_radius_meters, :mobility_score,
+                :encryption_changes, :ssid_changes, :channel_changes,
+                :suspicious_score, :last_analyzed
             )
-            tables = [row[0] for row in cur.fetchall()]
-            for name in tables:
-                row = db.execute(
-                    f"SELECT COUNT(*) FROM {name}"  # nosec B608
-                ).fetchone()
-                result[name] = int(row[0]) if row else 0
-        return result
-
-    return await asyncio.to_thread(_work)
-
-
-async def vacuum() -> None:
-    """Run ``VACUUM`` on the active database connection."""
-    await flush_health_records()
-    async with _get_conn() as conn:
-        await conn.execute("VACUUM")
-        await conn.commit()
-
-
-async def refresh_daily_detection_stats() -> None:
-    """Recreate the ``daily_detection_stats`` materialized view table."""
-    async with _get_conn() as conn:
-        await conn.execute("DROP TABLE IF EXISTS daily_detection_stats")
-        await conn.execute(
-            """
-            CREATE TABLE daily_detection_stats AS
-            SELECT
-                DATE(detection_timestamp) AS detection_date,
-                scan_session_id,
-                COUNT(*) AS total_detections,
-                COUNT(DISTINCT bssid) AS unique_networks,
-                AVG(signal_strength_dbm) AS avg_signal,
-                MIN(signal_strength_dbm) AS min_signal,
-                MAX(signal_strength_dbm) AS max_signal,
-                COUNT(DISTINCT channel) AS channels_used,
-                COUNT(
-                    CASE WHEN encryption_type = 'OPEN' THEN 1 END
-                ) AS open_networks,
-                COUNT(
-                    CASE WHEN encryption_type LIKE '%WEP%' THEN 1 END
-                ) AS wep_networks,
-                COUNT(
-                    CASE WHEN encryption_type LIKE '%WPA%' THEN 1 END
-                ) AS wpa_networks
-            FROM wifi_detections
-            GROUP BY DATE(detection_timestamp), scan_session_id
-            """
+            """,
+            records
         )
         await conn.commit()
 
 
-async def refresh_network_coverage_grid() -> None:
-    """Recreate the ``network_coverage_grid`` materialized view table."""
+async def get_network_analytics(
+    bssid: str | None = None,
+    limit: int = 100
+) -> List[Dict[str, Any]]:
+    """Get network analytics records."""
+    return await load_network_analytics(bssid=bssid, limit=limit)
+
+
+async def analyze_network_behavior(bssid: str) -> Dict[str, Any]:
+    """Analyze network behavior for a specific BSSID."""
     async with _get_conn() as conn:
-        await conn.execute("DROP TABLE IF EXISTS network_coverage_grid")
-        await conn.execute(
+        # Get detection stats
+        cursor = await conn.execute(
             """
-            CREATE TABLE network_coverage_grid AS
-            SELECT
-                ROUND(latitude, 4) AS lat_grid,
-                ROUND(longitude, 4) AS lon_grid,
-                COUNT(*) AS detection_count,
-                COUNT(DISTINCT bssid) AS unique_networks,
-                AVG(signal_strength_dbm) AS avg_signal,
-                MAX(signal_strength_dbm) AS max_signal
+            SELECT 
+                COUNT(*) as total_detections,
+                COUNT(DISTINCT latitude || ',' || longitude) as unique_locations,
+                AVG(signal_strength_dbm) as avg_signal,
+                COUNT(DISTINCT encryption_type) as encryption_changes,
+                COUNT(DISTINCT ssid) as ssid_changes,
+                COUNT(DISTINCT channel) as channel_changes
             FROM wifi_detections
-            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-            GROUP BY ROUND(latitude, 4), ROUND(longitude, 4)
-            """
+            WHERE bssid = ?
+            """,
+            (bssid,)
         )
-        await conn.commit()
+        
+        detection_stats = dict(await cursor.fetchone())
+        
+        # Calculate mobility score (0-1 based on location diversity)
+        mobility_score = min(1.0, detection_stats["unique_locations"] / max(1, detection_stats["total_detections"]))
+        
+        # Calculate suspicion score based on various factors
+        suspicion_score = 0.0
+        
+        # Check for excessive encryption changes
+        if detection_stats["encryption_changes"] > 3:
+            suspicion_score += 0.3
+        
+        # Check for excessive SSID changes
+        if detection_stats["ssid_changes"] > 2:
+            suspicion_score += 0.4
+        
+        # Check for excessive channel changes
+        if detection_stats["channel_changes"] > 5:
+            suspicion_score += 0.3
+        
+        suspicion_score = min(1.0, suspicion_score)
+        
+        return {
+            "detection_stats": detection_stats,
+            "mobility_score": mobility_score,
+            "suspicion_score": suspicion_score
+        }
+
+
+async def detect_suspicious_activities(scan_session_id: str) -> List[Dict[str, Any]]:
+    """Detect suspicious activities in a scan session."""
+    async with _get_conn() as conn:
+        # Get all detections for this session
+        cursor = await conn.execute(
+            """
+            SELECT bssid, ssid, encryption_type, signal_strength_dbm,
+                   latitude, longitude, detection_timestamp
+            FROM wifi_detections
+            WHERE scan_session_id = ?
+            ORDER BY detection_timestamp
+            """,
+            (scan_session_id,)
+        )
+        
+        detections = [dict(row) for row in await cursor.fetchall()]
+        
+        suspicious_activities = []
+        
+        # Check for rapid signal strength changes (possible spoofing)
+        bssid_signals = {}
+        for detection in detections:
+            bssid = detection["bssid"]
+            signal = detection["signal_strength_dbm"]
+            if bssid not in bssid_signals:
+                bssid_signals[bssid] = []
+            bssid_signals[bssid].append(signal)
+        
+        for bssid, signals in bssid_signals.items():
+            if len(signals) > 1:
+                signal_variance = max(signals) - min(signals)
+                if signal_variance > 40:  # Large signal changes
+                    suspicious_activities.append({
+                        "activity_type": "signal_anomaly",
+                        "severity": "medium",
+                        "target_bssid": bssid,
+                        "evidence": f"Signal variance: {signal_variance} dBm"
+                    })
+        
+        # Check for networks with suspicious SSIDs
+        for detection in detections:
+            ssid = detection.get("ssid", "")
+            if ssid and any(word in ssid.lower() for word in ["free", "wifi", "test", "default"]):
+                suspicious_activities.append({
+                    "activity_type": "suspicious_ssid",
+                    "severity": "low",
+                    "target_bssid": detection["bssid"],
+                    "target_ssid": ssid,
+                    "evidence": f"Suspicious SSID: {ssid}"
+                })
+        
+        return suspicious_activities
+
+
+async def run_suspicious_activity_detection(scan_session_id: str) -> int:
+    """Run suspicious activity detection and store results."""
+    activities = await detect_suspicious_activities(scan_session_id)
+    
+    if activities:
+        # Add required fields
+        for activity in activities:
+            activity.update({
+                "scan_session_id": scan_session_id,
+                "description": f"Detected {activity['activity_type']}",
+                "detected_at": datetime.now().isoformat(),
+                "false_positive": False,
+                "analyst_notes": None
+            })
+        
+        await save_suspicious_activities(activities)
+    
+    return len(activities)
 
 
 async def migrate() -> None:
     """Ensure the database schema is up to date."""
     async with _get_conn():
         pass
+
+
+# Export Functions
+async def export_detections_to_csv(
+    start_date: str | None = None,
+    end_date: str | None = None,
+    output_path: str | None = None
+) -> str:
+    """Export detections to CSV format."""
+    import csv
+    import tempfile
+    
+    if not output_path:
+        output_path = tempfile.mktemp(suffix=".csv")
+    
+    async with _get_conn() as conn:
+        query = """
+        SELECT 
+            wd.detection_timestamp,
+            wd.bssid,
+            wd.ssid,
+            wd.channel,
+            wd.signal_strength_dbm,
+            wd.encryption_type,
+            wd.latitude,
+            wd.longitude,
+            ss.scan_type,
+            ss.device_id
+        FROM wifi_detections wd
+        LEFT JOIN scan_sessions ss ON wd.scan_session_id = ss.id
+        WHERE 1=1
+        """
+        params = []
+        
+        if start_date:
+            query += " AND wd.detection_timestamp >= ?"
+            params.append(start_date)
+        
+        if end_date:
+            query += " AND wd.detection_timestamp < ?"
+            params.append(end_date)
+        
+        query += " ORDER BY wd.detection_timestamp"
+        
+        cursor = await conn.execute(query, params)
+        rows = await cursor.fetchall()
+    
+    with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([
+            'timestamp', 'bssid', 'ssid', 'channel', 'signal_strength',
+            'encryption', 'latitude', 'longitude', 'scan_type', 'device_id'
+        ])
+        writer.writerows(rows)
+    
+    return output_path
+
+
+async def export_analytics_to_json(
+    start_date: str | None = None,
+    end_date: str | None = None,
+    output_path: str | None = None
+) -> str:
+    """Export analytics data to JSON format."""
+    import json
+    import tempfile
+    
+    if not output_path:
+        output_path = tempfile.mktemp(suffix=".json")
+    
+    # Get analytics data
+    analytics = await load_network_analytics(start=start_date, end=end_date)
+    
+    # Get detection stats
+    detection_stats = await load_daily_detection_stats(start=start_date, end=end_date)
+    
+    # Get suspicious activities
+    suspicious = await load_recent_suspicious(limit=1000)
+    
+    export_data = {
+        "export_timestamp": datetime.now().isoformat(),
+        "network_analytics": analytics,
+        "detection_stats": detection_stats,
+        "suspicious_activities": suspicious,
+        "metadata": {
+            "start_date": start_date,
+            "end_date": end_date,
+            "total_analytics_records": len(analytics),
+            "total_detection_records": len(detection_stats)
+        }
+    }
+    
+    with open(output_path, 'w', encoding='utf-8') as jsonfile:
+        json.dump(export_data, jsonfile, indent=2, default=str)
+    
+    return output_path
+
+
+# Data Validation Functions
+async def validate_detection_data() -> Dict[str, Any]:
+    """Validate wifi detection data integrity."""
+    validation_results = {
+        "status": "valid",
+        "errors": [],
+        "warnings": [],
+        "stats": {}
+    }
+    
+    async with _get_conn() as conn:
+        # Check for NULL BSSIDs
+        cursor = await conn.execute(
+            "SELECT COUNT(*) FROM wifi_detections WHERE bssid IS NULL OR bssid = ''"
+        )
+        null_bssids = (await cursor.fetchone())[0]
+        if null_bssids > 0:
+            validation_results["errors"].append(f"Found {null_bssids} detections with NULL/empty BSSID")
+        
+        # Check for invalid signal strengths
+        cursor = await conn.execute(
+            "SELECT COUNT(*) FROM wifi_detections WHERE signal_strength_dbm > 0 OR signal_strength_dbm < -120"
+        )
+        invalid_signals = (await cursor.fetchone())[0]
+        if invalid_signals > 0:
+            validation_results["warnings"].append(f"Found {invalid_signals} detections with unusual signal strength")
+        
+        # Check for invalid coordinates
+        cursor = await conn.execute(
+            """
+            SELECT COUNT(*) FROM wifi_detections 
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+            AND (latitude < -90 OR latitude > 90 OR longitude < -180 OR longitude > 180)
+            """
+        )
+        invalid_coords = (await cursor.fetchone())[0]
+        if invalid_coords > 0:
+            validation_results["errors"].append(f"Found {invalid_coords} detections with invalid coordinates")
+        
+        # Check for duplicate detections
+        cursor = await conn.execute(
+            """
+            SELECT COUNT(*) FROM (
+                SELECT bssid, detection_timestamp, COUNT(*) as cnt
+                FROM wifi_detections
+                GROUP BY bssid, detection_timestamp
+                HAVING cnt > 1
+            )
+            """
+        )
+        duplicates = (await cursor.fetchone())[0]
+        if duplicates > 0:
+            validation_results["warnings"].append(f"Found {duplicates} potential duplicate detections")
+        
+        # Get general stats
+        cursor = await conn.execute("SELECT COUNT(*) FROM wifi_detections")
+        total_detections = (await cursor.fetchone())[0]
+        
+        cursor = await conn.execute("SELECT COUNT(DISTINCT bssid) FROM wifi_detections")
+        unique_bssids = (await cursor.fetchone())[0]
+        
+        validation_results["stats"] = {
+            "total_detections": total_detections,
+            "unique_bssids": unique_bssids,
+            "null_bssids": null_bssids,
+            "invalid_signals": invalid_signals,
+            "invalid_coordinates": invalid_coords,
+            "duplicate_detections": duplicates
+        }
+    
+    if validation_results["errors"]:
+        validation_results["status"] = "invalid"
+    elif validation_results["warnings"]:
+        validation_results["status"] = "warning"
+    
+    return validation_results
+
+
+async def cleanup_duplicate_detections() -> int:
+    """Remove duplicate detections, keeping the first occurrence."""
+    async with _get_conn() as conn:
+        # Find and remove duplicates
+        cursor = await conn.execute(
+            """
+            DELETE FROM wifi_detections 
+            WHERE id NOT IN (
+                SELECT MIN(id) 
+                FROM wifi_detections 
+                GROUP BY bssid, detection_timestamp, scan_session_id
+            )
+            """
+        )
+        
+        deleted_count = cursor.rowcount
+        await conn.commit()
+        
+        return deleted_count
+
+
+async def repair_data_integrity() -> Dict[str, int]:
+    """Repair data integrity issues."""
+    repairs = {
+        "null_bssids_removed": 0,
+        "invalid_signals_fixed": 0,
+        "invalid_coordinates_removed": 0,
+        "duplicates_removed": 0
+    }
+    
+    async with _get_conn() as conn:
+        # Remove detections with NULL/empty BSSID
+        cursor = await conn.execute(
+            "DELETE FROM wifi_detections WHERE bssid IS NULL OR bssid = ''"
+        )
+        repairs["null_bssids_removed"] = cursor.rowcount
+        
+        # Fix invalid signal strengths (clamp to reasonable range)
+        cursor = await conn.execute(
+            """
+            UPDATE wifi_detections 
+            SET signal_strength_dbm = CASE 
+                WHEN signal_strength_dbm > 0 THEN -30
+                WHEN signal_strength_dbm < -120 THEN -120
+                ELSE signal_strength_dbm
+            END
+            WHERE signal_strength_dbm > 0 OR signal_strength_dbm < -120
+            """
+        )
+        repairs["invalid_signals_fixed"] = cursor.rowcount
+        
+        # Remove detections with invalid coordinates
+        cursor = await conn.execute(
+            """
+            UPDATE wifi_detections 
+            SET latitude = NULL, longitude = NULL
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+            AND (latitude < -90 OR latitude > 90 OR longitude < -180 OR longitude > 180)
+            """
+        )
+        repairs["invalid_coordinates_removed"] = cursor.rowcount
+        
+        # Remove duplicates
+        repairs["duplicates_removed"] = await cleanup_duplicate_detections()
+        
+        await conn.commit()
+    
+    return repairs
+
+
+# Backup and Maintenance Functions
+async def backup_database(backup_path: str) -> Dict[str, Any]:
+    """Create a full database backup."""
+    import shutil
+    import os
+    
+    try:
+        db_path = _db_path()
+        if not os.path.exists(db_path):
+            return {"status": "error", "message": "Database file not found"}
+        
+        # Create backup
+        shutil.copy2(db_path, backup_path)
+        
+        # Verify backup
+        backup_size = os.path.getsize(backup_path)
+        original_size = os.path.getsize(db_path)
+        
+        return {
+            "status": "success",
+            "backup_path": backup_path,
+            "original_size": original_size,
+            "backup_size": backup_size,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+async def vacuum_database() -> Dict[str, Any]:
+    """Vacuum the database to reclaim space and optimize performance."""
+    async with _get_conn() as conn:
+        # Get database size before vacuum
+        cursor = await conn.execute("PRAGMA page_count")
+        pages_before = (await cursor.fetchone())[0]
+        
+        cursor = await conn.execute("PRAGMA page_size")
+        page_size = (await cursor.fetchone())[0]
+        
+        size_before = pages_before * page_size
+        
+        # Vacuum the database
+        await conn.execute("VACUUM")
+        
+        # Get database size after vacuum
+        cursor = await conn.execute("PRAGMA page_count")
+        pages_after = (await cursor.fetchone())[0]
+        
+        size_after = pages_after * page_size
+        
+        return {
+            "status": "success",
+            "size_before": size_before,
+            "size_after": size_after,
+            "space_reclaimed": size_before - size_after,
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+async def analyze_database_performance() -> Dict[str, Any]:
+    """Analyze database performance and provide recommendations."""
+    async with _get_conn() as conn:
+        # Get table sizes
+        cursor = await conn.execute(
+            """
+            SELECT name, 
+                   (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=m.name) as table_count
+            FROM sqlite_master m WHERE type='table'
+            """
+        )
+        tables = await cursor.fetchall()
+        
+        table_stats = {}
+        for table_name, _ in tables:
+            if table_name.startswith('sqlite_'):
+                continue
+                
+            cursor = await conn.execute(f"SELECT COUNT(*) FROM {table_name}")
+            count = (await cursor.fetchone())[0]
+            table_stats[table_name] = count
+        
+        # Get index usage
+        cursor = await conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'"
+        )
+        indexes = [row[0] for row in await cursor.fetchall()]
+        
+        # Get database size
+        cursor = await conn.execute("PRAGMA page_count")
+        pages = (await cursor.fetchone())[0]
+        
+        cursor = await conn.execute("PRAGMA page_size")
+        page_size = (await cursor.fetchone())[0]
+        
+        total_size = pages * page_size
+        
+        # Generate recommendations
+        recommendations = []
+        
+        if table_stats.get('wifi_detections', 0) > 100000:
+            recommendations.append("Consider partitioning wifi_detections table by date")
+        
+        if len(indexes) < 10:
+            recommendations.append("Consider adding more indexes for frequently queried columns")
+        
+        if total_size > 1000000000:  # 1GB
+            recommendations.append("Database is large, consider archiving old data")
+        
+        return {
+            "table_stats": table_stats,
+            "index_count": len(indexes),
+            "total_size": total_size,
+            "recommendations": recommendations,
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+async def cleanup_old_data(days_to_keep: int = 30) -> Dict[str, int]:
+    """Remove old data based on retention policy."""
+    cutoff_date = (datetime.now() - timedelta(days=days_to_keep)).isoformat()
+    
+    cleanup_stats = {
+        "wifi_detections_removed": 0,
+        "network_analytics_removed": 0,
+        "suspicious_activities_removed": 0,
+        "scan_sessions_removed": 0
+    }
+    
+    async with _get_conn() as conn:
+        # Remove old wifi detections
+        cursor = await conn.execute(
+            "DELETE FROM wifi_detections WHERE detection_timestamp < ?",
+            (cutoff_date,)
+        )
+        cleanup_stats["wifi_detections_removed"] = cursor.rowcount
+        
+        # Remove old network analytics
+        cursor = await conn.execute(
+            "DELETE FROM network_analytics WHERE analysis_date < ?",
+            (cutoff_date[:10],)  # Just the date part
+        )
+        cleanup_stats["network_analytics_removed"] = cursor.rowcount
+        
+        # Remove old suspicious activities
+        cursor = await conn.execute(
+            "DELETE FROM suspicious_activities WHERE detected_at < ?",
+            (cutoff_date,)
+        )
+        cleanup_stats["suspicious_activities_removed"] = cursor.rowcount
+        
+        # Remove old scan sessions
+        cursor = await conn.execute(
+            "DELETE FROM scan_sessions WHERE started_at < ?",
+            (cutoff_date,)
+        )
+        cleanup_stats["scan_sessions_removed"] = cursor.rowcount
+        
+        await conn.commit()
+    
+    return cleanup_stats
+
+
+async def schedule_maintenance_tasks() -> Dict[str, Any]:
+    """Schedule regular maintenance tasks."""
+    maintenance_results = {
+        "vacuum_result": await vacuum_database(),
+        "validation_result": await validate_detection_data(),
+        "performance_analysis": await analyze_database_performance(),
+        "cleanup_result": await cleanup_old_data(days_to_keep=90),
+        "timestamp": datetime.now().isoformat()
+    }
+    
+    return maintenance_results

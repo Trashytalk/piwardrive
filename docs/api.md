@@ -47,6 +47,71 @@ curl -X POST "http://localhost:8080/token" \
 
 ## Core Endpoints
 
+### API Architecture Overview
+
+```mermaid
+graph TB
+    A[Client Applications] --> B[API Gateway]
+    B --> C[Authentication Layer]
+    C --> D[Rate Limiting]
+    D --> E[API Endpoints]
+    
+    E --> F[System Endpoints]
+    E --> G[Wi-Fi Scanning]
+    E --> H[Device Management]
+    E --> I[Data Export]
+    E --> J[Real-time Streaming]
+    
+    F --> K[Health Checks]
+    F --> L[System Stats]
+    F --> M[Configuration]
+    
+    G --> N[Scan Control]
+    G --> O[Results Retrieval]
+    G --> P[Channel Management]
+    
+    H --> Q[Interface Control]
+    H --> R[Adapter Management]
+    H --> S[Monitor Mode]
+    
+    I --> T[Data Formats]
+    I --> U[Bulk Export]
+    I --> V[Filtering]
+    
+    J --> W[WebSocket Events]
+    J --> X[SSE Streaming]
+    J --> Y[Real-time Updates]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+```
+
+### API Request/Response Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API Gateway
+    participant Auth Service
+    participant Rate Limiter
+    participant API Endpoint
+    participant Database
+    
+    Client->>API Gateway: API Request
+    API Gateway->>Auth Service: Validate Token
+    Auth Service-->>API Gateway: Token Valid
+    API Gateway->>Rate Limiter: Check Limits
+    Rate Limiter-->>API Gateway: Within Limits
+    API Gateway->>API Endpoint: Forward Request
+    API Endpoint->>Database: Query Data
+    Database-->>API Endpoint: Return Data
+    API Endpoint-->>API Gateway: Response
+    API Gateway-->>Client: JSON Response
+```
+
 ### Authentication
 
 #### `POST /api/v1/auth/token`

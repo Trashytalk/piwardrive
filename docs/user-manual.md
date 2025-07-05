@@ -44,6 +44,71 @@ The PiWardrive interface consists of several main sections:
 - **Control Panel** - Start/stop scans and configure settings
 - **Status Bar** - System health and connection information
 
+### Dashboard Interface Overview
+
+```mermaid
+graph TB
+    A[PiWardrive Dashboard] --> B[Navigation Bar]
+    A --> C[Main Content Area]
+    A --> D[Side Panels]
+    A --> E[Status Bar]
+    
+    B --> B1[Home]
+    B --> B2[Wi-Fi Scanner]
+    B --> B3[Network Analysis]
+    B --> B4[Device Detection]
+    B --> B5[Analytics]
+    B --> B6[System]
+    
+    C --> C1[Real-Time Data]
+    C --> C2[Interactive Charts]
+    C --> C3[Data Tables]
+    C --> C4[Network Maps]
+    
+    D --> D1[Control Panel]
+    D --> D2[Quick Actions]
+    D --> D3[Recent Activity]
+    D --> D4[System Health]
+    
+    E --> E1[Connection Status]
+    E --> E2[Scan Status]
+    E --> E3[System Resources]
+    E --> E4[Alerts]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+```
+
+### User Workflow
+
+```mermaid
+graph LR
+    A[User Login] --> B[Dashboard Home]
+    B --> C[Start Scanning]
+    C --> D[Monitor Results]
+    D --> E[Analyze Data]
+    E --> F[Export Results]
+    
+    B --> G[Configure Settings]
+    G --> H[System Management]
+    
+    D --> I[Real-time Monitoring]
+    I --> J[Alert Notifications]
+    
+    E --> K[Generate Reports]
+    K --> L[Historical Analysis]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#ffebee
+```
+
 ## Dashboard Overview
 
 ### Main Navigation

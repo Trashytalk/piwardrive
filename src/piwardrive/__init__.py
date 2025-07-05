@@ -41,6 +41,10 @@ for _mod in (
     "cache",
     "circuit_breaker",
     "performance",
+    "visualization.advanced_viz",
+    "data_processing.enhanced_processing",
+    "hardware.enhanced_hardware",
+    "ui.user_experience",
 ):
     try:  # pragma: no cover - optional imports may fail
         module = import_module(f"piwardrive.{_mod}")

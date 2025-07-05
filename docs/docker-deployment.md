@@ -30,6 +30,46 @@ PiWardrive supports multiple Docker deployment strategies to accommodate differe
 - **Docker Swarm**: Multi-node container orchestration
 - **Raspberry Pi**: ARM-optimized containers for edge deployment
 
+```mermaid
+graph TB
+    A[Docker Deployment Options] --> B[All-in-One Container]
+    A --> C[Multi-Container Setup]
+    A --> D[Kubernetes Cluster]
+    A --> E[Docker Swarm]
+    A --> F[Raspberry Pi Edge]
+    
+    B --> B1[Single Container<br/>All Services]
+    B --> B2[SQLite Database<br/>Local Storage]
+    B --> B3[Quick Setup<br/>Development]
+    
+    C --> C1[API Container]
+    C --> C2[Database Container]
+    C --> C3[Redis Cache]
+    C --> C4[Grafana Dashboard]
+    
+    D --> D1[Pod Orchestration]
+    D --> D2[Auto-scaling]
+    D --> D3[Load Balancing]
+    D --> D4[Service Discovery]
+    
+    E --> E1[Multi-node Cluster]
+    E --> E2[Container Orchestration]
+    E --> E3[High Availability]
+    E --> E4[Rolling Updates]
+    
+    F --> F1[ARM64 Containers]
+    F --> F2[Low Resource Usage]
+    F --> F3[Edge Computing]
+    F --> F4[Offline Capability]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#ffebee
+```
+
 ## Prerequisites
 
 ### System Requirements
@@ -309,6 +349,71 @@ docker run -d \
 ```
 
 ## Multi-Container Deployment
+
+### Container Architecture Overview
+
+```mermaid
+graph TB
+    LB[Load Balancer] --> API[API Container]
+    API --> DB[(PostgreSQL Database)]
+    API --> REDIS[(Redis Cache)]
+    API --> SCANNER[Scanner Service]
+    
+    SCANNER --> WLAN[Wi-Fi Interface<br/>Monitor Mode]
+    SCANNER --> GPS[GPS Device]
+    
+    API --> GRAFANA[Grafana Dashboard]
+    GRAFANA --> INFLUX[(InfluxDB)]
+    
+    API --> WEB[Web Interface]
+    WEB --> USERS[Users/Browsers]
+    
+    subgraph "Docker Network: piwardrive-internal"
+        API
+        DB
+        REDIS
+        SCANNER
+        INFLUX
+    end
+    
+    subgraph "Docker Network: piwardrive-external"
+        LB
+        GRAFANA
+        WEB
+    end
+    
+    subgraph "Host Hardware"
+        WLAN
+        GPS
+    end
+    
+    style API fill:#e1f5fe
+    style DB fill:#e8f5e8
+    style REDIS fill:#fff3e0
+    style SCANNER fill:#fce4ec
+    style GRAFANA fill:#f3e5f5
+    style INFLUX fill:#ffebee
+```
+
+### Service Dependencies
+
+```mermaid
+graph LR
+    A[piwardrive-api] --> B[piwardrive-db]
+    A --> C[piwardrive-redis]
+    A --> D[piwardrive-scanner]
+    E[piwardrive-grafana] --> F[piwardrive-influxdb]
+    E --> A
+    G[piwardrive-nginx] --> A
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#ffebee
+    style G fill:#e0f2f1
+```
 
 ### Complete Multi-Service Stack
 

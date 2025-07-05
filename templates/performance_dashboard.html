@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - PiWardrive</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .header .subtitle {
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .metric-value.success {
+            color: #22c55e;
+        }
+        
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+        
+        .metric-value.error {
+            color: #ef4444;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-good { background-color: #22c55e; }
+        .status-warning { background-color: #f59e0b; }
+        .status-error { background-color: #ef4444; }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .recommendations {
+            margin-top: 2rem;
+        }
+        
+        .recommendation {
+            background: white;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .recommendation h4 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .recommendation p {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .recommendation .impact {
+            font-size: 0.9rem;
+            color: #22c55e;
+            font-weight: 500;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <div class="subtitle">Real-time performance monitoring and optimization</div>
+    </div>
+    
+    <div class="container">
+        <div class="controls">
+            <button class="btn btn-primary" onclick="refreshData()">
+                <span id="refresh-spinner"></span>
+                Refresh Data
+            </button>
+            <button class="btn btn-secondary" onclick="optimizeDatabase()">
+                Optimize Database
+            </button>
+            <button class="btn btn-secondary" onclick="exportData()">
+                Export Report
+            </button>
+            <div style="margin-left: auto;">
+                <span>Auto-refresh: </span>
+                <input type="checkbox" id="auto-refresh" checked onchange="toggleAutoRefresh()">
+                <label for="auto-refresh">Enabled</label>
+            </div>
+        </div>
+        
+        <div id="alerts-container"></div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('overview')">Overview</div>
+            <div class="tab" onclick="showTab('database')">Database</div>
+            <div class="tab" onclick="showTab('async')">Async Performance</div>
+            <div class="tab" onclick="showTab('realtime')">Real-time Updates</div>
+            <div class="tab" onclick="showTab('recommendations')">Recommendations</div>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>
+                        <span class="status-indicator status-good"></span>
+                        System Overview
+                    </h3>
+                    <div class="metric">
+                        <span class="metric-label">Database Status</span>
+                        <span class="metric-value" id="db-status">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Async Operations</span>
+                        <span class="metric-value" id="async-ops">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">WebSocket Connections</span>
+                        <span class="metric-value" id="ws-connections">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Last Updated</span>
+                        <span class="metric-value" id="last-updated">Never</span>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Performance Metrics</h3>
+                    <div class="chart-container">
+                        <canvas id="overview-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Quick Stats</h3>
+                    <div class="metric">
+                        <span class="metric-label">Total Tables</span>
+                        <span class="metric-value" id="total-tables">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Total Records</span>
+                        <span class="metric-value" id="total-records">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Database Size</span>
+                        <span class="metric-value" id="db-size">-</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Missing Indexes</span>
+                        <span class="metric-value" id="missing-indexes">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Database Tab -->
+        <div id="database-tab" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Database Performance</h3>
+                    <div id="database-metrics">Loading...</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Table Statistics</h3>
+                    <div id="table-stats">Loading...</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Query Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="query-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Async Tab -->
+        <div id="async-tab" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Async Operations</h3>
+                    <div id="async-metrics">Loading...</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Operation Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="async-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Real-time Tab -->
+        <div id="realtime-tab" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>WebSocket Performance</h3>
+                    <div id="websocket-metrics">Loading...</div>
+                </div>
+                
+                <div class="card">
+                    <h3>SSE Performance</h3>
+                    <div id="sse-metrics">Loading...</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Real-time Connections</h3>
+                    <div class="chart-container">
+                        <canvas id="realtime-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recommendations Tab -->
+        <div id="recommendations-tab" class="tab-content">
+            <div class="recommendations">
+                <h3>Performance Recommendations</h3>
+                <div id="recommendations-list">Loading...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefresh = true;
+        let refreshInterval;
+        let charts = {};
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            refreshData();
+            startAutoRefresh();
+        });
+        
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+        }
+        
+        function initializeCharts() {
+            // Overview chart
+            const overviewCtx = document.getElementById('overview-chart').getContext('2d');
+            charts.overview = new Chart(overviewCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Query Response Time (ms)',
+                        data: [],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Query performance chart
+            const queryCtx = document.getElementById('query-chart').getContext('2d');
+            charts.query = new Chart(queryCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Average Query Time (ms)',
+                        data: [],
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Async performance chart
+            const asyncCtx = document.getElementById('async-chart').getContext('2d');
+            charts.async = new Chart(asyncCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Successful', 'Failed'],
+                    datasets: [{
+                        data: [95, 5],
+                        backgroundColor: ['#22c55e', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Real-time connections chart
+            const realtimeCtx = document.getElementById('realtime-chart').getContext('2d');
+            charts.realtime = new Chart(realtimeCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'WebSocket Connections',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'SSE Streams',
+                        data: [],
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        async function refreshData() {
+            const refreshBtn = document.querySelector('.btn-primary');
+            const spinner = document.getElementById('refresh-spinner');
+            
+            // Show loading state
+            refreshBtn.disabled = true;
+            spinner.innerHTML = '<div class="spinner"></div>';
+            
+            try {
+                // Fetch comprehensive stats
+                const response = await fetch('/performance/api/comprehensive');
+                const data = await response.json();
+                
+                updateOverview(data);
+                updateDatabaseMetrics(data.database);
+                updateAsyncMetrics(data.async);
+                updateRealtimeMetrics(data.realtime);
+                
+                // Fetch alerts
+                const alertsResponse = await fetch('/performance/api/performance/alerts');
+                const alertsData = await alertsResponse.json();
+                updateAlerts(alertsData.alerts);
+                
+                // Fetch recommendations
+                const recsResponse = await fetch('/performance/api/performance/recommendations');
+                const recsData = await recsResponse.json();
+                updateRecommendations(recsData.recommendations);
+                
+                // Update last updated time
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                showAlert('Error fetching performance data: ' + error.message, 'error');
+            } finally {
+                // Hide loading state
+                refreshBtn.disabled = false;
+                spinner.innerHTML = '';
+            }
+        }
+        
+        function updateOverview(data) {
+            // Update overview metrics
+            if (data.database && !data.database.error) {
+                document.getElementById('db-status').textContent = 'Healthy';
+                document.getElementById('db-status').className = 'metric-value success';
+                document.getElementById('total-tables').textContent = data.database.table_count || 0;
+                document.getElementById('total-records').textContent = (data.database.total_rows || 0).toLocaleString();
+                document.getElementById('db-size').textContent = (data.database.total_size_mb || 0).toFixed(1) + ' MB';
+            } else {
+                document.getElementById('db-status').textContent = 'Error';
+                document.getElementById('db-status').className = 'metric-value error';
+            }
+            
+            if (data.async && !data.async.error) {
+                const totalOps = data.async.total_operations || 0;
+                document.getElementById('async-ops').textContent = totalOps.toLocaleString();
+            }
+            
+            if (data.realtime && !data.realtime.error) {
+                const wsConnections = data.realtime.websocket_stats?.active_connections || 0;
+                document.getElementById('ws-connections').textContent = wsConnections;
+            }
+        }
+        
+        function updateDatabaseMetrics(dbData) {
+            const container = document.getElementById('database-metrics');
+            
+            if (dbData?.error) {
+                container.innerHTML = `<div class="alert alert-error">Database Error: ${dbData.error}</div>`;
+                return;
+            }
+            
+            if (!dbData) {
+                container.innerHTML = '<div class="loading"><div class="spinner"></div>No database data available</div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">Total Tables</span>
+                    <span class="metric-value">${dbData.table_count || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Records</span>
+                    <span class="metric-value">${(dbData.total_rows || 0).toLocaleString()}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Database Size</span>
+                    <span class="metric-value">${(dbData.total_size_mb || 0).toFixed(2)} MB</span>
+                </div>
+            `;
+            
+            // Update table stats
+            const tableStatsContainer = document.getElementById('table-stats');
+            if (dbData.tables) {
+                let tableHtml = '';
+                Object.entries(dbData.tables).forEach(([tableName, stats]) => {
+                    tableHtml += `
+                        <div class="metric">
+                            <span class="metric-label">${tableName}</span>
+                            <span class="metric-value">${stats.row_count.toLocaleString()} rows</span>
+                        </div>
+                    `;
+                });
+                tableStatsContainer.innerHTML = tableHtml;
+            }
+        }
+        
+        function updateAsyncMetrics(asyncData) {
+            const container = document.getElementById('async-metrics');
+            
+            if (asyncData?.error) {
+                container.innerHTML = `<div class="alert alert-error">Async Error: ${asyncData.error}</div>`;
+                return;
+            }
+            
+            if (!asyncData || asyncData.message) {
+                container.innerHTML = '<div class="loading"><div class="spinner"></div>No async data available</div>';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">Total Operations</span>
+                    <span class="metric-value">${asyncData.total_operations || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Active Operations</span>
+                    <span class="metric-value">${asyncData.active_operations || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Slow Operations</span>
+                    <span class="metric-value ${(asyncData.slow_operations || 0) > 10 ? 'warning' : 'success'}">${asyncData.slow_operations || 0}</span>
+                </div>
+            `;
+        }
+        
+        function updateRealtimeMetrics(realtimeData) {
+            const wsContainer = document.getElementById('websocket-metrics');
+            const sseContainer = document.getElementById('sse-metrics');
+            
+            if (realtimeData?.error) {
+                wsContainer.innerHTML = `<div class="alert alert-error">Real-time Error: ${realtimeData.error}</div>`;
+                sseContainer.innerHTML = '';
+                return;
+            }
+            
+            const wsStats = realtimeData?.websocket_stats || {};
+            const sseStats = realtimeData?.sse_stats || {};
+            
+            wsContainer.innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">Active Connections</span>
+                    <span class="metric-value">${wsStats.active_connections || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Messages Sent</span>
+                    <span class="metric-value">${(wsStats.messages_sent || 0).toLocaleString()}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Errors</span>
+                    <span class="metric-value ${(wsStats.errors || 0) > 0 ? 'warning' : 'success'}">${wsStats.errors || 0}</span>
+                </div>
+            `;
+            
+            sseContainer.innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">Active Streams</span>
+                    <span class="metric-value">${sseStats.active_streams || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Events Sent</span>
+                    <span class="metric-value">${(sseStats.events_sent || 0).toLocaleString()}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Streams</span>
+                    <span class="metric-value">${sseStats.total_streams || 0}</span>
+                </div>
+            `;
+        }
+        
+        function updateAlerts(alerts) {
+            const container = document.getElementById('alerts-container');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let alertsHtml = '';
+            alerts.forEach(alert => {
+                const alertClass = `alert-${alert.type}`;
+                alertsHtml += `
+                    <div class="alert ${alertClass}">
+                        <strong>${alert.category.toUpperCase()}:</strong> ${alert.message}
+                        <br><small><strong>Recommendation:</strong> ${alert.recommendation}</small>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = alertsHtml;
+        }
+        
+        function updateRecommendations(recommendations) {
+            const container = document.getElementById('recommendations-list');
+            
+            if (!recommendations || recommendations.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">No performance recommendations at this time.</div>';
+                return;
+            }
+            
+            let recsHtml = '';
+            recommendations.forEach(rec => {
+                recsHtml += `
+                    <div class="recommendation">
+                        <h4>${rec.title} <span style="font-size: 0.8em; color: #666;">(${rec.priority} priority)</span></h4>
+                        <p>${rec.description}</p>
+                        <p><strong>Action:</strong> ${rec.action}</p>
+                        <div class="impact">${rec.estimated_impact}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = recsHtml;
+        }
+        
+        function showAlert(message, type = 'info') {
+            const alertsContainer = document.getElementById('alerts-container');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = message;
+            
+            alertsContainer.insertBefore(alertDiv, alertsContainer.firstChild);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+        
+        async function optimizeDatabase() {
+            if (!confirm('This will optimize the database by creating missing indexes and running VACUUM. Continue?')) {
+                return;
+            }
+            
+            try {
+                showAlert('Database optimization started...', 'info');
+                
+                const response = await fetch('/performance/api/database/optimize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Database optimization completed successfully!', 'info');
+                    refreshData(); // Refresh data to show improvements
+                } else {
+                    showAlert('Database optimization failed: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error during database optimization: ' + error.message, 'error');
+            }
+        }
+        
+        function exportData() {
+            // Export current performance data as JSON
+            fetch('/performance/api/comprehensive')
+                .then(response => response.json())
+                .then(data => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `piwardrive-performance-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    showAlert('Error exporting data: ' + error.message, 'error');
+                });
+        }
+        
+        function toggleAutoRefresh() {
+            autoRefresh = document.getElementById('auto-refresh').checked;
+            if (autoRefresh) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        }
+        
+        function startAutoRefresh() {
+            if (autoRefresh && !refreshInterval) {
+                refreshInterval = setInterval(refreshData, 30000); // Refresh every 30 seconds
+            }
+        }
+        
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -36,3 +36,41 @@ async def run_migrations(
             (mig.get_version(),),
         )
         await conn.commit()
+
+async def get_applied_migrations(conn: aiosqlite.Connection) -> set[int]:
+    """Get set of applied migration versions."""
+    await _ensure_table(conn)
+    return await _applied_versions(conn)
+
+
+async def get_available_migrations() -> list[BaseMigration]:
+    """Get list of available migrations."""
+    from . import MIGRATIONS
+    return MIGRATIONS
+
+
+async def check_migration_status(conn: aiosqlite.Connection) -> dict[str, any]:
+    """Check migration status."""
+    applied = await get_applied_migrations(conn)
+    available = get_available_migrations()
+    available_versions = {m.get_version() for m in available}
+    
+    return {
+        "applied": sorted(applied),
+        "available": sorted(available_versions),
+        "pending": sorted(available_versions - applied),
+        "unknown": sorted(applied - available_versions)
+    }
+
+
+async def run_pending_migrations(conn: aiosqlite.Connection) -> int:
+    """Run all pending migrations and return count of applied migrations."""
+    from . import MIGRATIONS
+    
+    status = await check_migration_status(conn)
+    pending_count = len(status["pending"])
+    
+    if pending_count > 0:
+        await run_migrations(conn, MIGRATIONS)
+    
+    return pending_count

@@ -1,13 +1,106 @@
 version: 2
 updates:
+    # Python dependency updates
     - package-ecosystem: "pip"
       directory: "/"
       schedule:
-          interval: "weekly"
-      open-pull-requests-limit: 5
+          interval: "daily"
+          time: "06:00"
+      open-pull-requests-limit: 10
+      reviewers:
+          - "@security-team"
       assignees:
           - "${{ github.repository_owner }}"
+      labels:
+          - "dependencies"
+          - "python"
+      commit-message:
+          prefix: "deps"
+          include: "scope"
+      # Group patch updates together
+      groups:
+          security-updates:
+              patterns:
+                  - "*"
+              update-types:
+                  - "security"
+          minor-updates:
+              patterns:
+                  - "*"
+              update-types:
+                  - "minor"
+                  - "patch"
+          major-updates:
+              patterns:
+                  - "*"
+              update-types:
+                  - "major"
+      # Ignore certain packages that need manual updates
+      ignore:
+          # Hardware-specific packages that need careful testing
+          - dependency-name: "mpu6050"
+          - dependency-name: "dronekit"
+          - dependency-name: "pyrtlsdr"
+          # Scientific packages that may have breaking changes
+          - dependency-name: "numpy"
+            update-types: ["version-update:semver-major"]
+          - dependency-name: "scipy"
+            update-types: ["version-update:semver-major"]
+          - dependency-name: "pandas"
+            update-types: ["version-update:semver-major"]
+          - dependency-name: "scikit-learn"
+            update-types: ["version-update:semver-major"]
+
+    # GitHub Actions dependency updates
     - package-ecosystem: "github-actions"
       directory: "/"
       schedule:
           interval: "weekly"
+          day: "monday"
+          time: "06:00"
+      open-pull-requests-limit: 5
+      assignees:
+          - "${{ github.repository_owner }}"
+      labels:
+          - "dependencies"
+          - "github-actions"
+
+    # Docker dependency updates
+    - package-ecosystem: "docker"
+      directory: "/"
+      schedule:
+          interval: "weekly"
+          day: "monday"
+          time: "06:00"
+      open-pull-requests-limit: 5
+      assignees:
+          - "${{ github.repository_owner }}"
+      labels:
+          - "dependencies"
+          - "docker"
+
+    # Node.js dependency updates for web UI
+    - package-ecosystem: "npm"
+      directory: "/webui"
+      schedule:
+          interval: "weekly"
+          day: "monday"
+          time: "06:00"
+      open-pull-requests-limit: 10
+      assignees:
+          - "${{ github.repository_owner }}"
+      labels:
+          - "dependencies"
+          - "frontend"
+      # Group patch updates together
+      groups:
+          patch-updates:
+              patterns:
+                  - "*"
+              update-types:
+                  - "patch"
+          security-updates:
+              patterns:
+                  - "*"
+              update-types:
+                  - "security"

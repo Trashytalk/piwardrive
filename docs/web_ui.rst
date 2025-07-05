@@ -3,6 +3,62 @@ Web Interface
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
+Web Interface Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. mermaid::
+
+   graph TB
+       A[React Frontend] --> B[HTTP API]
+       A --> C[WebSocket Connection]
+       A --> D[Server-Sent Events]
+       
+       B --> E[Service Module]
+       C --> F[Status Updates]
+       D --> G[Fallback Connection]
+       
+       E --> H[Database]
+       E --> I[Configuration]
+       E --> J[Plugin System]
+       
+       A --> K[Dashboard Widgets]
+       K --> L[Drag & Drop Layout]
+       K --> M[Responsive Design]
+       
+       J --> N[Plugin Detection]
+       N --> O[Widget Registration]
+       
+       style A fill:#e1f5fe
+       style B fill:#e8f5e8
+       style C fill:#fff3e0
+       style D fill:#fce4ec
+       style E fill:#f3e5f5
+
+Frontend Data Flow
+~~~~~~~~~~~~~~~~~~
+
+.. mermaid::
+
+   sequenceDiagram
+       participant Browser
+       participant React App
+       participant HTTP API
+       participant WebSocket
+       participant Database
+       
+       Browser->>React App: Load Application
+       React App->>HTTP API: Fetch Initial Data
+       HTTP API->>Database: Query Data
+       Database-->>HTTP API: Return Results
+       HTTP API-->>React App: JSON Response
+       React App->>WebSocket: Establish Connection
+       WebSocket-->>React App: Live Updates
+       React App-->>Browser: Render UI
+       
+       Note over React App,WebSocket: Falls back to SSE if WebSocket unavailable
+       React App->>HTTP API: Heartbeat every 15s
+       HTTP API-->>React App: Keep-alive Response
+
 
 PiWardrive's main user experience is delivered through a React application under
 ``webui/``. It consumes the HTTP API provided by :mod:`service` to display

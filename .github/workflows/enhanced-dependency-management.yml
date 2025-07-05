@@ -1,0 +1,443 @@
+name: Enhanced Dependency Management and Testing
+
+on:
+  schedule:
+    # Run dependency checks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of dependency test to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - security
+          - compatibility
+          - performance
+      force_update:
+        description: 'Force update all dependencies'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.9'
+  NODE_VERSION: '18'
+
+jobs:
+  dependency-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install safety bandit semgrep
+          
+      - name: Install Node.js dependencies
+        run: |
+          npm ci
+          npm install -g npm-audit-resolver audit-ci
+          
+      - name: Python security audit
+        run: |
+          echo "Running Python security audit..."
+          safety check --json --output safety-report.json || true
+          bandit -r src/ -f json -o bandit-report.json || true
+          semgrep --config=auto --json --output=semgrep-report.json src/ || true
+          
+      - name: Node.js security audit
+        run: |
+          echo "Running Node.js security audit..."
+          npm audit --json > npm-audit-report.json || true
+          audit-ci --config .audit-ci.json || true
+          
+      - name: Process security reports
+        run: |
+          python scripts/process_security_reports.py \
+            --safety-report safety-report.json \
+            --bandit-report bandit-report.json \
+            --semgrep-report semgrep-report.json \
+            --npm-audit-report npm-audit-report.json \
+            --output security-summary.json
+            
+      - name: Upload security artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            *-report.json
+            security-summary.json
+            
+      - name: Comment on PR if security issues found
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('security-summary.json')) {
+              const summary = JSON.parse(fs.readFileSync('security-summary.json', 'utf8'));
+              if (summary.critical_issues > 0 || summary.high_issues > 0) {
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `🚨 **Security Issues Detected**\n\n` +
+                        `- Critical: ${summary.critical_issues}\n` +
+                        `- High: ${summary.high_issues}\n` +
+                        `- Medium: ${summary.medium_issues}\n\n` +
+                        `Please review the security reports before merging.`
+                });
+              }
+            }
+
+  dependency-compatibility:
+    name: Dependency Compatibility Testing
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'compatibility' || github.event_name == 'schedule'
+    
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+        dependency-set: ['minimal', 'latest', 'pinned']
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Install dependencies (${{ matrix.dependency-set }})
+        run: |
+          python -m pip install --upgrade pip
+          
+          case "${{ matrix.dependency-set }}" in
+            "minimal")
+              # Install minimal versions
+              pip install -r requirements-minimal.txt
+              ;;
+            "latest")
+              # Install latest versions
+              pip install -r requirements.txt --upgrade
+              ;;
+            "pinned")
+              # Install pinned versions
+              pip install -r requirements.txt
+              ;;
+          esac
+          
+          pip install -r requirements-dev.txt
+          
+      - name: Run compatibility tests
+        run: |
+          python -m pytest tests/test_compatibility.py -v \
+            --junitxml=compatibility-results-${{ matrix.python-version }}-${{ matrix.dependency-set }}.xml
+            
+      - name: Upload compatibility results
+        uses: actions/upload-artifact@v4
+        with:
+          name: compatibility-results-${{ matrix.python-version }}-${{ matrix.dependency-set }}
+          path: compatibility-results-*.xml
+
+  dependency-performance:
+    name: Dependency Performance Impact
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'performance' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install current dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          
+      - name: Run baseline performance tests
+        run: |
+          python -m pytest benchmarks/ -v --benchmark-json=baseline-performance.json
+          
+      - name: Install updated dependencies
+        run: |
+          pip install -r requirements.txt --upgrade
+          
+      - name: Run updated performance tests
+        run: |
+          python -m pytest benchmarks/ -v --benchmark-json=updated-performance.json
+          
+      - name: Compare performance
+        run: |
+          python scripts/compare_performance.py \
+            --baseline baseline-performance.json \
+            --updated updated-performance.json \
+            --output performance-comparison.json \
+            --threshold 10  # 10% performance degradation threshold
+            
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-comparison
+          path: |
+            baseline-performance.json
+            updated-performance.json
+            performance-comparison.json
+            
+      - name: Fail if performance degradation detected
+        run: |
+          python -c "
+          import json
+          with open('performance-comparison.json') as f:
+              data = json.load(f)
+          if data.get('degradation_detected', False):
+              print('Performance degradation detected!')
+              exit(1)
+          "
+
+  dependency-update:
+    name: Automated Dependency Updates
+    runs-on: ubuntu-latest
+    if: github.event.inputs.force_update == 'true' || github.event_name == 'schedule'
+    needs: [dependency-audit, dependency-compatibility]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install update tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools pur
+          npm install -g npm-check-updates
+          
+      - name: Update Python dependencies
+        run: |
+          echo "Updating Python dependencies..."
+          
+          # Update requirements.txt
+          pur -r requirements.txt --force
+          
+          # Update requirements-dev.txt
+          pur -r requirements-dev.txt --force
+          
+          # Generate updated lock files
+          pip-compile requirements.in --upgrade
+          pip-compile requirements-dev.in --upgrade
+          
+      - name: Update Node.js dependencies
+        run: |
+          echo "Updating Node.js dependencies..."
+          
+          # Update package.json
+          ncu -u
+          
+          # Install updated dependencies
+          npm install
+          
+      - name: Run tests with updated dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
+          
+          # Run core tests
+          python -m pytest tests/test_core.py -v
+          
+          # Run integration tests
+          python -m pytest tests/test_integration.py -v
+          
+      - name: Create update summary
+        run: |
+          python scripts/create_update_summary.py \
+            --output dependency-update-summary.md
+            
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependencies'
+          title: 'Automated dependency updates'
+          body-path: dependency-update-summary.md
+          branch: automated-dependency-updates
+          delete-branch: true
+          
+  integration-testing:
+    name: Integration Testing with Updated Dependencies
+    runs-on: ubuntu-latest
+    needs: [dependency-update]
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: piwardrive_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          
+      - name: Set up test environment
+        run: |
+          # Create test configuration
+          cp config/test.json.example config/test.json
+          
+          # Set up test database
+          PGPASSWORD=postgres psql -h localhost -U postgres -d piwardrive_test -f scripts/setup_test_db.sql
+          
+      - name: Run comprehensive integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/piwardrive_test
+          REDIS_URL: redis://localhost:6379
+        run: |
+          python -m pytest tests/test_integration_comprehensive.py -v \
+            --junitxml=integration-results.xml \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=html
+            
+      - name: Run performance tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/piwardrive_test
+          REDIS_URL: redis://localhost:6379
+        run: |
+          python -m pytest tests/test_performance_comprehensive.py -v \
+            --benchmark-json=performance-results.json
+            
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            integration-results.xml
+            performance-results.json
+            coverage.xml
+            htmlcov/
+            
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Integration Test Results
+          path: integration-results.xml
+          reporter: java-junit
+          
+  notify-results:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [dependency-audit, dependency-compatibility, dependency-performance, dependency-update, integration-testing]
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        
+      - name: Process results
+        run: |
+          python scripts/process_workflow_results.py \
+            --output workflow-summary.json
+            
+      - name: Send Slack notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ job.status }}" === "success" ? "good" : "danger",
+                "title": "Dependency Management Workflow",
+                "fields": [
+                  {
+                    "title": "Status",
+                    "value": "${{ job.status }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.ref }}",
+                    "short": true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Create GitHub issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Dependency Management Workflow Failed',
+              body: 'The automated dependency management workflow has failed. Please check the workflow logs for details.',
+              labels: ['bug', 'dependencies', 'ci/cd']
+            });

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiWardrive Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .dashboard-container {
+            padding: 20px;
+        }
+        .widget {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .widget-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .widget-controls {
+            display: flex;
+            gap: 5px;
+        }
+        .widget-control {
+            border: none;
+            background: none;
+            color: #6c757d;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        .widget-control:hover {
+            color: #007bff;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .network-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .network-item:last-child {
+            border-bottom: none;
+        }
+        .network-info {
+            flex: 1;
+        }
+        .network-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        .network-details {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .signal-strength {
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        .signal-excellent { background: #d4edda; color: #155724; }
+        .signal-good { background: #d1ecf1; color: #0c5460; }
+        .signal-fair { background: #fff3cd; color: #856404; }
+        .signal-poor { background: #f8d7da; color: #721c24; }
+        .toolbar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-active { background: #28a745; }
+        .status-inactive { background: #dc3545; }
+        .status-warning { background: #ffc107; }
+        .scan-progress {
+            margin-top: 10px;
+        }
+        .chart-container {
+            height: 300px;
+            margin-top: 15px;
+        }
+        .environmental-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .env-metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .env-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #007bff;
+        }
+        .env-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .gps-coordinates {
+            font-family: monospace;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .channel-usage-chart {
+            height: 200px;
+            margin-top: 15px;
+        }
+        .system-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .metric-bar {
+            flex: 1;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+        .metric-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .cpu-fill { background: #007bff; }
+        .memory-fill { background: #28a745; }
+        .disk-fill { background: #ffc107; }
+        .temp-fill { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-wifi me-2"></i>
+                    PiWardrive Dashboard
+                </h2>
+                <div class="toolbar-actions">
+                    <button class="btn btn-success" id="start-scan-btn">
+                        <i class="fas fa-play me-2"></i>
+                        Start Scan
+                    </button>
+                    <button class="btn btn-danger" id="stop-scan-btn" style="display: none;">
+                        <i class="fas fa-stop me-2"></i>
+                        Stop Scan
+                    </button>
+                    <button class="btn btn-primary" onclick="exportData()">
+                        <i class="fas fa-download me-2"></i>
+                        Export
+                    </button>
+                    <button class="btn btn-secondary" onclick="openSettings()">
+                        <i class="fas fa-cog me-2"></i>
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="row">
+            <!-- Scan Status Widget -->
+            <div class="col-md-3">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">Scan Status</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('scan-status')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="mb-3">
+                            <span class="status-indicator status-inactive" id="scan-status-indicator"></span>
+                            <span id="scan-status-text">Idle</span>
+                        </div>
+                        <div class="stat-value" id="networks-found">0</div>
+                        <div class="stat-label">Networks Found</div>
+                        <div class="scan-progress" id="scan-progress" style="display: none;">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small class="text-muted">Scanning...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPS Status Widget -->
+            <div class="col-md-3">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">GPS Status</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('gps-status')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="mb-3">
+                            <span class="status-indicator status-active" id="gps-status-indicator"></span>
+                            <span id="gps-status-text">GPS Fix</span>
+                        </div>
+                        <div class="stat-value" id="satellite-count">8</div>
+                        <div class="stat-label">Satellites</div>
+                        <div class="gps-coordinates" id="gps-coordinates">
+                            <div>Lat: 40.7128</div>
+                            <div>Lon: -74.0060</div>
+                            <div>Accuracy: 3.2m</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Stats Widget -->
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">System Statistics</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('system-stats')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="system-metric">
+                        <span>CPU Usage</span>
+                        <div class="metric-bar">
+                            <div class="metric-fill cpu-fill" style="width: 35%"></div>
+                        </div>
+                        <span>35%</span>
+                    </div>
+                    <div class="system-metric">
+                        <span>Memory Usage</span>
+                        <div class="metric-bar">
+                            <div class="metric-fill memory-fill" style="width: 68%"></div>
+                        </div>
+                        <span>68%</span>
+                    </div>
+                    <div class="system-metric">
+                        <span>Disk Usage</span>
+                        <div class="metric-bar">
+                            <div class="metric-fill disk-fill" style="width: 45%"></div>
+                        </div>
+                        <span>45%</span>
+                    </div>
+                    <div class="system-metric">
+                        <span>Temperature</span>
+                        <div class="metric-bar">
+                            <div class="metric-fill temp-fill" style="width: 60%"></div>
+                        </div>
+                        <span>42°C</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signal Strength Chart -->
+            <div class="col-md-8">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">Signal Strength Over Time</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('signal-chart')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                            <button class="widget-control" onclick="toggleFullscreen('signal-chart')">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container" id="signal-chart"></div>
+                </div>
+            </div>
+
+            <!-- Network List Widget -->
+            <div class="col-md-4">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">Detected Networks</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('network-list')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="network-list">
+                        <!-- Network items will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Channel Usage Chart -->
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">Channel Usage</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('channel-usage')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="channel-usage-chart" id="channel-usage-chart"></div>
+                </div>
+            </div>
+
+            <!-- Environmental Sensors Widget -->
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h5 class="widget-title">Environmental Sensors</h5>
+                        <div class="widget-controls">
+                            <button class="widget-control" onclick="refreshWidget('environmental')">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="environmental-grid">
+                        <div class="env-metric">
+                            <div class="env-value">24.5°C</div>
+                            <div class="env-label">Temperature</div>
+                        </div>
+                        <div class="env-metric">
+                            <div class="env-value">65%</div>
+                            <div class="env-label">Humidity</div>
+                        </div>
+                        <div class="env-metric">
+                            <div class="env-value">1013</div>
+                            <div class="env-label">Pressure (hPa)</div>
+                        </div>
+                        <div class="env-metric">
+                            <div class="env-value">450</div>
+                            <div class="env-label">Light (lux)</div>
+                        </div>
+                        <div class="env-metric">
+                            <div class="env-value">2.1</div>
+                            <div class="env-label">UV Index</div>
+                        </div>
+                        <div class="env-metric">
+                            <div class="env-value">Good</div>
+                            <div class="env-label">Air Quality</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        // Initialize Socket.IO connection
+        const socket = io();
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+            startDataUpdates();
+        });
+
+        function initializeDashboard() {
+            // Initialize signal strength chart
+            initSignalChart();
+            
+            // Initialize channel usage chart
+            initChannelUsageChart();
+            
+            // Load initial data
+            loadNetworkList();
+            updateSystemStats();
+        }
+
+        function initSignalChart() {
+            const data = [{
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Signal Strength',
+                line: {color: '#007bff'}
+            }];
+
+            const layout = {
+                title: '',
+                xaxis: {title: 'Time'},
+                yaxis: {title: 'Signal Strength (dBm)'},
+                margin: {l: 50, r: 20, t: 20, b: 40}
+            };
+
+            Plotly.newPlot('signal-chart', data, layout);
+        }
+
+        function initChannelUsageChart() {
+            const data = [{
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+                y: [0, 2, 1, 0, 3, 8, 5, 0, 0, 0, 12, 0, 0, 0],
+                type: 'bar',
+                name: 'Networks per Channel',
+                marker: {color: '#007bff'}
+            }];
+
+            const layout = {
+                title: '',
+                xaxis: {title: 'Channel'},
+                yaxis: {title: 'Number of Networks'},
+                margin: {l: 50, r: 20, t: 20, b: 40}
+            };
+
+            Plotly.newPlot('channel-usage-chart', data, layout);
+        }
+
+        function loadNetworkList() {
+            // Mock network data
+            const networks = [
+                {ssid: 'HomeNetwork', bssid: '00:11:22:33:44:55', signal: -45, channel: 6, encryption: 'WPA2'},
+                {ssid: 'OfficeWiFi', bssid: '00:11:22:33:44:66', signal: -52, channel: 11, encryption: 'WPA3'},
+                {ssid: 'GuestNetwork', bssid: '00:11:22:33:44:77', signal: -68, channel: 1, encryption: 'WPA2'},
+                {ssid: 'MobileHotspot', bssid: '00:11:22:33:44:88', signal: -78, channel: 6, encryption: 'WPA2'}
+            ];
+
+            const networkList = document.getElementById('network-list');
+            networkList.innerHTML = '';
+
+            networks.forEach(network => {
+                const item = document.createElement('div');
+                item.className = 'network-item';
+                
+                const signalClass = getSignalClass(network.signal);
+                const signalText = `${network.signal} dBm`;
+                
+                item.innerHTML = `
+                    <div class="network-info">
+                        <div class="network-name">${network.ssid}</div>
+                        <div class="network-details">
+                            ${network.bssid} • Ch ${network.channel} • ${network.encryption}
+                        </div>
+                    </div>
+                    <div class="signal-strength ${signalClass}">
+                        ${signalText}
+                    </div>
+                `;
+                
+                networkList.appendChild(item);
+            });
+        }
+
+        function getSignalClass(signal) {
+            if (signal > -50) return 'signal-excellent';
+            if (signal > -60) return 'signal-good';
+            if (signal > -70) return 'signal-fair';
+            return 'signal-poor';
+        }
+
+        function updateSystemStats() {
+            // Mock system data - in real implementation, this would fetch from API
+            const stats = {
+                cpu: 35,
+                memory: 68,
+                disk: 45,
+                temp: 42
+            };
+
+            document.querySelector('.cpu-fill').style.width = stats.cpu + '%';
+            document.querySelector('.memory-fill').style.width = stats.memory + '%';
+            document.querySelector('.disk-fill').style.width = stats.disk + '%';
+            document.querySelector('.temp-fill').style.width = (stats.temp / 80 * 100) + '%';
+        }
+
+        function startDataUpdates() {
+            // Update data every 5 seconds
+            setInterval(() => {
+                updateSystemStats();
+                // Update other widgets as needed
+            }, 5000);
+        }
+
+        function refreshWidget(widgetId) {
+            console.log('Refreshing widget:', widgetId);
+            
+            switch(widgetId) {
+                case 'scan-status':
+                    // Refresh scan status
+                    break;
+                case 'gps-status':
+                    // Refresh GPS status
+                    break;
+                case 'system-stats':
+                    updateSystemStats();
+                    break;
+                case 'signal-chart':
+                    // Refresh signal chart
+                    break;
+                case 'network-list':
+                    loadNetworkList();
+                    break;
+                case 'channel-usage':
+                    // Refresh channel usage
+                    break;
+                case 'environmental':
+                    // Refresh environmental sensors
+                    break;
+            }
+        }
+
+        function toggleFullscreen(widgetId) {
+            // Toggle fullscreen for widget
+            console.log('Toggle fullscreen for:', widgetId);
+        }
+
+        function exportData() {
+            // Export data functionality
+            console.log('Exporting data...');
+        }
+
+        function openSettings() {
+            // Open settings modal or page
+            console.log('Opening settings...');
+        }
+
+        // Scan control functions
+        document.getElementById('start-scan-btn').addEventListener('click', function() {
+            startScan();
+        });
+
+        document.getElementById('stop-scan-btn').addEventListener('click', function() {
+            stopScan();
+        });
+
+        function startScan() {
+            document.getElementById('start-scan-btn').style.display = 'none';
+            document.getElementById('stop-scan-btn').style.display = 'inline-block';
+            document.getElementById('scan-status-indicator').className = 'status-indicator status-active';
+            document.getElementById('scan-status-text').textContent = 'Scanning';
+            document.getElementById('scan-progress').style.display = 'block';
+            
+            console.log('Starting scan...');
+        }
+
+        function stopScan() {
+            document.getElementById('start-scan-btn').style.display = 'inline-block';
+            document.getElementById('stop-scan-btn').style.display = 'none';
+            document.getElementById('scan-status-indicator').className = 'status-indicator status-inactive';
+            document.getElementById('scan-status-text').textContent = 'Idle';
+            document.getElementById('scan-progress').style.display = 'none';
+            
+            console.log('Stopping scan...');
+        }
+
+        // Socket.IO event handlers
+        socket.on('scan_update', function(data) {
+            console.log('Scan update received:', data);
+            // Update UI with new scan data
+        });
+
+        socket.on('gps_update', function(data) {
+            console.log('GPS update received:', data);
+            // Update GPS status
+        });
+
+        socket.on('system_stats', function(data) {
+            console.log('System stats received:', data);
+            // Update system statistics
+        });
+    </script>
+</body>
+</html>

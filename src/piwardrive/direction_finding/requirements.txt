@@ -1,0 +1,28 @@
+# Direction Finding Module Requirements
+# Additional requirements for PiWardrive Direction Finding functionality
+
+# Core scientific computing
+numpy>=1.21.0
+scipy>=1.7.0
+
+# Optional: Advanced signal processing
+scikit-learn>=1.0.0  # For ML-based improvements
+matplotlib>=3.5.0    # For visualization
+plotly>=5.0.0       # For interactive plots
+
+# Optional: Enhanced geospatial processing
+geopy>=2.2.0        # For distance calculations
+pyproj>=3.2.0       # For coordinate transformations
+
+# Optional: Hardware interface
+pyusb>=1.2.0        # For USB device access
+pyserial>=3.5       # For serial communication
+
+# Optional: Real-time processing
+redis>=4.0.0        # For caching and message queuing
+asyncio-mqtt>=0.11.0  # For MQTT integration
+
+# Testing
+pytest>=6.0.0
+pytest-asyncio>=0.18.0
+pytest-mock>=3.6.0

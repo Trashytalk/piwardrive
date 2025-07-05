@@ -50,6 +50,73 @@ Managed by `gpsd` service:
 
 ## Wi-Fi Adapters
 
+### Hardware Compatibility Matrix
+
+```mermaid
+graph TB
+    A[Wi-Fi Adapter Selection] --> B[Monitor Mode Required]
+    B --> C[Supported Adapters]
+    
+    C --> D[Alfa Network Series]
+    C --> E[Panda PAU09]
+    C --> F[TP-Link AC600 T2U Plus]
+    C --> G[Built-in Pi Wi-Fi]
+    
+    D --> D1[AWUS036ACS<br/>✓ Excellent]
+    D --> D2[AWUS036NHA<br/>✓ Well Tested]
+    D --> D3[AWUS036H<br/>✓ Legacy Support]
+    
+    E --> E1[802.11n<br/>✓ Community Tested]
+    E --> E2[Good Range<br/>✓ Reliable]
+    
+    F --> F1[802.11ac<br/>✓ Reported Working]
+    F --> F2[USB 3.0<br/>✓ High Throughput]
+    
+    G --> G1[Limited Monitor Mode<br/>⚠️ Basic Support]
+    G --> G2[Built-in Convenience<br/>✓ No Extra Hardware]
+    
+    style A fill:#e1f5fe
+    style B fill:#fff3e0
+    style C fill:#e8f5e8
+    style D fill:#e8f5e8
+    style E fill:#fff3e0
+    style F fill:#fce4ec
+    style G fill:#ffebee
+```
+
+### Hardware Setup Diagram
+
+```mermaid
+graph TB
+    A[Raspberry Pi] --> B[USB Hub]
+    B --> C[Wi-Fi Adapter]
+    B --> D[GPS Module]
+    B --> E[SSD Storage]
+    
+    A --> F[GPIO Pins]
+    F --> G[MPU-6050 Sensor]
+    F --> H[Display Connection]
+    
+    A --> I[HDMI Output]
+    I --> J[External Monitor]
+    
+    A --> K[Power Supply]
+    K --> L[5V 3A USB-C]
+    
+    C --> M[Monitor Mode<br/>Scanning]
+    D --> N[Location Services]
+    E --> O[Data Storage]
+    G --> P[Orientation<br/>Detection]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#ffebee
+    style G fill:#e0f2f1
+```
+
 ### Monitor Mode Capable
 Required for wireless scanning functionality:
 - **Alfa Network adapters** - Well tested (AWUS036ACS, AWUS036NHA)

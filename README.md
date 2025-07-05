@@ -13,16 +13,106 @@ For a full index of guides see [REFERENCE.md](REFERENCE.md) and the `docs/` dire
 
 ## Architecture Overview
 
+### System Architecture
+
 ```mermaid
-graph LR
-    A[PiWardriveApp] --> B[PollScheduler]
-    A --> C[Diagnostics]
-    A --> E[Screens]
-    B --> C
-    E --> F[Widgets]
-    F --> B
-    C --> D[Persistence]
-    C --> G[External Services]
+graph TB
+    subgraph "User Interface Layer"
+        UI[React Dashboard]
+        CLI[Command Line Interface]
+        API[REST API]
+    end
+    
+    subgraph "Application Layer"
+        APP[PiWardrive App]
+        SCHED[Poll Scheduler]
+        DIAG[Diagnostics]
+        SCREENS[Screen Manager]
+        WIDGETS[Widget Framework]
+    end
+    
+    subgraph "Service Layer"
+        KISMET[Kismet Service]
+        BETTERCAP[BetterCAP Service]
+        GPS[GPS Service]
+        DF[Direction Finding]
+        SYNC[Remote Sync]
+    end
+    
+    subgraph "Data Layer"
+        DB[(SQLite Database)]
+        CACHE[Tile Cache]
+        LOGS[Log Files]
+        CONFIG[Configuration]
+    end
+    
+    subgraph "Hardware Layer"
+        WIFI[WiFi Adapters]
+        GPSDEV[GPS Hardware]
+        SENSORS[Orientation Sensors]
+        DISPLAY[Touchscreen]
+    end
+    
+    UI --> APP
+    CLI --> APP
+    API --> APP
+    
+    APP --> SCHED
+    APP --> DIAG
+    APP --> SCREENS
+    SCREENS --> WIDGETS
+    WIDGETS --> SCHED
+    
+    SCHED --> KISMET
+    SCHED --> BETTERCAP
+    SCHED --> GPS
+    SCHED --> DF
+    
+    KISMET --> DB
+    BETTERCAP --> DB
+    GPS --> DB
+    DF --> DB
+    
+    DIAG --> LOGS
+    APP --> CONFIG
+    API --> CACHE
+    
+    KISMET --> WIFI
+    GPS --> GPSDEV
+    DIAG --> SENSORS
+    UI --> DISPLAY
+    
+    SYNC --> DB
+    SYNC --> CACHE
+```
+
+### Component Interaction Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Dashboard
+    participant Scheduler
+    participant Kismet
+    participant GPS
+    participant Database
+    
+    User->>Dashboard: Start Scan
+    Dashboard->>Scheduler: Initialize Services
+    Scheduler->>Kismet: Start Service
+    Scheduler->>GPS: Start Polling
+    
+    loop Continuous Scanning
+        Kismet->>Database: Store AP Data
+        GPS->>Database: Store Location
+        Scheduler->>Dashboard: Update Metrics
+        Dashboard->>User: Display Real-time Data
+    end
+    
+    User->>Dashboard: Stop Scan
+    Dashboard->>Scheduler: Stop Services
+    Scheduler->>Kismet: Stop Service
+    Scheduler->>GPS: Stop Polling
 ```
 
 ## Project Layout
@@ -71,15 +161,99 @@ graph LR
 
 The scheduler drives periodic tasks while diagnostics records system health. Screens host widgets that show metrics on the dashboard, while helper routines control external services like Kismet and BetterCAP.
 
+### Data Flow Architecture
+
+```mermaid
+flowchart TD
+    subgraph "Data Sources"
+        K[Kismet WiFi Scanning]
+        B[BetterCAP Network Analysis]
+        G[GPS Location Data]
+        S[System Sensors]
+        O[OBD-II Vehicle Data]
+    end
+    
+    subgraph "Data Processing"
+        P[Poll Scheduler]
+        DF[Direction Finding Engine]
+        A[Analytics Engine]
+        F[Data Filters]
+    end
+    
+    subgraph "Storage Layer"
+        DB[(SQLite Database)]
+        CACHE[Memory Cache]
+        LOGS[Log Files]
+        TILES[Map Tile Cache]
+    end
+    
+    subgraph "Output Layer"
+        WEB[Web Dashboard]
+        API[REST API]
+        EXP[Export Formats]
+        SYNC[Remote Sync]
+        NOTIF[Notifications]
+    end
+    
+    K --> P
+    B --> P
+    G --> P
+    S --> P
+    O --> P
+    
+    P --> DF
+    P --> A
+    P --> F
+    
+    DF --> DB
+    A --> DB
+    F --> DB
+    P --> CACHE
+    P --> LOGS
+    
+    DB --> WEB
+    DB --> API
+    DB --> EXP
+    DB --> SYNC
+    
+    CACHE --> WEB
+    TILES --> WEB
+    
+    A --> NOTIF
+    F --> NOTIF
+```
+
 ### Scanning and Logging
 
 ```mermaid
 flowchart TD
     A[Boot Device] --> B[Load Configuration]
-    B --> C[Start Kismet / BetterCAP]
-    C --> D[Begin GPS Polling]
-    D --> E[Record Access Points]
-    E --> F[Write Logs / DB]
+    B --> C{Check Hardware}
+    C -->|WiFi Available| D[Start Kismet/BetterCAP]
+    C -->|GPS Available| E[Start GPS Polling]
+    C -->|Sensors Available| F[Initialize Sensors]
+    
+    D --> G[Begin WiFi Scanning]
+    E --> H[Record Location Data]
+    F --> I[Monitor Orientation]
+    
+    G --> J[Process AP Data]
+    H --> J
+    I --> J
+    
+    J --> K[Apply Filters]
+    K --> L[Store in Database]
+    L --> M[Update Dashboard]
+    
+    M --> N{Alerts Triggered?}
+    N -->|Yes| O[Send Notifications]
+    N -->|No| P[Continue Monitoring]
+    O --> P
+    P --> G
+    
+    style A fill:#e1f5fe
+    style L fill:#c8e6c9
+    style O fill:#ffcdd2
 ```
 
 ### Diagnostics Flow
@@ -87,29 +261,163 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant User
-    participant App
+    participant Dashboard
     participant Diagnostics
-    participant Persistence
+    participant HealthMonitor
+    participant Database
+    participant Alerts
 
-    User->>App: open Diagnostics screen
-    App->>Diagnostics: self_test()
-    Diagnostics->>Persistence: store HealthRecord
-    Diagnostics-->>App: results
-    App-->>User: show status
+    User->>Dashboard: Open Diagnostics
+    Dashboard->>Diagnostics: Initialize Health Check
+    
+    Diagnostics->>HealthMonitor: Check CPU Temperature
+    HealthMonitor-->>Diagnostics: Temperature Data
+    
+    Diagnostics->>HealthMonitor: Check Memory Usage
+    HealthMonitor-->>Diagnostics: Memory Data
+    
+    Diagnostics->>HealthMonitor: Check Disk Space
+    HealthMonitor-->>Diagnostics: Disk Data
+    
+    Diagnostics->>HealthMonitor: Check Network Status
+    HealthMonitor-->>Diagnostics: Network Data
+    
+    Diagnostics->>Database: Store Health Record
+    Database-->>Diagnostics: Confirmation
+    
+    alt Critical Issues Found
+        Diagnostics->>Alerts: Trigger Alert
+        Alerts->>User: Send Notification
+    end
+    
+    Diagnostics-->>Dashboard: Health Status
+    Dashboard-->>User: Display Results
 ```
 
-### Scheduler Hooks
+### Widget and Scheduler Architecture
+
+```mermaid
+graph TB
+    subgraph "Widget Framework"
+        WF[Widget Factory]
+        WM[Widget Manager]
+        WR[Widget Registry]
+        WL[Widget Loader]
+    end
+    
+    subgraph "Core Widgets"
+        MAP[Map Widget]
+        METRICS[Metrics Widget]
+        GPS_W[GPS Widget]
+        SCAN[Scan Control Widget]
+        HEALTH[Health Widget]
+    end
+    
+    subgraph "Custom Widgets"
+        CUSTOM[Plugin Widgets]
+        DRONE[Drone Widget]
+        DF_W[Direction Finding Widget]
+        HEAT[Heatmap Widget]
+    end
+    
+    subgraph "Scheduler System"
+        PS[Poll Scheduler]
+        TIMER[Timer Service]
+        QUEUE[Task Queue]
+        EXEC[Executor Pool]
+    end
+    
+    WF --> WM
+    WM --> WR
+    WR --> WL
+    
+    WL --> MAP
+    WL --> METRICS
+    WL --> GPS_W
+    WL --> SCAN
+    WL --> HEALTH
+    
+    WL --> CUSTOM
+    WL --> DRONE
+    WL --> DF_W
+    WL --> HEAT
+    
+    MAP --> PS
+    METRICS --> PS
+    GPS_W --> PS
+    HEALTH --> PS
+    
+    PS --> TIMER
+    PS --> QUEUE
+    QUEUE --> EXEC
+    
+    style WF fill:#e3f2fd
+    style PS fill:#f3e5f5
+    style CUSTOM fill:#fff3e0
+```
+
+### Scheduler Hooks and Events
 
 ```mermaid
 sequenceDiagram
     participant Widget
     participant Scheduler
-    participant Clock
+    participant Timer
+    participant TaskQueue
+    participant Executor
 
-    Widget->>Scheduler: register_widget()
-    Scheduler->>Widget: check interval
-    Scheduler->>Clock: schedule_interval(update)
-    Clock-->>Scheduler: event handle
+    Widget->>Scheduler: register_widget(interval=5s)
+    Scheduler->>Timer: create_timer(5s)
+    Timer-->>Scheduler: timer_handle
+    
+    loop Every 5 seconds
+        Timer->>Scheduler: timer_expired()
+        Scheduler->>TaskQueue: queue_task(widget.update)
+        TaskQueue->>Executor: execute_task()
+        Executor->>Widget: update()
+        Widget-->>Executor: data
+        Executor-->>TaskQueue: result
+        TaskQueue-->>Scheduler: completion
+        Scheduler->>Timer: reset_timer()
+    end
+    
+    Note over Widget,Executor: Metrics available via get_metrics()
+```
+
+### Real-time Update Flow
+
+```mermaid
+flowchart LR
+    subgraph "Backend Services"
+        K[Kismet] --> PS[Poll Scheduler]
+        G[GPS] --> PS
+        S[Sensors] --> PS
+        BC[BetterCAP] --> PS
+    end
+    
+    subgraph "Processing Pipeline"
+        PS --> DP[Data Processor]
+        DP --> F[Filters]
+        F --> A[Aggregator]
+        A --> C[Cache]
+    end
+    
+    subgraph "Frontend Updates"
+        C --> WS[WebSocket]
+        WS --> UI[React Dashboard]
+        UI --> MW[Map Widget]
+        UI --> GW[GPS Widget]
+        UI --> HW[Health Widget]
+    end
+    
+    subgraph "Persistence"
+        A --> DB[(Database)]
+        DB --> SYNC[Remote Sync]
+    end
+    
+    style PS fill:#e8f5e8
+    style UI fill:#e3f2fd
+    style DB fill:#fff3e0
 ```
 
 Schedulers expose basic metrics via `get_metrics()` including the next
@@ -148,30 +456,161 @@ script accepts a `--forecast N` option to predict CPU temperature for the next
 -   Python 3.10+
 -   System packages: `kismet`, `gpsd`, `bettercap`, `evtest`, `git`, `build-essential`, `cmake`
 
+## Quick Install
+
+Choose the installation option that best fits your needs:
+
+### 🚀 Minimal Install (Recommended for Production)
+```bash
+# Linux/macOS
+bash scripts/install.sh minimal
+
+# Windows
+.\scripts\install.ps1 minimal
+
+# Or manually
+pip install -r requirements-core.txt
+```
+**~20 packages** - Core web UI, mapping, GPS, and database functionality
+
+### 🔧 Full Install (All Features)
+```bash
+# Linux/macOS
+bash scripts/install.sh full
+
+# Windows
+.\scripts\install.ps1 full
+
+# Or manually
+pip install -r requirements.txt
+```
+**~50-60 packages** - All features including scientific computing, visualization, and hardware support
+
+### 🛠️ Full + Development Install
+```bash
+# Linux/macOS
+bash scripts/install.sh full-dev
+
+# Windows
+.\scripts\install.ps1 full-dev
+
+# Or manually
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+**~70-80 packages** - All features plus development tools, linting, testing, and security scanning
+
+### 🎯 Feature-Specific Install
+```bash
+# Install only specific features you need
+pip install piwarddrive[analysis]        # Scientific computing
+pip install piwarddrive[visualization]   # Charts and plotting  
+pip install piwarddrive[hardware]        # Raspberry Pi sensors
+pip install piwarddrive[all]             # All features
+```
+
+After installation, activate your environment and run:
+```bash
+# Linux/macOS
+source venv/bin/activate
+
+# Windows
+venv\Scripts\Activate.ps1
+
+# Run PiWardrive
+python -m piwarddrive.webui_server
+```
+
+## Dependency Management
+
+PiWardrive uses a structured approach to dependency management with multiple installation options:
+
+### Installation Options
+
+**Minimal Installation** (recommended for production):
+```bash
+# Install only core dependencies (~20 packages)
+pip install -r requirements-core.txt
+```
+
+**Feature-Specific Installation**:
+```bash
+# Install with specific features
+pip install piwarddrive[analysis]        # Scientific computing
+pip install piwarddrive[visualization]   # Charts and plotting  
+pip install piwarddrive[hardware]        # Raspberry Pi sensors
+pip install piwarddrive[all]             # All features
+```
+
+**Full Installation** (development):
+```bash
+# Install all dependencies including optional packages
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+### Dependency Categories
+
+- **Core**: Web framework, database, networking, GPS (~20 packages)
+- **Analysis**: Scientific computing (numpy, scipy, pandas, scikit-learn)
+- **Visualization**: Plotting libraries (matplotlib, plotly, folium) 
+- **Hardware**: Raspberry Pi sensors and interfaces
+- **Integrations**: External services (AWS, MQTT, R integration)
+
+See [docs/dependency-management.md](docs/dependency-management.md) for detailed dependency strategy and maintenance procedures.
+
 ### Installation
+
+### Manual Installation
+
+If you prefer to install manually or need more control over the process:
 
 ```bash
 git clone git@github.com:Trashytalk/piwardrive.git
 cd piwardrive
-python3 -m venv gui-env
-source gui-env/bin/activate
-pip install -r requirements.txt
-pip install .
-sudo apt update
-sudo apt install -y r-base r-base-dev
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\Activate.ps1  # Windows
 
+# Choose your installation type:
+pip install -r requirements-core.txt    # Minimal
+pip install -r requirements.txt         # Full
+pip install -r requirements-dev.txt     # + Development
+
+pip install -e .
+```
+
+#### System Dependencies
+
+For full functionality, you may need additional system packages:
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install -y r-base r-base-dev libdbus-1-dev libglib2.0-dev
+
+# CentOS/RHEL
+sudo yum install -y R-core R-devel dbus-devel glib2-devel
+
+# macOS
+brew install r dbus glib
 ```
 
 #### Quickstart Script
 
-You can run `scripts/quickstart.sh` from the project root to install system
-packages and create the virtual environment automatically. The helper script
-uses `apt-get` to pull in required packages and sets up a Python environment in
-`gui-env/`. Run it with Bash and then activate the environment:
+**⚠️ Deprecated - Use the new installation scripts above instead**
 
+Legacy quickstart script (still works but not recommended):
 ```bash
 bash scripts/quickstart.sh
 source gui-env/bin/activate
+```
+
+**Recommended**: Use the new installation scripts:
+```bash
+# Better approach
+bash scripts/install.sh full-dev  # For development
+bash scripts/install.sh full      # For production
 ```
 
 #### Automated Setup
@@ -701,3 +1140,36 @@ Ensure all wireless and Bluetooth scans comply with local laws and have proper a
 ## License
 
 PiWardrive is released under the terms of the [MIT License](LICENSE).
+
+## Field Support & Maintenance
+
+PiWardrive includes comprehensive field support tools for deployment and maintenance:
+
+### Field Diagnostic Tools
+- **Field Diagnostics**: `piwardrive-field-diagnostics` - Comprehensive on-device diagnostics
+- **Mobile Diagnostics**: `piwardrive-mobile-diagnostics` - Remote diagnostic tool for technicians
+- **Problem Reporter**: `piwardrive-problem-reporter` - Automated problem reporting service
+- **Status Indicators**: `piwardrive-field-status` - LED and audio status indicators
+
+### Field Documentation
+- **Field Troubleshooting Guide**: `docs/field-troubleshooting-guide.md` - Non-technical user guide
+- **Field Serviceable Components**: `docs/field-serviceable-components.md` - Component replacement guide
+
+### Installation
+Install field support tools with:
+```bash
+sudo scripts/install-field-support.sh
+```
+
+This installs:
+- Diagnostic tools and scripts
+- Problem reporting service
+- Field technician documentation
+- LED status indicators
+- Audio alert system
+
+### Quick Reference
+- **Run diagnostics**: `piwardrive-field-diag`
+- **Remote diagnostics**: `piwardrive-mobile-diag -i <device-ip>`
+- **Test indicators**: `piwardrive-field-status --test`
+- **View problems**: `journalctl -u piwardrive-problem-reporter`

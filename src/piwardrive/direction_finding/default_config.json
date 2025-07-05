@@ -1,0 +1,128 @@
+{
+  "df_configuration": {
+    "enabled_algorithms": ["rss_triangulation"],
+    "primary_algorithm": "rss_triangulation",
+    "fallback_algorithm": null,
+    "enable_logging": true,
+    "log_level": "INFO",
+    "data_retention_days": 30,
+    "enable_performance_monitoring": true
+  },
+  "triangulation": {
+    "algorithm": "rss_triangulation",
+    "min_access_points": 3,
+    "max_position_error": 50.0,
+    "convergence_threshold": 0.01,
+    "max_iterations": 100,
+    "use_weighted_least_squares": true,
+    "outlier_rejection": true,
+    "confidence_threshold": 0.8
+  },
+  "path_loss": {
+    "model_type": "free_space",
+    "frequency_bands": ["2.4GHz", "5GHz"],
+    "environment_type": "suburban",
+    "enable_adaptive_calibration": true,
+    "reference_distance": 1.0,
+    "path_loss_exponent": 2.0,
+    "shadow_fading_std": 8.0,
+    "wall_penetration_loss": 10.0
+  },
+  "signal_mapping": {
+    "map_resolution": 10.0,
+    "interpolation_method": "kriging",
+    "coverage_threshold": -70.0,
+    "update_interval": 5.0,
+    "enable_real_time": true,
+    "export_formats": ["PNG", "KML", "GeoJSON"],
+    "enable_3d_visualization": false
+  },
+  "wifi_adapter": {
+    "supported_chipsets": [
+      "ath9k",
+      "rt2800usb",
+      "mt7601u",
+      "mt76x2u",
+      "rtl8812au",
+      "rtl8821au"
+    ],
+    "monitor_mode_required": true,
+    "injection_capability": false,
+    "auto_detection": true,
+    "channel_hopping": true,
+    "dwell_time": 0.1,
+    "power_level": 20,
+    "enable_load_balancing": true
+  },
+  "antenna_array": {
+    "array_type": "circular",
+    "num_elements": 4,
+    "element_spacing": 0.5,
+    "operating_frequency": 2400000000,
+    "enable_calibration": true,
+    "polarization": "linear",
+    "enable_mutual_coupling_compensation": true,
+    "temperature_compensation": false
+  },
+  "time_sync": {
+    "sync_source": "gps",
+    "accuracy_requirement": 1e-6,
+    "enable_drift_compensation": true,
+    "sync_interval": 60.0,
+    "holdover_time": 3600.0,
+    "jitter_threshold": 1e-7,
+    "enable_quality_monitoring": true
+  },
+  "music": {
+    "array_elements": 8,
+    "num_sources": 1,
+    "angular_resolution": 1.0,
+    "search_range": [-180, 180],
+    "enable_spatial_smoothing": true,
+    "smoothing_factor": 3,
+    "eigenvalue_threshold": 0.01,
+    "peak_detection_method": "threshold"
+  },
+  "array_processing": {
+    "sampling_rate": 20000000,
+    "fft_size": 1024,
+    "overlap_factor": 0.5,
+    "window_type": "hamming",
+    "enable_coherent_processing": true,
+    "beamforming_type": "conventional",
+    "null_steering": false
+  },
+  "visualization": {
+    "plot_types": ["polar", "cartesian"],
+    "update_rate": 10.0,
+    "history_length": 100,
+    "enable_confidence_intervals": true,
+    "export_formats": ["PNG", "SVG"],
+    "enable_animation": false,
+    "color_scheme": "viridis"
+  },
+  "ble": {
+    "ble_version": "5.1",
+    "cte_types": ["AoA", "AoD"],
+    "switching_pattern": "custom",
+    "sampling_rate": 1000000,
+    "cte_length": 160,
+    "switching_period": 4,
+    "enable_calibration": true
+  },
+  "bluetooth_classic": {
+    "supported_classes": ["1", "2", "3", "4", "5"],
+    "enable_frequency_hopping": true,
+    "inquiry_interval": 1.28,
+    "tracking_algorithm": "kalman",
+    "max_tracking_distance": 100.0,
+    "tracking_timeout": 30.0
+  },
+  "iot_protocols": {
+    "supported_protocols": ["zigbee", "z-wave", "thread"],
+    "enable_mesh_analysis": true,
+    "enable_topology_mapping": true,
+    "topology_algorithms": ["dijkstra", "centrality"],
+    "visualization_format": "networkx"
+  }
+}

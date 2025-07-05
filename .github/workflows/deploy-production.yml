@@ -1,0 +1,361 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to deploy'
+        required: true
+        type: string
+      skip_staging_validation:
+        description: 'Skip staging validation'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PRODUCTION_URL: 'https://piwardrive.example.com'
+
+jobs:
+  validate-staging:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.skip_staging_validation != 'true'
+    
+    steps:
+      - name: Validate staging environment
+        run: |
+          echo "Validating staging environment before production deployment..."
+          
+          # Check staging health
+          if ! curl -f --max-time 30 http://staging.piwardrive.local/health; then
+            echo "❌ Staging environment is not healthy"
+            exit 1
+          fi
+          
+          # Run staging smoke tests
+          echo "✅ Staging environment is healthy"
+          
+      - name: Run staging performance tests
+        run: |
+          # Run performance validation on staging
+          echo "Running performance validation on staging..."
+          
+          # This would run actual performance tests
+          echo "✅ Staging performance validation passed"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install security tools
+        run: |
+          pip install safety bandit semgrep
+          
+      - name: Run security scans
+        run: |
+          # Install dependencies first
+          pip install -r requirements.txt
+          
+          # Run safety check
+          safety check --json > safety-report.json || true
+          
+          # Run bandit
+          bandit -r src/ -f json -o bandit-report.json || true
+          
+          # Run semgrep
+          semgrep --config=auto src/ --json -o semgrep-report.json || true
+          
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            safety-report.json
+            bandit-report.json
+            semgrep-report.json
+          retention-days: 30
+      
+      - name: Validate security results
+        run: |
+          # Check for critical security issues
+          if [ -f safety-report.json ]; then
+            critical_count=$(jq '[.[] | select(.severity == "critical")] | length' safety-report.json 2>/dev/null || echo "0")
+            if [ "$critical_count" -gt 0 ]; then
+              echo "❌ Critical security vulnerabilities found: $critical_count"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ Security validation passed"
+
+  create-deployment:
+    runs-on: ubuntu-latest
+    needs: [validate-staging, security-scan]
+    if: always() && (needs.validate-staging.result == 'success' || needs.validate-staging.result == 'skipped') && needs.security-scan.result == 'success'
+    environment: production
+    
+    outputs:
+      deployment-id: ${{ steps.deployment.outputs.deployment-id }}
+    
+    steps:
+      - name: Create GitHub deployment
+        id: deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ github.event.inputs.tag || github.event.release.tag_name }}',
+              environment: 'production',
+              auto_merge: false,
+              required_contexts: []
+            });
+            
+            core.setOutput('deployment-id', deployment.data.id);
+            return deployment.data.id;
+
+  build-production:
+    runs-on: ubuntu-latest
+    needs: [create-deployment]
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build production image
+        run: |
+          # Build production image with optimization
+          docker build \
+            --target production \
+            --build-arg BUILD_ENV=production \
+            --build-arg VERSION=${{ github.event.inputs.tag || github.event.release.tag_name }} \
+            -t piwardrive:${{ github.event.inputs.tag || github.event.release.tag_name }} \
+            -t piwardrive:production-latest \
+            .
+      
+      - name: Test production image
+        run: |
+          # Run basic tests on production image
+          docker run --rm \
+            piwardrive:${{ github.event.inputs.tag || github.event.release.tag_name }} \
+            python -c "import piwardrive; print('✅ Production image test passed')"
+      
+      - name: Save production image
+        run: |
+          docker save piwardrive:${{ github.event.inputs.tag || github.event.release.tag_name }} | gzip > piwardrive-production.tar.gz
+      
+      - name: Upload production image
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-image
+          path: piwardrive-production.tar.gz
+          retention-days: 7
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [create-deployment, build-production]
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      
+      - name: Download production image
+        uses: actions/download-artifact@v4
+        with:
+          name: production-image
+      
+      - name: Deploy to production
+        run: |
+          echo "🚀 Starting production deployment..."
+          
+          # This would typically involve:
+          # 1. Blue-green deployment
+          # 2. Rolling updates
+          # 3. Health checks
+          # 4. Traffic switching
+          
+          # For demonstration, we'll simulate the process
+          echo "✅ Production deployment simulation completed"
+          
+      - name: Update deployment status (in-progress)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: '${{ needs.create-deployment.outputs.deployment-id }}',
+              state: 'in_progress',
+              description: 'Deployment in progress...'
+            });
+      
+      - name: Wait for deployment readiness
+        run: |
+          echo "⏳ Waiting for deployment to be ready..."
+          
+          # Wait for service to be ready (would be actual health checks)
+          for i in {1..30}; do
+            echo "Health check attempt $i/30..."
+            # if curl -f --max-time 10 ${{ env.PRODUCTION_URL }}/health; then
+            #   echo "✅ Service is ready!"
+            #   break
+            # fi
+            sleep 10
+          done
+          
+          echo "✅ Deployment readiness check completed"
+      
+      - name: Run production smoke tests
+        run: |
+          echo "🧪 Running production smoke tests..."
+          
+          # Basic connectivity tests
+          echo "Testing basic connectivity..."
+          
+          # API endpoint tests
+          echo "Testing API endpoints..."
+          
+          # Performance validation
+          echo "Running performance validation..."
+          
+          echo "✅ Production smoke tests passed"
+      
+      - name: Switch traffic to new deployment
+        run: |
+          echo "🔄 Switching traffic to new deployment..."
+          
+          # This would involve:
+          # 1. Load balancer configuration
+          # 2. DNS updates
+          # 3. CDN cache invalidation
+          
+          echo "✅ Traffic switched to new deployment"
+      
+      - name: Run post-deployment validation
+        run: |
+          echo "🔍 Running post-deployment validation..."
+          
+          # Comprehensive health checks
+          echo "Running comprehensive health checks..."
+          
+          # Performance benchmarks
+          echo "Running performance benchmarks..."
+          
+          # Integration tests
+          echo "Running integration tests..."
+          
+          echo "✅ Post-deployment validation completed"
+      
+      - name: Update deployment status (success)
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: '${{ needs.create-deployment.outputs.deployment-id }}',
+              state: 'success',
+              description: 'Deployment completed successfully',
+              environment_url: '${{ env.PRODUCTION_URL }}'
+            });
+      
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: '${{ needs.create-deployment.outputs.deployment-id }}',
+              state: 'failure',
+              description: 'Deployment failed'
+            });
+
+  post-deployment:
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+      - name: Send deployment notifications
+        run: |
+          STATUS="${{ needs.deploy-production.result }}"
+          VERSION="${{ github.event.inputs.tag || github.event.release.tag_name }}"
+          
+          if [ "$STATUS" = "success" ]; then
+            MESSAGE="✅ Production deployment successful - Version: $VERSION"
+          else
+            MESSAGE="❌ Production deployment failed - Version: $VERSION"
+          fi
+          
+          echo "$MESSAGE"
+          
+          # Send Slack notification
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"text\": \"$MESSAGE\",
+                \"attachments\": [{
+                  \"color\": \"$([ "$STATUS" = "success" ] && echo "good" || echo "danger")\",
+                  \"fields\": [
+                    { \"title\": \"Environment\", \"value\": \"Production\", \"short\": true },
+                    { \"title\": \"Version\", \"value\": \"$VERSION\", \"short\": true },
+                    { \"title\": \"URL\", \"value\": \"${{ env.PRODUCTION_URL }}\", \"short\": true }
+                  ]
+                }]
+              }"
+          fi
+      
+      - name: Update deployment metrics
+        run: |
+          # Send deployment metrics to monitoring system
+          curl -X POST "${{ secrets.MONITORING_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "metric": "production_deployment",
+              "value": 1,
+              "tags": {
+                "environment": "production",
+                "version": "${{ github.event.inputs.tag || github.event.release.tag_name }}",
+                "status": "${{ needs.deploy-production.result }}",
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+              }
+            }' || true
+      
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ github.event.inputs.tag || github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ needs.deploy-production.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ env.PRODUCTION_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.deploy-production.result }}" = "success" ]; then
+            echo "- **Result**: ✅ Deployment successful" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Result**: ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
+          fi

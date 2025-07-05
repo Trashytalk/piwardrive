@@ -1,0 +1,27 @@
+[Unit]
+Description=PiWardrive Problem Reporter
+After=network.target piwardrive.service
+Wants=piwardrive.service
+
+[Service]
+Type=simple
+User=piwardrive
+Group=piwardrive
+WorkingDirectory=/opt/piwardrive
+Environment=PYTHONPATH=/opt/piwardrive
+EnvironmentFile=-/etc/piwardrive/environment
+ExecStart=/opt/piwardrive/venv/bin/python /opt/piwardrive/scripts/problem_reporter.py --config /etc/piwardrive/problem-reporter.conf
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log /tmp /var/lib/piwardrive
+
+[Install]
+WantedBy=multi-user.target

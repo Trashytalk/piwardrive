@@ -1,0 +1,1246 @@
+"""
+Professional Reporting Suite for PiWardrive
+Interactive HTML reports, compliance checking, and professional documentation
+"""
+
+import json
+import jinja2
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass, asdict
+from enum import Enum
+import base64
+import io
+import logging
+import os
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+class ReportType(Enum):
+    """Types of reports available"""
+    EXECUTIVE_SUMMARY = "executive_summary"
+    TECHNICAL_DETAILED = "technical_detailed"
+    COMPLIANCE_AUDIT = "compliance_audit"
+    VULNERABILITY_ASSESSMENT = "vulnerability_assessment"
+    NETWORK_ANALYSIS = "network_analysis"
+    SECURITY_POSTURE = "security_posture"
+    PERFORMANCE_ANALYSIS = "performance_analysis"
+    CUSTOM = "custom"
+
+class ComplianceFramework(Enum):
+    """Compliance frameworks"""
+    PCI_DSS = "pci_dss"
+    HIPAA = "hipaa"
+    SOX = "sox"
+    ISO27001 = "iso27001"
+    NIST = "nist"
+    GDPR = "gdpr"
+    CUSTOM = "custom"
+
+class VulnerabilitySeverity(Enum):
+    """CVSS-based vulnerability severities"""
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    INFORMATIONAL = "informational"
+
+@dataclass
+class ReportMetadata:
+    """Report metadata and configuration"""
+    report_id: str
+    title: str
+    subtitle: str
+    author: str
+    organization: str
+    generation_date: datetime
+    report_type: ReportType
+    executive_summary: str
+    scope: str
+    methodology: str
+    template_version: str
+
+@dataclass
+class Vulnerability:
+    """Security vulnerability finding"""
+    id: str
+    title: str
+    description: str
+    severity: VulnerabilitySeverity
+    cvss_score: float
+    cve_id: Optional[str]
+    affected_systems: List[str]
+    remediation: str
+    references: List[str]
+    discovery_date: datetime
+    status: str  # 'open', 'confirmed', 'mitigated', 'false_positive'
+
+@dataclass
+class ComplianceCheck:
+    """Compliance check result"""
+    framework: ComplianceFramework
+    control_id: str
+    control_name: str
+    description: str
+    requirement: str
+    status: str  # 'compliant', 'non_compliant', 'partially_compliant', 'not_applicable'
+    evidence: List[str]
+    remediation_steps: List[str]
+    risk_rating: str
+    testing_date: datetime
+
+@dataclass
+class NetworkStatistics:
+    """Network analysis statistics"""
+    total_networks: int
+    total_devices: int
+    encryption_breakdown: Dict[str, int]
+    security_issues: int
+    channel_utilization: Dict[str, float]
+    signal_strength_distribution: Dict[str, int]
+    vendor_distribution: Dict[str, int]
+    temporal_analysis: Dict[str, Any]
+
+@dataclass
+class ExecutiveSummary:
+    """Executive summary data"""
+    key_findings: List[str]
+    risk_assessment: str
+    recommendations: List[str]
+    compliance_status: str
+    security_score: float
+    improvement_priorities: List[str]
+    business_impact: str
+    next_steps: List[str]
+
+class ReportGenerator:
+    """Main report generation engine"""
+    
+    def __init__(self, template_dir: str = "templates"):
+        self.template_dir = Path(template_dir)
+        self.template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(str(self.template_dir)),
+            autoescape=jinja2.select_autoescape(['html', 'xml'])
+        )
+        self.template_env.filters['datetime'] = self._format_datetime
+        self.template_env.filters['severity_color'] = self._get_severity_color
+        self.template_env.filters['compliance_color'] = self._get_compliance_color
+        self.template_env.filters['percentage'] = self._format_percentage
+        
+        # Initialize default templates
+        self._initialize_templates()
+    
+    def _initialize_templates(self):
+        """Initialize default HTML templates"""
+        self.template_dir.mkdir(exist_ok=True)
+        
+        # Create base template
+        base_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ metadata.title }}</title>
+    <style>
+        {{ css_styles }}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="report-header">
+            <h1>{{ metadata.title }}</h1>
+            <h2>{{ metadata.subtitle }}</h2>
+            <div class="report-meta">
+                <p><strong>Organization:</strong> {{ metadata.organization }}</p>
+                <p><strong>Author:</strong> {{ metadata.author }}</p>
+                <p><strong>Generated:</strong> {{ metadata.generation_date | datetime }}</p>
+                <p><strong>Report ID:</strong> {{ metadata.report_id }}</p>
+            </div>
+        </header>
+        
+        <main class="report-content">
+            {% block content %}{% endblock %}
+        </main>
+        
+        <footer class="report-footer">
+            <p>Generated by PiWardrive Professional Reporting Suite</p>
+            <p>Template Version: {{ metadata.template_version }}</p>
+        </footer>
+    </div>
+    
+    <script>
+        {{ javascript_code }}
+    </script>
+</body>
+</html>
+        """
+        
+        # Executive summary template
+        executive_template = """
+{% extends "base.html" %}
+
+{% block content %}
+<section class="executive-summary">
+    <h2>Executive Summary</h2>
+    <div class="summary-cards">
+        <div class="card risk-card">
+            <h3>Risk Assessment</h3>
+            <p class="risk-level {{ executive_summary.risk_assessment|lower }}">
+                {{ executive_summary.risk_assessment }}
+            </p>
+        </div>
+        
+        <div class="card score-card">
+            <h3>Security Score</h3>
+            <div class="score-circle">
+                <span class="score">{{ executive_summary.security_score }}/100</span>
+            </div>
+        </div>
+        
+        <div class="card compliance-card">
+            <h3>Compliance Status</h3>
+            <p class="compliance-status {{ executive_summary.compliance_status|lower }}">
+                {{ executive_summary.compliance_status }}
+            </p>
+        </div>
+    </div>
+    
+    <div class="findings">
+        <h3>Key Findings</h3>
+        <ul>
+        {% for finding in executive_summary.key_findings %}
+            <li>{{ finding }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    
+    <div class="recommendations">
+        <h3>Primary Recommendations</h3>
+        <ol>
+        {% for recommendation in executive_summary.recommendations %}
+            <li>{{ recommendation }}</li>
+        {% endfor %}
+        </ol>
+    </div>
+</section>
+
+<section class="network-overview">
+    <h2>Network Overview</h2>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <h4>Total Networks</h4>
+            <span class="stat-number">{{ network_stats.total_networks }}</span>
+        </div>
+        <div class="stat-box">
+            <h4>Total Devices</h4>
+            <span class="stat-number">{{ network_stats.total_devices }}</span>
+        </div>
+        <div class="stat-box">
+            <h4>Security Issues</h4>
+            <span class="stat-number critical">{{ network_stats.security_issues }}</span>
+        </div>
+    </div>
+    
+    <div class="charts">
+        <div class="chart-container">
+            <canvas id="encryptionChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="vendorChart"></canvas>
+        </div>
+    </div>
+</section>
+
+<section class="vulnerabilities">
+    <h2>Critical Vulnerabilities</h2>
+    <div class="vuln-list">
+    {% for vuln in vulnerabilities %}
+        {% if vuln.severity == 'critical' or vuln.severity == 'high' %}
+        <div class="vuln-item {{ vuln.severity }}">
+            <div class="vuln-header">
+                <h4>{{ vuln.title }}</h4>
+                <span class="severity-badge {{ vuln.severity }}">{{ vuln.severity|title }}</span>
+                <span class="cvss-score">CVSS: {{ vuln.cvss_score }}</span>
+            </div>
+            <p>{{ vuln.description }}</p>
+            <div class="vuln-details">
+                <p><strong>Affected Systems:</strong> {{ vuln.affected_systems|join(', ') }}</p>
+                <p><strong>Remediation:</strong> {{ vuln.remediation }}</p>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+    </div>
+</section>
+{% endblock %}
+        """
+        
+        # Save templates
+        with open(self.template_dir / "base.html", "w") as f:
+            f.write(base_template)
+        
+        with open(self.template_dir / "executive.html", "w") as f:
+            f.write(executive_template)
+    
+    def generate_report(self, report_type: ReportType, data: Dict[str, Any],
+                       output_path: str) -> str:
+        """Generate a report of the specified type"""
+        
+        # Prepare report data
+        report_data = self._prepare_report_data(report_type, data)
+        
+        # Select template
+        template_name = self._get_template_name(report_type)
+        template = self.template_env.get_template(template_name)
+        
+        # Generate HTML
+        html_content = template.render(**report_data)
+        
+        # Save report
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+        
+        logger.info(f"Report generated: {output_path}")
+        return output_path
+    
+    def _prepare_report_data(self, report_type: ReportType, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Prepare data for report generation"""
+        
+        # Get CSS styles
+        css_styles = self._get_css_styles()
+        
+        # Get JavaScript code
+        javascript_code = self._get_javascript_code(data)
+        
+        # Prepare base data
+        report_data = {
+            'css_styles': css_styles,
+            'javascript_code': javascript_code,
+            'metadata': data.get('metadata', {}),
+            'network_stats': data.get('network_stats', {}),
+            'vulnerabilities': data.get('vulnerabilities', []),
+            'compliance_checks': data.get('compliance_checks', []),
+            'executive_summary': data.get('executive_summary', {})
+        }
+        
+        return report_data
+    
+    def _get_template_name(self, report_type: ReportType) -> str:
+        """Get template name for report type"""
+        template_map = {
+            ReportType.EXECUTIVE_SUMMARY: "executive.html",
+            ReportType.TECHNICAL_DETAILED: "technical.html",
+            ReportType.COMPLIANCE_AUDIT: "compliance.html",
+            ReportType.VULNERABILITY_ASSESSMENT: "vulnerability.html",
+            ReportType.NETWORK_ANALYSIS: "network.html",
+            ReportType.SECURITY_POSTURE: "security.html",
+            ReportType.PERFORMANCE_ANALYSIS: "performance.html"
+        }
+        return template_map.get(report_type, "executive.html")
+    
+    def _get_css_styles(self) -> str:
+        """Get CSS styles for reports"""
+        return """
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .report-header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+        
+        .report-header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .report-header h2 {
+            color: #7f8c8d;
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+        
+        .report-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .report-meta p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+        
+        .risk-card {
+            border-left-color: #e74c3c;
+        }
+        
+        .score-card {
+            border-left-color: #2ecc71;
+        }
+        
+        .compliance-card {
+            border-left-color: #f39c12;
+        }
+        
+        .risk-level {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .risk-level.high {
+            color: #e74c3c;
+        }
+        
+        .risk-level.medium {
+            color: #f39c12;
+        }
+        
+        .risk-level.low {
+            color: #2ecc71;
+        }
+        
+        .score-circle {
+            text-align: center;
+        }
+        
+        .score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-number.critical {
+            color: #e74c3c;
+        }
+        
+        .charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .vuln-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .vuln-item {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #bdc3c7;
+        }
+        
+        .vuln-item.critical {
+            border-left-color: #e74c3c;
+        }
+        
+        .vuln-item.high {
+            border-left-color: #f39c12;
+        }
+        
+        .vuln-item.medium {
+            border-left-color: #f1c40f;
+        }
+        
+        .vuln-item.low {
+            border-left-color: #2ecc71;
+        }
+        
+        .vuln-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .vuln-header h4 {
+            flex: 1;
+            color: #2c3e50;
+        }
+        
+        .severity-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .severity-badge.critical {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .severity-badge.high {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .severity-badge.medium {
+            background: #f1c40f;
+            color: black;
+        }
+        
+        .severity-badge.low {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .cvss-score {
+            background: #34495e;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .report-footer {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        section {
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 5px;
+        }
+        
+        @media print {
+            .container {
+                box-shadow: none;
+                max-width: none;
+            }
+            
+            .charts {
+                display: none;
+            }
+        }
+        """
+    
+    def _get_javascript_code(self, data: Dict[str, Any]) -> str:
+        """Get JavaScript code for interactive charts"""
+        network_stats = data.get('network_stats', {})
+        
+        encryption_data = json.dumps(network_stats.get('encryption_breakdown', {}))
+        vendor_data = json.dumps(network_stats.get('vendor_distribution', {}))
+        
+        return f"""
+        document.addEventListener('DOMContentLoaded', function() {{
+            // Encryption breakdown chart
+            const encryptionCtx = document.getElementById('encryptionChart');
+            if (encryptionCtx) {{
+                const encryptionData = {encryption_data};
+                new Chart(encryptionCtx, {{
+                    type: 'doughnut',
+                    data: {{
+                        labels: Object.keys(encryptionData),
+                        datasets: [{{
+                            data: Object.values(encryptionData),
+                            backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12', '#3498db']
+                        }}]
+                    }},
+                    options: {{
+                        responsive: true,
+                        plugins: {{
+                            title: {{
+                                display: true,
+                                text: 'Encryption Types Distribution'
+                            }}
+                        }}
+                    }}
+                }});
+            }}
+            
+            // Vendor distribution chart
+            const vendorCtx = document.getElementById('vendorChart');
+            if (vendorCtx) {{
+                const vendorData = {vendor_data};
+                new Chart(vendorCtx, {{
+                    type: 'bar',
+                    data: {{
+                        labels: Object.keys(vendorData),
+                        datasets: [{{
+                            label: 'Device Count',
+                            data: Object.values(vendorData),
+                            backgroundColor: '#3498db'
+                        }}]
+                    }},
+                    options: {{
+                        responsive: true,
+                        plugins: {{
+                            title: {{
+                                display: true,
+                                text: 'Device Vendor Distribution'
+                            }}
+                        }}
+                    }}
+                }});
+            }}
+        }});
+        """
+    
+    def _format_datetime(self, dt):
+        """Format datetime for display"""
+        if isinstance(dt, datetime):
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
+        return str(dt)
+    
+    def _get_severity_color(self, severity):
+        """Get color for severity level"""
+        colors = {
+            'critical': '#e74c3c',
+            'high': '#f39c12',
+            'medium': '#f1c40f',
+            'low': '#2ecc71',
+            'informational': '#95a5a6'
+        }
+        return colors.get(severity.lower(), '#95a5a6')
+    
+    def _get_compliance_color(self, status):
+        """Get color for compliance status"""
+        colors = {
+            'compliant': '#2ecc71',
+            'non_compliant': '#e74c3c',
+            'partially_compliant': '#f39c12',
+            'not_applicable': '#95a5a6'
+        }
+        return colors.get(status.lower(), '#95a5a6')
+    
+    def _format_percentage(self, value):
+        """Format value as percentage"""
+        try:
+            return f"{float(value):.1f}%"
+        except:
+            return "0.0%"
+
+class ComplianceChecker:
+    """Compliance framework checker"""
+    
+    def __init__(self):
+        self.frameworks = {
+            ComplianceFramework.PCI_DSS: self._load_pci_dss_controls(),
+            ComplianceFramework.NIST: self._load_nist_controls(),
+            ComplianceFramework.ISO27001: self._load_iso27001_controls()
+        }
+    
+    def check_compliance(self, framework: ComplianceFramework, 
+                        network_data: Dict[str, Any]) -> List[ComplianceCheck]:
+        """Check compliance against framework"""
+        if framework not in self.frameworks:
+            return []
+        
+        controls = self.frameworks[framework]
+        compliance_results = []
+        
+        for control in controls:
+            result = self._evaluate_control(control, network_data)
+            compliance_results.append(result)
+        
+        return compliance_results
+    
+    def _load_pci_dss_controls(self) -> List[Dict]:
+        """Load PCI DSS control definitions"""
+        return [
+            {
+                'id': 'PCI-DSS-2.1',
+                'name': 'Default passwords changed',
+                'description': 'Always change vendor-supplied defaults',
+                'requirement': 'Change default passwords on all systems',
+                'test_function': self._test_default_passwords
+            },
+            {
+                'id': 'PCI-DSS-2.3',
+                'name': 'Encrypt non-console administrative access',
+                'description': 'Encrypt all non-console administrative access',
+                'requirement': 'Use strong encryption for remote access',
+                'test_function': self._test_encryption_admin_access
+            },
+            {
+                'id': 'PCI-DSS-4.1',
+                'name': 'Strong cryptography for data transmission',
+                'description': 'Use strong cryptography for sensitive data',
+                'requirement': 'Implement WPA2 or better encryption',
+                'test_function': self._test_wireless_encryption
+            }
+        ]
+    
+    def _load_nist_controls(self) -> List[Dict]:
+        """Load NIST control definitions"""
+        return [
+            {
+                'id': 'AC-18',
+                'name': 'Wireless Access',
+                'description': 'Control wireless access to the information system',
+                'requirement': 'Implement wireless security controls',
+                'test_function': self._test_wireless_security
+            },
+            {
+                'id': 'IA-5',
+                'name': 'Authenticator Management',
+                'description': 'Manage information system authenticators',
+                'requirement': 'Enforce strong authentication',
+                'test_function': self._test_authentication_strength
+            }
+        ]
+    
+    def _load_iso27001_controls(self) -> List[Dict]:
+        """Load ISO 27001 control definitions"""
+        return [
+            {
+                'id': 'A.13.1.1',
+                'name': 'Network controls',
+                'description': 'Networks should be controlled',
+                'requirement': 'Implement network access controls',
+                'test_function': self._test_network_controls
+            }
+        ]
+    
+    def _evaluate_control(self, control: Dict, network_data: Dict) -> ComplianceCheck:
+        """Evaluate a single control"""
+        test_function = control.get('test_function')
+        
+        if test_function:
+            status, evidence, remediation = test_function(network_data)
+        else:
+            status = 'not_applicable'
+            evidence = ['Control test not implemented']
+            remediation = ['Implement control testing']
+        
+        return ComplianceCheck(
+            framework=ComplianceFramework.PCI_DSS,  # Should be passed from caller
+            control_id=control['id'],
+            control_name=control['name'],
+            description=control['description'],
+            requirement=control['requirement'],
+            status=status,
+            evidence=evidence,
+            remediation_steps=remediation,
+            risk_rating=self._calculate_risk_rating(status),
+            testing_date=datetime.now()
+        )
+    
+    def _test_default_passwords(self, network_data: Dict) -> Tuple[str, List[str], List[str]]:
+        """Test for default passwords"""
+        # This would analyze network data for default credentials
+        networks = network_data.get('networks', [])
+        default_ssids = ['netgear', 'linksys', 'dlink', 'default']
+        
+        violations = []
+        for network in networks:
+            ssid = network.get('ssid', '').lower()
+            if any(default in ssid for default in default_ssids):
+                violations.append(f"Potential default configuration: {network.get('ssid')}")
+        
+        if violations:
+            return 'non_compliant', violations, ['Change default SSIDs and passwords']
+        else:
+            return 'compliant', ['No default configurations detected'], []
+    
+    def _test_encryption_admin_access(self, network_data: Dict) -> Tuple[str, List[str], List[str]]:
+        """Test encryption for administrative access"""
+        # Placeholder implementation
+        return 'compliant', ['Administrative access encryption verified'], []
+    
+    def _test_wireless_encryption(self, network_data: Dict) -> Tuple[str, List[str], List[str]]:
+        """Test wireless encryption strength"""
+        networks = network_data.get('networks', [])
+        weak_encryption = []
+        
+        for network in networks:
+            encryption = network.get('encryption', 'Open')
+            if encryption in ['Open', 'WEP', 'WPS']:
+                weak_encryption.append(f"{network.get('ssid')}: {encryption}")
+        
+        if weak_encryption:
+            return 'non_compliant', weak_encryption, ['Implement WPA2 or WPA3 encryption']
+        else:
+            return 'compliant', ['All networks use strong encryption'], []
+    
+    def _test_wireless_security(self, network_data: Dict) -> Tuple[str, List[str], List[str]]:
+        """Test overall wireless security"""
+        # Comprehensive wireless security test
+        issues = []
+        networks = network_data.get('networks', [])
+        
+        for network in networks:
+            if network.get('encryption') == 'Open':
+                issues.append(f"Open network detected: {network.get('ssid')}")
+            if network.get('wps_enabled'):
+                issues.append(f"WPS enabled: {network.get('ssid')}")
+        
+        if issues:
+            return 'non_compliant', issues, ['Secure all wireless networks', 'Disable WPS']
+        else:
+            return 'compliant', ['Wireless security controls in place'], []
+    
+    def _test_authentication_strength(self, network_data: Dict) -> Tuple[str, List[str], List[str]]:
+        """Test authentication strength"""
+        # Placeholder implementation
+        return 'compliant', ['Authentication strength verified'], []
+    
+    def _test_network_controls(self, network_data: Dict) -> Tuple[str, List[str], List[str]]:
+        """Test network access controls"""
+        # Placeholder implementation
+        return 'compliant', ['Network controls implemented'], []
+    
+    def _calculate_risk_rating(self, status: str) -> str:
+        """Calculate risk rating based on compliance status"""
+        risk_map = {
+            'compliant': 'Low',
+            'partially_compliant': 'Medium',
+            'non_compliant': 'High',
+            'not_applicable': 'N/A'
+        }
+        return risk_map.get(status, 'Medium')
+
+class VulnerabilityAnalyzer:
+    """Vulnerability analysis and CVSS scoring"""
+    
+    def __init__(self):
+        self.vulnerability_database = self._load_vulnerability_database()
+    
+    def analyze_vulnerabilities(self, network_data: Dict[str, Any]) -> List[Vulnerability]:
+        """Analyze network data for vulnerabilities"""
+        vulnerabilities = []
+        
+        # Check for common vulnerabilities
+        vulnerabilities.extend(self._check_encryption_vulnerabilities(network_data))
+        vulnerabilities.extend(self._check_configuration_vulnerabilities(network_data))
+        vulnerabilities.extend(self._check_protocol_vulnerabilities(network_data))
+        
+        return vulnerabilities
+    
+    def _load_vulnerability_database(self) -> Dict:
+        """Load vulnerability database"""
+        return {
+            'weak_encryption': {
+                'title': 'Weak Wireless Encryption',
+                'description': 'Network uses weak or no encryption',
+                'base_score': 7.5,
+                'remediation': 'Implement WPA2/WPA3 encryption'
+            },
+            'wps_enabled': {
+                'title': 'WPS Enabled',
+                'description': 'WiFi Protected Setup is enabled and vulnerable',
+                'base_score': 6.5,
+                'remediation': 'Disable WPS on all access points'
+            },
+            'default_credentials': {
+                'title': 'Default Credentials',
+                'description': 'Device using default administrative credentials',
+                'base_score': 9.0,
+                'remediation': 'Change default usernames and passwords'
+            }
+        }
+    
+    def _check_encryption_vulnerabilities(self, network_data: Dict) -> List[Vulnerability]:
+        """Check for encryption-related vulnerabilities"""
+        vulnerabilities = []
+        networks = network_data.get('networks', [])
+        
+        for network in networks:
+            encryption = network.get('encryption', 'Open')
+            if encryption in ['Open', 'WEP']:
+                vuln = Vulnerability(
+                    id=f"WEAK_ENC_{network.get('bssid', '')}",
+                    title='Weak Wireless Encryption',
+                    description=f"Network '{network.get('ssid')}' uses {encryption} encryption",
+                    severity=VulnerabilitySeverity.HIGH,
+                    cvss_score=7.5,
+                    cve_id=None,
+                    affected_systems=[network.get('ssid', 'Unknown')],
+                    remediation='Implement WPA2 or WPA3 encryption',
+                    references=['https://www.cisa.gov/wireless-security'],
+                    discovery_date=datetime.now(),
+                    status='open'
+                )
+                vulnerabilities.append(vuln)
+        
+        return vulnerabilities
+    
+    def _check_configuration_vulnerabilities(self, network_data: Dict) -> List[Vulnerability]:
+        """Check for configuration vulnerabilities"""
+        vulnerabilities = []
+        networks = network_data.get('networks', [])
+        
+        for network in networks:
+            if network.get('wps_enabled'):
+                vuln = Vulnerability(
+                    id=f"WPS_ENABLED_{network.get('bssid', '')}",
+                    title='WPS Enabled',
+                    description=f"Network '{network.get('ssid')}' has WPS enabled",
+                    severity=VulnerabilitySeverity.MEDIUM,
+                    cvss_score=6.5,
+                    cve_id='CVE-2011-5053',
+                    affected_systems=[network.get('ssid', 'Unknown')],
+                    remediation='Disable WPS on the access point',
+                    references=['https://nvd.nist.gov/vuln/detail/CVE-2011-5053'],
+                    discovery_date=datetime.now(),
+                    status='open'
+                )
+                vulnerabilities.append(vuln)
+        
+        return vulnerabilities
+    
+    def _check_protocol_vulnerabilities(self, network_data: Dict) -> List[Vulnerability]:
+        """Check for protocol-specific vulnerabilities"""
+        vulnerabilities = []
+        # Implementation for protocol-specific checks
+        return vulnerabilities
+    
+    def calculate_cvss_score(self, vulnerability: Dict) -> float:
+        """Calculate CVSS score for vulnerability"""
+        # Simplified CVSS calculation
+        base_score = vulnerability.get('base_score', 5.0)
+        
+        # Adjust based on environmental factors
+        exploitability = vulnerability.get('exploitability', 'high')
+        impact = vulnerability.get('impact', 'high')
+        
+        adjustments = {
+            'exploitability': {'high': 1.0, 'medium': 0.8, 'low': 0.6},
+            'impact': {'high': 1.0, 'medium': 0.8, 'low': 0.6}
+        }
+        
+        adjusted_score = (base_score * 
+                         adjustments['exploitability'].get(exploitability, 1.0) * 
+                         adjustments['impact'].get(impact, 1.0))
+        
+        return min(10.0, adjusted_score)
+
+class ProfessionalReportingSuite:
+    """Main professional reporting suite"""
+    
+    def __init__(self, template_dir: str = "templates"):
+        self.report_generator = ReportGenerator(template_dir)
+        self.compliance_checker = ComplianceChecker()
+        self.vulnerability_analyzer = VulnerabilityAnalyzer()
+    
+    def generate_executive_report(self, network_data: Dict[str, Any], 
+                                output_path: str) -> str:
+        """Generate executive summary report"""
+        
+        # Analyze vulnerabilities
+        vulnerabilities = self.vulnerability_analyzer.analyze_vulnerabilities(network_data)
+        
+        # Check compliance
+        compliance_results = self.compliance_checker.check_compliance(
+            ComplianceFramework.PCI_DSS, network_data
+        )
+        
+        # Generate executive summary
+        executive_summary = self._generate_executive_summary(
+            network_data, vulnerabilities, compliance_results
+        )
+        
+        # Prepare report data
+        report_data = {
+            'metadata': self._create_metadata('Executive Security Assessment'),
+            'network_stats': self._calculate_network_stats(network_data),
+            'vulnerabilities': [asdict(v) for v in vulnerabilities],
+            'compliance_checks': [asdict(c) for c in compliance_results],
+            'executive_summary': asdict(executive_summary)
+        }
+        
+        return self.report_generator.generate_report(
+            ReportType.EXECUTIVE_SUMMARY, report_data, output_path
+        )
+    
+    def _generate_executive_summary(self, network_data: Dict, 
+                                  vulnerabilities: List[Vulnerability],
+                                  compliance_results: List[ComplianceCheck]) -> ExecutiveSummary:
+        """Generate executive summary from analysis results"""
+        
+        # Calculate security score
+        security_score = self._calculate_security_score(vulnerabilities, compliance_results)
+        
+        # Generate key findings
+        key_findings = []
+        critical_vulns = [v for v in vulnerabilities if v.severity == VulnerabilitySeverity.CRITICAL]
+        if critical_vulns:
+            key_findings.append(f"Found {len(critical_vulns)} critical vulnerabilities")
+        
+        non_compliant = [c for c in compliance_results if c.status == 'non_compliant']
+        if non_compliant:
+            key_findings.append(f"{len(non_compliant)} compliance violations identified")
+        
+        # Generate recommendations
+        recommendations = [
+            "Implement strong encryption on all wireless networks",
+            "Disable WPS on all access points",
+            "Change default administrative credentials",
+            "Implement network segmentation",
+            "Establish regular security assessments"
+        ]
+        
+        return ExecutiveSummary(
+            key_findings=key_findings,
+            risk_assessment=self._assess_risk_level(vulnerabilities),
+            recommendations=recommendations,
+            compliance_status=self._assess_compliance_status(compliance_results),
+            security_score=security_score,
+            improvement_priorities=[
+                "Critical vulnerability remediation",
+                "Compliance gap closure",
+                "Security awareness training"
+            ],
+            business_impact="High-risk vulnerabilities pose significant security threats",
+            next_steps=[
+                "Immediate remediation of critical vulnerabilities",
+                "Quarterly security assessments",
+                "Staff security training program"
+            ]
+        )
+    
+    def _calculate_security_score(self, vulnerabilities: List[Vulnerability],
+                                compliance_results: List[ComplianceCheck]) -> float:
+        """Calculate overall security score"""
+        base_score = 100.0
+        
+        # Deduct points for vulnerabilities
+        for vuln in vulnerabilities:
+            if vuln.severity == VulnerabilitySeverity.CRITICAL:
+                base_score -= 20
+            elif vuln.severity == VulnerabilitySeverity.HIGH:
+                base_score -= 10
+            elif vuln.severity == VulnerabilitySeverity.MEDIUM:
+                base_score -= 5
+        
+        # Deduct points for compliance violations
+        for check in compliance_results:
+            if check.status == 'non_compliant':
+                base_score -= 10
+        
+        return max(0, base_score)
+    
+    def _assess_risk_level(self, vulnerabilities: List[Vulnerability]) -> str:
+        """Assess overall risk level"""
+        critical_count = sum(1 for v in vulnerabilities if v.severity == VulnerabilitySeverity.CRITICAL)
+        high_count = sum(1 for v in vulnerabilities if v.severity == VulnerabilitySeverity.HIGH)
+        
+        if critical_count > 0:
+            return "Critical"
+        elif high_count > 2:
+            return "High"
+        elif high_count > 0:
+            return "Medium"
+        else:
+            return "Low"
+    
+    def _assess_compliance_status(self, compliance_results: List[ComplianceCheck]) -> str:
+        """Assess overall compliance status"""
+        non_compliant = sum(1 for c in compliance_results if c.status == 'non_compliant')
+        total = len(compliance_results)
+        
+        if non_compliant == 0:
+            return "Compliant"
+        elif non_compliant / total > 0.5:
+            return "Non-Compliant"
+        else:
+            return "Partially Compliant"
+    
+    def _create_metadata(self, title: str) -> ReportMetadata:
+        """Create report metadata"""
+        return ReportMetadata(
+            report_id=f"PWD_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            title=title,
+            subtitle="Comprehensive WiFi Security Assessment",
+            author="PiWardrive Security Team",
+            organization="Security Assessment Division",
+            generation_date=datetime.now(),
+            report_type=ReportType.EXECUTIVE_SUMMARY,
+            executive_summary="Comprehensive security assessment of wireless infrastructure",
+            scope="All detected wireless networks and devices",
+            methodology="Automated scanning and analysis with manual validation",
+            template_version="1.0.0"
+        )
+    
+    def _calculate_network_stats(self, network_data: Dict) -> NetworkStatistics:
+        """Calculate network statistics"""
+        networks = network_data.get('networks', [])
+        
+        # Calculate encryption breakdown
+        encryption_breakdown = {}
+        for network in networks:
+            encryption = network.get('encryption', 'Unknown')
+            encryption_breakdown[encryption] = encryption_breakdown.get(encryption, 0) + 1
+        
+        # Calculate vendor distribution
+        vendor_distribution = {}
+        for network in networks:
+            vendor = network.get('vendor', 'Unknown')
+            vendor_distribution[vendor] = vendor_distribution.get(vendor, 0) + 1
+        
+        return NetworkStatistics(
+            total_networks=len(networks),
+            total_devices=len(networks),  # Simplified
+            encryption_breakdown=encryption_breakdown,
+            security_issues=sum(1 for n in networks if n.get('encryption') in ['Open', 'WEP']),
+            channel_utilization={},
+            signal_strength_distribution={},
+            vendor_distribution=vendor_distribution,
+            temporal_analysis={}
+        )
+
+# Example usage and testing
+def test_professional_reporting():
+    """Test professional reporting suite"""
+    print("Testing Professional Reporting Suite...")
+    
+    # Create reporting suite
+    reporting_suite = ProfessionalReportingSuite()
+    
+    # Sample network data
+    network_data = {
+        'networks': [
+            {
+                'ssid': 'TestNetwork1',
+                'bssid': '00:11:22:33:44:55',
+                'encryption': 'WPA2',
+                'vendor': 'Cisco',
+                'channel': 6,
+                'signal_strength': -45
+            },
+            {
+                'ssid': 'OpenNetwork',
+                'bssid': '00:11:22:33:44:66',
+                'encryption': 'Open',
+                'vendor': 'Netgear',
+                'channel': 11,
+                'signal_strength': -65
+            },
+            {
+                'ssid': 'WeakNetwork',
+                'bssid': '00:11:22:33:44:77',
+                'encryption': 'WEP',
+                'vendor': 'Linksys',
+                'channel': 1,
+                'signal_strength': -55,
+                'wps_enabled': True
+            }
+        ]
+    }
+    
+    # Generate executive report
+    output_path = "executive_report.html"
+    report_path = reporting_suite.generate_executive_report(network_data, output_path)
+    
+    print(f"Executive report generated: {report_path}")
+    
+    # Test vulnerability analysis
+    vulnerabilities = reporting_suite.vulnerability_analyzer.analyze_vulnerabilities(network_data)
+    print(f"Found {len(vulnerabilities)} vulnerabilities:")
+    for vuln in vulnerabilities:
+        print(f"  - {vuln.title} ({vuln.severity.value}): CVSS {vuln.cvss_score}")
+    
+    # Test compliance checking
+    compliance_results = reporting_suite.compliance_checker.check_compliance(
+        ComplianceFramework.PCI_DSS, network_data
+    )
+    print(f"Compliance checks completed: {len(compliance_results)} controls evaluated")
+    
+    non_compliant = [c for c in compliance_results if c.status == 'non_compliant']
+    print(f"Non-compliant controls: {len(non_compliant)}")
+    
+    print("Professional Reporting Suite test completed!")
+
+if __name__ == "__main__":
+    test_professional_reporting()

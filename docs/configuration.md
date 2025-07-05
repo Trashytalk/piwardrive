@@ -27,6 +27,49 @@ PiWardrive supports multiple configuration methods to accommodate different depl
 
 All configuration parameters are validated at startup, and invalid configurations will prevent the service from starting with clear error messages.
 
+```mermaid
+graph TD
+    A[Application Startup] --> B[Load Configuration]
+    B --> C{Command Line Args?}
+    C -->|Yes| D[Apply CLI Args]
+    C -->|No| E{Environment Variables?}
+    D --> E
+    E -->|Yes| F[Apply Environment Variables]
+    E -->|No| G{Configuration File?}
+    F --> G
+    G -->|Yes| H[Load Config File]
+    G -->|No| I[Apply Default Values]
+    H --> J[Validate Configuration]
+    I --> J
+    J --> K{Valid?}
+    K -->|Yes| L[Start Services]
+    K -->|No| M[Exit with Error]
+    
+    style A fill:#e1f5fe
+    style L fill:#e8f5e8
+    style M fill:#ffebee
+```
+
+### Configuration Hierarchy
+
+```mermaid
+graph LR
+    A[CLI Args<br/>Priority: 1] --> B[Env Variables<br/>Priority: 2]
+    B --> C[Config File<br/>Priority: 3]
+    C --> D[Default Values<br/>Priority: 4]
+    
+    A -.-> E[Final Config]
+    B -.-> E
+    C -.-> E
+    D -.-> E
+    
+    style A fill:#ffcdd2
+    style B fill:#fff3e0
+    style C fill:#e3f2fd
+    style D fill:#f3e5f5
+    style E fill:#e8f5e8
+```
+
 ## Configuration Methods
 
 ### 1. Environment Variables
@@ -141,6 +184,56 @@ services:
 | `PIWARDRIVE_INFLUXDB_URL` | string | `""` | InfluxDB connection URL (optional) |
 | `PIWARDRIVE_GPS_ENABLED` | boolean | `false` | Enable GPS functionality |
 | `PIWARDRIVE_GPS_DEVICE` | string | `"/dev/ttyUSB0"` | GPS device path |
+
+### Configuration Structure Overview
+
+```mermaid
+graph TB
+    A[PiWardrive Configuration] --> B[Application Settings]
+    A --> C[Database Configuration]
+    A --> D[Wi-Fi Scanner Settings]
+    A --> E[System Monitoring]
+    A --> F[Security & Auth]
+    A --> G[Optional Services]
+    
+    B --> B1[Host/Port]
+    B --> B2[Debug Mode]
+    B --> B3[Logging]
+    B --> B4[Data Directories]
+    
+    C --> C1[Database URL]
+    C --> C2[Connection Pool]
+    C --> C3[Timeouts]
+    C --> C4[SQLite/PostgreSQL]
+    
+    D --> D1[Interface Selection]
+    D --> D2[Scan Parameters]
+    D --> D3[Monitor Mode]
+    D --> D4[Channel Configuration]
+    
+    E --> E1[System Metrics]
+    E --> E2[Performance Monitoring]
+    E --> E3[Health Checks]
+    E --> E4[Alerting]
+    
+    F --> F1[JWT Tokens]
+    F --> F2[API Keys]
+    F --> F3[Rate Limiting]
+    F --> F4[CORS Settings]
+    
+    G --> G1[Redis Cache]
+    G --> G2[InfluxDB]
+    G --> G3[GPS Integration]
+    G --> G4[External APIs]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#fce4ec
+    style F fill:#ffebee
+    style G fill:#e0f2f1
+```
 
 ## Configuration File
 

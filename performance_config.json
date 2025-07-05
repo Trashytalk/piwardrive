@@ -1,0 +1,84 @@
+{
+  "monitoring_interval": 60,
+  "database_path": "performance_metrics.db",
+  "api_endpoints": [
+    {
+      "url": "http://localhost:8080/health",
+      "name": "health_check",
+      "timeout": 10
+    },
+    {
+      "url": "http://localhost:8080/api/status",
+      "name": "status_api",
+      "timeout": 15
+    },
+    {
+      "url": "http://localhost:8080/api/wifi/networks",
+      "name": "wifi_networks",
+      "timeout": 30
+    },
+    {
+      "url": "http://localhost:8080/api/bluetooth/devices",
+      "name": "bluetooth_devices",
+      "timeout": 30
+    },
+    {
+      "url": "http://localhost:8080/api/metrics",
+      "name": "metrics_endpoint",
+      "timeout": 20
+    }
+  ],
+  "performance_thresholds": {
+    "api_response_time": 2.0,
+    "database_query_time": 0.1,
+    "memory_usage_percent": 80.0,
+    "cpu_usage_percent": 80.0,
+    "disk_usage_percent": 85.0,
+    "network_latency": 100.0,
+    "throughput_rps": 50.0
+  },
+  "alerts": {
+    "slack_webhook": "",
+    "email_smtp_server": "",
+    "email_smtp_port": 587,
+    "email_username": "",
+    "email_password": "",
+    "email_recipients": []
+  },
+  "monitoring_webhook": "",
+  "monitoring_api_key": "",
+  "load_test_config": {
+    "default_concurrent_users": 10,
+    "default_duration_seconds": 60,
+    "default_ramp_up_seconds": 10,
+    "default_timeout": 30,
+    "stress_test_max_users": 200,
+    "performance_regression_threshold": 0.1
+  },
+  "database_performance": {
+    "max_connection_time": 1.0,
+    "max_query_time": 0.5,
+    "connection_pool_size": 20,
+    "query_timeout": 30
+  },
+  "system_monitoring": {
+    "cpu_alert_threshold": 80.0,
+    "memory_alert_threshold": 85.0,
+    "disk_alert_threshold": 90.0,
+    "network_timeout": 10.0,
+    "process_monitoring": ["piwardrive", "postgres", "redis"]
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_file": "performance_monitor.log",
+    "max_log_size": "10MB",
+    "backup_count": 5,
+    "enable_console_logging": true
+  },
+  "reporting": {
+    "generate_html_reports": true,
+    "report_retention_days": 30,
+    "send_daily_summary": true,
+    "send_weekly_report": true
+  }
+}

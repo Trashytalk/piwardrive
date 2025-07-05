@@ -62,6 +62,39 @@ Default credentials:
 - **GPS module** (optional) for location tracking
 - **Official touchscreen** (optional) for portable use
 
+### Hardware Setup Overview
+
+```mermaid
+graph TB
+    A[Raspberry Pi 5/4] --> B[External Wi-Fi Adapter]
+    A --> C[SSD Storage]
+    A --> D[GPS Module]
+    A --> E[Display]
+    
+    B --> B1[Monitor Mode<br/>Capable]
+    B --> B2[USB 3.0/2.0<br/>Connection]
+    
+    C --> C1[USB 3.0<br/>Connection]
+    C --> C2[32GB+ Storage<br/>Recommended]
+    
+    D --> D1[UART/USB<br/>Connection]
+    D --> D2[NMEA Protocol<br/>Support]
+    
+    E --> E1[Official 7"<br/>Touchscreen]
+    E --> E2[HDMI Monitor<br/>or TV]
+    
+    F[Power Supply] --> A
+    F --> F1[5V 3A<br/>USB-C]
+    F --> F2[Official PSU<br/>Recommended]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#fff3e0
+    style D fill:#fce4ec
+    style E fill:#f3e5f5
+    style F fill:#ffebee
+```
+
 ### Supported Operating Systems
 
 #### Tested Platforms
@@ -76,6 +109,49 @@ Default credentials:
 - **Windows/macOS**: Use Docker installation method
 
 ## Installation Methods
+
+### Installation Flow Overview
+
+```mermaid
+graph TD
+    A[Choose Installation Method] --> B[Automated Script]
+    A --> C[Manual Installation]
+    A --> D[Docker Installation]
+    A --> E[Package Installation]
+    
+    B --> B1[Download Script]
+    B1 --> B2[Run install.sh]
+    B2 --> B3[Configure Services]
+    B3 --> B4[Start Dashboard]
+    
+    C --> C1[Clone Repository]
+    C1 --> C2[Install Dependencies]
+    C2 --> C3[Configure System]
+    C3 --> C4[Setup Services]
+    C4 --> C5[Start Application]
+    
+    D --> D1[Install Docker]
+    D1 --> D2[Pull Images]
+    D2 --> D3[Run Containers]
+    D3 --> D4[Configure Networking]
+    
+    E --> E1[Add Repository]
+    E1 --> E2[Install Package]
+    E2 --> E3[Configure System]
+    E3 --> E4[Enable Services]
+    
+    B4 --> F[Access Dashboard]
+    C5 --> F
+    D4 --> F
+    E4 --> F
+    
+    style A fill:#e1f5fe
+    style F fill:#e8f5e8
+    style B fill:#fff3e0
+    style C fill:#fce4ec
+    style D fill:#f3e5f5
+    style E fill:#ffebee
+```
 
 ### Method 1: Automated Script (Recommended)
 

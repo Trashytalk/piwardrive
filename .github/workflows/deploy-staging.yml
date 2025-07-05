@@ -1,0 +1,303 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      force_deploy:
+        description: 'Force deployment even if tests fail'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  STAGING_URL: 'http://staging.piwardrive.local'
+
+jobs:
+  pre-deployment-checks:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+      
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check if deployment should proceed
+        id: check
+        run: |
+          # Check if this is a forced deployment
+          if [ "${{ github.event.inputs.force_deploy }}" == "true" ]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "Forced deployment requested"
+            exit 0
+          fi
+          
+          # Check if there are any critical files changed
+          git diff --name-only HEAD~1 HEAD > changed_files.txt
+          
+          # Check for infrastructure changes
+          if grep -q "deploy\|docker\|k8s" changed_files.txt; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "Infrastructure changes detected"
+          # Check for application changes
+          elif grep -q "src\|requirements\|package" changed_files.txt; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "Application changes detected"
+          # Check for configuration changes
+          elif grep -q "config\|env" changed_files.txt; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "Configuration changes detected"
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "No deployment-relevant changes detected"
+          fi
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: pre-deployment-checks
+    if: needs.pre-deployment-checks.outputs.should_deploy == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: webui/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install -e .
+          
+      - name: Build frontend
+        working-directory: webui
+        run: |
+          npm ci
+          npm run build
+          
+      - name: Run tests
+        run: |
+          # Run unit tests
+          pytest tests/unit/ -v --tb=short
+          
+          # Run integration tests
+          pytest tests/integration/ -v --tb=short
+          
+          # Run security tests
+          python scripts/dependency_audit.py --enhanced-security --no-alerts
+          
+      - name: Build Docker image
+        run: |
+          docker build -t piwardrive:staging-${{ github.sha }} .
+          docker tag piwardrive:staging-${{ github.sha }} piwardrive:staging-latest
+          
+      - name: Save Docker image
+        run: |
+          docker save piwardrive:staging-${{ github.sha }} | gzip > piwardrive-staging.tar.gz
+          
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: piwardrive-staging.tar.gz
+          retention-days: 1
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [pre-deployment-checks, build-and-test]
+    if: needs.pre-deployment-checks.outputs.should_deploy == 'true'
+    environment: staging
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.STAGING_SSH_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Deploy to staging
+        run: |
+          # Copy Docker image to staging server
+          scp piwardrive-staging.tar.gz ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }}:/tmp/
+          
+          # Copy deployment scripts
+          scp deploy/docker-compose.staging.yml ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }}:/tmp/
+          scp scripts/deploy_staging.sh ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }}:/tmp/
+          
+          # Execute deployment
+          ssh ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }} << 'EOF'
+            # Load new Docker image
+            docker load < /tmp/piwardrive-staging.tar.gz
+            
+            # Update deployment
+            cd /tmp
+            chmod +x deploy_staging.sh
+            ./deploy_staging.sh staging-${{ github.sha }}
+          EOF
+          
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for deployment to be ready..."
+          
+          # Wait up to 5 minutes for the service to be ready
+          timeout 300 bash -c '
+            while true; do
+              if curl -f --max-time 10 ${{ env.STAGING_URL }}/health 2>/dev/null; then
+                echo "Service is ready!"
+                break
+              fi
+              echo "Waiting for service to be ready..."
+              sleep 10
+            done
+          '
+          
+      - name: Run smoke tests
+        run: |
+          # Basic health check
+          curl -f ${{ env.STAGING_URL }}/health
+          
+          # Check API endpoints
+          curl -f ${{ env.STAGING_URL }}/api/status
+          
+          # Check performance endpoint
+          curl -f ${{ env.STAGING_URL }}/performance/stats
+          
+      - name: Run staging integration tests
+        run: |
+          # Set base URL for tests
+          export TEST_BASE_URL=${{ env.STAGING_URL }}
+          
+          # Run staging-specific tests
+          pytest tests/staging/ -v --tb=short --base-url=${{ env.STAGING_URL }}
+          
+      - name: Run performance validation
+        run: |
+          # Run performance tests against staging
+          python scripts/run_performance_benchmarks.py --base-url ${{ env.STAGING_URL }} --output staging-performance.json
+          
+          # Compare with baseline (if available)
+          if [ -f performance_baseline.json ]; then
+            python scripts/compare_performance.py \
+              --current staging-performance.json \
+              --baseline performance_baseline.json \
+              --threshold 30  # Allow 30% regression for staging
+          fi
+          
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-performance-results
+          path: staging-performance.json
+          retention-days: 30
+          
+      - name: Update deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Staging deployment successful"
+            # Update deployment status in monitoring system
+            curl -X POST "${{ secrets.MONITORING_WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "event": "deployment_success",
+                "environment": "staging",
+                "version": "${{ github.sha }}",
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+              }' || true
+          else
+            echo "❌ Staging deployment failed"
+            # Update deployment status in monitoring system
+            curl -X POST "${{ secrets.MONITORING_WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "event": "deployment_failure",
+                "environment": "staging",
+                "version": "${{ github.sha }}",
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+              }' || true
+          fi
+          
+      - name: Notify deployment result
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}';
+            const emoji = status === 'success' ? '✅' : '❌';
+            const message = `${emoji} Staging deployment ${status}`;
+            
+            // Create deployment comment
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `${message}\n\nEnvironment: Staging\nURL: ${{ env.STAGING_URL }}\nVersion: ${{ github.sha }}`
+            });
+            
+            // Send Slack notification if webhook is configured
+            if (process.env.SLACK_WEBHOOK_URL) {
+              const payload = {
+                text: `${message}`,
+                attachments: [{
+                  color: status === 'success' ? 'good' : 'danger',
+                  fields: [
+                    { title: 'Environment', value: 'Staging', short: true },
+                    { title: 'Version', value: '${{ github.sha }}', short: true },
+                    { title: 'URL', value: '${{ env.STAGING_URL }}', short: true }
+                  ]
+                }]
+              };
+              
+              fetch(process.env.SLACK_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: always()
+    
+    steps:
+      - name: Cleanup artifacts
+        run: |
+          echo "Cleaning up deployment artifacts..."
+          # This job runs regardless of success/failure to clean up
+          
+      - name: Update deployment metrics
+        run: |
+          # Send deployment metrics to monitoring system
+          curl -X POST "${{ secrets.MONITORING_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "metric": "deployment_duration",
+              "value": "${{ github.event.head_commit.timestamp }}",
+              "tags": {
+                "environment": "staging",
+                "branch": "${{ github.ref_name }}",
+                "status": "${{ needs.deploy-staging.result }}"
+              }
+            }' || true

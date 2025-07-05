@@ -3,6 +3,67 @@ Persistence
 .. note::
    Please read the legal notice in the project `README.md` before using PiWardrive.
 
+Database Architecture
+~~~~~~~~~~~~~~~~~~~~~
+
+.. mermaid::
+
+   graph TB
+       A[PiWardrive Application] --> B[Persistence Module]
+       B --> C[SQLite Database]
+       C --> D[HealthRecord Table]
+       C --> E[AppState Table]
+       C --> F[Configuration Data]
+       
+       B --> G[Database Connection Pool]
+       G --> H[WAL Mode]
+       G --> I[Connection Caching]
+       
+       J[Optional Encryption] --> K[SQLCipher]
+       K --> C
+       
+       L[Maintenance Tasks] --> M[Vacuum Operation]
+       L --> N[Purge Old Records]
+       L --> O[Database Optimization]
+       
+       style A fill:#e1f5fe
+       style B fill:#e8f5e8
+       style C fill:#fff3e0
+       style D fill:#fce4ec
+       style E fill:#f3e5f5
+       style F fill:#ffebee
+
+Data Flow
+~~~~~~~~~
+
+.. mermaid::
+
+   sequenceDiagram
+       participant App as Application
+       participant Persist as Persistence Module
+       participant DB as SQLite Database
+       participant Health as Health Monitor
+       
+       App->>Persist: Initialize Database
+       Persist->>DB: Create Schema
+       DB-->>Persist: Schema Ready
+       
+       Health->>Persist: Store Health Metrics
+       Persist->>DB: INSERT HealthRecord
+       DB-->>Persist: Record Saved
+       
+       App->>Persist: Load Recent Health
+       Persist->>DB: SELECT Health Records
+       DB-->>Persist: Return Results
+       Persist-->>App: Health Data
+       
+       App->>Persist: Save App State
+       Persist->>DB: UPDATE AppState
+       DB-->>Persist: State Saved
+       
+       Note over Persist,DB: WAL mode for better concurrency
+       Note over DB: Optional SQLCipher encryption
+
 
 The :mod:`persistence` module provides a lightweight SQLite database at
 ``~/.config/piwardrive/app.db`` by default. Set ``PW_DB_PATH`` to override

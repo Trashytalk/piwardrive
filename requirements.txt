@@ -1,57 +1,77 @@
-##requirements
+# PiWardrive Core Dependencies
+# Last updated: 2025-01-25
+# See docs/dependency-management.md for update strategy
 
-requests==2.32.4
-requests-cache==1.2.1
-cachetools==6.1.0
-psutil==5.9.6
-gpsd-py3==0.3.0
-redis==5.0.4
-aiofiles==24.1.0
-scipy==1.15.3
-pyrtlsdr==0.3.0
-pydantic==2.11.7
-ujson==5.10.0
-img2pdf
-PyYAML==6.0.2
-matplotlib==3.10.3
-plotly==6.1.2
-kaleido==0.2.1
-vispy==0.15.2
-cryptography==45.0.4
-pyshp==2.3.1
-fastapi==0.115.12
-defusedxml==0.7.1
-uvicorn[standard]==0.34.3
-httpx==0.28.1
-boto3==1.39.0
-aiohttp==3.12.13
-aiosqlite==0.21.0
-aiomysql==0.2.0
-asyncpg==0.29.0
-PyJWT==2.8.0
-bcrypt==4.1.3
-dbus-fast==2.44.1
-dbus-python==1.4.0
-bleak==0.22.3
-watchdog==6.0.0
-## pybluez>=0.23
-## Re-enable this after testing is done. It is breaking the environment
-gps==3.19
-python-gps
-orjson==3.10.18
-pandas==2.3.0
-pyprof2calltree==1.4.5
-rpy2==3.6.1
-scikit-learn==1.5.0
-mpu6050
-graphene==3.3
-paho-mqtt==2.1.0
+# ===== CORE WEB FRAMEWORK =====
+# Web framework and server components
+fastapi>=0.115.12,<0.116.0
+uvicorn[standard]>=0.34.3,<0.35.0
+httpx>=0.28.1,<0.29.0
+aiohttp>=3.12.13,<3.13.0
+aiofiles>=24.1.0,<25.0.0
+flask>=2.3.3,<3.0.0
+flask-socketio>=5.3.6,<6.0.0
 
-# Additional GUI and scientific libraries
-numpy
-folium
-dronekit
+# ===== SECURITY & AUTHENTICATION =====
+# Security-critical packages - pin tightly
+cryptography>=45.0.4,<46.0.0
+PyJWT>=2.8.0,<3.0.0
+bcrypt>=4.1.3,<5.0.0
 
-# Web UI build dependencies
-# Requires Node.js >=18 and npm
-# Debian/Ubuntu packages: nodejs npm libdbus-1-dev libglib2.0-dev
+# ===== DATABASE & PERSISTENCE =====
+# Database drivers and ORM
+aiosqlite>=0.21.0,<0.22.0
+aiomysql>=0.2.0,<0.3.0
+asyncpg>=0.29.0,<0.30.0
+
+# ===== DATA PROCESSING & SERIALIZATION =====
+# Data handling and serialization
+pydantic>=2.11.7,<3.0.0
+ujson>=5.10.0,<6.0.0
+orjson>=3.10.18,<4.0.0
+PyYAML>=6.0.2,<7.0.0
+defusedxml>=0.7.1,<0.8.0
+
+# ===== ADVANCED DATA PROCESSING =====
+# Data science and analysis
+numpy>=1.24.4,<2.0.0
+pandas>=2.0.3,<3.0.0
+scipy>=1.10.1,<2.0.0
+scikit-learn>=1.3.2,<2.0.0
+plotly>=5.17.0,<6.0.0
+matplotlib>=3.7.2,<4.0.0
+seaborn>=0.12.2,<0.13.0
+
+# ===== VISUALIZATION & REPORTING =====
+# Advanced visualization and reporting
+plotly>=5.17.0,<6.0.0
+reportlab>=4.0.7,<5.0.0
+geojson>=3.0.1,<4.0.0
+
+# ===== SYSTEM & HARDWARE INTERFACE =====
+# System monitoring and hardware interfaces
+psutil>=5.9.6,<6.0.0
+watchdog>=6.0.0,<7.0.0
+dbus-fast>=2.44.1,<3.0.0
+dbus-python>=1.4.0,<2.0.0
+
+# ===== HARDWARE INTEGRATION =====
+# Hardware interface libraries
+pyserial>=3.5,<4.0
+RPi.GPIO>=0.7.1,<1.0.0; sys_platform == "linux"
+smbus2>=0.4.3,<1.0.0; sys_platform == "linux"
+spidev>=3.6,<4.0; sys_platform == "linux"
+pyusb>=1.2.1,<2.0.0
+opencv-python>=4.8.1,<5.0.0
+
+# ===== NETWORKING & COMMUNICATION =====
+# HTTP clients and caching
+requests>=2.32.4,<3.0.0
+requests-cache>=1.2.1,<2.0.0
+cachetools>=6.1.0,<7.0.0
+redis>=5.0.4,<6.0.0
+
+# ===== GPS & LOCATION SERVICES =====
+# GPS and location handling
+gpsd-py3>=0.3.0,<0.4.0
+gps>=3.19,<4.0

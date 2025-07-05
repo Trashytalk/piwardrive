@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiWardrive Setup Wizard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .setup-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+        .step-indicator .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        .step-indicator .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #dee2e6;
+            z-index: -1;
+        }
+        .step-indicator .step.active::after {
+            background: #007bff;
+        }
+        .step-indicator .step.completed::after {
+            background: #28a745;
+        }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+        .step.active .step-circle {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+        .step.completed .step-circle {
+            border-color: #28a745;
+            background: #28a745;
+            color: white;
+        }
+        .step-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .hardware-detection-results {
+            margin-top: 20px;
+        }
+        .hardware-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        .hardware-item.detected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .hardware-item.not-detected {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .progress-bar-container {
+            margin-top: 20px;
+        }
+        .navigation-buttons {
+            display: flex;
+            justify-content: between;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .navigation-buttons .btn {
+            flex: 1;
+            max-width: 150px;
+        }
+        .form-section {
+            margin-bottom: 25px;
+        }
+        .form-section h5 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="setup-container">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-cog me-2"></i>
+                PiWardrive Setup Wizard
+            </h1>
+            
+            <!-- Progress Indicator -->
+            <div class="step-indicator">
+                {% for step in all_steps %}
+                <div class="step {% if step.id == current_step.id %}active{% elif step.completed %}completed{% endif %}">
+                    <div class="step-circle">
+                        {% if step.completed %}
+                            <i class="fas fa-check"></i>
+                        {% else %}
+                            {{ loop.index }}
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ step.title }}</small>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%"></div>
+                </div>
+                <small class="text-muted">{{ progress|round(1) }}% Complete</small>
+            </div>
+            
+            <!-- Step Content -->
+            <div class="step-content">
+                {% if current_step %}
+                    <div id="step-{{ current_step.id }}">
+                        <h3>{{ current_step.title }}</h3>
+                        <p class="text-muted">{{ current_step.description }}</p>
+                        
+                        {% if current_step.id == 'welcome' %}
+                            <div class="text-center">
+                                <i class="fas fa-wifi fa-3x text-primary mb-3"></i>
+                                <h4>Welcome to PiWardrive</h4>
+                                <p>This wizard will help you set up your PiWardrive system for wireless surveying and monitoring.</p>
+                                <p>The setup process will configure your hardware, database, and preferences.</p>
+                            </div>
+                        {% elif current_step.id == 'hardware_detection' %}
+                            <div class="text-center">
+                                <button class="btn btn-primary btn-lg" onclick="detectHardware()">
+                                    <i class="fas fa-search me-2"></i>
+                                    Detect Hardware
+                                </button>
+                            </div>
+                            <div class="loading-spinner" id="hardware-loading">
+                                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                                <p>Detecting hardware...</p>
+                            </div>
+                            <div class="hardware-detection-results" id="hardware-results" style="display: none;"></div>
+                        {% elif current_step.id == 'network_config' %}
+                            <div class="form-section">
+                                <h5>Wireless Adapter Configuration</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Primary Adapter</label>
+                                        <select class="form-select" id="primary-adapter">
+                                            <option value="">Select adapter...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Secondary Adapter (Optional)</label>
+                                        <select class="form-select" id="secondary-adapter">
+                                            <option value="">Select adapter...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-section">
+                                <h5>Scanning Preferences</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Default Scan Interval (seconds)</label>
+                                        <input type="number" class="form-control" id="scan-interval" value="5" min="1" max="60">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Channel Hopping Speed</label>
+                                        <select class="form-select" id="channel-speed">
+                                            <option value="slow">Slow (thorough)</option>
+                                            <option value="medium" selected>Medium (balanced)</option>
+                                            <option value="fast">Fast (quick survey)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif current_step.id == 'gps_setup' %}
+                            <div class="form-section">
+                                <h5>GPS Configuration</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">GPS Device</label>
+                                        <select class="form-select" id="gps-device">
+                                            <option value="">Select GPS device...</option>
+                                            <option value="/dev/ttyUSB0">/dev/ttyUSB0</option>
+                                            <option value="/dev/ttyUSB1">/dev/ttyUSB1</option>
+                                            <option value="/dev/ttyS0">/dev/ttyS0</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Baud Rate</label>
+                                        <select class="form-select" id="gps-baudrate">
+                                            <option value="4800">4800</option>
+                                            <option value="9600" selected>9600</option>
+                                            <option value="19200">19200</option>
+                                            <option value="38400">38400</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-section">
+                                <h5>Enhancement Options</h5>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enable-dgps">
+                                    <label class="form-check-label" for="enable-dgps">
+                                        Enable DGPS Correction
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enable-rtk">
+                                    <label class="form-check-label" for="enable-rtk">
+                                        Enable RTK Correction (if available)
+                                    </label>
+                                </div>
+                            </div>
+                        {% elif current_step.id == 'database_setup' %}
+                            <div class="form-section">
+                                <h5>Database Configuration</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Database Type</label>
+                                        <select class="form-select" id="db-type">
+                                            <option value="sqlite" selected>SQLite (recommended)</option>
+                                            <option value="mysql">MySQL</option>
+                                            <option value="postgresql">PostgreSQL</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Database Path/Name</label>
+                                        <input type="text" class="form-control" id="db-path" value="piwardrive.db">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-section">
+                                <h5>Storage Options</h5>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="auto-backup" checked>
+                                    <label class="form-check-label" for="auto-backup">
+                                        Enable automatic backups
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="compress-data">
+                                    <label class="form-check-label" for="compress-data">
+                                        Compress stored data
+                                    </label>
+                                </div>
+                            </div>
+                        {% elif current_step.id == 'completion' %}
+                            <div class="text-center">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h4>Setup Complete!</h4>
+                                <p>Your PiWardrive system is now configured and ready to use.</p>
+                                <p>You can now start scanning for wireless networks and collecting data.</p>
+                                <a href="/" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-home me-2"></i>
+                                    Go to Dashboard
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <!-- Navigation Buttons -->
+                <div class="navigation-buttons">
+                    <button class="btn btn-secondary" onclick="previousStep()" 
+                            {% if current_step.id == 'welcome' %}disabled{% endif %}>
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Previous
+                    </button>
+                    <button class="btn btn-primary" onclick="nextStep()" 
+                            {% if current_step.id == 'completion' %}style="display:none;"{% endif %}>
+                        Next
+                        <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function detectHardware() {
+            const loadingDiv = document.getElementById('hardware-loading');
+            const resultsDiv = document.getElementById('hardware-results');
+            
+            loadingDiv.style.display = 'block';
+            resultsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/setup/step/hardware_detection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayHardwareResults(data.data);
+                } else {
+                    alert('Hardware detection failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error during hardware detection');
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        function displayHardwareResults(results) {
+            const resultsDiv = document.getElementById('hardware-results');
+            let html = '<h5>Hardware Detection Results</h5>';
+            
+            // Wireless Adapters
+            html += '<h6>Wireless Adapters</h6>';
+            if (results.wireless_adapters.length > 0) {
+                results.wireless_adapters.forEach(adapter => {
+                    html += `<div class="hardware-item detected">
+                        <strong>${adapter.interface}</strong> - ${adapter.chipset}
+                        <br><small>Driver: ${adapter.driver} | Capabilities: ${adapter.capabilities.join(', ')}</small>
+                    </div>`;
+                });
+            } else {
+                html += '<div class="hardware-item not-detected">No wireless adapters detected</div>';
+            }
+            
+            // GPS Devices
+            html += '<h6>GPS Devices</h6>';
+            if (results.gps_devices.length > 0) {
+                results.gps_devices.forEach(device => {
+                    html += `<div class="hardware-item ${device.available ? 'detected' : 'not-detected'}">
+                        <strong>${device.port}</strong>
+                        <br><small>Status: ${device.available ? 'Available' : 'Not Available'}</small>
+                    </div>`;
+                });
+            } else {
+                html += '<div class="hardware-item not-detected">No GPS devices detected</div>';
+            }
+            
+            // Environmental Sensors
+            html += '<h6>Environmental Sensors</h6>';
+            if (results.environmental_sensors.length > 0) {
+                results.environmental_sensors.forEach(sensor => {
+                    html += `<div class="hardware-item ${sensor.detected ? 'detected' : 'not-detected'}">
+                        <strong>${sensor.type}</strong>
+                        <br><small>Status: ${sensor.detected ? 'Detected' : 'Not Detected'}</small>
+                    </div>`;
+                });
+            } else {
+                html += '<div class="hardware-item not-detected">No environmental sensors detected</div>';
+            }
+            
+            // Camera Devices
+            html += '<h6>Camera Devices</h6>';
+            if (results.camera_devices.length > 0) {
+                results.camera_devices.forEach(camera => {
+                    html += `<div class="hardware-item ${camera.available ? 'detected' : 'not-detected'}">
+                        <strong>${camera.device}</strong>
+                        <br><small>Status: ${camera.available ? 'Available' : 'Not Available'}</small>
+                    </div>`;
+                });
+            } else {
+                html += '<div class="hardware-item not-detected">No camera devices detected</div>';
+            }
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+        
+        async function nextStep() {
+            const currentStepId = '{{ current_step.id }}';
+            const stepData = getStepData(currentStepId);
+            
+            try {
+                const response = await fetch(`/api/setup/step/${currentStepId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(stepData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error completing step');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error completing step');
+            }
+        }
+        
+        function previousStep() {
+            // Implementation for going back
+            window.history.back();
+        }
+        
+        function getStepData(stepId) {
+            switch(stepId) {
+                case 'welcome':
+                    return {};
+                case 'hardware_detection':
+                    return {}; // Data already handled by detectHardware
+                case 'network_config':
+                    return {
+                        primary_adapter: document.getElementById('primary-adapter').value,
+                        secondary_adapter: document.getElementById('secondary-adapter').value,
+                        scan_interval: parseInt(document.getElementById('scan-interval').value),
+                        channel_speed: document.getElementById('channel-speed').value
+                    };
+                case 'gps_setup':
+                    return {
+                        gps_device: document.getElementById('gps-device').value,
+                        gps_baudrate: parseInt(document.getElementById('gps-baudrate').value),
+                        enable_dgps: document.getElementById('enable-dgps').checked,
+                        enable_rtk: document.getElementById('enable-rtk').checked
+                    };
+                case 'database_setup':
+                    return {
+                        db_type: document.getElementById('db-type').value,
+                        db_path: document.getElementById('db-path').value,
+                        auto_backup: document.getElementById('auto-backup').checked,
+                        compress_data: document.getElementById('compress-data').checked
+                    };
+                default:
+                    return {};
+            }
+        }
+    </script>
+</body>
+</html>

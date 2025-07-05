@@ -30,73 +30,178 @@ PiWardrive is a distributed IoT monitoring and Wi-Fi analysis system designed fo
 
 ## Component Architecture
 
-### High-Level System Diagram
+### High-Level System Architecture
 
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        WEB[Web Dashboard<br/>React/TypeScript]
+        MOBILE[Mobile App<br/>React Native]
+        CLI[CLI Tools<br/>Python]
+    end
+    
+    subgraph "API Gateway Layer"
+        GATEWAY[FastAPI Gateway<br/>service.py]
+        AUTH[Authentication<br/>JWT/OAuth]
+        RATE[Rate Limiting<br/>Redis-based]
+        CORS[CORS Handler]
+    end
+    
+    subgraph "Application Services"
+        CORE[Core Application<br/>main.py]
+        SCHEDULER[Poll Scheduler<br/>Background Tasks]
+        DIAGNOSTICS[System Diagnostics<br/>Health Monitoring]
+        WIDGETS[Widget Framework<br/>Pluggable UI]
+    end
+    
+    subgraph "Domain Services"
+        WIFI[WiFi Scanner<br/>Kismet/BetterCAP]
+        GPS[GPS Service<br/>GPSD Integration]
+        DF[Direction Finding<br/>Triangulation/MUSIC]
+        SENSORS[Sensor Manager<br/>Hardware Interface]
+        SYNC[Remote Sync<br/>Data Aggregation]
+    end
+    
+    subgraph "Data Layer"
+        SQLITE[(SQLite Database<br/>Metadata Storage)]
+        CACHE[Memory Cache<br/>Real-time Data]
+        FILES[File Storage<br/>Exports/Logs]
+        TILES[Tile Cache<br/>Map Data]
+    end
+    
+    subgraph "Infrastructure Layer"
+        MONITOR[System Monitor<br/>CPU/Memory/Disk]
+        SECURITY[Security Layer<br/>Firewall/VPN]
+        BACKUP[Backup Service<br/>Data Protection]
+        LOGGING[Logging Service<br/>Centralized Logs]
+    end
+    
+    subgraph "Hardware Layer"
+        WIFI_HW[WiFi Adapters<br/>Monitor Mode]
+        GPS_HW[GPS Hardware<br/>USB/Serial]
+        SENSORS_HW[GPIO Sensors<br/>Temperature/IMU]
+        DISPLAY[Touchscreen<br/>7-inch Display]
+    end
+    
+    WEB --> GATEWAY
+    MOBILE --> GATEWAY
+    CLI --> GATEWAY
+    
+    GATEWAY --> AUTH
+    GATEWAY --> RATE
+    GATEWAY --> CORS
+    GATEWAY --> CORE
+    
+    CORE --> SCHEDULER
+    CORE --> DIAGNOSTICS
+    CORE --> WIDGETS
+    
+    SCHEDULER --> WIFI
+    SCHEDULER --> GPS
+    SCHEDULER --> DF
+    SCHEDULER --> SENSORS
+    
+    WIFI --> SQLITE
+    GPS --> SQLITE
+    DF --> SQLITE
+    SENSORS --> CACHE
+    
+    SYNC --> SQLITE
+    SYNC --> FILES
+    
+    CORE --> MONITOR
+    CORE --> SECURITY
+    CORE --> BACKUP
+    CORE --> LOGGING
+    
+    WIFI --> WIFI_HW
+    GPS --> GPS_HW
+    SENSORS --> SENSORS_HW
+    WIDGETS --> DISPLAY
+    
+    style WEB fill:#e3f2fd
+    style CORE fill:#e8f5e8
+    style SQLITE fill:#fff3e0
+    style WIFI_HW fill:#ffcdd2
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        PiWardrive System                        │
-├─────────────────────────────────────────────────────────────────┤
-│  Frontend Layer                                                 │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   Web Dashboard │  │   Mobile App    │  │   CLI Tools     │ │
-│  │   (React/TS)    │  │   (Optional)    │  │   (Python)      │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  API Gateway Layer                                              │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │              FastAPI Gateway (service.py)                  │ │
-│  │  • Authentication • Rate Limiting • Request Routing       │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Service Layer                                                  │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │  Wi-Fi Scanner  │  │ System Monitor  │  │  GPS Service    │ │
-│  │   Service       │  │    Service      │  │   (Optional)    │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Data Layer                                                     │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │   SQLite DB     │  │   Time Series   │  │   File Storage  │ │
-│  │  (Metadata)     │  │   (Metrics)     │  │   (Exports)     │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Hardware Layer                                                 │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
-│  │  Wi-Fi Adapter  │  │  GPIO Sensors   │  │   GPS Module    │ │
-│  │ (Monitor Mode)  │  │ (Temp, etc.)    │  │   (Optional)    │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+
+### Detailed Component Interaction
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant Core
+    participant Scheduler
+    participant WiFiService
+    participant Database
+    participant Hardware
+    
+    Client->>Gateway: HTTP Request
+    Gateway->>Gateway: Authenticate & Rate Limit
+    Gateway->>Core: Forward Request
+    
+    Core->>Scheduler: Check Service Status
+    Scheduler->>WiFiService: Get Scan Data
+    WiFiService->>Hardware: Interface with Adapter
+    Hardware-->>WiFiService: Raw Data
+    WiFiService->>WiFiService: Process & Filter
+    WiFiService-->>Scheduler: Processed Data
+    Scheduler->>Database: Store Data
+    Database-->>Scheduler: Confirmation
+    Scheduler-->>Core: Status Update
+    Core-->>Gateway: Response Data
+    Gateway-->>Client: JSON Response
+    
+    Note over Client,Hardware: Real-time updates via WebSocket
 ```
 
-### Component Responsibilities
+### Service Mesh Architecture
 
-#### Frontend Components
-
-**Web Dashboard (React/TypeScript)**
-
-- Real-time data visualization
-- User authentication and session management
-- Configuration interface
-- Export functionality
-- Responsive design for mobile devices
-
-**CLI Tools (Python)**
-
-- Command-line interface for automation
-- Scripted data collection
-- Batch operations
-- System administration tasks
-
-#### Backend Services
-
-**API Gateway (FastAPI)**
-
-- Request routing and load balancing
-- Authentication and authorization
-- Rate limiting and throttling
-- Request/response transformation
-- CORS handling
-- API documentation serving
+```mermaid
+graph LR
+    subgraph "Service Mesh"
+        subgraph "Core Services"
+            A[Authentication Service]
+            B[WiFi Scanner Service]
+            C[GPS Service]
+            D[Direction Finding Service]
+            E[Analytics Service]
+        end
+        
+        subgraph "Support Services"
+            F[Configuration Service]
+            G[Notification Service]
+            H[Export Service]
+            I[Backup Service]
+        end
+        
+        subgraph "Infrastructure Services"
+            J[Service Discovery]
+            K[Load Balancer]
+            L[Circuit Breaker]
+            M[Health Check]
+        end
+    end
+    
+    A <--> J
+    B <--> J
+    C <--> J
+    D <--> J
+    E <--> J
+    F <--> J
+    G <--> J
+    H <--> J
+    I <--> J
+    
+    J --> K
+    K --> L
+    L --> M
+    
+    style A fill:#e1f5fe
+    style J fill:#f3e5f5
+    style K fill:#e8f5e8
+```
 
 **Wi-Fi Scanner Service**
 
