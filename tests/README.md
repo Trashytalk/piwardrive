@@ -15,3 +15,27 @@ docker compose down
 ```
 
 See `docker-compose.yml` for the list of containers started.
+
+## Running Unit Tests
+
+Both the Python and Node.js test suites expect the required modules to be
+installed. From the repository root run:
+
+```bash
+pip install -r config/requirements-dev.txt
+npm install
+```
+
+Node based tests also need access to the Python sources. Export
+`PYTHONPATH=src` when invoking them:
+
+```bash
+PYTHONPATH=src node --test tests/*.test.js
+```
+
+Tests that rely on Vitest (such as `tileMaintenanceCli.test.js`) can be run
+with:
+
+```bash
+npx vitest run tests/tileMaintenanceCli.test.js
+```
