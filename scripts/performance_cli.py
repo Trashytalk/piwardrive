@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 # Add the src directory to the path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from piwardrive.performance.db_optimizer import (
     DatabaseOptimizer,
