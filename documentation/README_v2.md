@@ -254,6 +254,290 @@ piwardrive-webui
 4. **Visualization**: React dashboard displays real-time information
 5. **Export**: Data can be exported or synchronized to aggregation service
 
+## 📊 System Architecture Diagrams
+
+### Complete System Overview
+
+```mermaid
+graph TB
+    subgraph "Hardware Layer"
+        PI[Raspberry Pi]
+        WIFI[Wi-Fi Adapter]
+        GPS[GPS Module]
+        SSD[SSD Storage]
+        DISPLAY[Touchscreen]
+    end
+    
+    subgraph "System Services"
+        K[Kismet]
+        G[GPSD]
+        S[System Monitor]
+        BC[BetterCAP]
+        O[Orientation]
+        TILES[Tile Service]
+    end
+    
+    subgraph "PiWardrive Core"
+        P[Poll Scheduler]
+        DF[Direction Finding]
+        A[Anomaly Detection]
+        F[Filters]
+        DB[(Database)]
+        CACHE[(Cache)]
+        LOGS[(Logs)]
+    end
+    
+    subgraph "Web Interface"
+        WEB[React Dashboard]
+        API[FastAPI Server]
+        WS[WebSocket]
+        EXP[Export Service]
+        SYNC[Remote Sync]
+    end
+    
+    PI --> WIFI
+    PI --> GPS
+    PI --> SSD
+    PI --> DISPLAY
+    
+    WIFI --> K
+    WIFI --> BC
+    GPS --> G
+    PI --> S
+    PI --> O
+    
+    K --> P
+    G --> P
+    S --> P
+    O --> P
+    
+    P --> DF
+    P --> A
+    P --> F
+    
+    DF --> DB
+    A --> DB
+    F --> DB
+    P --> CACHE
+    P --> LOGS
+    
+    DB --> WEB
+    DB --> API
+    DB --> EXP
+    DB --> SYNC
+    
+    CACHE --> WEB
+    TILES --> WEB
+    
+    A --> NOTIF[Notifications]
+    F --> NOTIF
+    
+    style PI fill:#e1f5fe
+    style P fill:#e8f5e8
+    style DB fill:#fff3e0
+    style WEB fill:#fce4ec
+```
+
+### Scanning and Data Processing Flow
+
+```mermaid
+flowchart TD
+    A[Boot Device] --> B[Load Configuration]
+    B --> C{Check Hardware}
+    C -->|WiFi Available| D[Start Kismet/BetterCAP]
+    C -->|GPS Available| E[Start GPS Polling]
+    C -->|Sensors Available| F[Initialize Sensors]
+    
+    D --> G[Begin WiFi Scanning]
+    E --> H[Record Location Data]
+    F --> I[Monitor Orientation]
+    
+    G --> J[Process AP Data]
+    H --> J
+    I --> J
+    
+    J --> K[Apply Filters]
+    K --> L[Store in Database]
+    L --> M[Update Dashboard]
+    
+    M --> N{Alerts Triggered?}
+    N -->|Yes| O[Send Notifications]
+    N -->|No| P[Continue Monitoring]
+    O --> P
+    P --> G
+    
+    style A fill:#e1f5fe
+    style L fill:#c8e6c9
+    style O fill:#ffcdd2
+    style P fill:#e8f5e8
+```
+
+### Diagnostics and Health Monitoring
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Dashboard
+    participant Diagnostics
+    participant HealthMonitor
+    participant Database
+    participant Alerts
+
+    User->>Dashboard: Open Diagnostics
+    Dashboard->>Diagnostics: Initialize Health Check
+    
+    Diagnostics->>HealthMonitor: Check CPU Temperature
+    HealthMonitor-->>Diagnostics: Temperature Data
+    
+    Diagnostics->>HealthMonitor: Check Memory Usage
+    HealthMonitor-->>Diagnostics: Memory Data
+    
+    Diagnostics->>HealthMonitor: Check Disk Space
+    HealthMonitor-->>Diagnostics: Disk Data
+    
+    Diagnostics->>HealthMonitor: Check Network Status
+    HealthMonitor-->>Diagnostics: Network Data
+    
+    Diagnostics->>Database: Store Health Record
+    Database-->>Diagnostics: Confirmation
+    
+    alt Critical Issues Found
+        Diagnostics->>Alerts: Trigger Alert
+        Alerts->>User: Send Notification
+    end
+    
+    Diagnostics-->>Dashboard: Health Status
+    Dashboard-->>User: Display Results
+```
+
+### Widget and Scheduler Architecture
+
+```mermaid
+graph TB
+    subgraph "Widget Framework"
+        WF[Widget Factory]
+        WM[Widget Manager]
+        WR[Widget Registry]
+        WL[Widget Loader]
+    end
+    
+    subgraph "Core Widgets"
+        MAP[Map Widget]
+        METRICS[Metrics Widget]
+        GPS_W[GPS Widget]
+        SCAN[Scan Control Widget]
+        HEALTH[Health Widget]
+    end
+    
+    subgraph "Custom Widgets"
+        CUSTOM[Plugin Widgets]
+        DRONE[Drone Widget]
+        DF_W[Direction Finding Widget]
+        HEAT[Heatmap Widget]
+    end
+    
+    subgraph "Scheduler System"
+        PS[Poll Scheduler]
+        TIMER[Timer Service]
+        QUEUE[Task Queue]
+        EXEC[Executor Pool]
+    end
+    
+    WF --> WM
+    WM --> WR
+    WR --> WL
+    
+    WL --> MAP
+    WL --> METRICS
+    WL --> GPS_W
+    WL --> SCAN
+    WL --> HEALTH
+    
+    WL --> CUSTOM
+    WL --> DRONE
+    WL --> DF_W
+    WL --> HEAT
+    
+    MAP --> PS
+    METRICS --> PS
+    GPS_W --> PS
+    HEALTH --> PS
+    
+    PS --> TIMER
+    PS --> QUEUE
+    QUEUE --> EXEC
+    
+    style WF fill:#e3f2fd
+    style PS fill:#f3e5f5
+    style CUSTOM fill:#fff3e0
+    style WL fill:#e8f5e8
+```
+
+### Real-time Update and Communication Flow
+
+```mermaid
+flowchart LR
+    subgraph "Backend Services"
+        K[Kismet] --> PS[Poll Scheduler]
+        G[GPS] --> PS
+        S[Sensors] --> PS
+        BC[BetterCAP] --> PS
+    end
+    
+    subgraph "Processing Pipeline"
+        PS --> DP[Data Processor]
+        DP --> F[Filters]
+        F --> A[Aggregator]
+        A --> C[Cache]
+    end
+    
+    subgraph "Frontend Updates"
+        C --> WS[WebSocket]
+        WS --> UI[React Dashboard]
+        UI --> MW[Map Widget]
+        UI --> GW[GPS Widget]
+        UI --> HW[Health Widget]
+    end
+    
+    subgraph "Persistence"
+        A --> DB[(Database)]
+        DB --> SYNC[Remote Sync]
+    end
+    
+    style PS fill:#e8f5e8
+    style UI fill:#e3f2fd
+    style DB fill:#fff3e0
+    style WS fill:#fce4ec
+```
+
+### Scheduler Event and Task Management
+
+```mermaid
+sequenceDiagram
+    participant Widget
+    participant Scheduler
+    participant Timer
+    participant TaskQueue
+    participant Executor
+
+    Widget->>Scheduler: register_widget(interval=5s)
+    Scheduler->>Timer: create_timer(5s)
+    Timer-->>Scheduler: timer_handle
+    
+    loop Every 5 seconds
+        Timer->>Scheduler: timer_expired()
+        Scheduler->>TaskQueue: queue_task(widget.update)
+        TaskQueue->>Executor: execute_task()
+        Executor->>Widget: update()
+        Widget-->>Executor: data
+        Executor-->>TaskQueue: result
+        TaskQueue-->>Scheduler: completion
+        Scheduler->>Timer: reset_timer()
+    end
+    
+    Note over Widget,Executor: Metrics available via get_metrics()
+```
+
 ### Deployment Options
 
 -   **Standalone**: Single device with web interface

@@ -1,27 +1,214 @@
-# Byte-compiled / cache files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*$py.class
 *.pyo
 
-# Virtual environment
-gui-env/
-venv/
+# C extensions
+*.so
 
-
-# Local config directory (not in repo)
-.config/piwardrive/
-
-# OS / editor files
-.DS_Store
-*.swp
-
-# logs
-logs/
-
+# Distribution / packaging
+.Python
 build/
-ckml*.so
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+gui-env/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# PiWardrive specific
+*.pcap
+*.pcapng
+*.cap
+*.db
+*.sqlite
+*.sqlite3
+kismet_*.csv
+kismet_*.xml
+kismet_*.json
+kismet_*.netxml
+data/
+logs/
+output/
+reports/
+temp/
+tmp/
+cache/
+
+# Configuration files that may contain secrets
+config/*_secret.yaml
+config/*_private.yaml
+config/*.key
+config/*.pem
+config/*.crt
+config/secrets/
+
+# Runtime generated files
+scan_results_*.json
+threat_intel.db
+performance_metrics.json
+system_state.json
+*.log.*
+*.pid
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Docker volumes and data
+docker/data/
+docker/logs/
+docker/volumes/
+
+# Grafana data
+grafana/data/
+grafana/logs/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Test artifacts
+test_results/
+test_data/
+coverage_reports/
+
+# Performance test outputs
+benchmarks/results/
+benchmarks/data/
+
+# Generated documentation
+docs/build/
+documentation/generated/
+
+# Local development overrides
+local_config.yaml
+dev_config.yaml
+*.local
+
+# Node.js dependencies
 node_modules/
 webui/node_modules/
 webui/dist/
 webui/package-lock.json
+
+# Local config directory (not in repo)
+.config/piwardrive/
+
+# Build artifacts
+ckml*.so
 

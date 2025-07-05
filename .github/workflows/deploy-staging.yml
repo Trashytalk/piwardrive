@@ -76,8 +76,8 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install -e .
           
       - name: Build frontend

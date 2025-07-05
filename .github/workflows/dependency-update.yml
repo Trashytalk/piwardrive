@@ -16,14 +16,14 @@ jobs:
                   cache: "pip"
             - name: Upgrade packages
               run: |
-                  pip install -r requirements.txt -r requirements-dev.txt
+                  pip install -r config/requirements.txt -r requirements-dev.txt
                   pip list --outdated --format=freeze | cut -d= -f1 | xargs -n1 pip install -U
                   pip freeze > requirements.txt
                   pip freeze > requirements-dev.txt
             - name: Run tests
               run: |
-                  pip install -r requirements.txt
-                  pip install -r requirements-dev.txt
+                  pip install -r config/requirements.txt
+                  pip install -r config/requirements-dev.txt
                   pytest -q
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v6

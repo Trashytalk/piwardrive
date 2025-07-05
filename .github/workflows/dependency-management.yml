@@ -37,8 +37,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install pip-audit safety pip-licenses pipdeptree
       
       - name: Run dependency audit
@@ -177,7 +177,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r config/requirements.txt
           pip install pip-licenses
       
       - name: Check licenses

@@ -62,8 +62,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install pytest-benchmark pytest-xdist
           
       - name: Set up test environment
@@ -129,8 +129,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install pytest-benchmark pytest-xdist
           
       - name: Set up test environment
@@ -282,8 +282,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install locust psutil
           
       - name: Set up stress test environment
@@ -353,8 +353,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install locust
           
       - name: Set up load test environment
@@ -403,8 +403,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install memory-profiler pympler objgraph
           
       - name: Run memory profiling
@@ -445,8 +445,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r config/requirements.txt
+          pip install -r config/requirements-dev.txt
           pip install cProfile pstats py-spy
           
       - name: Run CPU profiling
