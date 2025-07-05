@@ -426,6 +426,10 @@ npm run build
 sudo chown -R $USER:$USER ~/.config/piwardrive
 ```
 
+#### Type Checking
+If `mypy` reports duplicate module stubs or cannot find modules, remove any redundant `.pyi` files and set `MYPYPATH=src` before running `mypy`.
+
+
 ### Debugging Tools
 
 #### Python Debugging
