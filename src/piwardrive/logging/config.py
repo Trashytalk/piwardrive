@@ -23,7 +23,10 @@ class LoggingConfig:
             "version": 1,
             "disable_existing_loggers": False,
             "formatters": {
-                "structured": {"()": "piwardrive.logging.structured_logger.StructuredFormatter", "include_extra": True}
+                "structured": {
+                    "()": "piwardrive.logging.structured_logger.StructuredFormatter",
+                    "include_extra": True,
+                }
             },
             "handlers": {
                 "console": {
@@ -39,7 +42,13 @@ class LoggingConfig:
                     "backupCount": 5,
                 },
             },
-            "loggers": {"piwardrive": {"level": "INFO", "handlers": ["console", "file"], "propagate": False}},
+            "loggers": {
+                "piwardrive": {
+                    "level": "INFO",
+                    "handlers": ["console", "file"],
+                    "propagate": False,
+                }
+            },
         }
 
         file_config: Dict[str, Any] = {}
@@ -64,7 +73,11 @@ class LoggingConfig:
         merged: Dict[str, Any] = {}
         for cfg in configs:
             for key, value in cfg.items():
-                if isinstance(value, dict) and key in merged and isinstance(merged[key], dict):
+                if (
+                    isinstance(value, dict)
+                    and key in merged
+                    and isinstance(merged[key], dict)
+                ):
                     merged[key] = self._merge_configs(merged[key], value)
                 else:
                     merged[key] = value
@@ -72,8 +85,10 @@ class LoggingConfig:
 
     def apply(self) -> None:
         """Apply the loaded configuration using ``logging.config``."""
+        file_handler = self.config.get("handlers", {}).get("file")
+        if file_handler and "filename" in file_handler:
+            Path(file_handler["filename"]).parent.mkdir(parents=True, exist_ok=True)
         logging.config.dictConfig(self.config)
 
 
 __all__ = ["LoggingConfig"]
-
