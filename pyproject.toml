@@ -87,7 +87,7 @@ analysis = [
 visualization = [
     "matplotlib>=3.10.3,<4.0.0",
     "plotly>=6.1.2,<7.0.0",
-    "kaleido>=0.2.1,<0.3.0",
+    "kaleido>=0.2.1,<1.1.0",
     "vispy>=0.15.2,<0.16.0",
     "folium",
 ]
