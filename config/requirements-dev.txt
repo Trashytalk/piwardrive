@@ -33,7 +33,7 @@ safety==3.3.0
 
 # ===== DEVELOPMENT TOOLS =====
 # Development utilities and workflow tools
-pre-commit==3.7.1
+pre-commit==4.2.0
 watchgod==0.8.2
 
 # ===== DOCUMENTATION =====
