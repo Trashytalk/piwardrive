@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import * as vs from '../src/vehicleSensors.js';
 
+function setObd(value) {
+  Object.defineProperty(vs, 'obd', { value, writable: true });
+}
+
 describe('vehicleSensors', () => {
   it('returns null when obd missing', () => {
-    vs.obd = null;
+    setObd(null);
     expect(vs.readRpmObd()).toBeNull();
   });
 
@@ -15,10 +19,10 @@ describe('vehicleSensors', () => {
     class DummyConn {
       query() { return { value: new DummyVal(50) }; }
     }
-    vs.obd = {
+    setObd({
       OBD: () => new DummyConn(),
       commands: { ENGINE_LOAD: 'ENGINE_LOAD', RPM: 'RPM' }
-    };
+    });
     expect(vs.readEngineLoadObd()).toBe(50);
     expect(vs.readRpmObd()).toBe(50);
   });
