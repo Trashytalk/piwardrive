@@ -52,7 +52,9 @@ export async function prefetchTiles(bounds, zoom = 16, progressCb) {
           const buf = await resp.arrayBuffer();
           idx[key] = { time: Date.now(), size: buf.byteLength };
         }
-      } catch {}
+      } catch (e) {
+        // ignore caching failures
+      }
     } else {
       idx[key].time = Date.now();
     }

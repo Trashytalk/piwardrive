@@ -1,5 +1,7 @@
 import { execFileSync } from 'child_process';
 
+/* global process */
+
 export function main(dbPath) {
   execFileSync('sqlite3', [dbPath, 'VACUUM']);
 }

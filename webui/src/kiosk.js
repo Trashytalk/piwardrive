@@ -2,6 +2,8 @@ import { spawn as _spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+/* global process */
+
 function which(cmd) {
   const dirs = process.env.PATH.split(path.delimiter);
   for (const d of dirs) {
@@ -9,7 +11,9 @@ function which(cmd) {
     try {
       fs.accessSync(p, fs.constants.X_OK);
       return p;
-    } catch (e) {}
+    } catch (e) {
+      // ignore missing executable
+    }
   }
   return null;
 }

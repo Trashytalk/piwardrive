@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 
+/* global process */
+
 const require = createRequire(import.meta.url);
 
 function pluginDir() {

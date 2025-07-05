@@ -6,13 +6,12 @@ Real-time protocol analysis, topology mapping, and traffic classification
 import struct
 import socket
 import time
-from typing import Dict, List, Optional, Tuple, Any, Set
+from typing import Any, Dict, List, Optional, Set
 from dataclasses import dataclass, field
 from enum import Enum
 from collections import defaultdict, deque
 import hashlib
-import ipaddress
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)

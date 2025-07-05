@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+
+/* global process */
 import { EXPORT_DIR } from './sigintPaths.js';
 
 export function loadSigintData(name) {

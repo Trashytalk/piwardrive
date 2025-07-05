@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 from typing import Any
 
 try:  # pragma: no cover - optional dependency may be missing
@@ -28,7 +27,13 @@ logger = logging.getLogger(__name__)
 class GPSHandler:
     """Simple wrapper around :mod:`gps` providing timeout handling."""
 
-    def __init__(self, host: str | None = None, port: int | None = None, *, timeout: float = 1.0) -> None:
+    def __init__(
+        self,
+        host: str | None = None,
+        port: int | None = None,
+        *,
+        timeout: float = 1.0,
+    ) -> None:
         self.host = host or os.getenv("PW_GPSD_HOST", "127.0.0.1")
         self.port = port or int(os.getenv("PW_GPSD_PORT", 2947))
         self.timeout = timeout
