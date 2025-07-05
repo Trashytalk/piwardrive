@@ -1,7 +1,8 @@
 """Demonstrate running the new detection services."""
 
 import asyncio
-from piwardrive.services import security_analyzer, network_fingerprinting
+
+from piwardrive.services import network_fingerprinting, security_analyzer
 
 
 async def main() -> None:

@@ -8,7 +8,7 @@ export function verifyPassword(password: string, hashed: string): boolean;
 export type BasicAuthHandler = (
   req: any,
   res: any,
-  next: (err?: any) => void,
+  next: (err?: any) => void
 ) => void;
 
 export const basicAuth: BasicAuthHandler;

@@ -1,6 +1,4 @@
 import json
-import os
-import sys
 
 import piwardrive.scripts.service_status as ss
 

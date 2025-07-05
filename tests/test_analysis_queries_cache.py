@@ -10,6 +10,7 @@ from piwardrive.services import analysis_queries
 class CallCounter:
     def __init__(self):
         self.count = 0
+
     async def __call__(self, *a, **k):
         self.count += 1
         return [{"data": 1}]
@@ -23,4 +24,3 @@ def test_cached_fetch(monkeypatch):
     second = asyncio.run(analysis_queries.evil_twin_detection())
     assert first == second == [{"data": 1}]
     assert counter.count == 1
-

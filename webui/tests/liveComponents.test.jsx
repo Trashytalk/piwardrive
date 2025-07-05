@@ -11,7 +11,7 @@ function mockSocket() {
   socket = {
     send: vi.fn(),
     close: vi.fn(),
-    readyState: WebSocket.OPEN
+    readyState: WebSocket.OPEN,
   };
   setTimeout(() => socket.onopen && socket.onopen(), 0);
   return socket;
@@ -26,7 +26,12 @@ describe('live components', () => {
   it('updates live monitoring feed', async () => {
     render(<LiveMonitoring />);
     act(() => {
-      socket.onmessage({ data: JSON.stringify({ detection: { text: 'd1' }, stats: { total: 1 } }) });
+      socket.onmessage({
+        data: JSON.stringify({
+          detection: { text: 'd1' },
+          stats: { total: 1 },
+        }),
+      });
     });
     expect(await screen.findByText('d1')).toBeInTheDocument();
     expect(screen.getByText('Detections: 1')).toBeInTheDocument();
@@ -43,7 +48,12 @@ describe('live components', () => {
   it('updates scanning status', async () => {
     render(<ScanningStatus />);
     act(() => {
-      socket.onmessage({ data: JSON.stringify({ progress: 50, device: { name: 's1', health: 'ok' } }) });
+      socket.onmessage({
+        data: JSON.stringify({
+          progress: 50,
+          device: { name: 's1', health: 'ok' },
+        }),
+      });
     });
     expect(await screen.findByText(/s1/)).toBeInTheDocument();
   });

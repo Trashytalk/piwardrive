@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+
 class BaseMigration(ABC):
     """Abstract base class for database migrations."""
 

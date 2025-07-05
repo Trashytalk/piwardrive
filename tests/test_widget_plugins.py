@@ -1,5 +1,4 @@
 import importlib
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -41,7 +40,9 @@ def _build_c_plugin(plugin_dir: Path) -> None:
         [
             sys.executable,
             "-c",
-            "import sysconfig,sys;sys.stdout.write(sysconfig.get_config_var('EXT_SUFFIX'))",
+            "import sysconfig,
+                sys;sys.stdout.write(sysconfig.get_config_var('EXT_SUFFIX'))",
+                
         ],
         text=True,
     ).strip()

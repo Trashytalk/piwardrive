@@ -172,6 +172,8 @@ def test_detect_rogue_devices_combines_checks() -> None:
         },
     ]
 
-    rogues = network_analytics.detect_rogue_devices(records, eps=0.002, min_samples=2, distance=0.001)
+    rogues = network_analytics.detect_rogue_devices(
+        records, eps=0.002, min_samples=2, distance=0.001
+    )
     assert records[2] in rogues  # nosec B101
     assert records[3] in rogues  # nosec B101

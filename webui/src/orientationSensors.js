@@ -28,7 +28,10 @@ export function resetOrientationMap() {
   ORIENTATION_MAP = { ...DEFAULT_ORIENTATION_MAP };
 }
 
-export function updateOrientationMap(newMap, { clear = false, mapping = null } = {}) {
+export function updateOrientationMap(
+  newMap,
+  { clear = false, mapping = null } = {}
+) {
   const target = mapping || ORIENTATION_MAP;
   if (clear) {
     for (const k in target) delete target[k];
@@ -46,7 +49,10 @@ export function getOrientationDbus() {
   if (!dbus) return null;
   try {
     const bus = dbus.SystemBus();
-    const proxy = bus.get_object('net.hadess.SensorProxy', '/net/hadess/SensorProxy');
+    const proxy = bus.get_object(
+      'net.hadess.SensorProxy',
+      '/net/hadess/SensorProxy'
+    );
     const iface = dbus.Interface(proxy, 'net.hadess.SensorProxy');
     if (!iface.HasAccelerometer()) return null;
     iface.ClaimAccelerometer();

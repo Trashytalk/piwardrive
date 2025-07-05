@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import pickle
+import json
 from typing import Any
 
 from .core.utils import _get_redis_client
@@ -20,13 +20,13 @@ class RedisCache:
         if cli is None:
             return None
         data = await cli.get(self._key(key))
-        return pickle.loads(data) if data else None
+        return json.loads(data) if data else None
 
     async def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         cli = _get_redis_client()
         if cli is None:
             return
-        data = pickle.dumps(value)
+        data = json.dumps(value)
         await cli.set(self._key(key), data, ex=ttl)
 
     async def invalidate(self, key: str) -> None:

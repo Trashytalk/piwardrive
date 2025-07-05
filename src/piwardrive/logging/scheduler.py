@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Callable, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, List
 
 import schedule
 
@@ -26,8 +26,12 @@ class RotationScheduler:
             schedule.every().hour.do(self._check_handler_rotation, handler)
         schedule.every().day.at("02:00").do(self._daily_cleanup, handler)
 
-    def schedule_retention_cleanup(self, retention_manager: LogRetentionManager) -> None:
-        schedule.every().day.at("03:00").do(self._run_retention_cleanup, retention_manager)
+    def schedule_retention_cleanup(
+        self, retention_manager: LogRetentionManager
+    ) -> None:
+        schedule.every().day.at("03:00").do(
+            self._run_retention_cleanup, retention_manager
+        )
 
     async def start(self) -> None:
         self.running = True
@@ -68,4 +72,3 @@ class RotationScheduler:
             asyncio.create_task(retention_manager.cleanup_expired_logs("performance"))
         except Exception as exc:
             logging.error("Error during retention cleanup: %s", exc)
-

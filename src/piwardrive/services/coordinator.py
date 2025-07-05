@@ -14,7 +14,6 @@ from .cluster_manager import ClusterManager, DeviceStatus
 
 logger = logging.getLogger(__name__)
 
-
 # Default global manager instance used by helper functions
 cluster_manager = ClusterManager()
 

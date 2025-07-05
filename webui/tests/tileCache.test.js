@@ -9,9 +9,13 @@ let cache;
 beforeEach(() => {
   store = {};
   global.localStorage = {
-    getItem: k => store[k] || null,
-    setItem: (k, v) => { store[k] = v; },
-    removeItem: k => { delete store[k]; },
+    getItem: (k) => store[k] || null,
+    setItem: (k, v) => {
+      store[k] = v;
+    },
+    removeItem: (k) => {
+      delete store[k];
+    },
   };
   cache = { delete: vi.fn() };
   global.caches = { open: async () => cache };
@@ -36,7 +40,9 @@ describe('purgeOldTiles', () => {
 
     await purgeOldTiles(5);
 
-    expect(cache.delete).toHaveBeenCalledWith('https://tile.openstreetmap.org/16/1/2.png');
+    expect(cache.delete).toHaveBeenCalledWith(
+      'https://tile.openstreetmap.org/16/1/2.png'
+    );
     const saved = JSON.parse(store[INDEX_KEY]);
     expect(saved).toEqual({ '16/3/4': idx['16/3/4'] });
   });
@@ -53,7 +59,9 @@ describe('enforceCacheLimit', () => {
 
     await enforceCacheLimit(250);
 
-    expect(cache.delete).toHaveBeenCalledWith('https://tile.openstreetmap.org/16/1/1.png');
+    expect(cache.delete).toHaveBeenCalledWith(
+      'https://tile.openstreetmap.org/16/1/1.png'
+    );
     const saved = JSON.parse(store[INDEX_KEY]);
     expect(Object.keys(saved)).toEqual(['16/2/2']);
   });

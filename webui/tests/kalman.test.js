@@ -11,7 +11,7 @@ function randomSeries(n, seed = 1) {
   const arr = [];
   for (let i = 0; i < n; i++) {
     x = (x * 16807) % 2147483647;
-    arr.push((x / 2147483646) - 0.5);
+    arr.push(x / 2147483646 - 0.5);
   }
   return arr;
 }

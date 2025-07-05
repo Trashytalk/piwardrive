@@ -11,7 +11,7 @@ export default function Orientation({ data }) {
 
     const load = () => {
       fetch('/orientation')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setInfo)
         .catch(() => setInfo(null));
     };
@@ -24,5 +24,10 @@ export default function Orientation({ data }) {
   if (!info) return <div>Orientation: N/A</div>;
   const angle = info.angle != null ? ` (${info.angle.toFixed(0)}°)` : '';
   const orient = info.orientation != null ? info.orientation : 'N/A';
-  return <div>Orientation: {orient}{angle}</div>;
+  return (
+    <div>
+      Orientation: {orient}
+      {angle}
+    </div>
+  );
 }

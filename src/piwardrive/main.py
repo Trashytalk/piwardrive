@@ -28,8 +28,8 @@ from piwardrive.logging import init_logging
 from piwardrive.persistence import AppState, _db_path, load_app_state, save_app_state
 from piwardrive.scheduler import AsyncScheduler, PollScheduler
 from piwardrive.security import hash_password
-from piwardrive.services.view_refresher import ViewRefresher
 from piwardrive.services.model_trainer import ModelTrainer
+from piwardrive.services.view_refresher import ViewRefresher
 from piwardrive.task_queue import BackgroundTaskQueue
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -217,7 +217,7 @@ class PiWardriveApp:
         self._config_stamp = stamp
         data = load_config()
         self._updating_config = True
-        self.config_data = data
+        self.configdata = data
         for key, val in asdict(data).items():
             if hasattr(self, key):
                 setattr(self, key, val)

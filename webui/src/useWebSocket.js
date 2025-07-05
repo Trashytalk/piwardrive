@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function useWebSocket(url, { onMessage, buffer = false, protocols } = {}) {
+export function useWebSocket(
+  url,
+  { onMessage, buffer = false, protocols } = {}
+) {
   const wsRef = useRef(null);
   const bufferRef = useRef([]);
   const [status, setStatus] = useState('connecting');
@@ -18,11 +21,11 @@ export function useWebSocket(url, { onMessage, buffer = false, protocols } = {})
         ws.onopen = () => {
           setStatus('open');
           if (buffer && bufferRef.current.length) {
-            bufferRef.current.forEach(msg => ws.send(msg));
+            bufferRef.current.forEach((msg) => ws.send(msg));
             bufferRef.current = [];
           }
         };
-        ws.onmessage = ev => {
+        ws.onmessage = (ev) => {
           if (onMessage) onMessage(ev.data);
         };
         ws.onclose = () => {
@@ -46,7 +49,7 @@ export function useWebSocket(url, { onMessage, buffer = false, protocols } = {})
     };
   }, [url, protocols, onMessage, buffer]);
 
-  const send = msg => {
+  const send = (msg) => {
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(msg);

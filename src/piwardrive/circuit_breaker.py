@@ -20,7 +20,7 @@ class CircuitBreaker:
         if self.open and time.time() - self.last_failure < self.reset_timeout:
             raise RuntimeError("Circuit open")
         try:
-            result = await func(*args, **kwargs)
+            __result = await func(*args, **kwargs)
         except Exception:
             self.failures += 1
             self.last_failure = time.time()

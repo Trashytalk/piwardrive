@@ -8,11 +8,15 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
 from piwardrive.database_service import db_service
-from piwardrive.security import hash_secret, verify_password
 from piwardrive.exceptions import ServiceError
+from piwardrive.security import hash_secret, verify_password
 
+from ..health.models import (  # types shared
+    AuthLoginResponse,
+    LogoutResponse,
+    TokenResponse,
+)
 from .dependencies import AUTH_DEP, SECURITY_DEP, ensure_default_user
-from ..health.models import TokenResponse, AuthLoginResponse, LogoutResponse  # types shared
 
 router = APIRouter()
 
@@ -45,6 +49,7 @@ async def logout(token: str = SECURITY_DEP) -> LogoutResponse:
     """Invalidate the provided token."""
     TOKENS.pop(token, None)
     return {"logout": True}
+
 
 # in-memory token store retained for compatibility
 TOKENS: dict[str, str] = {}

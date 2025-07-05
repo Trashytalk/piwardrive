@@ -8,7 +8,10 @@ import { buildGPX, BaseBuilder } from 'gpx-builder';
 
 export const EXPORT_FORMATS = ['csv', 'json', 'gpx', 'kml', 'geojson', 'shp'];
 
-export function filterRecords(records, { ssid, encryption, oui, minSignal, maxAge } = {}) {
+export function filterRecords(
+  records,
+  { ssid, encryption, oui, minSignal, maxAge } = {}
+) {
   const now = Date.now() / 1000;
   const result = [];
   for (const rec of records) {
@@ -53,9 +56,13 @@ function recordsToGeojson(records, fields) {
 }
 
 export async function exportRecords(records, path, fmt, fields = null) {
-  if (fields) records = records.map(r => Object.fromEntries(fields.map(f => [f, r[f]])));
+  if (fields)
+    records = records.map((r) =>
+      Object.fromEntries(fields.map((f) => [f, r[f]]))
+    );
   fmt = fmt.toLowerCase();
-  if (!EXPORT_FORMATS.includes(fmt)) throw new Error(`Unsupported format: ${fmt}`);
+  if (!EXPORT_FORMATS.includes(fmt))
+    throw new Error(`Unsupported format: ${fmt}`);
 
   if (fmt === 'csv') {
     const columns = fields || (records[0] ? Object.keys(records[0]) : []);
@@ -122,12 +129,21 @@ export function estimateLocationFromRssi(points) {
   return [sumLat / total, sumLon / total];
 }
 
-export async function exportMapKml(track, aps, bts, path, { computePosition = false } = {}) {
+export async function exportMapKml(
+  track,
+  aps,
+  bts,
+  path,
+  { computePosition = false } = {}
+) {
   const features = [];
   if (track && track.length) {
     features.push({
       type: 'Feature',
-      geometry: { type: 'LineString', coordinates: track.map(([lat, lon]) => [lon, lat]) },
+      geometry: {
+        type: 'LineString',
+        coordinates: track.map(([lat, lon]) => [lon, lat]),
+      },
       properties: { name: 'Track' },
     });
   }

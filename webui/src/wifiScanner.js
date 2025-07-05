@@ -14,7 +14,9 @@ export function parseIwlist(output) {
       if (current) {
         if (encLines.length) {
           current.encryption = (
-            (current.encryption || '') + ' ' + encLines.join(' ')
+            (current.encryption || '') +
+            ' ' +
+            encLines.join(' ')
           ).trim();
         }
         records.push(current);
@@ -42,12 +44,14 @@ export function parseIwlist(output) {
   if (current) {
     if (encLines.length) {
       current.encryption = (
-        (current.encryption || '') + ' ' + encLines.join(' ')
+        (current.encryption || '') +
+        ' ' +
+        encLines.join(' ')
       ).trim();
     }
     records.push(current);
   }
-  return records.map(r => {
+  return records.map((r) => {
     const vendor = r.bssid ? cachedLookupVendor(r.bssid) : null;
     const heading = getHeading();
     if (vendor) r.vendor = vendor;
@@ -56,7 +60,12 @@ export function parseIwlist(output) {
   });
 }
 
-export function scanWifi(iface = 'wlan0', iwlistCmd = 'iwlist', privCmd = 'sudo', timeout) {
+export function scanWifi(
+  iface = 'wlan0',
+  iwlistCmd = 'iwlist',
+  privCmd = 'sudo',
+  timeout
+) {
   try {
     const args = [];
     if (privCmd) args.push(...privCmd.split(/\s+/));
@@ -64,7 +73,7 @@ export function scanWifi(iface = 'wlan0', iwlistCmd = 'iwlist', privCmd = 'sudo'
     const out = execFileSync(args[0], args.slice(1), {
       encoding: 'utf-8',
       timeout: timeout ? timeout * 1000 : undefined,
-      stdio: ['ignore', 'pipe', 'ignore']
+      stdio: ['ignore', 'pipe', 'ignore'],
     });
     return parseIwlist(out);
   } catch (e) {
@@ -73,18 +82,31 @@ export function scanWifi(iface = 'wlan0', iwlistCmd = 'iwlist', privCmd = 'sudo'
   }
 }
 
-export function asyncScanWifi(iface = 'wlan0', iwlistCmd = 'iwlist', privCmd = 'sudo', timeout) {
-  return new Promise(resolve => {
+export function asyncScanWifi(
+  iface = 'wlan0',
+  iwlistCmd = 'iwlist',
+  privCmd = 'sudo',
+  timeout
+) {
+  return new Promise((resolve) => {
     const args = [];
     if (privCmd) args.push(...privCmd.split(/\s+/));
     args.push(iwlistCmd, iface, 'scanning');
-    execFile(args[0], args.slice(1), {
-      encoding: 'utf-8',
-      timeout: timeout ? timeout * 1000 : undefined,
-      stdio: ['ignore', 'pipe', 'ignore']
-    }, (err, stdout) => {
-      if (err) { resolve([]); return; }
-      resolve(parseIwlist(stdout));
-    });
+    execFile(
+      args[0],
+      args.slice(1),
+      {
+        encoding: 'utf-8',
+        timeout: timeout ? timeout * 1000 : undefined,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      },
+      (err, stdout) => {
+        if (err) {
+          resolve([]);
+          return;
+        }
+        resolve(parseIwlist(stdout));
+      }
+    );
   });
 }

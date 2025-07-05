@@ -11,8 +11,8 @@ export default function LoRaScan() {
   useEffect(() => {
     const load = () => {
       fetch('/lora-scan')
-        .then(r => r.json())
-        .then(d => setCount(d.count))
+        .then((r) => r.json())
+        .then((d) => setCount(d.count))
         .catch(() => setCount(null));
     };
     load();

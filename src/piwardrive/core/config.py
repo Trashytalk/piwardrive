@@ -394,7 +394,7 @@ def load_config(profile: Optional[str] = None) -> Config:
         parent = raw.pop("extends", None)
         if parent and parent not in visited:
             visited.add(parent)
-            parent_data = _load(parent)
+            _parentdata = _load(parent)
             return {**parent_data, **raw}
         return raw
 

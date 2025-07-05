@@ -1,7 +1,4 @@
 import asyncio
-import os
-import sys
-import types
 
 from piwardrive.sigint_suite.cellular.band_scanner.scanner import (
     async_scan_bands,

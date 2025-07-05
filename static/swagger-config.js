@@ -1,11 +1,11 @@
 window.onload = () => {
   window.ui = SwaggerUIBundle({
-    url: "/openapi.json",
-    dom_id: "#swagger-ui",
+    url: '/openapi.json',
+    dom_id: '#swagger-ui',
     presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-    layout: "BaseLayout",
-    docExpansion: "none",
+    layout: 'BaseLayout',
+    docExpansion: 'none',
     validatorUrl: null,
-    oauth2RedirectUrl: window.location.origin + "/docs/oauth2-redirect",
+    oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
   });
 };

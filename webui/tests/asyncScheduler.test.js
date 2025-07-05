@@ -4,7 +4,9 @@ import { PollScheduler, AsyncScheduler } from '../src/scheduler.js';
 vi.useFakeTimers();
 
 describe('PollScheduler', () => {
-  afterEach(() => { vi.clearAllTimers(); });
+  afterEach(() => {
+    vi.clearAllTimers();
+  });
 
   it('accepts async widget', async () => {
     const scheduler = new PollScheduler();
@@ -35,7 +37,9 @@ describe('PollScheduler', () => {
 });
 
 describe('AsyncScheduler', () => {
-  afterEach(() => { vi.clearAllTimers(); });
+  afterEach(() => {
+    vi.clearAllTimers();
+  });
 
   it('runs tasks', async () => {
     const scheduler = new AsyncScheduler();

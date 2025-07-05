@@ -1,15 +1,13 @@
 """Compute summary statistics and graphs for system health records."""
 
 import math
+import os
+import sys
 from dataclasses import asdict
 from statistics import fmean
 from typing import Callable, Dict, List
 
 from piwardrive.persistence import HealthRecord
-
-import os
-import sys
-
 
 try:  # optional dependency
     import pandas as pd
@@ -111,10 +109,9 @@ _ML_HOOKS: list[Callable[[HealthRecord], None]] = []
 
 if (
     HealthAnomalyDetector is not None
-    and (
-        "piwardrive.main" in sys.modules or "piwardrive.service" in sys.modules
-    )
-    and os.getenv("PW_DISABLE_ANOMALY_DETECTION", "0").lower() not in {
+    and ("piwardrive.main" in sys.modules or "piwardrive.service" in sys.modules)
+    and os.getenv("PW_DISABLE_ANOMALY_DETECTION", "0").lower()
+    not in {
         "1",
         "true",
         "yes",

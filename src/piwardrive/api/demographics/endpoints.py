@@ -6,8 +6,8 @@ from typing import Any, Dict
 
 from fastapi import APIRouter
 
-from piwardrive.services import demographic_analytics
 from piwardrive import service
+from piwardrive.services import demographic_analytics
 
 router = APIRouter(prefix="/demographics", tags=["demographics"])
 
@@ -36,4 +36,3 @@ async def get_digital_equity(_auth: Any = service.AUTH_DEP) -> Dict[str, Any]:
 
 
 __all__ = ["router"]
-

@@ -127,7 +127,9 @@ class SmartRotatingHandler(logging.handlers.BaseRotatingHandler):
         if self.policy.min_free_space:
             self.rotation_conditions.append(self._check_free_space)
 
-    def shouldRollover(self, record: Optional[logging.LogRecord]) -> bool:  # type: ignore[override]
+    def shouldRollover(
+        self, record: Optional[logging.LogRecord]
+    ) -> bool:  # type: ignore[override]
         """Check if log should be rotated."""
         with self.rotation_lock:
             return any(condition() for condition in self.rotation_conditions)

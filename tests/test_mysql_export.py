@@ -1,5 +1,4 @@
 import asyncio
-import pytest
 
 import piwardrive.mysql_export as me
 from piwardrive.persistence import HealthRecord
@@ -41,6 +40,7 @@ class DummyConn:
 
 def test_init_schema(monkeypatch):
     conn = DummyConn()
+
     async def fake_connect(*a, **k):
         return conn
 
@@ -54,6 +54,7 @@ def test_init_schema(monkeypatch):
 
 def test_insert_records(monkeypatch):
     conn = DummyConn()
+
     async def fake_connect(*a, **k):
         return conn
 

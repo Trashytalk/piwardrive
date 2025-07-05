@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { loadPluginComponents } from '../src/pluginLoader.js';
 
 const modules = {
-  './components/TestPlugin.jsx': vi.fn(async () => ({ default: () => 'plug' }))
+  './components/TestPlugin.jsx': vi.fn(async () => ({ default: () => 'plug' })),
 };
 
 describe('plugin loader', () => {

@@ -5,7 +5,7 @@ vi.mock('chart.js', () => ({
   CategoryScale: {},
   LinearScale: {},
   PointElement: {},
-  LineElement: {}
+  LineElement: {},
 }));
 vi.mock('react-chartjs-2', () => ({ Line: () => <div /> }));
 import StatsDashboard from '../src/components/StatsDashboard.jsx';
@@ -16,11 +16,11 @@ describe('StatsDashboard', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     origFetch = global.fetch;
-    global.fetch = vi.fn(url => {
+    global.fetch = vi.fn((url) => {
       const map = {
         '/cpu': { percent: 10 },
         '/ram': { percent: 20 },
-        '/storage': { percent: 30 }
+        '/storage': { percent: 30 },
       };
       return Promise.resolve({ json: () => Promise.resolve(map[url]) });
     });

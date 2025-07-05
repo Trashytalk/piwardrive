@@ -7,8 +7,8 @@ import asyncio
 import logging
 import os
 import sqlite3
-from typing import Dict, List, Any
 from datetime import datetime
+from typing import Any, Dict, List
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,35 +16,35 @@ logger = logging.getLogger(__name__)
 
 class DatabaseInitializer:
     """Initialize database with all required tables and indexes."""
-    
+
     def __init__(self, db_path: str):
         self.db_path = db_path
         self.ensure_directory()
-    
+
     def ensure_directory(self):
         """Ensure the database directory exists."""
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-    
+
     def create_database(self):
         """Create database with all required tables and indexes."""
         logger.info(f"Creating database at {self.db_path}")
-        
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         # Set performance pragmas
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.execute("PRAGMA temp_store=MEMORY")
         cursor.execute("PRAGMA cache_size=10000")
-        
+
         # Create schema version table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS schema_version (
                 version INTEGER PRIMARY KEY
             )
         """)
-        
+
         # Create migration tracking table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -52,51 +52,51 @@ class DatabaseInitializer:
                 applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
+
         # Migration 1: Core tables
         self._migration_1_core_tables(cursor)
-        
+
         # Migration 2: Scan sessions
         self._migration_2_scan_sessions(cursor)
-        
+
         # Migration 3: WiFi detections
         self._migration_3_wifi_detections(cursor)
-        
+
         # Migration 4: Bluetooth detections
         self._migration_4_bluetooth_detections(cursor)
-        
+
         # Migration 5: Cellular detections
         self._migration_5_cellular_detections(cursor)
-        
+
         # Migration 6: GPS tracks
         self._migration_6_gps_tracks(cursor)
-        
+
         # Migration 7: Network fingerprints
         self._migration_7_network_fingerprints(cursor)
-        
+
         # Migration 8: Suspicious activities
         self._migration_8_suspicious_activities(cursor)
-        
+
         # Migration 9: Network analytics
         self._migration_9_network_analytics(cursor)
-        
+
         # Migration 10: Performance indexes
         self._migration_10_performance_indexes(cursor)
-        
+
         # Migration 11: Materialized views
         self._migration_11_materialized_views(cursor)
-        
+
         # Set final schema version
         cursor.execute("INSERT OR REPLACE INTO schema_version (version) VALUES (11)")
-        
+
         conn.commit()
         conn.close()
         logger.info("Database initialization completed successfully")
-    
+
     def _migration_1_core_tables(self, cursor):
         """Migration 1: Core application tables."""
         logger.info("Creating core application tables...")
-        
+
         # Health records table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS health_records (
@@ -107,7 +107,7 @@ class DatabaseInitializer:
                 disk_percent REAL
             )
         """)
-        
+
         # App state table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS app_state (
@@ -117,7 +117,7 @@ class DatabaseInitializer:
                 first_run INTEGER
             )
         """)
-        
+
         # Access point cache
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ap_cache (
@@ -129,7 +129,7 @@ class DatabaseInitializer:
                 last_time INTEGER
             )
         """)
-        
+
         # Dashboard settings
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS dashboard_settings (
@@ -138,7 +138,7 @@ class DatabaseInitializer:
                 widgets TEXT
             )
         """)
-        
+
         # Users table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -148,18 +148,18 @@ class DatabaseInitializer:
                 token_created INTEGER
             )
         """)
-        
+
         # Basic indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_health_time ON health_records(timestamp)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_apcache_time ON ap_cache(last_time)")
-        
+
         # Record migration
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (1)")
-    
+
     def _migration_2_scan_sessions(self, cursor):
         """Migration 2: Scan sessions table."""
         logger.info("Creating scan sessions table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS scan_sessions (
                 id TEXT PRIMARY KEY,
@@ -178,18 +178,20 @@ class DatabaseInitializer:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
+
         # Indexes
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id, started_at)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id,
+            started_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON scan_sessions(scan_type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat, location_start_lon)")
-        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat,
+            location_start_lon)")
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (2)")
-    
+
     def _migration_3_wifi_detections(self, cursor):
         """Migration 3: Enhanced WiFi detections table."""
         logger.info("Creating WiFi detections table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS wifi_detections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -232,24 +234,25 @@ class DatabaseInitializer:
                 FOREIGN KEY (scan_session_id) REFERENCES scan_sessions(id)
             )
         """)
-        
+
         # Critical indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_session ON wifi_detections(scan_session_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_bssid ON wifi_detections(bssid)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_ssid ON wifi_detections(ssid)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_time ON wifi_detections(detection_timestamp)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_location ON wifi_detections(latitude, longitude)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_location ON wifi_detections(latitude,
+            longitude)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_signal ON wifi_detections(signal_strength_dbm)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_channel ON wifi_detections(channel)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_encryption ON wifi_detections(encryption_type)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_detections_vendor ON wifi_detections(vendor_name)")
-        
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (3)")
-    
+
     def _migration_4_bluetooth_detections(self, cursor):
         """Migration 4: Bluetooth detections table."""
         logger.info("Creating Bluetooth detections table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS bluetooth_detections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -279,20 +282,21 @@ class DatabaseInitializer:
                 FOREIGN KEY (scan_session_id) REFERENCES scan_sessions(id)
             )
         """)
-        
+
         # Indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_detections_session ON bluetooth_detections(scan_session_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_detections_mac ON bluetooth_detections(mac_address)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_detections_time ON bluetooth_detections(detection_timestamp)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_detections_location ON bluetooth_detections(latitude, longitude)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_detections_location ON bluetooth_detections(latitude,
+            longitude)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_detections_rssi ON bluetooth_detections(rssi_dbm)")
-        
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (4)")
-    
+
     def _migration_5_cellular_detections(self, cursor):
         """Migration 5: Cellular detections table."""
         logger.info("Creating cellular detections table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS cellular_detections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -322,19 +326,21 @@ class DatabaseInitializer:
                 FOREIGN KEY (scan_session_id) REFERENCES scan_sessions(id)
             )
         """)
-        
+
         # Indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_detections_session ON cellular_detections(scan_session_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_detections_cell ON cellular_detections(cell_id, lac)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_detections_cell ON cellular_detections(cell_id,
+            lac)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_detections_time ON cellular_detections(detection_timestamp)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_detections_location ON cellular_detections(latitude, longitude)")
-        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_detections_location ON cellular_detections(latitude,
+            longitude)")
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (5)")
-    
+
     def _migration_6_gps_tracks(self, cursor):
         """Migration 6: GPS tracks table."""
         logger.info("Creating GPS tracks table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS gps_tracks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -354,18 +360,19 @@ class DatabaseInitializer:
                 FOREIGN KEY (scan_session_id) REFERENCES scan_sessions(id)
             )
         """)
-        
+
         # Indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_gps_tracks_session ON gps_tracks(scan_session_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_gps_tracks_time ON gps_tracks(timestamp)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_gps_tracks_location ON gps_tracks(latitude, longitude)")
-        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_gps_tracks_location ON gps_tracks(latitude,
+            longitude)")
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (6)")
-    
+
     def _migration_7_network_fingerprints(self, cursor):
         """Migration 7: Network fingerprints table."""
         logger.info("Creating network fingerprints table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS network_fingerprints (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -383,18 +390,18 @@ class DatabaseInitializer:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
+
         # Indexes
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_fingerprints_bssid ON network_fingerprints(bssid)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_fingerprints_hash ON network_fingerprints(fingerprint_hash)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_fingerprints_classification ON network_fingerprints(classification)")
-        
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (7)")
-    
+
     def _migration_8_suspicious_activities(self, cursor):
         """Migration 8: Suspicious activities table."""
         logger.info("Creating suspicious activities table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS suspicious_activities (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -413,19 +420,19 @@ class DatabaseInitializer:
                 FOREIGN KEY (scan_session_id) REFERENCES scan_sessions(id)
             )
         """)
-        
+
         # Indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_suspicious_session ON suspicious_activities(scan_session_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_suspicious_type ON suspicious_activities(activity_type)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_suspicious_severity ON suspicious_activities(severity)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_suspicious_time ON suspicious_activities(detected_at)")
-        
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (8)")
-    
+
     def _migration_9_network_analytics(self, cursor):
         """Migration 9: Network analytics table."""
         logger.info("Creating network analytics table...")
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS network_analytics (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -447,36 +454,43 @@ class DatabaseInitializer:
                 UNIQUE(bssid, analysis_date)
             )
         """)
-        
+
         # Indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_bssid ON network_analytics(bssid)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_date ON network_analytics(analysis_date)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_suspicious ON network_analytics(suspicious_score)")
-        
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (9)")
-    
+
     def _migration_10_performance_indexes(self, cursor):
         """Migration 10: Additional performance indexes."""
         logger.info("Creating performance indexes...")
-        
+
         # Compound indexes for common queries
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_time_location ON wifi_detections(detection_timestamp, latitude, longitude)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_signal_channel ON wifi_detections(signal_strength_dbm, channel)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_vendor_encryption ON wifi_detections(vendor_name, encryption_type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_ssid_bssid ON wifi_detections(ssid, bssid)")
-        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_time_location ON wifi_detections(detection_timestamp,
+            latitude,
+            longitude)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_signal_channel ON wifi_detections(signal_strength_dbm,
+            channel)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_vendor_encryption ON wifi_detections(vendor_name,
+            encryption_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_wifi_ssid_bssid ON wifi_detections(ssid,
+            bssid)")
+
         # Additional bluetooth indexes
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_manufacturer_type ON bluetooth_detections(manufacturer_name, device_type)")
-        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_bt_manufacturer_type ON bluetooth_detections(manufacturer_name,
+            device_type)")
+
         # Additional cellular indexes
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_network_tech ON cellular_detections(network_name, technology)")
-        
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cellular_network_tech ON cellular_detections(network_name,
+            technology)")
+
         cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (10)")
-    
+
     def _migration_11_materialized_views(self, cursor):
         """Migration 11: Materialized views as tables."""
         logger.info("Creating materialized view tables...")
-        
+
         # Daily detection stats
         cursor.execute("DROP TABLE IF EXISTS daily_detection_stats")
         cursor.execute("""
@@ -496,7 +510,7 @@ class DatabaseInitializer:
                 PRIMARY KEY (detection_date, scan_session_id)
             )
         """)
-        
+
         # Network coverage grid
         cursor.execute("DROP TABLE IF EXISTS network_coverage_grid")
         cursor.execute("""
@@ -511,40 +525,40 @@ class DatabaseInitializer:
                 PRIMARY KEY (lat_grid, lon_grid)
             )
         """)
-        
-        cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (11)")
 
+        cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (11)")
 
 async def main():
     """Initialize the database."""
     print("=== PiWardrive Database Initialization ===\n")
-    
+
     # Default database path
     db_path = os.path.expanduser("~/.config/piwardrive/app.db")
-    
+
     print(f"Initializing database at: {db_path}")
-    
+
     initializer = DatabaseInitializer(db_path)
     initializer.create_database()
-    
+
     print("\n✅ Database initialization completed successfully!")
     print(f"Database created at: {db_path}")
-    
+
     # Run status check
     print("\n=== Post-initialization Status ===")
     from simple_db_check import check_database_status
-    
+
     status = await check_database_status(db_path)
-    print(f"Tables Present ({len(status['tables_present'])}): {', '.join(status['tables_present'])}")
-    print(f"Indexes Present ({len(status['indexes_present'])}): {', '.join(status['indexes_present'])}")
-    
+    print(f"Tables Present ({len(status['tables_present'])}): {',
+        '.join(status['tables_present'])}")
+    print(f"Indexes Present ({len(status['indexes_present'])}): {',
+        '.join(status['indexes_present'])}")
+
     if status["recommendations"]:
         print(f"\nRemaining recommendations:")
         for rec in status["recommendations"]:
             print(f"  - {rec['description']}")
     else:
         print("\n✅ No additional recommendations - database is ready!")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

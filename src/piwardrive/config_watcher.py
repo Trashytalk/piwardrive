@@ -20,12 +20,16 @@ class _ConfigHandler(FileSystemEventHandler):
         self._path = os.path.abspath(path)
         self._callback = callback
 
-    def on_modified(self, event: FileSystemEvent) -> None:  # noqa: V105 - Watchdog callback
+    def on_modified(
+        self, event: FileSystemEvent
+    ) -> None:  # noqa: V105 - Watchdog callback
         """Watchdog callback for modifications to the watched file."""
         if os.path.abspath(event.src_path) == self._path:
             self._callback()
 
-    def on_created(self, event: FileSystemEvent) -> None:  # noqa: V105 - Watchdog callback
+    def on_created(
+        self, event: FileSystemEvent
+    ) -> None:  # noqa: V105 - Watchdog callback
         """Watchdog callback for creation of the watched file."""
         if os.path.abspath(event.src_path) == self._path:
             self._callback()

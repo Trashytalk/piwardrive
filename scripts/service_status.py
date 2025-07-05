@@ -9,7 +9,7 @@ from piwardrive.logconfig import setup_logging
 
 
 def _get_service_statuses(
-    services: tuple[str, ...] | list[str] | None = None
+    services: tuple[str, ...] | list[str] | None = None,
 ) -> dict[str, bool]:
     """Import :mod:`piwardrive.diagnostics` lazily and get statuses."""
     from piwardrive import diagnostics as _diag

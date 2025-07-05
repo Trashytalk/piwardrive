@@ -6,7 +6,7 @@ export default function IncidentResponse() {
   useEffect(() => {
     const load = () => {
       fetch('/incident-response')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setInfo)
         .catch(() => setInfo(null));
     };

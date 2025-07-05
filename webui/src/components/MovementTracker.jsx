@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+} from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 
@@ -15,8 +21,10 @@ function hashId(id) {
 
 function cluster(devices) {
   const clusters = [];
-  devices.forEach(d => {
-    const found = clusters.find(c => Math.hypot(c.x - d.x, c.y - d.y) < 0.0005);
+  devices.forEach((d) => {
+    const found = clusters.find(
+      (c) => Math.hypot(c.x - d.x, c.y - d.y) < 0.0005
+    );
     if (found) {
       found.count += 1;
     } else {
@@ -62,14 +70,25 @@ export default function MovementTracker() {
   return (
     <div>
       <label>
-        <input type="checkbox" checked={privacy} onChange={() => setPrivacy(!privacy)} />
+        <input
+          type="checkbox"
+          checked={privacy}
+          onChange={() => setPrivacy(!privacy)}
+        />
         Anonymize Devices
       </label>
       <h3>Movement Timeline</h3>
       <Line
         data={{
-          labels: timeline.map(t => new Date(t[0]).toLocaleTimeString()),
-          datasets: [{ label: 'Speed m/s', data: speeds, borderColor: 'blue', tension: 0.2 }]
+          labels: timeline.map((t) => new Date(t[0]).toLocaleTimeString()),
+          datasets: [
+            {
+              label: 'Speed m/s',
+              data: speeds,
+              borderColor: 'blue',
+              tension: 0.2,
+            },
+          ],
         }}
         options={{ animation: false, scales: { y: { beginAtZero: true } } }}
       />
@@ -83,9 +102,10 @@ export default function MovementTracker() {
       </ul>
       <h3>Tracked Devices</h3>
       <ul>
-        {devices.map(d => (
+        {devices.map((d) => (
           <li key={d.id}>
-            {privacy ? hashId(d.id) : d.id} at {d.x.toFixed(5)}, {d.y.toFixed(5)}
+            {privacy ? hashId(d.id) : d.id} at {d.x.toFixed(5)},{' '}
+            {d.y.toFixed(5)}
           </li>
         ))}
       </ul>

@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polygon, Polyline, useMapEvents } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  Polygon,
+  Polyline,
+  useMapEvents,
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 export default function GeofenceEditor() {
@@ -18,7 +24,8 @@ export default function GeofenceEditor() {
       const yi = poly[i][1];
       const xj = poly[j][0];
       const yj = poly[j][1];
-      const intersect = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+      const intersect =
+        yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
       if (intersect) inside = !inside;
     }
     return inside;
@@ -26,7 +33,7 @@ export default function GeofenceEditor() {
 
   useEffect(() => {
     fetch('/geofences')
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setPolygons)
       .catch(() => {});
   }, []);
@@ -69,7 +76,7 @@ export default function GeofenceEditor() {
         exit_message: exit_message || null,
       }),
     })
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setPolygons)
       .catch(() => {});
     setCurrent([]);
@@ -77,7 +84,7 @@ export default function GeofenceEditor() {
 
   const removePolygon = (name) => {
     fetch(`/geofences/${encodeURIComponent(name)}`, { method: 'DELETE' })
-      .then(() => setPolygons(polygons.filter(p => p.name !== name)))
+      .then(() => setPolygons(polygons.filter((p) => p.name !== name)))
       .catch(() => {});
   };
 
@@ -89,13 +96,19 @@ export default function GeofenceEditor() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newName }),
     })
-      .then(r => r.json())
-      .then(() => setPolygons(polygons.map(p => p.name === oldName ? { ...p, name: newName } : p)))
+      .then((r) => r.json())
+      .then(() =>
+        setPolygons(
+          polygons.map((p) =>
+            p.name === oldName ? { ...p, name: newName } : p
+          )
+        )
+      )
       .catch(() => {});
   };
 
   const editMessages = (name) => {
-    const poly = polygons.find(p => p.name === name) || {};
+    const poly = polygons.find((p) => p.name === name) || {};
     const enter = window.prompt('Enter message', poly.enter_message || '');
     const exit = window.prompt('Exit message', poly.exit_message || '');
     fetch(`/geofences/${encodeURIComponent(name)}`, {
@@ -106,11 +119,11 @@ export default function GeofenceEditor() {
         exit_message: exit || null,
       }),
     })
-      .then(r => r.json())
-      .then(updated =>
-        setPolygons(polygons.map(p =>
-          p.name === name ? { ...p, ...updated } : p
-        ))
+      .then((r) => r.json())
+      .then((updated) =>
+        setPolygons(
+          polygons.map((p) => (p.name === name ? { ...p, ...updated } : p))
+        )
       )
       .catch(() => {});
   };
@@ -129,12 +142,14 @@ export default function GeofenceEditor() {
         {polygons.map((poly, idx) => (
           <Polygon key={idx} positions={poly.points} />
         ))}
-        {current.length > 1 && <Polyline positions={[...current, current[0]]} />}
+        {current.length > 1 && (
+          <Polyline positions={[...current, current[0]]} />
+        )}
         <ClickHandler />
       </MapContainer>
       <button onClick={finishPolygon}>Finish</button>
       <ul>
-        {polygons.map(poly => {
+        {polygons.map((poly) => {
           const inside = pointInPolygon(position, poly.points);
           return (
             <li key={poly.name}>

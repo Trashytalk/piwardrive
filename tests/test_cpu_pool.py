@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 from piwardrive.cpu_pool import run_cpu_bound

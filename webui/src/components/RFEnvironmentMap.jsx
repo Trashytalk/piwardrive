@@ -17,25 +17,25 @@ export default function RFEnvironmentMap() {
   useEffect(() => {
     const load = async () => {
       try {
-        const p = await fetch('/api/rf/propagation').then(r => r.json());
+        const p = await fetch('/api/rf/propagation').then((r) => r.json());
         setPropagation(p.points || []);
       } catch {
         setPropagation([]);
       }
       try {
-        const c = await fetch('/api/rf/channels').then(r => r.json());
+        const c = await fetch('/api/rf/channels').then((r) => r.json());
         setChannels(c.utilization || []);
       } catch {
         setChannels([]);
       }
       try {
-        const i = await fetch('/api/rf/interference').then(r => r.json());
+        const i = await fetch('/api/rf/interference').then((r) => r.json());
         setInterference(i.sources || []);
       } catch {
         setInterference([]);
       }
       try {
-        const s = await fetch('/api/rf/spectrum').then(r => r.json());
+        const s = await fetch('/api/rf/spectrum').then((r) => r.json());
         setSpectrum(s.overlays || []);
       } catch {
         setSpectrum([]);
@@ -56,8 +56,14 @@ export default function RFEnvironmentMap() {
         />
       ))}
       {channels.map((poly, idx) => (
-        <Polygon key={`c${idx}`} positions={poly.points} pathOptions={{ color: 'purple' }}>
-          <Popup>Ch {poly.channel}: {poly.util}%</Popup>
+        <Polygon
+          key={`c${idx}`}
+          positions={poly.points}
+          pathOptions={{ color: 'purple' }}
+        >
+          <Popup>
+            Ch {poly.channel}: {poly.util}%
+          </Popup>
         </Polygon>
       ))}
       {interference.map((src, idx) => (
@@ -69,7 +75,11 @@ export default function RFEnvironmentMap() {
         />
       ))}
       {spectrum.map((sp, idx) => (
-        <Polygon key={`s${idx}`} positions={sp.area} pathOptions={{ color: 'orange' }} />
+        <Polygon
+          key={`s${idx}`}
+          positions={sp.area}
+          pathOptions={{ color: 'orange' }}
+        />
       ))}
     </MapContainer>
   );

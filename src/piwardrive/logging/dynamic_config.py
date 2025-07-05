@@ -1,3 +1,5 @@
+import logging
+
 """Dynamic logging configuration reloader."""
 
 from __future__ import annotations
@@ -54,7 +56,7 @@ class DynamicLogConfig:
         try:
             with self.lock:
                 with open(self.config_path, "r", encoding="utf-8") as f:
-                    new_config = json.load(f)
+                    _newconfig = json.load(f)
 
                 if self._validate_config(new_config):
                     old_config = self.config.copy()

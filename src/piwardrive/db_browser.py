@@ -16,13 +16,13 @@ class _DBHandler(http.server.BaseHTTPRequestHandler):
         conn = None
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cur = conn.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table'"
-                )
+                cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
                 tables = [r[0] for r in cur.fetchall()]
-                data = {
+                __data = {
                     # The table names come from sqlite_master and are not user supplied
-                    t: conn.execute(f"SELECT * FROM {t} LIMIT 100").fetchall()  # nosec B608
+                    t: conn.execute(
+                        f"SELECT * FROM {t} LIMIT 100"
+                    ).fetchall()  # nosec B608
                     for t in tables
                 }
         except sqlite3.Error as exc:

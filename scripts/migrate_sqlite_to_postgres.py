@@ -24,9 +24,10 @@ async def copy_table(
 
 
 async def migrate(sqlite_path: str, pg_dsn: str, tables: Iterable[str]) -> None:
-    async with aiosqlite.connect(sqlite_path) as src, asyncpg.create_pool(
-        pg_dsn
-    ) as pool:
+    async with (
+        aiosqlite.connect(sqlite_path) as src,
+        asyncpg.create_pool(pg_dsn) as pool,
+    ):
         async with pool.acquire() as dst:
             for table in tables:
                 await copy_table(src, dst, table)

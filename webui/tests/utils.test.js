@@ -9,8 +9,13 @@ describe('formatError', () => {
 
 describe('pointInPolygon', () => {
   it('detects containment', () => {
-    const poly = [ [0,0], [0,1], [1,1], [1,0] ];
-    expect(pointInPolygon([0.5,0.5], poly)).toBe(true);
-    expect(pointInPolygon([1.5,0.5], poly)).toBe(false);
+    const poly = [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ];
+    expect(pointInPolygon([0.5, 0.5], poly)).toBe(true);
+    expect(pointInPolygon([1.5, 0.5], poly)).toBe(false);
   });
 });

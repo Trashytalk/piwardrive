@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../src/logconfig.js', () => ({
-  setupLogging: vi.fn(() => ({ error: vi.fn() }))
+  setupLogging: vi.fn(() => ({ error: vi.fn() })),
 }));
 
 import { setupLogging } from '../src/logconfig.js';

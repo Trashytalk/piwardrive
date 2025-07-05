@@ -1,0 +1,287 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*", "docs*", "benchmarks*", "examples*"]
+
+
+[tool.setuptools.package-data]
+"piwardrive" = ["py.typed", "web_gui/*", "scripts/*.R", "templates/reports/*"]
+
+[project]
+name = "piwardrive"
+version = "0.1.0"
+description = "Headless war-driving toolkit with a browser-based interface"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "PiWardrive contributors"}]
+keywords = ["war-driving", "wireless", "raspberry pi", "mapping"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Utilities",
+]
+
+[project.scripts]
+piwardrive-service = "piwardrive.service:main"
+piwardrive-webui = "piwardrive.webui_server:main"
+health-export = "piwardrive.scripts.health_export:main"
+health-import = "piwardrive.scripts.health_import:main"
+health-stats = "piwardrive.scripts.health_stats:main"
+piwardrive-prefetch = "piwardrive.scripts.prefetch_cli:main"
+service-status = "piwardrive.scripts.service_status:main"
+piwardrive-vacuum = "piwardrive.scripts.vacuum_db:main"
+piwardrive-migrate = "piwardrive.scripts.migrate_db:main"
+prune-db = "piwardrive.scripts.prune_db:main"
+uav-record = "piwardrive.scripts.uav_record:main"
+uav-track-playback = "piwardrive.scripts.uav_track_playback:main"
+piwardrive-mbtiles = "piwardrive.scripts.vector_tile_customizer_cli:main"
+piwardrive-prefetch-batch = "piwardrive.scripts.prefetch_batch:main"
+log-follow = "piwardrive.scripts.log_follow:main"
+config-cli = "piwardrive.scripts.config_cli:main"
+calibrate-orientation = "piwardrive.scripts.calibrate_orientation:main"
+export-orientation-map = "piwardrive.scripts.export_orientation_map:main"
+check-orientation-sensors = "piwardrive.scripts.check_orientation_sensors:main"
+piwardrive-kiosk = "piwardrive.cli.kiosk:main"
+export-log-bundle = "piwardrive.scripts.export_log_bundle:main"
+db-summary = "piwardrive.scripts.db_summary:main"
+piwardrive-maintain-tiles = "piwardrive.scripts.tile_maintenance_cli:main"
+export-gpx = "piwardrive.scripts.export_gpx:main"
+export-shp = "piwardrive.scripts.export_shp:main"
+export-grafana = "piwardrive.scripts.export_grafana:main"
+scan-report = "piwardrive.scripts.scan_report:main"
+# Installation and maintenance scripts
+piwardrive-install = "piwardrive.scripts.install_cli:main"
+piwardrive-deps-audit = "piwardrive.scripts.dependency_audit:main"
+# Field Support & Maintenance Tools
+piwardrive-field-diagnostics = "piwardrive.scripts.field_diagnostics:main"
+piwardrive-problem-reporter = "piwardrive.scripts.problem_reporter:main"
+piwardrive-mobile-diagnostics = "piwardrive.scripts.mobile_diagnostics:main"
+piwardrive-field-status = "piwardrive.scripts.field_status_indicators:main"
+
+[project.optional-dependencies]
+# Performance optimizations
+performance = [
+    "orjson>=3.10.18,<4.0.0",
+    "ujson>=5.10.0,<6.0.0",
+]
+
+# Scientific computing and data analysis
+analysis = [
+    "numpy>=1.24.0",
+    "scipy>=1.15.3,<2.0.0",
+    "pandas>=2.3.0,<3.0.0",
+    "scikit-learn>=1.5.0,<2.0.0",
+]
+
+# Visualization and reporting
+visualization = [
+    "matplotlib>=3.10.3,<4.0.0",
+    "plotly>=6.1.2,<7.0.0",
+    "kaleido>=0.2.1,<0.3.0",
+    "vispy>=0.15.2,<0.16.0",
+    "folium",
+]
+
+# Hardware interfaces for Raspberry Pi
+hardware = [
+    "mpu6050",
+    "pyrtlsdr>=0.3.0,<0.4.0",
+    "bleak>=0.22.3,<0.23.0",
+    "dbus-fast>=2.44.1,<3.0.0",
+    "dbus-python>=1.4.0,<2.0.0",
+]
+
+# External service integrations
+integrations = [
+    "boto3>=1.39.0,<2.0.0",
+    "paho-mqtt>=2.1.0,<3.0.0",
+    "graphene>=3.3,<4.0.0",
+    "dronekit",
+    "rpy2>=3.6.1,<4.0.0",
+]
+
+# Development and testing
+development = [
+    "pytest>=8.4.0,<9.0.0",
+    "pytest-cov>=6.2.1,<7.0.0",
+    "pytest-asyncio>=0.24.0,<1.0.0",
+    "pytest-mock>=3.14.0,<4.0.0",
+    "black>=25.1.0,<26.0.0",
+    "isort>=6.0.1,<7.0.0",
+    "flake8>=7.2.0,<8.0.0",
+    "mypy>=1.16.0,<2.0.0",
+    "pre-commit>=3.7.1,<4.0.0",
+    "bandit>=1.8.5,<2.0.0",
+    "pip-audit>=2.7.3,<3.0.0",
+    "safety>=3.3.0,<4.0.0",
+]
+
+# All optional dependencies for full installation
+all = [
+    "piwardrive[performance,analysis,visualization,hardware,integrations]",
+]
+
+# Tool configurations
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-branch",
+    "--cov-fail-under=80",
+    "--tb=short",
+    "--maxfail=5",
+    "-v",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "hardware: marks tests that require hardware",
+    "network: marks tests that require network access",
+    "performance: marks tests as performance tests",
+    "stress: marks tests as stress tests",
+]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src", "tests"]
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+disallow_any_generics = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_no_return = true
+strict_equality = true
+extra_checks = true
+show_error_codes = true
+show_error_context = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+    "bluetooth.*",
+    "bluez.*",
+    "dbus.*",
+    "gi.*",
+    "rtlsdr.*",
+    "rpy2.*",
+    "dronekit.*",
+    "folium.*",
+    "kaleido.*",
+    "mpu6050.*",
+    "pytest_mock.*",
+    "vispy.*",
+]
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+(
+  /(
+      \.eggs
+    | \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+    | node_modules
+    | docs/conf.py
+    | static
+    | templates
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+known_first_party = ["piwardrive", "pwutils"]
+known_third_party = ["pytest", "numpy", "scipy", "matplotlib", "flask", "sqlalchemy"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip_glob = [
+    "*.pyc",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/node_modules/*",
+    "*/static/*",
+    "*/templates/*",
+    "docs/conf.py",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/build/*",
+    "*/dist/*",
+    "*/node_modules/*",
+    "*/static/*",
+    "*/templates/*",
+    "docs/conf.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs", "static", "templates", "node_modules"]
+skips = ["B101", "B601"]  # Skip assert and shell usage tests
+
+
+
+
+

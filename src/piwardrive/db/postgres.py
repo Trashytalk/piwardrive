@@ -62,7 +62,9 @@ class PostgresAdapter(DatabaseAdapter):
         self._rr_index = (self._rr_index + 1) % len(self.replica_pools)
         return pool
 
-    async def _acquire(self, *, read: bool = False) -> tuple[asyncpg.Connection, asyncpg.Pool]:
+    async def _acquire(
+        self, *, read: bool = False
+    ) -> tuple[asyncpg.Connection, asyncpg.Pool]:
         pool = await self._get_read_pool() if read else self.pool
         assert pool
         conn = await pool.acquire()

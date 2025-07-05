@@ -9,9 +9,11 @@ test('parses options and uploads', async () => {
   const res = await svc.run(
     ['--db', 'file.db', '--url', 'http://x', '--services', 'a', 'b'],
     {
-      uploadDb: async (db, url) => { uploaded = { db, url }; },
+      uploadDb: async (db, url) => {
+        uploaded = { db, url };
+      },
       checkStatus: () => true,
-    },
+    }
   );
   assert.deepStrictEqual(uploaded, { db: 'file.db', url: 'http://x' });
   assert.deepStrictEqual(res, { synced: true, status: { a: true, b: true } });

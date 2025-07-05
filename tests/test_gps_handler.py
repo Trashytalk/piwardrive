@@ -44,7 +44,9 @@ def test_timeout_returns_none(monkeypatch):
 
 
 def test_reconnect_after_error(monkeypatch):
-    packet = types.SimpleNamespace(class_="TPV", lat=1.0, lon=2.0, epx=1.0, epy=1.0, mode=3)
+    packet = types.SimpleNamespace(
+        class_="TPV", lat=1.0, lon=2.0, epx=1.0, epy=1.0, mode=3
+    )
     calls = [True, False]
 
     class Dummy(_DummyBase):

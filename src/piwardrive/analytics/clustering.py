@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Mapping, Tuple, List
+from typing import Iterable, List, Mapping, Tuple
 
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -21,11 +21,7 @@ def cluster_positions(
     """
 
     coords = np.array(
-        [
-            (rec["lat"], rec["lon"])
-            for rec in records
-            if "lat" in rec and "lon" in rec
-        ],
+        [(rec["lat"], rec["lon"]) for rec in records if "lat" in rec and "lon" in rec],
         dtype=float,
     )
     if coords.size == 0:

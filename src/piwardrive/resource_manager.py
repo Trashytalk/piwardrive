@@ -12,7 +12,9 @@ class ResourceManager:
         self._finalizers: list[weakref.finalize] = []
         self._tasks: "weakref.WeakSet[asyncio.Task[Any]]" = weakref.WeakSet()
 
-    def register(self, obj: Any, cleanup: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+    def register(
+        self, obj: Any, cleanup: Callable[..., Any], *args: Any, **kwargs: Any
+    ) -> None:
         """Register ``cleanup`` to run when ``obj`` is garbage collected."""
         self._finalizers.append(weakref.finalize(obj, cleanup, *args, **kwargs))
 

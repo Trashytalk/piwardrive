@@ -7,7 +7,10 @@ export async function controlService(service, action) {
 
   let resp;
   try {
-    resp = await fetch(`/service/${service}/${action}`, { method: 'POST', headers });
+    resp = await fetch(`/service/${service}/${action}`, {
+      method: 'POST',
+      headers,
+    });
   } catch (e) {
     reportError(e, true);
     return false;
@@ -16,7 +19,10 @@ export async function controlService(service, action) {
     password = window.prompt('Admin password');
     if (!password) return false;
     sessionStorage.setItem('adminPassword', password);
-    resp = await fetch(`/service/${service}/${action}`, { method: 'POST', headers: { 'X-Admin-Password': password } });
+    resp = await fetch(`/service/${service}/${action}`, {
+      method: 'POST',
+      headers: { 'X-Admin-Password': password },
+    });
   }
   if (!resp.ok) {
     reportError(new Error(`Failed to ${action} ${service}`), true);

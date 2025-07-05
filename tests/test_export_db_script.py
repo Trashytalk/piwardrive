@@ -4,12 +4,15 @@ import sys
 import pytest
 
 
-@pytest.mark.parametrize("fmt,check", [
-    ("csv", lambda p: "ssid" in p.read_text()),
-    ("json", lambda p: json.loads(p.read_text())[0]["ssid"] == "A"),
-    ("gpx", lambda p: "<wpt" in p.read_text()),
-    ("kml", lambda p: "<Placemark>" in p.read_text()),
-])
+@pytest.mark.parametrize(
+    "fmt,check",
+    [
+        ("csv", lambda p: "ssid" in p.read_text()),
+        ("json", lambda p: json.loads(p.read_text())[0]["ssid"] == "A"),
+        ("gpx", lambda p: "<wpt" in p.read_text()),
+        ("kml", lambda p: "<Placemark>" in p.read_text()),
+    ],
+)
 def test_export_db_script(monkeypatch, tmp_path, fmt, check):
     records = [{"ssid": "A", "bssid": "AA", "lat": 1.0, "lon": 2.0}]
 

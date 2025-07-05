@@ -82,9 +82,7 @@ def histogram(
     else:
         min_lat, min_lon, max_lat, max_lon = map(float, bounds)
 
-    hist = _fill_histogram(
-        pts, bins_lat, bins_lon, min_lat, max_lat, min_lon, max_lon
-    )
+    hist = _fill_histogram(pts, bins_lat, bins_lon, min_lat, max_lat, min_lon, max_lon)
     return hist, (min_lat, max_lat), (min_lon, max_lon)
 
 
@@ -127,7 +125,7 @@ def save_png(hist: Sequence[Sequence[int]], path: str) -> None:
 
     plt.figure(figsize=(3, 3))
     plt.imshow(hist, cmap="hot", origin="lower")
-    plt.axis("off")
+    plt.axis("of")
     plt.tight_layout()
     plt.savefig(path, dpi=100, bbox_inches="tight", pad_inches=0)
     plt.close()

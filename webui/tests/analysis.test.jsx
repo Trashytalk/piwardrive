@@ -5,15 +5,25 @@ import { computeHealthStats } from '../src/analysis.js';
 import CPUTempGraph from '../src/components/CPUTempGraph.jsx';
 
 vi.mock('react-chartjs-2', () => ({
-  Line: vi.fn(() => <div>chart</div>)
+  Line: vi.fn(() => <div>chart</div>),
 }));
 import { Line } from 'react-chartjs-2';
 
 describe('computeHealthStats', () => {
   it('computes averages', () => {
     const records = [
-      { cpu_temp: 40.0, cpu_percent: 10.0, memory_percent: 50.0, disk_percent: 20.0 },
-      { cpu_temp: 50.0, cpu_percent: 20.0, memory_percent: 40.0, disk_percent: 30.0 },
+      {
+        cpu_temp: 40.0,
+        cpu_percent: 10.0,
+        memory_percent: 50.0,
+        disk_percent: 20.0,
+      },
+      {
+        cpu_temp: 50.0,
+        cpu_percent: 20.0,
+        memory_percent: 40.0,
+        disk_percent: 30.0,
+      },
     ];
     const stats = computeHealthStats(records);
     expect(stats.temp_avg).toBeCloseTo(45.0, 1);

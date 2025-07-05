@@ -1,3 +1,5 @@
+import logging
+
 from flask import Blueprint, jsonify, request
 
 from piwardrive.logging.dynamic_config import DynamicLogConfig
@@ -38,6 +40,6 @@ def get_filters():
 @logging_api.route("/filters", methods=["PUT"])
 def update_filters():
     """Update filter configuration."""
-    data = request.get_json()
+    __data = request.get_json()
     # Implementation for updating filters
     return jsonify({"status": "updated"})

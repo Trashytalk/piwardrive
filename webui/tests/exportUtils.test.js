@@ -4,16 +4,38 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import jszip from 'jszip';
 import shapefile from 'shapefile';
-import { filterRecords, exportRecords, exportMapKml } from '../src/exportUtils.js';
+import {
+  filterRecords,
+  exportRecords,
+  exportMapKml,
+} from '../src/exportUtils.js';
 
 describe('filterRecords', () => {
   it('applies filters', () => {
     const records = [
-      { ssid: 'A', encryption: 'WPA2', bssid: 'AA', lat: 1.0, lon: 2.0, signal_dbm: -40, last_time: 80 },
-      { ssid: 'B', encryption: 'OPEN', bssid: 'BB', lat: 3.0, lon: 4.0, signal_dbm: -80, last_time: 20 },
+      {
+        ssid: 'A',
+        encryption: 'WPA2',
+        bssid: 'AA',
+        lat: 1.0,
+        lon: 2.0,
+        signal_dbm: -40,
+        last_time: 80,
+      },
+      {
+        ssid: 'B',
+        encryption: 'OPEN',
+        bssid: 'BB',
+        lat: 3.0,
+        lon: 4.0,
+        signal_dbm: -80,
+        last_time: 20,
+      },
     ];
     vi.spyOn(Date, 'now').mockReturnValue(100000);
-    expect(filterRecords(records, { encryption: 'OPEN' })).toEqual([records[1]]);
+    expect(filterRecords(records, { encryption: 'OPEN' })).toEqual([
+      records[1],
+    ]);
     expect(filterRecords(records, { oui: 'AA' })).toEqual([records[0]]);
     expect(filterRecords(records, { minSignal: -50 })).toEqual([records[0]]);
     expect(filterRecords(records, { maxAge: 30 })).toEqual([records[0]]);
@@ -57,7 +79,10 @@ describe('exportRecords', () => {
 
 describe('exportMapKml', () => {
   it('creates kml and kmz', async () => {
-    const track = [[1.0, 2.0], [3.0, 4.0]];
+    const track = [
+      [1.0, 2.0],
+      [3.0, 4.0],
+    ];
     const aps = [{ ssid: 'A', lat: 1.0, lon: 2.0 }];
     const bts = [{ name: 'bt', lat: 5.0, lon: 6.0 }];
 

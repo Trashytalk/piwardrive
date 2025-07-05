@@ -7,9 +7,11 @@ describe('LogViewer', () => {
   let origFetch;
   beforeEach(() => {
     origFetch = global.fetch;
-    global.fetch = vi.fn(() => Promise.resolve({
-      json: () => Promise.resolve({ lines: ['line1', 'line2'] })
-    }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ lines: ['line1', 'line2'] }),
+      })
+    );
   });
   afterEach(() => {
     global.fetch = origFetch;
@@ -17,7 +19,9 @@ describe('LogViewer', () => {
 
   it('loads logs for given path and lines', async () => {
     render(<LogViewer path="/tmp/test.log" lines={10} />);
-    expect(global.fetch).toHaveBeenCalledWith('/logs?path=%2Ftmp%2Ftest.log&lines=10');
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/logs?path=%2Ftmp%2Ftest.log&lines=10'
+    );
     const pre = await screen.findByText((content, el) => el.tagName === 'PRE');
     expect(pre.textContent).toBe('line1\nline2');
   });

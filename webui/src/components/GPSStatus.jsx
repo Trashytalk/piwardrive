@@ -10,8 +10,8 @@ export default function GPSStatus({ metrics }) {
     }
     const load = () => {
       fetch('/gps')
-        .then(r => r.json())
-        .then(d => setFix(d.fix))
+        .then((r) => r.json())
+        .then((d) => setFix(d.fix))
         .catch(() => setFix(null));
     };
     load();

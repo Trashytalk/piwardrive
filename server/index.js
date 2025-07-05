@@ -8,7 +8,13 @@ function verifyPassword(password, hashed) {
     const data = Buffer.from(hashed, 'base64');
     const salt = data.slice(0, 16);
     const digest = data.slice(16);
-    const check = crypto.pbkdf2Sync(password, salt, 100000, digest.length, 'sha256');
+    const check = crypto.pbkdf2Sync(
+      password,
+      salt,
+      100000,
+      digest.length,
+      'sha256'
+    );
     return crypto.timingSafeEqual(check, digest);
   } catch {
     return false;
@@ -42,7 +48,7 @@ function parseWidgets() {
     'src',
     'piwardrive',
     'widgets',
-    '__init__.py',
+    '__init__.py'
   );
   const script = path.join(__dirname, 'parse_widgets.py');
 
@@ -62,7 +68,7 @@ function parseWidgets() {
       throw new Error(proc.stderr.trim() || 'failed');
     }
     const data = JSON.parse(proc.stdout);
-    if (!Array.isArray(data) || !data.every(w => typeof w === 'string')) {
+    if (!Array.isArray(data) || !data.every((w) => typeof w === 'string')) {
       throw new Error('invalid widget data');
     }
     widgetCache = data;
@@ -81,7 +87,9 @@ function parseWidgets() {
 
 function createServer(opts = {}) {
   const distDir =
-    opts.distDir || process.env.PW_WEBUI_DIST || path.join(__dirname, '..', 'webui', 'dist');
+    opts.distDir ||
+    process.env.PW_WEBUI_DIST ||
+    path.join(__dirname, '..', 'webui', 'dist');
   const healthFile = opts.healthFile || process.env.PW_HEALTH_FILE;
   const app = express();
 
@@ -107,7 +115,7 @@ function createServer(opts = {}) {
 
   app.get('/api/orientation-map', (req, res) => {
     const script =
-      "import json, piwardrive.orientation_sensors as os; print(json.dumps(os.clone_orientation_map()))";
+      'import json, piwardrive.orientation_sensors as os; print(json.dumps(os.clone_orientation_map()))';
     try {
       const { spawnSync } = require('child_process');
       const proc = spawnSync('python3', ['-c', script], { encoding: 'utf8' });

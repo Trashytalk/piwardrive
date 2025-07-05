@@ -1,12 +1,20 @@
 export async function scanOnce() {
   const [wifi, bluetooth] = await Promise.all([
-    fetch('/scan/wifi').then(r => r.json()).catch(() => []),
-    fetch('/scan/bluetooth').then(r => r.json()).catch(() => []),
+    fetch('/scan/wifi')
+      .then((r) => r.json())
+      .catch(() => []),
+    fetch('/scan/bluetooth')
+      .then((r) => r.json())
+      .catch(() => []),
   ]);
   return { wifi, bluetooth };
 }
 
-export function runContinuousScan({ interval = 60, iterations = 0, onResult } = {}) {
+export function runContinuousScan({
+  interval = 60,
+  iterations = 0,
+  onResult,
+} = {}) {
   let count = 0;
   let active = true;
 
@@ -21,5 +29,7 @@ export function runContinuousScan({ interval = 60, iterations = 0, onResult } = 
   };
 
   run();
-  return () => { active = false; };
+  return () => {
+    active = false;
+  };
 }

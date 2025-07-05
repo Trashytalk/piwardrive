@@ -7,14 +7,20 @@ export default function SystemStats() {
     const load = async () => {
       try {
         const [cpuRes, ramRes, diskRes] = await Promise.all([
-          fetch('/cpu').then(r => r.json()).catch(() => null),
-          fetch('/ram').then(r => r.json()).catch(() => null),
-          fetch('/storage').then(r => r.json()).catch(() => null)
+          fetch('/cpu')
+            .then((r) => r.json())
+            .catch(() => null),
+          fetch('/ram')
+            .then((r) => r.json())
+            .catch(() => null),
+          fetch('/storage')
+            .then((r) => r.json())
+            .catch(() => null),
         ]);
         setStats({
           temp: cpuRes && cpuRes.temp != null ? cpuRes.temp : null,
           mem: ramRes && ramRes.percent != null ? ramRes.percent : null,
-          disk: diskRes && diskRes.percent != null ? diskRes.percent : null
+          disk: diskRes && diskRes.percent != null ? diskRes.percent : null,
         });
       } catch (_) {}
     };

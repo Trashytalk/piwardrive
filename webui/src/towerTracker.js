@@ -12,7 +12,12 @@ export class TowerTracker {
   }
 
   async updateTower(towerId, lat, lon, lastSeen = Date.now()) {
-    this.towers.set(towerId, { tower_id: towerId, lat, lon, last_seen: lastSeen });
+    this.towers.set(towerId, {
+      tower_id: towerId,
+      lat,
+      lon,
+      last_seen: lastSeen,
+    });
   }
 
   async getTower(towerId) {
@@ -25,7 +30,13 @@ export class TowerTracker {
 
   async close() {}
 
-  async logTower(towerId, rssi, lat = null, lon = null, timestamp = Date.now()) {
+  async logTower(
+    towerId,
+    rssi,
+    lat = null,
+    lon = null,
+    timestamp = Date.now()
+  ) {
     await this._record(this.towerObs, towerId, {
       tower_id: towerId,
       rssi,
@@ -57,7 +68,13 @@ export class TowerTracker {
       .sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  async logBluetooth(address, name, lat = null, lon = null, timestamp = Date.now()) {
+  async logBluetooth(
+    address,
+    name,
+    lat = null,
+    lon = null,
+    timestamp = Date.now()
+  ) {
     await this._record(this.btObs, address, {
       address,
       name,

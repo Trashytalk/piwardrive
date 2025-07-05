@@ -1,8 +1,8 @@
 import asyncio
 from types import SimpleNamespace
 
-from piwardrive.services import model_trainer
 from piwardrive import analysis, persistence
+from piwardrive.services import model_trainer
 
 
 class DummyScheduler:

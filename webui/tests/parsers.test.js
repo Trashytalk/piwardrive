@@ -6,8 +6,22 @@ describe('parseImsiOutput', () => {
     const output = '12345,310,260,-50\n67890,311,480,-60';
     const recs = parseImsiOutput(output);
     expect(recs).toEqual([
-      { imsi: '12345', mcc: '310', mnc: '260', rssi: '-50', lat: null, lon: null },
-      { imsi: '67890', mcc: '311', mnc: '480', rssi: '-60', lat: null, lon: null },
+      {
+        imsi: '12345',
+        mcc: '310',
+        mnc: '260',
+        rssi: '-50',
+        lat: null,
+        lon: null,
+      },
+      {
+        imsi: '67890',
+        mcc: '311',
+        mnc: '480',
+        rssi: '-60',
+        lat: null,
+        lon: null,
+      },
     ]);
   });
 });

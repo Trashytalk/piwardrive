@@ -1,4 +1,3 @@
-
 export class HealthMonitor {
   constructor(scheduler, interval = 10, collector = null) {
     this.scheduler = scheduler;

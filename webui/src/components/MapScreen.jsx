@@ -3,7 +3,12 @@ import { reportError } from '../exceptionHandler.js';
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
-import { prefetchTiles, routePrefetch, purgeOldTiles, enforceCacheLimit } from '../tileCache.js';
+import {
+  prefetchTiles,
+  routePrefetch,
+  purgeOldTiles,
+  enforceCacheLimit,
+} from '../tileCache.js';
 import { adjustGpsInterval } from '../dynamicGps.js';
 
 function haversine(p1, p2) {
@@ -46,8 +51,8 @@ export default function MapScreen() {
 
   useEffect(() => {
     fetch('/config')
-      .then(r => r.json())
-      .then(c => {
+      .then((r) => r.json())
+      .then((c) => {
         conf.current = {
           poll: c.map_poll_gps ?? 5,
           max: c.map_poll_gps_max ?? 30,
@@ -57,13 +62,12 @@ export default function MapScreen() {
       .catch(() => {});
   }, []);
 
-  
   // load configuration
   useEffect(() => {
     fetch('/config')
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setConfig)
-      .catch(e => reportError(e));
+      .catch((e) => reportError(e));
   }, []);
 
   useEffect(() => {
@@ -75,8 +79,9 @@ export default function MapScreen() {
     for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
       const [lat1, lon1] = poly[i];
       const [lat2, lon2] = poly[j];
-      if ((lon1 > pt[1]) !== (lon2 > pt[1])) {
-        const intersect = (lat2 - lat1) * (pt[1] - lon1) / (lon2 - lon1) + lat1;
+      if (lon1 > pt[1] !== lon2 > pt[1]) {
+        const intersect =
+          ((lat2 - lat1) * (pt[1] - lon1)) / (lon2 - lon1) + lat1;
         if (pt[0] < intersect) inside = !inside;
       }
     }
@@ -96,7 +101,7 @@ export default function MapScreen() {
           const pos = [data.lat, data.lon];
           if (follow) setCenter(pos);
           track.current.push(pos);
-            const now = Date.now();
+          const now = Date.now();
           if (last.current) {
             const dist = haversine(last.current, [data.lat, data.lon]);
             const dt = (now - lastTime.current) / 1000;
@@ -113,8 +118,8 @@ export default function MapScreen() {
           last.current = [data.lat, data.lon];
           lastTime.current = now;
           if (geofencesRef.current.length) {
-            setGeofences(gfs =>
-              gfs.map(g => {
+            setGeofences((gfs) =>
+              gfs.map((g) => {
                 const inside = pointInPoly(pos, g.points);
                 if (inside && !g.inside && g.enter_message) {
                   alert(g.enter_message.replace('{name}', g.name));
@@ -144,10 +149,10 @@ export default function MapScreen() {
       try {
         const resp = await fetch('/export/aps?fmt=geojson');
         const j = await resp.json();
-        const markers = j.features.map(f => ({
+        const markers = j.features.map((f) => ({
           ...f.properties,
           lat: f.geometry.coordinates[1],
-          lon: f.geometry.coordinates[0]
+          lon: f.geometry.coordinates[0],
         }));
         setAps(markers);
       } catch (e) {
@@ -159,8 +164,8 @@ export default function MapScreen() {
 
   useEffect(() => {
     fetch('/geofences')
-      .then(r => r.json())
-      .then(data => setGeofences(data.map(g => ({ ...g, inside: false }))))
+      .then((r) => r.json())
+      .then((data) => setGeofences(data.map((g) => ({ ...g, inside: false }))))
       .catch(() => {});
   }, []);
 
@@ -174,9 +179,9 @@ export default function MapScreen() {
       try {
         const data = JSON.parse(raw);
         if (data.aps && data.aps.length) {
-          setAps(prev => {
-            const map = new Map(prev.map(a => [a.bssid, a]));
-            data.aps.forEach(ap => map.set(ap.bssid, ap));
+          setAps((prev) => {
+            const map = new Map(prev.map((a) => [a.bssid, a]));
+            data.aps.forEach((ap) => map.set(ap.bssid, ap));
             return Array.from(map.values());
           });
         }
@@ -187,14 +192,14 @@ export default function MapScreen() {
 
     const startSse = () => {
       es = new EventSource('/sse/aps');
-      es.onmessage = ev => handle(ev.data);
+      es.onmessage = (ev) => handle(ev.data);
       es.onerror = () => es.close();
     };
 
     if (window.WebSocket) {
       try {
         ws = new WebSocket(`${proto}//${window.location.host}/ws/aps`);
-        ws.onmessage = ev => handle(ev.data);
+        ws.onmessage = (ev) => handle(ev.data);
         ws.onerror = () => {
           ws.close();
           startSse();
@@ -234,7 +239,7 @@ export default function MapScreen() {
     return () => clearInterval(id);
   }, [zoom, config]);
 
-  const filtered = aps.filter(ap => {
+  const filtered = aps.filter((ap) => {
     if (filter.ssid && !(ap.ssid || '').includes(filter.ssid)) return false;
     if (filter.encryption && filter.encryption !== ap.encryption) return false;
     return true;
@@ -245,7 +250,7 @@ export default function MapScreen() {
       center[0] - 0.01,
       center[1] - 0.01,
       center[0] + 0.01,
-      center[1] + 0.01
+      center[1] + 0.01,
     ];
     setPrefetchProgress({ done: 0, total: 0 });
     prefetchTiles(bounds, zoom, (d, t) => {
@@ -287,13 +292,13 @@ export default function MapScreen() {
         <input
           placeholder="SSID filter"
           value={filter.ssid}
-          onChange={e => setFilter({ ...filter, ssid: e.target.value })}
+          onChange={(e) => setFilter({ ...filter, ssid: e.target.value })}
           style={{ marginLeft: '1em' }}
         />
         <input
           placeholder="Encryption"
           value={filter.encryption}
-          onChange={e => setFilter({ ...filter, encryption: e.target.value })}
+          onChange={(e) => setFilter({ ...filter, encryption: e.target.value })}
           style={{ marginLeft: '1em' }}
         />
       </div>
@@ -301,9 +306,13 @@ export default function MapScreen() {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <HeatmapLayer show={showHeatmap} />
         {geofences.map((g, idx) => (
-          <Polygon key={idx} positions={g.points} pathOptions={{ color: 'red' }} />
+          <Polygon
+            key={idx}
+            positions={g.points}
+            pathOptions={{ color: 'red' }}
+          />
         ))}
-        {filtered.map(ap => (
+        {filtered.map((ap) => (
           <Marker key={ap.bssid} position={[ap.lat, ap.lon]}>
             <Popup>{ap.ssid || ap.bssid}</Popup>
           </Marker>

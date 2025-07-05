@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 from piwardrive.sigint_integration import load_sigint_data
 

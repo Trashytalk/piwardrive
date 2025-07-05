@@ -2,9 +2,8 @@ from __future__ import annotations
 
 """Helpers for exporting database tables to various formats."""
 
-from typing import Sequence
 from importlib import resources
-import os
+from typing import Sequence
 
 from piwardrive import export, persistence
 

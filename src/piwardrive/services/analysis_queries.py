@@ -2,24 +2,30 @@ from __future__ import annotations
 
 """Database analysis query helpers."""
 
-from typing import Any, Sequence
 import hashlib
 import threading
+from typing import Any, Sequence
+
 from cachetools import TTLCache
 
-from piwardrive.database_service import db_service
 from piwardrive.cache import RedisCache
+from piwardrive.database_service import db_service
 
 _CACHE_TTL = 300
 _CACHE_MAX_SIZE = 128
 
-_local_cache: TTLCache[str, list[dict[str, Any]]] = TTLCache(maxsize=_CACHE_MAX_SIZE, ttl=_CACHE_TTL)
+_local_cache: TTLCache[str, list[dict[str, Any]]] = TTLCache(
+    maxsize=_CACHE_MAX_SIZE, ttl=_CACHE_TTL
+)
 _cache_lock = threading.Lock()
 _remote_cache = RedisCache(prefix="analysis")
 
-async def _cached_fetch(key: str, query: str, params: Sequence[Any] | None = None, ttl: int = _CACHE_TTL) -> list[dict[str, Any]]:
+
+async def _cached_fetch(
+    key: str, query: str, params: Sequence[Any] | None = None, ttl: int = _CACHE_TTL
+) -> list[dict[str, Any]]:
     params = params or []
-    digest = hashlib.sha1(repr((key, params)).encode()).hexdigest()
+    digest = hashlib.sha256(repr((key, params)).encode()).hexdigest()
     cache_key = f"{key}:{digest}"
     with _cache_lock:
         _local_cache.expire()
@@ -37,6 +43,7 @@ async def _cached_fetch(key: str, query: str, params: Sequence[Any] | None = Non
     await _remote_cache.set(cache_key, result, ttl)
     return result
 
+
 async def evil_twin_detection() -> list[dict[str, Any]]:
     query = """
         SELECT
@@ -52,6 +59,7 @@ async def evil_twin_detection() -> list[dict[str, Any]]:
         ORDER BY bssid_count DESC
     """
     return await _cached_fetch("evil_twin", query)
+
 
 async def signal_strength_analysis() -> list[dict[str, Any]]:
     query = """
@@ -71,6 +79,7 @@ async def signal_strength_analysis() -> list[dict[str, Any]]:
     """
     return await _cached_fetch("signal_strength", query)
 
+
 async def network_security_analysis() -> list[dict[str, Any]]:
     query = """
         SELECT
@@ -84,6 +93,7 @@ async def network_security_analysis() -> list[dict[str, Any]]:
         ORDER BY network_count DESC
     """
     return await _cached_fetch("network_security", query)
+
 
 async def temporal_pattern_analysis() -> list[dict[str, Any]]:
     query = """
@@ -99,16 +109,23 @@ async def temporal_pattern_analysis() -> list[dict[str, Any]]:
     """
     return await _cached_fetch("temporal_pattern", query)
 
+
 async def mobile_device_detection() -> list[dict[str, Any]]:
     query = """
         SELECT
             bssid,
             ssid,
             vendor_name,
-            COUNT(DISTINCT ROUND(latitude,3) || ',' || ROUND(longitude,3)) as unique_locations,
+            COUNT(DISTINCT ROUND(latitude,
+                3) || ',
+                ' || ROUND(longitude,
+                3)) as unique_locations,
+                
             MAX(speed_kmh) as max_speed,
             AVG(signal_strength_dbm) as avg_signal,
-            strftime('%s', MAX(detection_timestamp)) - strftime('%s', MIN(detection_timestamp)) as time_span_seconds
+            strftime('%s',
+                MAX(detection_timestamp)) - strftime('%s',
+                MIN(detection_timestamp)) as time_span_seconds
         FROM wifi_detections
         WHERE latitude IS NOT NULL
           AND longitude IS NOT NULL
@@ -119,10 +136,12 @@ async def mobile_device_detection() -> list[dict[str, Any]]:
     """
     return await _cached_fetch("mobile_device", query)
 
+
 async def clear_cache() -> None:
     with _cache_lock:
         _local_cache.clear()
     await _remote_cache.clear()
+
 
 __all__ = [
     "evil_twin_detection",

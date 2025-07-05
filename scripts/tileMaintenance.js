@@ -19,7 +19,10 @@ async function saveIndex(folder, idx) {
   await fs.writeFile(path.join(folder, INDEX), JSON.stringify(idx));
 }
 
-export async function prefetch(bounds, { zoom = 16, folder = '/mnt/ssd/tiles' } = {}) {
+export async function prefetch(
+  bounds,
+  { zoom = 16, folder = '/mnt/ssd/tiles' } = {}
+) {
   const [minLat, minLon, maxLat, maxLon] = bounds.map(Number);
   const [x1, y1] = deg2num(maxLat, minLon, zoom);
   const [x2, y2] = deg2num(minLat, maxLon, zoom);
@@ -64,7 +67,9 @@ export async function purgeOld(folder = '/mnt/ssd/tiles', days = 30) {
   for (const [key, meta] of Object.entries(idx)) {
     if (meta.time < cutoff) {
       const file = path.join(folder, `${key}.png`);
-      try { await fs.unlink(file); } catch {}
+      try {
+        await fs.unlink(file);
+      } catch {}
       delete idx[key];
     }
   }
@@ -79,7 +84,9 @@ export async function enforceLimit(folder = '/mnt/ssd/tiles', limitMb = 512) {
   for (const [key, meta] of entries) {
     if (total <= max) break;
     const file = path.join(folder, `${key}.png`);
-    try { await fs.unlink(file); } catch {}
+    try {
+      await fs.unlink(file);
+    } catch {}
     total -= meta.size;
     delete idx[key];
   }
@@ -104,7 +111,7 @@ export async function main(argv = process.argv.slice(2)) {
   const opts = parseArgs(rest);
   if (cmd === 'prefetch') {
     const box = opts._.slice(0, 4).map(Number);
-    if (box.length < 4 || box.some(n => Number.isNaN(n))) {
+    if (box.length < 4 || box.some((n) => Number.isNaN(n))) {
       console.error('bounding box required');
       return;
     }
@@ -114,7 +121,9 @@ export async function main(argv = process.argv.slice(2)) {
   } else if (cmd === 'enforce-limit') {
     await enforceLimit(opts.folder, opts.limitMb);
   } else {
-    console.log('Commands: prefetch <minLat> <minLon> <maxLat> <maxLon> [--zoom z] [--folder dir]');
+    console.log(
+      'Commands: prefetch <minLat> <minLon> <maxLat> <maxLon> [--zoom z] [--folder dir]'
+    );
     console.log('          purge-old [--days n] [--folder dir]');
     console.log('          enforce-limit [--limit-mb m] [--folder dir]');
   }

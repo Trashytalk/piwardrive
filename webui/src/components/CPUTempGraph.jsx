@@ -1,5 +1,11 @@
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+} from 'chart.js';
 import { useEffect, useState } from 'react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
@@ -9,7 +15,7 @@ export default function CPUTempGraph({ metrics }) {
 
   useEffect(() => {
     if (metrics && metrics.cpu_temp != null) {
-      setData(prev => [...prev.slice(-59), metrics.cpu_temp]);
+      setData((prev) => [...prev.slice(-59), metrics.cpu_temp]);
     }
   }, [metrics]);
 

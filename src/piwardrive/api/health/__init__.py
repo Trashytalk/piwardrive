@@ -1,4 +1,4 @@
 from .endpoints import router
-from .models import HealthRecordDict, BaselineAnalysisResult
+from .models import BaselineAnalysisResult, HealthRecordDict
 
 __all__ = ["router", "HealthRecordDict", "BaselineAnalysisResult"]

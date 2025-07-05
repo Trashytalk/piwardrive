@@ -33,7 +33,8 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--output') args.output = argv[++i];
-    else if (a === '--lines' || a === '-n') args.lines = parseInt(argv[++i], 10);
+    else if (a === '--lines' || a === '-n')
+      args.lines = parseInt(argv[++i], 10);
     else if (a === '--upload') args.upload = argv[++i];
   }
   return args;
@@ -50,7 +51,8 @@ async function run(argv = process.argv.slice(2), helpers = {}) {
 
   const args = parseArgs(argv);
 
-  const outPath = args.output || path.join(os.tmpdir(), `logs-${Date.now()}.txt`);
+  const outPath =
+    args.output || path.join(os.tmpdir(), `logs-${Date.now()}.txt`);
   const logPath = opts.defaultLogPath();
   const data = opts.tailLines(logPath, args.lines);
   opts.saveLogs(data, outPath);
@@ -63,12 +65,14 @@ async function run(argv = process.argv.slice(2), helpers = {}) {
 }
 
 if (require.main === module) {
-  run().then(r => {
-    console.log(JSON.stringify(r));
-  }).catch(err => {
-    console.error(err.message);
-    process.exit(1);
-  });
+  run()
+    .then((r) => {
+      console.log(JSON.stringify(r));
+    })
+    .catch((err) => {
+      console.error(err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = { run, tailLines, saveLogs, uploadFile, defaultLogPath };

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any, Awaitable, Callable, Mapping, Sequence
-import os
-import typing
 
 from fastapi import Body, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -17,7 +14,6 @@ try:
     import lora_scanner as _lora_scanner
 except Exception:  # pragma: no cover - fall back to real module
     from piwardrive import lora_scanner as _lora_scanner
-
 
 __all__ = [
     "fetch_metrics_async",

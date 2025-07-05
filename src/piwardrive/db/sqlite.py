@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Iterable
-
 import asyncio
+from typing import Any, AsyncIterator, Iterable
 
 import aiosqlite
 
@@ -27,7 +26,9 @@ class SQLiteAdapter(DatabaseAdapter):
         self._rr_index = 0
         self.metrics = {"acquired": 0, "released": 0}
 
-    async def _create_conn(self, path: str, *, readonly: bool = False) -> aiosqlite.Connection:
+    async def _create_conn(
+        self, path: str, *, readonly: bool = False
+    ) -> aiosqlite.Connection:
         if readonly:
             conn = await aiosqlite.connect(f"file:{path}?mode=ro", uri=True)
         else:
@@ -68,7 +69,9 @@ class SQLiteAdapter(DatabaseAdapter):
             await self._close_pool(rp)
         self.replica_pools.clear()
 
-    async def _acquire(self, *, read: bool = False) -> tuple[aiosqlite.Connection, asyncio.Queue[aiosqlite.Connection]]:
+    async def _acquire(
+        self, *, read: bool = False
+    ) -> tuple[aiosqlite.Connection, asyncio.Queue[aiosqlite.Connection]]:
         if read and self.replica_pools:
             pool = self.replica_pools[self._rr_index]
             self._rr_index = (self._rr_index + 1) % len(self.replica_pools)
@@ -84,7 +87,9 @@ class SQLiteAdapter(DatabaseAdapter):
         self.metrics["acquired"] += 1
         return conn, pool
 
-    async def _release(self, pool: asyncio.Queue[aiosqlite.Connection], conn: aiosqlite.Connection) -> None:
+    async def _release(
+        self, pool: asyncio.Queue[aiosqlite.Connection], conn: aiosqlite.Connection
+    ) -> None:
         await pool.put(conn)
         self.metrics["released"] += 1
 

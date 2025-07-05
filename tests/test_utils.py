@@ -1,7 +1,6 @@
 """Tests for various utility helpers."""
 
 import asyncio
-import json
 import logging
 import os
 import sys
@@ -266,8 +265,11 @@ def test_load_kml_parses_features(tmp_path: Any) -> None:
     kml_content = (
         "<?xml version='1.0' encoding='UTF-8'?>"
         "<kml xmlns='http://www.opengis.net/kml/2.2'>"
-        "<Placemark><name>Line</name><LineString><coordinates>0,0 1,1</coordinates></LineString></Placemark>"
-        "<Placemark><name>Pt</name><Point><coordinates>2,2</coordinates></Point></Placemark>"
+        "<Placemark><name>Line</name><LineString><coordinates>0,
+            0 1,
+            1</coordinates></LineString></Placemark>"
+        "<Placemark><name>Pt</name><Point><coordinates>2,
+            2</coordinates></Point></Placemark>"
         "</kml>"
     )
     kml_path = tmp_path / "test.kml"
@@ -281,7 +283,8 @@ def test_load_kmz_parses_features(tmp_path: Any) -> None:
     kml_content = (
         "<?xml version='1.0' encoding='UTF-8'?>"
         "<kml xmlns='http://www.opengis.net/kml/2.2'>"
-        "<Placemark><name>Pt</name><Point><coordinates>3,3</coordinates></Point></Placemark>"
+        "<Placemark><name>Pt</name><Point><coordinates>3,
+            3</coordinates></Point></Placemark>"
         "</kml>"
     )
     kmz_path = tmp_path / "test.kmz"
@@ -515,7 +518,9 @@ def test_safe_request_retries(monkeypatch: Any) -> None:
         def raise_for_status(self) -> None:
             pass
 
-    def get(url: str, timeout: int = 5, expire_after=None) -> Resp:  # type: ignore[override]
+    def get(url: str,
+        timeout: int = 5,
+        expire_after=None) -> Resp:  # type: ignore[override]
         calls.append(url)
         if len(calls) == 1:
             raise Exception("boom")

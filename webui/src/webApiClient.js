@@ -14,5 +14,7 @@ export async function getBt() {
 }
 
 export async function toggleKismet(state) {
-  await fetch(`/api/kismet/toggle?state=${encodeURIComponent(state)}`, { method: 'POST' });
+  await fetch(`/api/kismet/toggle?state=${encodeURIComponent(state)}`, {
+    method: 'POST',
+  });
 }

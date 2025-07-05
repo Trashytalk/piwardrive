@@ -58,7 +58,6 @@ _PLUGIN_LOADERS: Dict[str, Callable[[], type]] = {}
 _WIDGET_CACHE: "weakref.WeakValueDictionary[str, type]" = weakref.WeakValueDictionary()
 _PLUGIN_STAMP: float | None = None
 
-
 __all__: list[str] = [
     "LogViewer",
     "SignalStrengthWidget",

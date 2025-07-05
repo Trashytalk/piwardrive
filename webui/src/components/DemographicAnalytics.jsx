@@ -6,7 +6,7 @@ export default function DemographicAnalytics() {
   useEffect(() => {
     const load = () => {
       fetch('/demographics/social')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setData)
         .catch(() => setData(null));
     };
@@ -19,8 +19,14 @@ export default function DemographicAnalytics() {
 
   return (
     <div>
-      <div>Socioeconomic Correlation: {data.socioeconomic_correlation?.correlation?.toFixed(2)}</div>
-      <div>Avg Tech Adoption: {data.technology_adoption_patterns?.average_access?.toFixed(2)}</div>
+      <div>
+        Socioeconomic Correlation:{' '}
+        {data.socioeconomic_correlation?.correlation?.toFixed(2)}
+      </div>
+      <div>
+        Avg Tech Adoption:{' '}
+        {data.technology_adoption_patterns?.average_access?.toFixed(2)}
+      </div>
       <div>Digital Divide Gap: {data.digital_divide?.gap?.toFixed(2)}</div>
       <div>Community Networks Detected: {data.community_networks?.count}</div>
     </div>

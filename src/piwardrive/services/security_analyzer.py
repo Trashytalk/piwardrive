@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any, Iterable, Mapping, List
+from typing import Any, Iterable, List, Mapping
 
 from piwardrive import persistence
-
 
 _DEF_SEVERITY = {
     "evil_twin": "high",

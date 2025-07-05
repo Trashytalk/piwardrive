@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { hashPassword, verifyPassword, sanitizePath, validateServiceName } from '../src/security.js';
+import {
+  hashPassword,
+  verifyPassword,
+  sanitizePath,
+  validateServiceName,
+} from '../src/security.js';
 
 describe('security helpers', () => {
   it('hashes and verifies password', () => {
@@ -18,7 +23,7 @@ describe('security helpers', () => {
     expect(sanitizePath(p)).toBe(require('path').normalize(p));
   });
 
-  ['../etc/passwd', 'a/../../secret.txt'].forEach(p => {
+  ['../etc/passwd', 'a/../../secret.txt'].forEach((p) => {
     it(`rejects unsafe path ${p}`, () => {
       expect(() => sanitizePath(p)).toThrow();
     });

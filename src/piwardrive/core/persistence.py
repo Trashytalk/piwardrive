@@ -47,7 +47,7 @@ class ShardManager:
             base = os.path.join(config.CONFIG_DIR, "app.db")
         if self.shards == 1:
             return base
-        idx = int(hashlib.sha1(key.encode()).hexdigest(), 16) % self.shards
+        idx = int(hashlib.sha256(key.encode()).hexdigest(), 16) % self.shards
         root, ext = os.path.splitext(base)
         return f"{root}_{idx}{ext}"
 
@@ -938,12 +938,12 @@ async def load_recent_suspicious(limit: int = 10) -> List[Dict[str, Any]]:
     async with _get_conn() as conn:
         cursor = await conn.execute(
             """
-            SELECT 
+            SELECT
                 id, scan_session_id, activity_type, severity, target_bssid,
                 target_ssid, evidence, description, detected_at,
                 latitude, longitude, false_positive, analyst_notes
-            FROM suspicious_activities 
-            ORDER BY detected_at DESC 
+            FROM suspicious_activities
+            ORDER BY detected_at DESC
             LIMIT ?
             """,
             (limit,),
@@ -983,7 +983,7 @@ async def load_daily_detection_stats(
     """Load daily detection statistics."""
     async with _get_conn() as conn:
         query = """
-        SELECT 
+        SELECT
             DATE(detection_timestamp) as date,
             COUNT(*) as total_detections,
             COUNT(DISTINCT bssid) as unique_networks,
@@ -1026,7 +1026,7 @@ async def load_hourly_detection_stats(
     """Load hourly detection statistics."""
     async with _get_conn() as conn:
         query = """
-        SELECT 
+        SELECT
             strftime('%Y-%m-%d %H:00:00', detection_timestamp) as hour,
             COUNT(*) as total_detections,
             COUNT(DISTINCT bssid) as unique_networks,
@@ -1068,7 +1068,7 @@ async def load_network_analytics(
     """Load network analytics records."""
     async with _get_conn() as conn:
         query = """
-        SELECT 
+        SELECT
             bssid, analysis_date, total_detections, unique_locations,
             avg_signal_strength, max_signal_strength, min_signal_strength,
             signal_variance, coverage_radius_meters, mobility_score,
@@ -1111,13 +1111,13 @@ async def load_network_coverage_grid(
     """Load network coverage grid data."""
     async with _get_conn() as conn:
         query = """
-        SELECT 
+        SELECT
             latitude, longitude, COUNT(*) as detection_count,
             AVG(signal_strength_dbm) as avg_signal_strength,
             COUNT(DISTINCT bssid) as unique_networks
         FROM wifi_detections
         WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-        GROUP BY 
+        GROUP BY
             CAST(latitude * 1000 AS INT),
             CAST(longitude * 1000 AS INT)
         ORDER BY detection_count DESC
@@ -1154,6 +1154,7 @@ async def refresh_daily_detection_stats() -> None:
                 COUNT(DISTINCT channel) AS channels_used,
                 COUNT(CASE WHEN encryption_type = 'OPEN' THEN 1 END) AS open_networks,
                 COUNT(CASE WHEN encryption_type LIKE '%WEP%' THEN 1 END) AS wep_networks,
+                    
                 COUNT(CASE WHEN encryption_type LIKE '%WPA%' THEN 1 END) AS wpa_networks
             FROM wifi_detections
             GROUP BY DATE(detection_timestamp), scan_session_id
@@ -1224,7 +1225,7 @@ async def analyze_network_behavior(bssid: str) -> Dict[str, Any]:
         # Get detection stats
         cursor = await conn.execute(
             """
-            SELECT 
+            SELECT
                 COUNT(*) as total_detections,
                 COUNT(DISTINCT latitude || ',' || longitude) as unique_locations,
                 AVG(signal_strength_dbm) as avg_signal,
@@ -1373,7 +1374,7 @@ async def export_detections_to_csv(
 
     async with _get_conn() as conn:
         query = """
-        SELECT 
+        SELECT
             wd.detection_timestamp,
             wd.bssid,
             wd.ssid,
@@ -1493,7 +1494,7 @@ async def validate_detection_data() -> Dict[str, Any]:
         # Check for invalid coordinates
         cursor = await conn.execute(
             """
-            SELECT COUNT(*) FROM wifi_detections 
+            SELECT COUNT(*) FROM wifi_detections
             WHERE latitude IS NOT NULL AND longitude IS NOT NULL
             AND (latitude < -90 OR latitude > 90 OR longitude < -180 OR longitude > 180)
             """
@@ -1551,10 +1552,10 @@ async def cleanup_duplicate_detections() -> int:
         # Find and remove duplicates
         cursor = await conn.execute(
             """
-            DELETE FROM wifi_detections 
+            DELETE FROM wifi_detections
             WHERE id NOT IN (
-                SELECT MIN(id) 
-                FROM wifi_detections 
+                SELECT MIN(id)
+                FROM wifi_detections
                 GROUP BY bssid, detection_timestamp, scan_session_id
             )
             """
@@ -1585,8 +1586,8 @@ async def repair_data_integrity() -> Dict[str, int]:
         # Fix invalid signal strengths (clamp to reasonable range)
         cursor = await conn.execute(
             """
-            UPDATE wifi_detections 
-            SET signal_strength_dbm = CASE 
+            UPDATE wifi_detections
+            SET signal_strength_dbm = CASE
                 WHEN signal_strength_dbm > 0 THEN -30
                 WHEN signal_strength_dbm < -120 THEN -120
                 ELSE signal_strength_dbm
@@ -1599,7 +1600,7 @@ async def repair_data_integrity() -> Dict[str, int]:
         # Remove detections with invalid coordinates
         cursor = await conn.execute(
             """
-            UPDATE wifi_detections 
+            UPDATE wifi_detections
             SET latitude = NULL, longitude = NULL
             WHERE latitude IS NOT NULL AND longitude IS NOT NULL
             AND (latitude < -90 OR latitude > 90 OR longitude < -180 OR longitude > 180)
@@ -1618,8 +1619,8 @@ async def repair_data_integrity() -> Dict[str, int]:
 # Backup and Maintenance Functions
 async def backup_database(backup_path: str) -> Dict[str, Any]:
     """Create a full database backup."""
-    import shutil
     import os
+    import shutil
 
     try:
         db_path = _db_path()
@@ -1685,7 +1686,7 @@ async def analyze_database_performance() -> Dict[str, Any]:
         # Get table sizes
         cursor = await conn.execute(
             """
-            SELECT name, 
+            SELECT name,
                    (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=m.name) as table_count
             FROM sqlite_master m WHERE type='table'
             """

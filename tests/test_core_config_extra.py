@@ -38,8 +38,6 @@ def test_yaml_export_import(tmp_path):
     assert loaded.remote_sync_url == cfg.remote_sync_url
 
 
-
-
 def test_apply_env_overrides_remote_sync_url(monkeypatch):
     base = {"remote_sync_url": "http://old"}
     monkeypatch.setenv("PW_REMOTE_SYNC_URL", "http://example.com")

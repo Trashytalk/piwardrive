@@ -26,16 +26,16 @@ from piwardrive.api.common import (
     run_service_cmd,
     service_status_async,
 )
+from piwardrive.api.demographics import router as demographics_router
 from piwardrive.api.health import router as health_router
 from piwardrive.api.maintenance_jobs import router as maintenance_jobs_router
 from piwardrive.api.monitoring import router as monitoring_router
+from piwardrive.api.performance_dashboard import router as performance_router
 from piwardrive.api.system import collect_widget_metrics as _collect_widget_metrics
 from piwardrive.api.system import router as system_router
 from piwardrive.api.websockets import router as ws_router
 from piwardrive.api.widget_marketplace import router as marketplace_router
 from piwardrive.api.widgets import router as widgets_router
-from piwardrive.api.demographics import router as demographics_router
-from piwardrive.api.performance_dashboard import router as performance_router
 from piwardrive.error_middleware import add_error_middleware
 from piwardrive.routes import analytics as analytics_routes
 from piwardrive.routes import bluetooth as bluetooth_routes
@@ -60,7 +60,6 @@ if cors_origins:
 
 app.add_middleware(AuthMiddleware)
 add_error_middleware(app)
-
 
 app.include_router(wifi_routes.router)
 app.include_router(bluetooth_routes.router)

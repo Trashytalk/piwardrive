@@ -7,7 +7,7 @@ export default function ThreatIntelligence() {
   useEffect(() => {
     const load = () => {
       fetch('/threat-intel')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setInfo)
         .catch(() => setInfo(null));
     };

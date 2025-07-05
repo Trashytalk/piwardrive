@@ -25,7 +25,7 @@ _METRICS: dict[str, List[float]] = defaultdict(list)
 def record_metric(name: str, value: float) -> None:
     """Record a single metric sample."""
     _METRICS[name].append(value)
-    logger.debug("metric %s=%.2f", name, value)
+    logger.debug("metric %s=%.2", name, value)
 
 
 def aggregate_metrics() -> Dict[str, Dict[str, float]]:

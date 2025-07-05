@@ -10,7 +10,9 @@ def _load_receiver(tmp_path, monkeypatch):
         return str(tmp_path)
 
     monkeypatch.setattr("os.path.expanduser", fake_expand)
-    spec = importlib.util.spec_from_file_location("sync_receiver", Path("sync_receiver.py"))
+    spec = importlib.util.spec_from_file_location(
+        "sync_receiver", Path("sync_receiver.py")
+    )
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)  # type: ignore[attr-defined]

@@ -6,7 +6,7 @@ export default function DigitalEquity() {
   useEffect(() => {
     const load = () => {
       fetch('/demographics/equity')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setMetrics)
         .catch(() => setMetrics(null));
     };

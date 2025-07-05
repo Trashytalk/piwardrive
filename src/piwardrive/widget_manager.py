@@ -3,17 +3,15 @@ from __future__ import annotations
 """Lazy widget loading with memory aware cleanup."""
 
 import asyncio
-import importlib
 import os
 import sys
 import weakref
-from importlib import util
 from pathlib import Path
 from typing import Dict, Optional
 
-from .resource_manager import ResourceManager
-from .memory_monitor import MemoryMonitor
 from . import widgets
+from .memory_monitor import MemoryMonitor
+from .resource_manager import ResourceManager
 from .widgets.base import DashboardWidget
 
 
@@ -30,7 +28,9 @@ class LazyWidgetManager:
         self._rm = resource_manager
         self._monitor = memory_monitor or MemoryMonitor(history=1)
         self._threshold_mb = unload_threshold_mb
-        self._instances: "weakref.WeakValueDictionary[str, DashboardWidget]" = weakref.WeakValueDictionary()
+        self._instances: "weakref.WeakValueDictionary[str, DashboardWidget]" = (
+            weakref.WeakValueDictionary()
+        )
         self._locks: Dict[str, asyncio.Lock] = {}
         self._plugin_cache: Dict[str, tuple[str, Path]] = {}
         self._cache_stamp: float | None = None

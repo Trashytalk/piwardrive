@@ -38,7 +38,9 @@ except Exception:  # pragma: no cover - minimal fallback
             delay = REQUEST_RETRY_DELAY
             for attempt in range(REQUEST_RETRY_ATTEMPTS):
                 try:
-                    return requests.request(method, url, headers=headers, timeout=timeout)
+                    return requests.request(
+                        method, url, headers=headers, timeout=timeout
+                    )
                 except Exception as exc:  # pragma: no cover - simple retry
                     last_exc = exc
                     if attempt < REQUEST_RETRY_ATTEMPTS - 1:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
@@ -7,10 +9,9 @@ from piwardrive.database_service import db_service
 from piwardrive.persistence import User
 from piwardrive.security import hash_secret
 
-import os
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 SECURITY_DEP = Depends(oauth2_scheme)
+
 
 async def ensure_default_user() -> None:
     """Create default user account from environment variables if needed."""
@@ -21,6 +22,7 @@ async def ensure_default_user() -> None:
     if await db_service.get_user(username) is None:
         await db_service.save_user(User(username=username, password_hash=pw_hash))
 
+
 async def check_auth(token: str = SECURITY_DEP) -> None:
     """Validate bearer token against stored users."""
     await ensure_default_user()
@@ -29,5 +31,6 @@ async def check_auth(token: str = SECURITY_DEP) -> None:
     user = await db_service.get_user_by_token(hash_secret(token))
     if user is None:
         raise HTTPException(status_code=401, detail="Unauthorized")
+
 
 AUTH_DEP = Depends(check_auth)

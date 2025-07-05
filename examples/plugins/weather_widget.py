@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import requests
+
 from piwardrive.simpleui import Card as MDCard
 from piwardrive.simpleui import Label as MDLabel
 from piwardrive.simpleui import dp
-
 from widgets.base import DashboardWidget
 
 

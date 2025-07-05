@@ -11,25 +11,33 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from piwardrive import service
+from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
 from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
-from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
 from piwardrive.sync import upload_data
-from .models import HealthRecordDict, BaselineAnalysisResult, SyncResponse
+
+from .models import BaselineAnalysisResult, HealthRecordDict, SyncResponse
 
 router = APIRouter()
 
+
 @router.get("/status")
-
-
-async def get_status(limit: int = 5, _auth: Any = service.AUTH_DEP) -> list[HealthRecordDict]:
+async def get_status(
+    limit: int = 5, _auth: Any = service.AUTH_DEP
+) -> list[HealthRecordDict]:
     records = db_service.load_recent_health(limit)
     if inspect.isawaitable(records):
         records = await records
     return [asdict(rec) for rec in records]
 
+
 @router.get("/baseline-analysis")
-async def baseline_analysis_endpoint(limit: int = 10, days: int = 30, threshold: float = 5.0, _auth: Any = service.AUTH_DEP) -> BaselineAnalysisResult:
+async def baseline_analysis_endpoint(
+    limit: int = 10,
+    days: int = 30,
+    threshold: float = 5.0,
+    _auth: Any = service.AUTH_DEP,
+) -> BaselineAnalysisResult:
     recent = db_service.load_recent_health(limit)
     if inspect.isawaitable(recent):
         recent = await recent
@@ -37,6 +45,7 @@ async def baseline_analysis_endpoint(limit: int = 10, days: int = 30, threshold:
     if inspect.isawaitable(baseline):
         baseline = await baseline
     return analyze_health_baseline(recent, baseline, threshold)
+
 
 @router.post("/sync")
 async def sync_records(limit: int = 100, _auth: Any = service.AUTH_DEP) -> SyncResponse:
@@ -48,8 +57,11 @@ async def sync_records(limit: int = 100, _auth: Any = service.AUTH_DEP) -> SyncR
         raise ServiceError("Upload failed", status_code=502)
     return {"uploaded": len(records)}
 
+
 @router.get("/sse/history")
-async def sse_history(request: Request, limit: int = 100, interval: float = 1.0) -> StreamingResponse:
+async def sse_history(
+    request: Request, limit: int = 100, interval: float = 1.0
+) -> StreamingResponse:
     records = await db_service.load_health_history()
     if limit:
         records = records[-limit:]
@@ -65,4 +77,6 @@ async def sse_history(request: Request, limit: int = 100, interval: float = 1.0)
             await service.asyncio.sleep(max(interval, service.MIN_EVENT_INTERVAL))
 
     headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
-    return StreamingResponse(_event_gen(), media_type="text/event-stream", headers=headers)
+    return StreamingResponse(
+        _event_gen(), media_type="text/event-stream", headers=headers
+    )

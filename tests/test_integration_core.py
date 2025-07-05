@@ -1,11 +1,11 @@
 import asyncio
-import json
 import os
+
 from aiohttp import web
 
-from piwardrive.core import persistence as cp
-from piwardrive import config
 import remote_sync as rs
+from piwardrive import config
+from piwardrive.core import persistence as cp
 
 
 def setup_tmp(tmp_path):

@@ -1,0 +1,109 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.6.0 -- /home/homebrew/Documents/piwardrive/venv/bin/python3
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /home/homebrew/Documents/piwardrive
+configfile: pyproject.toml
+plugins: mock-3.14.1, hypothesis-6.135.26, cov-6.2.1, schemathesis-4.0.5, asyncio-0.26.0, subtests-0.14.2, anyio-4.9.0
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 2 items / 5 errors
+
+==================================== ERRORS ====================================
+____ ERROR collecting tests/performance/test_performance_infrastructure.py _____
+venv/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+venv/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:177: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:357: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/ast.py:52: in parse
+    return compile(source, filename, mode, flags,
+E     File "/home/homebrew/Documents/piwardrive/tests/performance/test_performance_infrastructure.py", line 452
+E       assert result.latency_avg < 2.0,
+E                                       ^
+E   SyntaxError: invalid syntax
+__________ ERROR collecting tests/staging/test_staging_environment.py __________
+venv/lib/python3.12/site-packages/_pytest/python.py:498: in importtestmodule
+    mod = import_path(
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+venv/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:177: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:357: in _rewrite_test
+    tree = ast.parse(source, filename=strfn)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/ast.py:52: in parse
+    return compile(source, filename, mode, flags,
+E     File "/home/homebrew/Documents/piwardrive/tests/staging/test_staging_environment.py", line 102
+E       f"Expected {endpoint.expected_status},
+E       ^
+E   SyntaxError: unterminated f-string literal (detected at line 102)
+_____________ ERROR collecting tests/test_advanced_localization.py _____________
+tests/test_advanced_localization.py:4: in <module>
+    from piwardrive.advanced_localization import (
+src/piwardrive/__init__.py:10: in <module>
+    logger = logging.getLogger(__name__)
+             ^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'piwardrive.logging' has no attribute 'getLogger'. Did you mean: 'get_logger'?
+______________ ERROR collecting tests/test_aggregation_service.py ______________
+ImportError while importing test module '/home/homebrew/Documents/piwardrive/tests/test_aggregation_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_aggregation_service.py:5: in <module>
+    from fastapi.testclient import TestClient
+E   ModuleNotFoundError: No module named 'fastapi'
+___________________ ERROR collecting tests/test_analysis.py ____________________
+ImportError while importing test module '/home/homebrew/Documents/piwardrive/tests/test_analysis.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_analysis.py:5: in <module>
+    from piwardrive import analysis
+src/piwardrive/analysis.py:10: in <module>
+    from piwardrive.persistence import HealthRecord
+src/piwardrive/persistence.py:14: in <module>
+    from .core.persistence import *  # noqa: F401,F403,F405
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/piwardrive/core/persistence.py:24: in <module>
+    import aiosqlite
+E   ModuleNotFoundError: No module named 'aiosqlite'
+=========================== short test summary info ============================
+ERROR tests/performance/test_performance_infrastructure.py
+ERROR tests/staging/test_staging_environment.py
+ERROR tests/test_advanced_localization.py - AttributeError: module 'piwardriv...
+ERROR tests/test_aggregation_service.py
+ERROR tests/test_analysis.py
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 5 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 5 errors in 1.86s ===============================

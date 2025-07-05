@@ -1,3 +1,5 @@
+import logging
+
 """Backward compatibility wrapper around the :mod:`remote_sync` package."""
 
 from __future__ import annotations

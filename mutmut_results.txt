@@ -1,0 +1,4 @@
+Usage: mutmut run [OPTIONS] [MUTANT_NAMES]...
+Try 'mutmut run --help' for help.
+
+Error: No such option: --paths-to-mutate

@@ -11,7 +11,8 @@ fake_pydantic = ModuleType("pydantic")
 fake_pydantic.BaseModel = object  # type: ignore[attr-defined]
 fake_pydantic.Field = lambda *a, **k: None  # type: ignore[attr-defined]
 fake_pydantic.ValidationError = type("VE", (), {})  # type: ignore[attr-defined]
-fake_pydantic.field_validator = lambda *a, **k: (lambda f: f)  # type: ignore[attr-defined]  # noqa: E501
+fake_pydantic.field_validator = lambda *a,
+    **k: (lambda f: f)  # type: ignore[attr-defined]  # noqa: E501
 sys.modules.setdefault("pydantic", fake_pydantic)  # noqa: E402
 
 from piwardrive import analysis  # noqa: E402
@@ -75,7 +76,10 @@ def test_plot_cpu_temp_matplotlib_backend(tmp_path: Path, monkeypatch) -> None:
     pyplot.plot = lambda *a, **k: None  # type: ignore[attr-defined]
     pyplot.legend = lambda *a, **k: None  # type: ignore[attr-defined]
     pyplot.tight_layout = lambda *a, **k: None  # type: ignore[attr-defined]
-    pyplot.savefig = lambda p, *a, **k: open(p, "wb").close()  # type: ignore[attr-defined]  # noqa: E501
+    pyplot.savefig = lambda p,
+        *a,
+        **k: open(p,
+        "wb").close()  # type: ignore[attr-defined]  # noqa: E501
     pyplot.close = lambda *a, **k: None  # type: ignore[attr-defined]
     mpl.pyplot = pyplot  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "matplotlib", mpl)
@@ -96,7 +100,10 @@ def test_plot_cpu_temp_no_pandas(tmp_path: Path, monkeypatch):
     pyplot.plot = lambda *a, **k: None  # type: ignore[attr-defined]
     pyplot.legend = lambda *a, **k: None  # type: ignore[attr-defined]
     pyplot.tight_layout = lambda *a, **k: None  # type: ignore[attr-defined]
-    pyplot.savefig = lambda p, *a, **k: open(p, "wb").close()  # type: ignore[attr-defined]  # noqa: E501
+    pyplot.savefig = lambda p,
+        *a,
+        **k: open(p,
+        "wb").close()  # type: ignore[attr-defined]  # noqa: E501
     pyplot.close = lambda *a, **k: None  # type: ignore[attr-defined]
     mpl.pyplot = pyplot  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "matplotlib", mpl)

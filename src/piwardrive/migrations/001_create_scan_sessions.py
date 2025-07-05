@@ -30,23 +30,19 @@ class Migration(BaseMigration):
             """
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id, started_at)"
+            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id,
+                started_at)"
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON scan_sessions(scan_type)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat, location_start_lon)"
+            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat,
+                location_start_lon)"
         )
 
     async def rollback(self, conn) -> None:
-        await conn.execute(
-            "DROP INDEX IF EXISTS idx_scan_sessions_device_time"
-        )
-        await conn.execute(
-            "DROP INDEX IF EXISTS idx_scan_sessions_type"
-        )
-        await conn.execute(
-            "DROP INDEX IF EXISTS idx_scan_sessions_location"
-        )
+        await conn.execute("DROP INDEX IF EXISTS idx_scan_sessions_device_time")
+        await conn.execute("DROP INDEX IF EXISTS idx_scan_sessions_type")
+        await conn.execute("DROP INDEX IF EXISTS idx_scan_sessions_location")
         await conn.execute("DROP TABLE IF EXISTS scan_sessions")

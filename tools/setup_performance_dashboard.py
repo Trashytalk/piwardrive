@@ -2,37 +2,57 @@
 """
 Performance Dashboard Setup Script
 
-This script helps set up and validate the performance optimization dashboard integration.
+This script helps set up \and
+    validate the performance optimization dashboard integration.
 """
 
-import os
-import sys
-import subprocess
 import importlib.util
+import subprocess
+import sys
 from pathlib import Path
+
 
 def check_module(module_name: str) -> bool:
     """Check if a module is available."""
     spec = importlib.util.find_spec(module_name)
     return spec is not None
 
+
 def install_missing_dependencies():
     """Install missing dependencies."""
     print("🔧 Installing missing dependencies...")
-    
+
     # Check for basic dependencies
-    required_modules = ['psutil', 'pydantic', 'fastapi', 'aiohttp', 'bcrypt', 'requests']
+    required_modules = [
+        "psutil",
+        "pydantic",
+        "fastapi",
+        "aiohttp",
+        "bcrypt",
+        "requests",
+    ]
     missing = [mod for mod in required_modules if not check_module(mod)]
-    
+
     if missing:
         print(f"Missing modules: {missing}")
-        
+
         # Try to install requirements
         requirements_file = Path(__file__).parent / "requirements.txt"
         if requirements_file.exists():
             try:
-                subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(requirements_file)], 
-                             check=True, capture_output=True, text=True)
+                subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "install",
+                        "-r",
+                        str(requirements_file),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
                 print("✓ Dependencies installed successfully")
                 return True
             except subprocess.CalledProcessError as e:
@@ -45,65 +65,74 @@ def install_missing_dependencies():
         print("✓ All dependencies are available")
         return True
 
+
 def validate_integration():
     """Validate the performance dashboard integration."""
     print("🔍 Validating performance dashboard integration...")
-    
+
     try:
         # Add src to Python path
         src_path = Path(__file__).parent.parent / "src"
         if src_path not in sys.path:
             sys.path.insert(0, str(src_path))
-        
+
         # Test individual modules
         print("  Testing performance module imports...")
-        
+
         # Test database optimizer
         from piwardrive.performance.db_optimizer import DatabaseOptimizer
-        db_opt = DatabaseOptimizer(":memory:")
+
+        _db_opt = DatabaseOptimizer(":memory:")
         print("  ✓ Database optimizer ready")
-        
+
         # Test async optimizer
         from piwardrive.performance.async_optimizer import AsyncOptimizer
-        async_opt = AsyncOptimizer()
+
+        _async_opt = AsyncOptimizer()
         print("  ✓ Async optimizer ready")
-        
+
         # Test realtime optimizer
         from piwardrive.performance.realtime_optimizer import RealtimeOptimizer
-        rt_opt = RealtimeOptimizer()
+
+        _rt_opt = RealtimeOptimizer()
         print("  ✓ Realtime optimizer ready")
-        
+
         # Test performance dashboard API
         from piwardrive.api.performance_dashboard import router
+
         print("  ✓ Performance dashboard router ready")
-        
+
         # Test CLI tool
         cli_path = Path(__file__).parent / "scripts" / "performance_cli.py"
         if cli_path.exists():
             print("  ✓ Performance CLI tool available")
         else:
             print("  ❌ Performance CLI tool not found")
-        
+
         # Test dashboard template
-        template_path = Path(__file__).parent / "templates" / "performance_dashboard.html"
+        template_path = (
+            Path(__file__).parent / "templates" / "performance_dashboard.html"
+        )
         if template_path.exists():
             print("  ✓ Performance dashboard template available")
         else:
             print("  ❌ Performance dashboard template not found")
-        
+
         print("✅ Integration validation successful!")
         return True
-        
+
     except Exception as e:
         print(f"❌ Integration validation failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def create_sample_config():
     """Create sample configuration for performance optimization."""
     print("📋 Creating sample performance configuration...")
-    
+
     config_content = """
 # Performance Optimization Configuration
 # Copy this to your main configuration file
@@ -119,7 +148,7 @@ PERFORMANCE_CONFIG = {
         "enable_monitoring": True, # Enable performance monitoring
         "auto_optimize": True,     # Enable automatic optimization
     },
-    
+
     # Async optimization settings
     "async": {
         "max_pool_size": 100,      # Maximum connection pool size
@@ -130,7 +159,7 @@ PERFORMANCE_CONFIG = {
         "enable_monitoring": True,  # Enable async monitoring
         "auto_optimize": True,      # Enable automatic optimization
     },
-    
+
     # Real-time optimization settings
     "realtime": {
         "max_connections": 1000,   # Maximum WebSocket connections
@@ -141,7 +170,7 @@ PERFORMANCE_CONFIG = {
         "enable_monitoring": True, # Enable realtime monitoring
         "auto_optimize": True,     # Enable automatic optimization
     },
-    
+
     # Dashboard settings
     "dashboard": {
         "enable": True,           # Enable performance dashboard
@@ -155,12 +184,13 @@ PERFORMANCE_CONFIG = {
     }
 }
 """
-    
+
     config_path = Path(__file__).parent / "performance_config_sample.py"
     with open(config_path, "w") as f:
         f.write(config_content)
-    
+
     print(f"✓ Sample configuration created at: {config_path}")
+
 
 def show_usage_examples():
     """Show usage examples for the performance tools."""
@@ -170,63 +200,69 @@ def show_usage_examples():
     print("   python scripts/performance_cli.py optimize --component database")
     print("   python scripts/performance_cli.py monitor --duration 60")
     print("   python scripts/performance_cli.py benchmark --all")
-    
+
     print("\n2. Dashboard Access:")
     print("   Stats: GET /performance/stats")
     print("   Alerts: GET /performance/alerts")
     print("   Recommendations: GET /performance/recommendations")
     print("   Optimize: POST /performance/optimize")
     print("   Dashboard UI: /performance/dashboard")
-    
+
     print("\n3. Python API Usage:")
-    print("""
-   from piwardrive.performance import DatabaseOptimizer, AsyncOptimizer, RealtimeOptimizer
-   
+    print(
+        """
+   from piwardrive.performance import DatabaseOptimizer,
+       AsyncOptimizer,
+       RealtimeOptimizer
+
    # Database optimization
    db_optimizer = DatabaseOptimizer("/path/to/database.db")
    stats = db_optimizer.get_stats()
    recommendations = db_optimizer.get_recommendations()
    result = db_optimizer.optimize()
-   
+
    # Async optimization
    async_optimizer = AsyncOptimizer()
    async with async_optimizer.monitor_operation("api_call") as monitor:
        result = await some_async_operation()
-   
+
    # Real-time optimization
    rt_optimizer = RealtimeOptimizer()
    await rt_optimizer.optimize_websockets()
-""")
+"""
+    )
+
 
 def main():
     """Main setup function."""
     print("🚀 PiWardrive Performance Dashboard Setup")
     print("=" * 50)
-    
+
     # Check and install dependencies
     if not install_missing_dependencies():
         print("❌ Setup failed due to missing dependencies")
         return False
-    
+
     # Validate integration
     if not validate_integration():
         print("❌ Setup failed due to integration issues")
         return False
-    
+
     # Create sample configuration
     create_sample_config()
-    
+
     # Show usage examples
     show_usage_examples()
-    
+
     print("\n✅ Performance Dashboard Setup Complete!")
     print("\nNext steps:")
     print("1. Review and customize performance_config_sample.py")
     print("2. Start your PiWardrive application")
     print("3. Access the performance dashboard at /performance/dashboard")
     print("4. Run CLI tools for analysis and optimization")
-    
+
     return True
+
 
 if __name__ == "__main__":
     success = main()

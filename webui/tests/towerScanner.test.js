@@ -4,7 +4,11 @@ vi.mock('child_process', () => {
   const execFile = vi.fn();
   return { execFileSync, execFile, default: { execFileSync, execFile } };
 });
-import { parseTowerOutput, scanTowers, asyncScanTowers } from '../src/towerScanner.js';
+import {
+  parseTowerOutput,
+  scanTowers,
+  asyncScanTowers,
+} from '../src/towerScanner.js';
 import * as childProcess from 'child_process';
 
 describe('parseTowerOutput', () => {
@@ -33,7 +37,9 @@ describe('asyncScanTowers', () => {
       cb(null, '123,-70');
     });
     const res = await asyncScanTowers('dummy');
-    expect(res).toEqual([{ tower_id: '123', rssi: '-70', lat: null, lon: null }]);
+    expect(res).toEqual([
+      { tower_id: '123', rssi: '-70', lat: null, lon: null },
+    ]);
     expect(childProcess.execFile).toHaveBeenCalled();
   });
 });

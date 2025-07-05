@@ -1,4 +1,7 @@
 [flake8]
 max-line-length = 88
-extend-ignore = E203,W503
-exclude = tests,.gitattributes,screens,widgets,docs/conf.py,node_modules
+extend-ignore = E203,E501,W503,W504
+exclude = .git,__pycache__,docs/conf.py,build,dist,node_modules,static,templates,venv,.venv,.tox,.pytest_cache,.mypy_cache
+per-file-ignores = 
+    __init__.py:F401
+    tests/*:S101

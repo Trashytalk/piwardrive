@@ -1,0 +1,100 @@
+WARNING: Error in file src/piwardrive/mysql_export.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/diagnostics.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/remote_sync.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/error_middleware.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/services/db_monitor.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/performance/realtime_optimizer.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/performance/db_optimizer.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/performance/optimization.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/ui/user_experience.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/sigint_suite/cellular/imsi_catcher/scanner.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/sigint_suite/cellular/tower_tracker/tracker.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/migrations/004_create_gps_tracks.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/migrations/001_create_scan_sessions.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/migrations/003_create_bluetooth_detections.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/migrations/010_performance_indexes.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/navigation/offline_navigation.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/geospatial/intelligence.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/enhanced/critical_additions.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/protocols/multi_protocol.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/api/performance_dashboard.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/mining/advanced_data_mining.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/logging/dynamic_config.py: Cannot parse file.
+WARNING: Error in file src/piwardrive/signal/rf_spectrum.py: Cannot parse file.
+src/gps_handler.py:30 in public method `__init__`:
+        D107: Missing docstring in __init__
+
+        All modules should normally have docstrings.  [...] all functions and
+        classes exported by a module should also have docstrings. Public
+        methods (including the __init__ constructor) should also have
+        docstrings.
+        Note: Public (exported) definitions are either those with names listed
+              in __all__ variable (if present), or those that do not start
+              with a single underscore.
+
+
+src/gps_handler.py:61 in private method `_get_report`:
+        D202: No blank lines allowed after function docstring (found 1)
+
+        There's no blank line either before or after the docstring unless directly
+        followed by an inner function or class.
+
+
+src/gps_handler.py:82 in public method `get_position`:
+        D102: Missing docstring in public method
+
+        All modules should normally have docstrings.  [...] all functions and
+        classes exported by a module should also have docstrings. Public
+        methods (including the __init__ constructor) should also have
+        docstrings.
+        Note: Public (exported) definitions are either those with names listed
+              in __all__ variable (if present), or those that do not start
+              with a single underscore.
+
+
+src/gps_handler.py:95 in public method `get_accuracy`:
+        D102: Missing docstring in public method
+
+        All modules should normally have docstrings.  [...] all functions and
+        classes exported by a module should also have docstrings. Public
+        methods (including the __init__ constructor) should also have
+        docstrings.
+        Note: Public (exported) definitions are either those with names listed
+              in __all__ variable (if present), or those that do not start
+              with a single underscore.
+
+
+src/gps_handler.py:108 in public method `get_fix_quality`:
+        D102: Missing docstring in public method
+
+        All modules should normally have docstrings.  [...] all functions and
+        classes exported by a module should also have docstrings. Public
+        methods (including the __init__ constructor) should also have
+        docstrings.
+        Note: Public (exported) definitions are either those with names listed
+              in __all__ variable (if present), or those that do not start
+              with a single underscore.
+
+
+src/gps_handler.py:121 in public method `close`:
+        D102: Missing docstring in public method
+
+        All modules should normally have docstrings.  [...] all functions and
+        classes exported by a module should also have docstrings. Public
+        methods (including the __init__ constructor) should also have
+        docstrings.
+        Note: Public (exported) definitions are either those with names listed
+              in __all__ variable (if present), or those that do not start
+              with a single underscore.
+
+
+src/sync.py:1 at module level:
+        D100: Missing docstring in public module
+
+        All modules should normally have docstrings.  [...] all functions and
+        classes exported by a module should also have docstrings. Public
+        methods (including the __init__ constructor) should also have
+        docstrings.
+        Note: Public (exported) definitions are either those with names listed
+              in __all__ variable (if present), or those that do not start
+              with a single underscore.

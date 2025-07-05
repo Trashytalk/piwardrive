@@ -15,7 +15,10 @@ function setupEnv() {
 describe('widgetPlugins', () => {
   beforeEach(() => {
     setupEnv();
-    fs.writeFileSync(path.join(pluginDir, 'plug1.js'), 'exports.Widget1 = function(){}');
+    fs.writeFileSync(
+      path.join(pluginDir, 'plug1.js'),
+      'exports.Widget1 = function(){}'
+    );
     mod = require('../src/widgetPlugins.js');
   });
 
@@ -32,7 +35,10 @@ describe('widgetPlugins', () => {
 
   it('clears cache and reloads', () => {
     mod.listPlugins();
-    fs.writeFileSync(path.join(pluginDir, 'plug2.js'), 'exports.Widget2 = function(){}');
+    fs.writeFileSync(
+      path.join(pluginDir, 'plug2.js'),
+      'exports.Widget2 = function(){}'
+    );
     mod.clearPluginCache();
     const names = mod.listPlugins();
     expect(names).toContain('Widget2');

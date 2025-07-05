@@ -7,7 +7,10 @@ let lastNetworkOk = 0;
 
 function getCpuTemp() {
   try {
-    const text = fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8');
+    const text = fs.readFileSync(
+      '/sys/class/thermal/thermal_zone0/temp',
+      'utf8'
+    );
     return parseFloat(text) / 1000;
   } catch (_) {
     try {
@@ -23,7 +26,9 @@ function getCpuTemp() {
 
 function getDiskPercent() {
   try {
-    const out = execSync("df -P / | awk 'NR==2 {print $5}'", { encoding: 'utf8' });
+    const out = execSync("df -P / | awk 'NR==2 {print $5}'", {
+      encoding: 'utf8',
+    });
     return parseFloat(out) || 0;
   } catch (_) {
     return 0;

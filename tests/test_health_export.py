@@ -1,6 +1,4 @@
 import json
-import os
-import sys
 from dataclasses import asdict
 
 import piwardrive.scripts.health_export as he

@@ -8,7 +8,7 @@ describe('runKiosk', () => {
       calls.push(cmd);
       return { kill: vi.fn() };
     });
-    const whichFn = vi.fn(cmd => `/bin/${cmd}`);
+    const whichFn = vi.fn((cmd) => `/bin/${cmd}`);
     await runKiosk({ delay: 0, spawnFn: spawn, whichFn });
     expect(calls).toContain('piwardrive-webui');
     expect(calls).toContain('/bin/chromium-browser');

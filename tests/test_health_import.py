@@ -1,8 +1,6 @@
 import asyncio
 import csv
 import json
-import os
-import sys
 
 import piwardrive.scripts.health_import as hi
 from piwardrive import config, persistence

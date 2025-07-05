@@ -65,13 +65,20 @@ describe('orientation sensors pkg', () => {
       constructor(addr) {
         this.address = addr;
       }
-      get_accel_data() { return { x: 1 }; }
-      get_gyro_data() { return { y: 2 }; }
+      get_accel_data() {
+        return { x: 1 };
+      }
+      get_gyro_data() {
+        return { y: 2 };
+      }
     }
     const orig = os.mpu6050;
     os.mpu6050 = DummySensor;
     try {
-      expect(os.readMpu6050()).toEqual({ accelerometer: { x: 1 }, gyroscope: { y: 2 } });
+      expect(os.readMpu6050()).toEqual({
+        accelerometer: { x: 1 },
+        gyroscope: { y: 2 },
+      });
     } finally {
       os.mpu6050 = orig;
     }

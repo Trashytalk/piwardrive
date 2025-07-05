@@ -14,8 +14,10 @@ describe('controlService', () => {
     window.prompt = vi.fn(() => 'pw');
     const store = {};
     global.sessionStorage = {
-      getItem: key => store[key] || null,
-      setItem: (key, val) => { store[key] = val; }
+      getItem: (key) => store[key] || null,
+      setItem: (key, val) => {
+        store[key] = val;
+      },
     };
   });
 
@@ -28,7 +30,10 @@ describe('controlService', () => {
   it('sends simple request', async () => {
     const ok = await controlService('kismet', 'start');
     expect(ok).toBe(true);
-    expect(global.fetch).toHaveBeenCalledWith('/service/kismet/start', { method: 'POST', headers: {} });
+    expect(global.fetch).toHaveBeenCalledWith('/service/kismet/start', {
+      method: 'POST',
+      headers: {},
+    });
   });
 
   it('retries on 401 with password', async () => {
@@ -38,6 +43,8 @@ describe('controlService', () => {
     const ok = await controlService('kismet', 'stop');
     expect(ok).toBe(true);
     expect(window.prompt).toHaveBeenCalled();
-    expect(global.fetch.mock.calls[1][1].headers['X-Admin-Password']).toBe('pw');
+    expect(global.fetch.mock.calls[1][1].headers['X-Admin-Password']).toBe(
+      'pw'
+    );
   });
 });

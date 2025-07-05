@@ -105,7 +105,9 @@ describe('config helpers', () => {
 
   it('save config validation error', () => {
     const { cfg } = setupTemp();
-    expect(() => cfg.saveConfig({ ...cfg.DEFAULT_CONFIG, map_poll_gps: 0 })).toThrow();
+    expect(() =>
+      cfg.saveConfig({ ...cfg.DEFAULT_CONFIG, map_poll_gps: 0 })
+    ).toThrow();
   });
 
   it('config mtime updates', () => {

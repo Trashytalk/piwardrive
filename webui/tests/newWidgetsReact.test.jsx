@@ -14,7 +14,11 @@ describe('new widget equivalents', () => {
   });
 
   it('service status displays ok/down', () => {
-    render(<ServiceStatus metrics={{ kismet_running: true, bettercap_running: false }} />);
+    render(
+      <ServiceStatus
+        metrics={{ kismet_running: true, bettercap_running: false }}
+      />
+    );
     expect(screen.getByText('Kismet: ok')).toBeInTheDocument();
     expect(screen.getByText('BetterCAP: down')).toBeInTheDocument();
   });
@@ -26,9 +30,13 @@ describe('new widget equivalents', () => {
 
   it('storage usage fetches percent', async () => {
     const origFetch = global.fetch;
-    global.fetch = vi.fn(() => Promise.resolve({ json: () => Promise.resolve({ percent: 55 }) }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve({ percent: 55 }) })
+    );
     render(<StorageUsage />);
-    await waitFor(() => expect(screen.getByText('SSD: 55%')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText('SSD: 55%')).toBeInTheDocument()
+    );
     global.fetch = origFetch;
   });
 

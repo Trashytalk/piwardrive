@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
 import logging
 import os
 import time
-import json
-from datetime import datetime, time as dt_time
+from datetime import datetime
+from datetime import time as dt_time
 from typing import Any, Awaitable, Callable, Dict, Mapping, Protocol, Sequence
 
+from . import utils
 from .core import config
 from .gpsd_client import client as gps_client
-from . import utils
 
 ClockEvent = object
 
@@ -23,8 +24,7 @@ class Updatable(Protocol):
 
     update_interval: float
 
-    def update(self) -> Awaitable[None] | None:
-        ...
+    def update(self) -> Awaitable[None] | None: ...
 
 
 class PollScheduler:

@@ -16,14 +16,16 @@ export function parsePackets(lines) {
     for (const m of line.matchAll(/(\w+)=([\w.:-]+)/g)) {
       fields[m[1]] = m[2];
     }
-    pkts.push(new LoRaPacket(
-      fields.time,
-      fields.freq,
-      fields.rssi,
-      fields.snr,
-      fields.devaddr,
-      line
-    ));
+    pkts.push(
+      new LoRaPacket(
+        fields.time,
+        fields.freq,
+        fields.rssi,
+        fields.snr,
+        fields.devaddr,
+        line
+      )
+    );
   }
   return pkts;
 }

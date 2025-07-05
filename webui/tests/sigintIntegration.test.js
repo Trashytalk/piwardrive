@@ -6,7 +6,9 @@ import { loadSigintData } from '../src/sigintIntegration.js';
 let origDir;
 
 describe('sigint integration', () => {
-  beforeEach(() => { origDir = process.env.SIGINT_EXPORT_DIR; });
+  beforeEach(() => {
+    origDir = process.env.SIGINT_EXPORT_DIR;
+  });
   afterEach(() => {
     if (origDir === undefined) delete process.env.SIGINT_EXPORT_DIR;
     else process.env.SIGINT_EXPORT_DIR = origDir;

@@ -8,7 +8,9 @@ import LoRaScan, { LoRaScanStatic } from '../src/components/LoRaScan.jsx';
 describe('extra widgets', () => {
   it('shows orientation text', () => {
     render(<Orientation data={{ orientation: 'right-up', angle: 90 }} />);
-    expect(screen.getByText('Orientation: right-up (90\u00B0)')).toBeInTheDocument();
+    expect(
+      screen.getByText('Orientation: right-up (90\u00B0)')
+    ).toBeInTheDocument();
   });
 
   it('shows vehicle speed', () => {
@@ -23,9 +25,11 @@ describe('extra widgets', () => {
 
   it('fetches LoRa scan results', async () => {
     let origFetch = global.fetch;
-    global.fetch = vi.fn(() => Promise.resolve({
-      json: () => Promise.resolve({ count: 3 })
-    }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ count: 3 }),
+      })
+    );
     render(<LoRaScan />);
     expect(await screen.findByText('LoRa Devices: 3')).toBeInTheDocument();
     global.fetch = origFetch;

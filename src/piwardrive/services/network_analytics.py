@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
 from typing import Any, List
 
 import numpy as np
 
-from piwardrive import persistence, network_analytics as heuristics
+from piwardrive import network_analytics as heuristics
+from piwardrive import persistence
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
 
@@ -17,7 +18,10 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     phi2 = math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dl = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dl / 2) ** 2
+    a = (
+        math.sin(dphi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(dl / 2) ** 2
+    )
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
@@ -52,9 +56,7 @@ async def analyze_day(day: date) -> None:
             for r in items
             if r.get("latitude") is not None and r.get("longitude") is not None
         ]
-        unique_locs = {
-            (round(lat, 5), round(lon, 5)) for lat, lon in locs
-        }
+        unique_locs = {(round(lat, 5), round(lon, 5)) for lat, lon in locs}
         signals = [
             float(r["signal_strength_dbm"])
             for r in items
@@ -103,9 +105,7 @@ class NetworkAnalyticsService:
     def __init__(self, scheduler: PollScheduler, hour: int = 2) -> None:
         self._scheduler = scheduler
         self._event = "network_analytics"
-        scheduler.schedule(
-            self._event, lambda _dt: run_async_task(self.run()), 86400
-        )
+        scheduler.schedule(self._event, lambda _dt: run_async_task(self.run()), 86400)
         # optional immediate run for testing
         run_async_task(self.run())
 

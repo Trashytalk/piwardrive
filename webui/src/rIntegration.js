@@ -15,7 +15,7 @@ export async function healthSummary(csvPath, plotPath = null) {
   const response = await fetch(csvPath);
   const text = await response.text();
   const lines = text.trim().split(/\n+/);
-  const values = lines.map(line => parseFloat(line.split(',')[0] || '0'));
+  const values = lines.map((line) => parseFloat(line.split(',')[0] || '0'));
   const sum = values.reduce((a, b) => a + b, 0);
   const avg = values.length ? sum / values.length : 0;
   const result = { average: avg };

@@ -11,7 +11,8 @@ fake_pydantic = ModuleType("pydantic")
 fake_pydantic.BaseModel = object  # type: ignore[attr-defined]
 fake_pydantic.Field = lambda *a, **k: None  # type: ignore[attr-defined]
 fake_pydantic.ValidationError = type("VE", (), {})  # type: ignore[attr-defined]
-fake_pydantic.field_validator = lambda *a, **k: (lambda f: f)  # type: ignore[attr-defined]
+fake_pydantic.field_validator = lambda *a,
+    **k: (lambda f: f)  # type: ignore[attr-defined]
 sys.modules.setdefault("pydantic", fake_pydantic)
 
 from piwardrive import analysis

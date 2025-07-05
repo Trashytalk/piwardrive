@@ -33,7 +33,9 @@ export async function loadDashboardSettings() {
 export async function purgeOldHealth(days) {
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
   const list = JSON.parse(localStorage.getItem('healthRecords') || '[]');
-  const filtered = list.filter(r => new Date(r.timestamp).getTime() >= cutoff);
+  const filtered = list.filter(
+    (r) => new Date(r.timestamp).getTime() >= cutoff
+  );
   localStorage.setItem('healthRecords', JSON.stringify(filtered));
   return filtered.length;
 }

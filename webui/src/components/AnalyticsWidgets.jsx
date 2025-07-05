@@ -67,6 +67,6 @@ export function DeviceClassificationWidget() {
     return () => clearInterval(id);
   }, []);
   return (
-    <div>Device Types: {info ? info.suspicious_score ?? 'N/A' : 'N/A'}</div>
+    <div>Device Types: {info ? (info.suspicious_score ?? 'N/A') : 'N/A'}</div>
   );
 }

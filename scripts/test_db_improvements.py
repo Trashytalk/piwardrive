@@ -3,11 +3,10 @@
 Simple test script to validate database improvements.
 """
 
-import sys
-import os
-from pathlib import Path
 import sqlite3
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -27,9 +26,10 @@ print(f"Database exists: {db_path.exists()}")
 try:
     conn = sqlite3.connect(str(db_path))
     cursor = conn.cursor()
-    
+
     # Create basic tables
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS wifi_detections (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             scan_session_id TEXT,
@@ -44,9 +44,11 @@ try:
             vendor_name TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
-    
-    cursor.execute('''
+    """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS suspicious_activities (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             scan_session_id TEXT,
@@ -62,9 +64,11 @@ try:
             false_positive BOOLEAN DEFAULT FALSE,
             analyst_notes TEXT
         )
-    ''')
-    
-    cursor.execute('''
+    """
+    )
+
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS network_analytics (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             bssid TEXT NOT NULL,
@@ -84,11 +88,12 @@ try:
             last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (bssid, analysis_date)
         )
-    ''')
-    
+    """
+    )
+
     conn.commit()
     print("✓ Basic database schema created")
-    
+
     # Test 3: Create indexes
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_wifi_bssid ON wifi_detections(bssid)",
@@ -96,47 +101,68 @@ try:
         "CREATE INDEX IF NOT EXISTS idx_wifi_signal ON wifi_detections(signal_strength_dbm)",
         "CREATE INDEX IF NOT EXISTS idx_suspicious_type ON suspicious_activities(activity_type)",
         "CREATE INDEX IF NOT EXISTS idx_analytics_bssid ON network_analytics(bssid)",
-        "CREATE INDEX IF NOT EXISTS idx_analytics_date ON network_analytics(analysis_date)"
+        "CREATE INDEX IF NOT EXISTS idx_analytics_date ON network_analytics(analysis_date)",
     ]
-    
+
     for index_sql in indexes:
         cursor.execute(index_sql)
-    
+
     conn.commit()
     print("✓ Indexes created")
-    
+
     # Test 4: Insert sample data
-    cursor.execute('''
-        INSERT OR REPLACE INTO wifi_detections 
-        (scan_session_id, detection_timestamp, bssid, ssid, channel, signal_strength_dbm, encryption_type)
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO wifi_detections
+        (scan_session_id,
+            detection_timestamp,
+            bssid,
+            ssid,
+            channel,
+            signal_strength_dbm,
+            encryption_type)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', ('test_session', datetime.now().isoformat(), '00:11:22:33:44:55', 'TestNetwork', 6, -45, 'WPA2'))
-    
-    cursor.execute('''
-        INSERT OR REPLACE INTO network_analytics 
+    """,
+        (
+            "test_session",
+            datetime.now().isoformat(),
+            "00:11:22:33:44:55",
+            "TestNetwork",
+            6,
+            -45,
+            "WPA2",
+        ),
+    )
+
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO network_analytics
         (bssid, analysis_date, total_detections, suspicious_score)
         VALUES (?, ?, ?, ?)
-    ''', ('00:11:22:33:44:55', datetime.now().date().isoformat(), 1, 0.1))
-    
+    """,
+        ("00:11:22:33:44:55", datetime.now().date().isoformat(), 1, 0.1),
+    )
+
     conn.commit()
     print("✓ Sample data inserted")
-    
+
     # Test 5: Query data
     cursor.execute("SELECT COUNT(*) FROM wifi_detections")
     wifi_count = cursor.fetchone()[0]
     print(f"✓ WiFi detections count: {wifi_count}")
-    
+
     cursor.execute("SELECT COUNT(*) FROM network_analytics")
     analytics_count = cursor.fetchone()[0]
     print(f"✓ Network analytics count: {analytics_count}")
-    
+
     cursor.execute("SELECT COUNT(*) FROM suspicious_activities")
     suspicious_count = cursor.fetchone()[0]
     print(f"✓ Suspicious activities count: {suspicious_count}")
-    
+
     # Test 6: Advanced queries
-    cursor.execute('''
-        SELECT 
+    cursor.execute(
+        """
+        SELECT
             DATE(detection_timestamp) as date,
             COUNT(*) as detections,
             COUNT(DISTINCT bssid) as unique_networks
@@ -144,14 +170,15 @@ try:
         GROUP BY DATE(detection_timestamp)
         ORDER BY date DESC
         LIMIT 5
-    ''')
-    
+    """
+    )
+
     daily_stats = cursor.fetchall()
     print(f"✓ Daily statistics query returned {len(daily_stats)} rows")
-    
+
     conn.close()
     print("✓ Database connection closed")
-    
+
 except Exception as e:
     print(f"✗ Database test failed: {e}")
     sys.exit(1)

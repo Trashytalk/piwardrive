@@ -4,7 +4,8 @@ export default function BatteryStatus({ metrics }) {
   if (battery_percent == null) return <div>Battery: N/A</div>;
   return (
     <div>
-      Battery: {battery_percent.toFixed(0)}% {battery_plugged ? 'charging' : 'discharging'}
+      Battery: {battery_percent.toFixed(0)}%{' '}
+      {battery_plugged ? 'charging' : 'discharging'}
     </div>
   );
 }

@@ -1,6 +1,7 @@
+import logging
+
 """Tests for :mod:`piwardrive.error_reporting`."""
 
-import logging
 from types import SimpleNamespace
 from typing import Any
 

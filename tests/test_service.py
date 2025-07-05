@@ -207,7 +207,6 @@ def test_logs_endpoint_rejects_unknown_path() -> None:
         assert not called
 
 
-
 def test_websocket_status_stream() -> None:
     rec = persistence.HealthRecord(
         timestamp="t",
@@ -594,8 +593,6 @@ def test_storage_endpoint() -> None:
         assert resp.json() == {"percent": 70.0}
 
 
-
-
 def test_gps_endpoint(monkeypatch) -> None:
     with (
         mock.patch("service.gps_client.get_position", return_value=(1.0, 2.0)),
@@ -723,4 +720,3 @@ def test_auth_login_valid(monkeypatch) -> None:
     assert "access_token" in data
     assert "refresh_token" in data
     assert data["refresh_token"] in service.REFRESH_TOKENS
-

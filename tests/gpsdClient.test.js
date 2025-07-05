@@ -3,15 +3,22 @@ const assert = require('node:assert/strict');
 const Module = require('module');
 const path = require('path');
 
-function reloadWithDummy({ connectOk = true, packet = null, raiseOnGet = false, getCurrent } = {}) {
+function reloadWithDummy({
+  connectOk = true,
+  packet = null,
+  raiseOnGet = false,
+  getCurrent,
+} = {}) {
   const dummy = {
     connect: () => {
       if (!connectOk) throw new Error('fail');
     },
-    getCurrent: getCurrent || (() => {
-      if (raiseOnGet) throw new Error('boom');
-      return packet;
-    }),
+    getCurrent:
+      getCurrent ||
+      (() => {
+        if (raiseOnGet) throw new Error('boom');
+        return packet;
+      }),
   };
 
   const original = Module._load;
@@ -35,7 +42,10 @@ test('reconnect after error', () => {
   const pkt = { mode: 3, lat: 1.0, lon: 2.0, error: { x: 1.0, y: 1.0 } };
   let first = true;
   function getCurrent() {
-    if (first) { first = false; throw new Error('fail'); }
+    if (first) {
+      first = false;
+      throw new Error('fail');
+    }
     return pkt;
   }
   const mod = reloadWithDummy({ getCurrent });

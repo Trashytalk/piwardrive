@@ -16,8 +16,8 @@ export default function MLDashboard({ metrics }) {
     }
     const load = () => {
       fetch('/ml/metrics')
-        .then(r => r.json())
-        .then(d => {
+        .then((r) => r.json())
+        .then((d) => {
           setPerformance(d.performance);
           setAccuracy(d.accuracy);
           setFeatures(d.features || []);
@@ -42,7 +42,9 @@ export default function MLDashboard({ metrics }) {
       <div>Training: {progress ?? 'N/A'}%</div>
       <ul>
         {features.map((f, idx) => (
-          <li key={idx}>{f.name || f.feature}: {f.importance}</li>
+          <li key={idx}>
+            {f.name || f.feature}: {f.importance}
+          </li>
         ))}
       </ul>
     </div>

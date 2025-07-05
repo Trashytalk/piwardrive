@@ -1,9 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
-import { loadOuiMap, lookupVendor, cachedLookupVendor } from '../src/ouiRegistry.js';
+import {
+  loadOuiMap,
+  lookupVendor,
+  cachedLookupVendor,
+} from '../src/ouiRegistry.js';
 
 describe('ouiRegistry', () => {
   it('loads file and caches vendor lookup', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ text: () => Promise.resolve('Assignment,Organization Name\nAA-BB-CC,VendorX\n') });
+    global.fetch = vi.fn().mockResolvedValue({
+      text: () =>
+        Promise.resolve('Assignment,Organization Name\nAA-BB-CC,VendorX\n'),
+    });
     await loadOuiMap('/oui.csv');
     const vendor = lookupVendor('AA:BB:CC:00:11:22');
     expect(vendor).toBe('VendorX');

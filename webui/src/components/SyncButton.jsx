@@ -5,7 +5,7 @@ export default function SyncButton({ limit = 100 }) {
   const [result, setResult] = useState(null);
   const run = () => {
     syncHealthRecords(limit)
-      .then(r => setResult(`uploaded ${r.uploaded}`))
+      .then((r) => setResult(`uploaded ${r.uploaded}`))
       .catch(() => setResult('failed'));
   };
   return (

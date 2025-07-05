@@ -1,8 +1,16 @@
-export function suggestRoute(points, cellSize = 0.001, steps = 5, searchRadius = 5) {
-  const pts = points.map(p => [Number(p[0]), Number(p[1])]);
+export function suggestRoute(
+  points,
+  cellSize = 0.001,
+  steps = 5,
+  searchRadius = 5
+) {
+  const pts = points.map((p) => [Number(p[0]), Number(p[1])]);
   if (pts.length === 0) return [];
-  const toCell = (lat, lon) => [Math.floor(lat / cellSize), Math.floor(lon / cellSize)];
-  const visited = new Set(pts.map(p => toCell(p[0], p[1]).join(',')));
+  const toCell = (lat, lon) => [
+    Math.floor(lat / cellSize),
+    Math.floor(lon / cellSize),
+  ];
+  const visited = new Set(pts.map((p) => toCell(p[0], p[1]).join(',')));
   let cur = toCell(pts[pts.length - 1][0], pts[pts.length - 1][1]);
   const route = [];
   for (let i = 0; i < steps; i++) {

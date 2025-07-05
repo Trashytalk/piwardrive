@@ -8,12 +8,15 @@ describe('HealthAnalysis', () => {
   let origFetch;
   beforeEach(() => {
     origFetch = global.fetch;
-    global.fetch = vi.fn(() => Promise.resolve({
-      json: () => Promise.resolve([
-        { system: { cpu_temp: 40, mem_percent: 20, disk_percent: 10 } },
-        { system: { cpu_temp: 60, mem_percent: 40, disk_percent: 20 } }
-      ])
-    }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve([
+            { system: { cpu_temp: 40, mem_percent: 20, disk_percent: 10 } },
+            { system: { cpu_temp: 60, mem_percent: 40, disk_percent: 20 } },
+          ]),
+      })
+    );
   });
   afterEach(() => {
     global.fetch = origFetch;
@@ -21,6 +24,8 @@ describe('HealthAnalysis', () => {
 
   it('shows averaged health stats', async () => {
     render(<HealthAnalysis />);
-    expect(await screen.findByText('Temp:50.0°C Mem:30% Disk:15%')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Temp:50.0°C Mem:30% Disk:15%')
+    ).toBeInTheDocument();
   });
 });

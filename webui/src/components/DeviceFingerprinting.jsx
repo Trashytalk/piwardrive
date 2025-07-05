@@ -10,8 +10,8 @@ export default function DeviceFingerprinting({ metrics }) {
     }
     const load = () => {
       fetch('/fingerprinting')
-        .then(r => r.json())
-        .then(d => setDevices(d.devices || []))
+        .then((r) => r.json())
+        .then((d) => setDevices(d.devices || []))
         .catch(() => setDevices([]));
     };
     load();
@@ -23,7 +23,9 @@ export default function DeviceFingerprinting({ metrics }) {
     <ul>
       {devices.map((d, i) => (
         <li key={i}>
-          {d.type || d.device_type}: {d.vendor} ({d.confidence != null ? (d.confidence * 100).toFixed(0) + '%' : 'N/A'})
+          {d.type || d.device_type}: {d.vendor} (
+          {d.confidence != null ? (d.confidence * 100).toFixed(0) + '%' : 'N/A'}
+          )
         </li>
       ))}
     </ul>

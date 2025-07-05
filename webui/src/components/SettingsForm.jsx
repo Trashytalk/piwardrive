@@ -5,7 +5,7 @@ export default function SettingsForm() {
 
   useEffect(() => {
     fetch('/config')
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setConfig);
   }, []);
 
@@ -19,7 +19,7 @@ export default function SettingsForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config),
     })
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setConfig);
   };
 
@@ -64,13 +64,13 @@ export default function SettingsForm() {
               <input
                 type="checkbox"
                 checked={!!config[key]}
-                onChange={e => handleChange(key, e.target.checked)}
+                onChange={(e) => handleChange(key, e.target.checked)}
               />
             ) : (
               <input
                 type={type}
                 value={config[key] ?? ''}
-                onChange={e =>
+                onChange={(e) =>
                   handleChange(
                     key,
                     type === 'number' ? Number(e.target.value) : e.target.value

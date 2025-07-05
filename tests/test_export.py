@@ -1,7 +1,4 @@
-import importlib
 import json
-import os
-import sys
 import time
 from types import ModuleType, SimpleNamespace
 
@@ -102,13 +99,15 @@ def test_export_map_kml(tmp_path) -> None:
 
 
 def test_export_map_kml_compute_position(tmp_path) -> None:
-    aps = [{
-        "ssid": "A",
-        "observations": [
-            {"lat": 1.0, "lon": 1.0, "rssi": -30},
-            {"lat": 2.0, "lon": 2.0, "rssi": -40},
-        ],
-    }]
+    aps = [
+        {
+            "ssid": "A",
+            "observations": [
+                {"lat": 1.0, "lon": 1.0, "rssi": -30},
+                {"lat": 2.0, "lon": 2.0, "rssi": -40},
+            ],
+        }
+    ]
     out = tmp_path / "pos.kml"
     exp.export_map_kml([], aps, [], str(out), compute_position=True)
     text = out.read_text()

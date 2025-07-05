@@ -10,8 +10,8 @@ export default function LogViewer({ path = '/var/log/syslog', lines = 200 }) {
   // fetch list of allowed log paths once
   useEffect(() => {
     fetch('/config')
-      .then(r => r.json())
-      .then(cfg => {
+      .then((r) => r.json())
+      .then((cfg) => {
         if (Array.isArray(cfg.log_paths) && cfg.log_paths.length) {
           setPaths(cfg.log_paths);
           if (!path) setCurPath(cfg.log_paths[0]);
@@ -24,13 +24,13 @@ export default function LogViewer({ path = '/var/log/syslog', lines = 200 }) {
     const load = () => {
       const params = new URLSearchParams({ path: curPath, lines });
       fetch(`/logs?${params}`)
-        .then(r => r.json())
-        .then(d => {
+        .then((r) => r.json())
+        .then((d) => {
           let linesArr = d.lines || [];
           if (filter) {
             try {
               const re = new RegExp(filter);
-              linesArr = linesArr.filter(ln => re.test(ln));
+              linesArr = linesArr.filter((ln) => re.test(ln));
             } catch {
               // ignore invalid regex
             }
@@ -64,8 +64,8 @@ export default function LogViewer({ path = '/var/log/syslog', lines = 200 }) {
   return (
     <div>
       <div style={{ marginBottom: '0.5em' }}>
-        <select value={curPath} onChange={e => setCurPath(e.target.value)}>
-          {paths.map(p => (
+        <select value={curPath} onChange={(e) => setCurPath(e.target.value)}>
+          {paths.map((p) => (
             <option key={p} value={p}>
               {p}
             </option>
@@ -74,7 +74,7 @@ export default function LogViewer({ path = '/var/log/syslog', lines = 200 }) {
         <input
           placeholder="Filter regex"
           value={filter}
-          onChange={e => setFilter(e.target.value)}
+          onChange={(e) => setFilter(e.target.value)}
           style={{ marginLeft: '0.5em' }}
         />
         <button onClick={jumpToError} style={{ marginLeft: '0.5em' }}>

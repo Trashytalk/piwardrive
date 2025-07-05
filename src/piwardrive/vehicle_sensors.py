@@ -12,7 +12,6 @@ try:
 except Exception:  # pragma: no cover - library not available
     obd = None
 
-
 _OBD_CONN: "obd.OBD | None" = None
 
 

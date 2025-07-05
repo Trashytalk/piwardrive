@@ -7,7 +7,7 @@ export default function SplitScreen() {
   useEffect(() => {
     const load = () => {
       fetch('/widget-metrics')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setMetrics)
         .catch(() => {});
     };
@@ -16,9 +16,11 @@ export default function SplitScreen() {
     return () => clearInterval(id);
   }, []);
 
-  const cpu = metrics?.cpu_temp != null ? metrics.cpu_temp.toFixed(1) + '°C' : 'N/A';
+  const cpu =
+    metrics?.cpu_temp != null ? metrics.cpu_temp.toFixed(1) + '°C' : 'N/A';
   const handshakes = metrics?.handshake_count ?? 'N/A';
-  const rssi = metrics?.avg_rssi != null ? metrics.avg_rssi.toFixed(1) + ' dBm' : 'N/A';
+  const rssi =
+    metrics?.avg_rssi != null ? metrics.avg_rssi.toFixed(1) + ' dBm' : 'N/A';
   const kismet = metrics?.kismet_running ? 'OK' : 'DOWN';
   const bettercap = metrics?.bettercap_running ? 'OK' : 'DOWN';
   const gps = metrics?.gps_fix ?? 'N/A';

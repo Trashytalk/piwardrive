@@ -4,7 +4,7 @@ export function parseTowerOutput(output) {
   const records = [];
   for (const line of output.split(/\n+/)) {
     if (!line) continue;
-    const parts = line.split(',').map(p => p.trim());
+    const parts = line.split(',').map((p) => p.trim());
     if (parts.length >= 2) {
       const [tower_id, rssi] = parts;
       records.push({ tower_id, rssi, lat: null, lon: null });
@@ -26,7 +26,7 @@ export function scanTowers(cmd = 'tower-scan', timeout) {
 }
 
 export function asyncScanTowers(cmd = 'tower-scan', timeout) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     execFile(
       cmd,
       { encoding: 'utf-8', timeout: timeout ? timeout * 1000 : undefined },

@@ -3,7 +3,12 @@ import path from 'path';
 
 /* global process, require */
 
-const PLUGIN_DIR = path.join(process.env.HOME || '', '.config', 'piwardrive', 'plugins');
+const PLUGIN_DIR = path.join(
+  process.env.HOME || '',
+  '.config',
+  'piwardrive',
+  'plugins'
+);
 let PLUGIN_STAMP = null;
 const PLUGINS = {};
 

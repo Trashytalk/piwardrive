@@ -5,15 +5,22 @@ vi.useFakeTimers();
 
 describe('continuous scanning', () => {
   let origFetch;
-  beforeEach(() => { origFetch = global.fetch; });
+  beforeEach(() => {
+    origFetch = global.fetch;
+  });
   afterEach(() => {
     global.fetch = origFetch;
     vi.clearAllTimers();
   });
 
   it('scanOnce returns wifi and bluetooth data', async () => {
-    global.fetch = vi.fn(url =>
-      Promise.resolve({ json: () => Promise.resolve(url.includes('wifi') ? [{ ssid: 'x' }] : [{ address: 'a' }]) })
+    global.fetch = vi.fn((url) =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve(
+            url.includes('wifi') ? [{ ssid: 'x' }] : [{ address: 'a' }]
+          ),
+      })
     );
     const result = await scanOnce();
     expect(result.wifi[0].ssid).toBe('x');
@@ -21,9 +28,17 @@ describe('continuous scanning', () => {
   });
 
   it('runContinuousScan performs given iterations', async () => {
-    global.fetch = vi.fn(() => Promise.resolve({ json: () => Promise.resolve([]) }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ json: () => Promise.resolve([]) })
+    );
     let count = 0;
-    runContinuousScan({ interval: 0, iterations: 3, onResult: () => { count += 1; } });
+    runContinuousScan({
+      interval: 0,
+      iterations: 3,
+      onResult: () => {
+        count += 1;
+      },
+    });
     // first run executes immediately
     await Promise.resolve();
     // subsequent runs are scheduled with timers

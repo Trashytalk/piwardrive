@@ -9,7 +9,9 @@ export default function SecurityConfig({ config, onChange }) {
           <input
             type="number"
             value={config.threat_sensitivity}
-            onChange={e => onChange('threat_sensitivity', Number(e.target.value))}
+            onChange={(e) =>
+              onChange('threat_sensitivity', Number(e.target.value))
+            }
           />
         </label>
       </div>
@@ -19,7 +21,9 @@ export default function SecurityConfig({ config, onChange }) {
           <input
             type="text"
             value={config.alert_escalation_policy}
-            onChange={e => onChange('alert_escalation_policy', e.target.value)}
+            onChange={(e) =>
+              onChange('alert_escalation_policy', e.target.value)
+            }
           />
         </label>
       </div>
@@ -29,7 +33,7 @@ export default function SecurityConfig({ config, onChange }) {
           <input
             type="text"
             value={config.security_rule_version}
-            onChange={e => onChange('security_rule_version', e.target.value)}
+            onChange={(e) => onChange('security_rule_version', e.target.value)}
           />
         </label>
       </div>
@@ -38,7 +42,7 @@ export default function SecurityConfig({ config, onChange }) {
           Whitelist
           <textarea
             value={config.whitelist}
-            onChange={e => onChange('whitelist', e.target.value)}
+            onChange={(e) => onChange('whitelist', e.target.value)}
           />
         </label>
       </div>

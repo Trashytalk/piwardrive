@@ -9,19 +9,28 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 # Add the src directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 try:
     from piwardrive.core.persistence import (
-        save_scan_session, save_wifi_detections, save_bluetooth_detections,
-        save_cellular_detections, save_gps_tracks, save_network_fingerprints,
-        save_suspicious_activities, get_table_counts, compute_network_analytics,
-        run_suspicious_activity_detection, refresh_daily_detection_stats,
-        refresh_network_coverage_grid, analyze_network_behavior,
-        count_suspicious_activities, load_recent_suspicious
+        analyze_network_behavior,
+        compute_network_analytics,
+        count_suspicious_activities,
+        get_table_counts,
+        load_recent_suspicious,
+        refresh_daily_detection_stats,
+        refresh_network_coverage_grid,
+        run_suspicious_activity_detection,
+        save_bluetooth_detections,
+        save_cellular_detections,
+        save_gps_tracks,
+        save_network_fingerprints,
+        save_scan_session,
+        save_suspicious_activities,
+        save_wifi_detections,
     )
 except ImportError as e:
     print(f"Import error: {e}")
@@ -30,11 +39,10 @@ except ImportError as e:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 async def create_sample_data():
     """Create sample data to test database functions."""
     logger.info("Creating sample data...")
-    
+
     # Sample scan session
     session_id = "test-session-001"
     session_data = {
@@ -52,14 +60,14 @@ async def create_sample_data():
         "scan_parameters": json.dumps({"channels": [1, 6, 11], "scan_time": 30}),
         "total_detections": 0
     }
-    
+
     await save_scan_session(session_data)
     logger.info(f"Created scan session: {session_id}")
-    
+
     # Sample WiFi detections
     wifi_detections = []
     base_time = datetime.now()
-    
+
     # Regular networks
     for i in range(5):
         wifi_detections.append({
@@ -81,7 +89,7 @@ async def create_sample_data():
             "last_seen": (base_time + timedelta(minutes=i+10)).isoformat(),
             "detection_count": 1
         })
-    
+
     # Evil twin candidate (same SSID, different BSSID)
     wifi_detections.append({
         "scan_session_id": session_id,
@@ -98,7 +106,7 @@ async def create_sample_data():
         "last_seen": (base_time + timedelta(minutes=20)).isoformat(),
         "detection_count": 1
     })
-    
+
     # Hidden SSID
     wifi_detections.append({
         "scan_session_id": session_id,
@@ -115,10 +123,10 @@ async def create_sample_data():
         "last_seen": (base_time + timedelta(minutes=25)).isoformat(),
         "detection_count": 1
     })
-    
+
     await save_wifi_detections(wifi_detections)
     logger.info(f"Created {len(wifi_detections)} WiFi detections")
-    
+
     # Sample Bluetooth detections
     bluetooth_detections = [
         {
@@ -136,10 +144,10 @@ async def create_sample_data():
             "detection_count": 1
         }
     ]
-    
+
     await save_bluetooth_detections(bluetooth_detections)
     logger.info(f"Created {len(bluetooth_detections)} Bluetooth detections")
-    
+
     # Sample GPS tracks
     gps_tracks = []
     for i in range(10):
@@ -153,10 +161,10 @@ async def create_sample_data():
             "speed_kmh": 5.0,
             "satellite_count": 8
         })
-    
+
     await save_gps_tracks(gps_tracks)
     logger.info(f"Created {len(gps_tracks)} GPS tracks")
-    
+
     # Sample network fingerprints
     fingerprints = [
         {
@@ -169,91 +177,88 @@ async def create_sample_data():
             "risk_level": "low"
         }
     ]
-    
+
     await save_network_fingerprints(fingerprints)
     logger.info(f"Created {len(fingerprints)} network fingerprints")
-    
-    return session_id
 
+    return session_id
 
 async def test_analytics_functions(session_id: str):
     """Test analytics and detection functions."""
     logger.info("Testing analytics functions...")
-    
+
     # Test suspicious activity detection
     suspicious_count = await run_suspicious_activity_detection(session_id)
     logger.info(f"Detected {suspicious_count} suspicious activities")
-    
+
     # Test network analytics computation
     await compute_network_analytics()
     logger.info("Computed network analytics")
-    
+
     # Test materialized view refresh
     await refresh_daily_detection_stats()
     logger.info("Refreshed daily detection stats")
-    
+
     await refresh_network_coverage_grid()
     logger.info("Refreshed network coverage grid")
-    
+
     # Test network behavior analysis
     behavior = await analyze_network_behavior("aa:bb:cc:dd:ee:00")
-    logger.info(f"Network behavior analysis: mobility={behavior['mobility_score']:.2f}, suspicion={behavior['suspicion_score']:.2f}")
-    
-    return suspicious_count
+    logger.info(f"Network behavior analysis: mobility={behavior['mobility_score']:.2f},
+        suspicion={behavior['suspicion_score']:.2f}")
 
+    return suspicious_count
 
 async def test_query_functions():
     """Test query functions."""
     logger.info("Testing query functions...")
-    
+
     # Test table counts
     counts = await get_table_counts()
     logger.info(f"Table counts: {counts}")
-    
+
     # Test suspicious activity queries
     total_suspicious = await count_suspicious_activities()
     recent_suspicious = await load_recent_suspicious(5)
-    
+
     logger.info(f"Total suspicious activities: {total_suspicious}")
     logger.info(f"Recent suspicious activities: {len(recent_suspicious)}")
-    
-    return counts
 
+    return counts
 
 async def main():
     """Main test function."""
     print("=== PiWardrive Database Function Tests ===\n")
-    
+
     try:
         # Create sample data
         session_id = await create_sample_data()
-        
+
         # Test analytics functions
         suspicious_count = await test_analytics_functions(session_id)
-        
+
         # Test query functions
         counts = await test_query_functions()
-        
+
         print("\n=== Test Results ===")
         print(f"✅ Sample data created successfully")
         print(f"✅ Detected {suspicious_count} suspicious activities")
         print(f"✅ Analytics computed successfully")
         print(f"✅ Table counts: {sum(counts.values())} total records")
-        
+
         # Show some detailed results
         if suspicious_count > 0:
             recent = await load_recent_suspicious(3)
             print(f"\nRecent suspicious activities:")
             for activity in recent:
                 print(f"  - {activity['activity_type']}: {activity['description']}")
-        
+
         print("\n✅ All database functions tested successfully!")
-        
+
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
         traceback.print_exc()
-
 
 if __name__ == "__main__":
     asyncio.run(main())

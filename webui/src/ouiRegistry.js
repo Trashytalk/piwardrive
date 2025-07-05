@@ -8,13 +8,16 @@ export async function loadOuiMap(url = DEFAULT_OUI_URL) {
     const resp = await fetch(url);
     const text = await resp.text();
     const map = {};
-    text.split(/\n+/).slice(1).forEach(line => {
-      const [assign, vendor] = line.split(',');
-      if (assign && vendor) {
-        const prefix = assign.replace(/-/g, ':').toUpperCase();
-        map[prefix] = vendor.trim();
-      }
-    });
+    text
+      .split(/\n+/)
+      .slice(1)
+      .forEach((line) => {
+        const [assign, vendor] = line.split(',');
+        if (assign && vendor) {
+          const prefix = assign.replace(/-/g, ':').toUpperCase();
+          map[prefix] = vendor.trim();
+        }
+      });
     OUI_MAP = map;
     return map;
   } catch (e) {

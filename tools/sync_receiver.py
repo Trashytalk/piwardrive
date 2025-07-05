@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 
 from piwardrive.security import validate_filename
 
@@ -14,7 +14,9 @@ os.makedirs(STORAGE, exist_ok=True)
 async def receive(file: UploadFile):
     name = os.path.basename(file.filename)
     if name != file.filename:
-        raise HTTPException(status_code=400, detail=f"Invalid filename: {file.filename}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid filename: {file.filename}"
+        )
     try:
         validate_filename(name)
     except ValueError as exc:

@@ -9,7 +9,6 @@ from typing import Dict, List
 
 from piwardrive.core import config
 from piwardrive.scheduler import PollScheduler
-
 from piwardrive.sigint_suite.models import BluetoothDevice
 
 logger = logging.getLogger(__name__)

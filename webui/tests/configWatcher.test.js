@@ -5,7 +5,9 @@ vi.useFakeTimers();
 
 describe('watchConfig', () => {
   let origFetch;
-  beforeEach(() => { origFetch = global.fetch; });
+  beforeEach(() => {
+    origFetch = global.fetch;
+  });
   afterEach(() => {
     global.fetch = origFetch;
     vi.clearAllTimers();
@@ -13,9 +15,11 @@ describe('watchConfig', () => {
 
   it('invokes callback when config changes', async () => {
     let data = { a: 1 };
-    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve(data) }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(data) })
+    );
     const calls = [];
-    const stop = watchConfig('/config', cfg => calls.push(cfg), 1000);
+    const stop = watchConfig('/config', (cfg) => calls.push(cfg), 1000);
     // first fetch happens immediately
     await Promise.resolve();
     expect(calls.length).toBe(1);

@@ -12,7 +12,11 @@ import fs from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { execSync } from 'child_process';
-import { rotateLog, runNetworkTest, listUsbDevices } from '../src/diagnostics.js';
+import {
+  rotateLog,
+  runNetworkTest,
+  listUsbDevices,
+} from '../src/diagnostics.js';
 
 beforeEach(() => {
   vi.resetAllMocks();

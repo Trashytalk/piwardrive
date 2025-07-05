@@ -1,3 +1,5 @@
+import logging
+
 """System diagnostic helpers for PiWardrive."""
 
 from __future__ import annotations
@@ -6,7 +8,6 @@ import asyncio
 import cProfile
 import gzip
 import io
-import logging
 import os
 import pstats
 import shutil
@@ -387,7 +388,7 @@ class HealthMonitor:
         plot_path = os.path.join(cfg.reports_dir, f"health_{date}.png")
 
         try:
-            result = await asyncio.to_thread(
+            __result = await asyncio.to_thread(
                 r_integration.health_summary, csv_path, plot_path
             )
         except PiWardriveError as exc:  # pragma: no cover - optional

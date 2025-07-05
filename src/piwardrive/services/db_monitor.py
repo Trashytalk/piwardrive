@@ -31,7 +31,6 @@ def get_query_metrics() -> Dict[str, Dict[str, float]]:
         result[key] = {"count": count, "avg": avg}
     return result
 
-
 async def health_check() -> bool:
     """Return ``True`` if the database is reachable."""
     try:
@@ -41,19 +40,18 @@ async def health_check() -> bool:
         return False
     return True
 
-
 async def analyze_index_usage() -> List[Dict[str, Any]]:
     """Return basic index size information using the ``dbstat`` virtual table."""
     async with persistence._get_conn() as conn:
         try:
             cur = await conn.execute(
-                "SELECT name, SUM(pgsize) AS size FROM dbstat WHERE name IN (SELECT name FROM sqlite_master WHERE type='index') GROUP BY name ORDER BY size DESC"
+                "SELECT name,
+                    SUM(pgsize) AS size FROM dbstat WHERE name IN (SELECT name FROM sqlite_master WHERE type='index') GROUP BY name ORDER BY size DESC"
             )
             rows = await cur.fetchall()
         except Exception as exc:  # pragma: no cover - dbstat may not exist
             logger.debug("index usage query failed: %s", exc)
             return []
     return [dict(row) for row in rows]
-
 
 __all__ = ["record_query", "get_query_metrics", "health_check", "analyze_index_usage"]

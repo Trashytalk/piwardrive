@@ -12,8 +12,8 @@ export function loadSigintData(name) {
     const data = JSON.parse(text);
     if (Array.isArray(data)) {
       return data
-        .filter(r => typeof r === 'object' && r !== null)
-        .map(r => ({ ...r }));
+        .filter((r) => typeof r === 'object' && r !== null)
+        .map((r) => ({ ...r }));
     }
   } catch {
     // ignore missing or invalid files

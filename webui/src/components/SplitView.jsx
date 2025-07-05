@@ -6,7 +6,7 @@ export default function SplitView() {
   useEffect(() => {
     const load = () => {
       fetch('/widget-metrics')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setMetrics)
         .catch(() => {});
     };
@@ -34,7 +34,9 @@ export default function SplitView() {
         <li>CPU: {cpu_temp != null ? cpu_temp.toFixed(1) + '°C' : 'N/A'}</li>
         <li>BSSIDs: {bssid_count}</li>
         <li>Handshakes: {handshake_count}</li>
-        <li>Avg RSSI: {avg_rssi != null ? avg_rssi.toFixed(1) + ' dBm' : 'N/A'}</li>
+        <li>
+          Avg RSSI: {avg_rssi != null ? avg_rssi.toFixed(1) + ' dBm' : 'N/A'}
+        </li>
         <li>Kismet: {kismet_running ? 'OK' : 'DOWN'}</li>
         <li>BetterCAP: {bettercap_running ? 'OK' : 'DOWN'}</li>
         <li>Fix: {gps_fix}</li>

@@ -1,11 +1,11 @@
 import asyncio
-from piwardrive.sigint_suite.wifi.scanner import _parse_iwlist_output, scan_wifi
-from piwardrive.sigint_suite.bluetooth.scanner import (
-    _scan_bluetoothctl,
-    _async_scan_bluetoothctl,
-    BluetoothDevice,
-)
 
+from piwardrive.sigint_suite.bluetooth.scanner import (
+    BluetoothDevice,
+    _async_scan_bluetoothctl,
+    _scan_bluetoothctl,
+)
+from piwardrive.sigint_suite.wifi.scanner import _parse_iwlist_output, scan_wifi
 
 WIFI_OUTPUT = """\
 Cell 01 - Address: AA:BB:CC:DD:EE:FF

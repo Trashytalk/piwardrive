@@ -5,7 +5,8 @@ const { spawnSync } = require('child_process');
 const { createServer } = require('../server/index.js');
 
 function getOrientationMap() {
-  const script = "import json, piwardrive.orientation_sensors as os; print(json.dumps(os.clone_orientation_map()))";
+  const script =
+    'import json, piwardrive.orientation_sensors as os; print(json.dumps(os.clone_orientation_map()))';
   const proc = spawnSync('python3', ['-c', script], {
     encoding: 'utf8',
     env: { ...process.env, PYTHONPATH: path.join(__dirname, '..', 'src') },

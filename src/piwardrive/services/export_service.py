@@ -38,8 +38,7 @@ async def export_to_json(
 async def export_to_kml(path: str) -> None:
     """Export GPS tracks and detection points to ``path`` as KML."""
     track_rows = await _fetch(
-        "SELECT latitude AS lat, longitude AS lon "
-        "FROM gps_tracks ORDER BY timestamp"
+        "SELECT latitude AS lat, longitude AS lon " "FROM gps_tracks ORDER BY timestamp"
     )
     aps = await _fetch(
         "SELECT latitude AS lat, longitude AS lon, ssid, bssid, "

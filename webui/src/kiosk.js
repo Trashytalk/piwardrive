@@ -18,10 +18,15 @@ function which(cmd) {
   return null;
 }
 
-export async function runKiosk({ url = 'http://localhost:8000', delay = 2000, spawnFn = _spawn, whichFn = which } = {}) {
+export async function runKiosk({
+  url = 'http://localhost:8000',
+  delay = 2000,
+  spawnFn = _spawn,
+  whichFn = which,
+} = {}) {
   const server = spawnFn('piwardrive-webui', []);
   try {
-    await new Promise(r => setTimeout(r, delay));
+    await new Promise((r) => setTimeout(r, delay));
     const browser = whichFn('chromium-browser') || whichFn('chromium');
     if (!browser) throw new Error('Chromium browser not found');
     spawnFn(browser, ['--kiosk', url]);

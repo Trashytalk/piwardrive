@@ -11,7 +11,9 @@ aiohttp_mod = ModuleType("aiohttp")
 aiohttp_mod.ClientSession = object  # type: ignore[attr-defined]
 aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
-aiohttp_mod.FormData = lambda: type("FormData", (), {"add_field": lambda *a, **k: None})()  # type: ignore[attr-defined]
+aiohttp_mod.FormData = lambda: type(
+    "FormData", (), {"add_field": lambda *a, **k: None}
+)()  # type: ignore[attr-defined]
 sys.modules.setdefault("aiohttp", aiohttp_mod)
 
 import piwardrive.remote_sync as rs

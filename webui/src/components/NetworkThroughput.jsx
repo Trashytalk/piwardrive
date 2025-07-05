@@ -1,5 +1,11 @@
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+} from 'chart.js';
 import { useEffect, useState } from 'react';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
@@ -10,8 +16,10 @@ export default function NetworkThroughput({ metrics }) {
 
   useEffect(() => {
     if (metrics) {
-      if (metrics.rx_kbps != null) setRx(prev => [...prev.slice(-59), metrics.rx_kbps]);
-      if (metrics.tx_kbps != null) setTx(prev => [...prev.slice(-59), metrics.tx_kbps]);
+      if (metrics.rx_kbps != null)
+        setRx((prev) => [...prev.slice(-59), metrics.rx_kbps]);
+      if (metrics.tx_kbps != null)
+        setTx((prev) => [...prev.slice(-59), metrics.tx_kbps]);
     }
   }, [metrics]);
 

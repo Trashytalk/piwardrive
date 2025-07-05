@@ -8,7 +8,10 @@ import piwardrive.vector_tiles as vt
 def create_db(path):
     with sqlite3.connect(path) as db:
         db.execute(
-            "CREATE TABLE tiles (zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BLOB)"
+            "CREATE TABLE tiles (zoom_level INTEGER,
+                tile_column INTEGER,
+                tile_row INTEGER,
+                tile_data BLOB)"
         )
         db.execute("INSERT INTO tiles VALUES (1, 2, 3, ?)", (b"data",))
         db.execute("INSERT INTO tiles VALUES (2, 0, 0, ?)", (b"foo",))

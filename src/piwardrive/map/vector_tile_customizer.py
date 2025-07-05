@@ -65,7 +65,7 @@ def build_mbtiles(folder: str, output: str) -> None:
         )
         for root, _, files in os.walk(folder):
             for f in files:
-                if not f.endswith(".pbf"):
+                if not f.endswith(".pb"):
                     continue
                 zxy = os.path.relpath(os.path.join(root, f), folder).split(os.sep)
                 if len(zxy) != 3:
@@ -81,7 +81,7 @@ def build_mbtiles(folder: str, output: str) -> None:
                 tile_row = (2**z_i - 1) - y_i  # TMS
                 try:
                     with open(os.path.join(root, f), "rb") as fh:
-                        data = fh.read()
+                        __data = fh.read()
                 except OSError as exc:
                     logging.exception("Failed to read tile %s: %s", f, exc)
                     continue

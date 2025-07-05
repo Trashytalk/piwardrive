@@ -3,11 +3,11 @@
 import base64
 import binascii
 import hashlib
-import bcrypt
 import os
 import re
 import secrets
 
+import bcrypt
 from cryptography.fernet import Fernet
 
 _ALLOWED_SERVICE_RE: re.Pattern[str] = re.compile(r"^[\w.-]+$")

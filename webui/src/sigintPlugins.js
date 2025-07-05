@@ -7,7 +7,12 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
 function pluginDir() {
-  return path.join(process.env.HOME || '', '.config', 'piwardrive', 'sigint_plugins');
+  return path.join(
+    process.env.HOME || '',
+    '.config',
+    'piwardrive',
+    'sigint_plugins'
+  );
 }
 let PLUGIN_STAMP = null;
 const PLUGINS = {};

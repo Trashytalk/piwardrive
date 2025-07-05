@@ -1,9 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../src/ouiRegistry.js', () => ({
-  cachedLookupVendor: vi.fn(bssid => ({ 'AA:BB:CC': 'VendorA', '11:22:33': 'VendorB' }[bssid.slice(0,8)] || null))
+  cachedLookupVendor: vi.fn(
+    (bssid) =>
+      ({ 'AA:BB:CC': 'VendorA', '11:22:33': 'VendorB' })[bssid.slice(0, 8)] ||
+      null
+  ),
 }));
-vi.mock('../src/orientationSensors.js', () => ({ getHeading: vi.fn(() => 45.0) }));
+vi.mock('../src/orientationSensors.js', () => ({
+  getHeading: vi.fn(() => 45.0),
+}));
 
 import { parseIwlist } from '../src/wifiScanner.js';
 
@@ -30,7 +36,9 @@ describe('parseIwlist', () => {
   });
 
   it('handles missing vendor', () => {
-    const data = parseIwlist(`Cell 01 - Address: AA:BB:CC:DD:EE:FF\n          ESSID:\"TestNet\"\n          Frequency:2.437 GHz (Channel 6)\n          Encryption key:on`);
+    const data = parseIwlist(
+      `Cell 01 - Address: AA:BB:CC:DD:EE:FF\n          ESSID:\"TestNet\"\n          Frequency:2.437 GHz (Channel 6)\n          Encryption key:on`
+    );
     expect(data[0].vendor).toBe('VendorA');
     expect(data[0].heading).toBe(45.0);
   });

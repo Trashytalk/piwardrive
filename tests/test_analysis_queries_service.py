@@ -55,10 +55,18 @@ def test_analysis_endpoints(monkeypatch, add_dummy_module):
     service = _get_service(add_dummy_module)
     # patch analysis query functions
     monkeypatch.setattr(service.analysis_queries, "evil_twin_detection", _dummy_result)
-    monkeypatch.setattr(service.analysis_queries, "signal_strength_analysis", _dummy_result)
-    monkeypatch.setattr(service.analysis_queries, "network_security_analysis", _dummy_result)
-    monkeypatch.setattr(service.analysis_queries, "temporal_pattern_analysis", _dummy_result)
-    monkeypatch.setattr(service.analysis_queries, "mobile_device_detection", _dummy_result)
+    monkeypatch.setattr(
+        service.analysis_queries, "signal_strength_analysis", _dummy_result
+    )
+    monkeypatch.setattr(
+        service.analysis_queries, "network_security_analysis", _dummy_result
+    )
+    monkeypatch.setattr(
+        service.analysis_queries, "temporal_pattern_analysis", _dummy_result
+    )
+    monkeypatch.setattr(
+        service.analysis_queries, "mobile_device_detection", _dummy_result
+    )
 
     async def run_tests():
         paths = [
@@ -74,4 +82,3 @@ def test_analysis_endpoints(monkeypatch, add_dummy_module):
             assert resp.json() == [{"ok": True}]
 
     asyncio.run(run_tests())
-

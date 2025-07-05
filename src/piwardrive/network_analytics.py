@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Mapping, Dict, Tuple
-
 import math
 from collections import defaultdict
+from typing import Any, Dict, Iterable, List, Mapping, Tuple
 
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -91,7 +90,9 @@ def cluster_by_signal(
                 continue
             mask = labels == label
             pts = coords[mask]
-            rssis = np.array([vals[i][2] for i in range(len(vals)) if mask[i]], dtype=float)
+            rssis = np.array(
+                [vals[i][2] for i in range(len(vals)) if mask[i]], dtype=float
+            )
             weights = 1.0 / np.maximum(1.0, np.abs(rssis))
             weight_sum = float(weights.sum())
             lat = float(np.average(pts[:, 0], weights=weights))

@@ -24,7 +24,7 @@ function haversine(p1, p2) {
 function predict(point, aps) {
   return aps.reduce((acc, ap) => {
     const d = haversine(point, [ap.lat, ap.lon]);
-    return acc + (ap.power || 1) / ((d || 1) ** 2);
+    return acc + (ap.power || 1) / (d || 1) ** 2;
   }, 0);
 }
 
@@ -37,19 +37,19 @@ export default function InfrastructurePlanner() {
   useEffect(() => {
     const load = async () => {
       try {
-        const g = await fetch('/api/planner/gaps').then(r => r.json());
+        const g = await fetch('/api/planner/gaps').then((r) => r.json());
         setGaps(g.zones || []);
       } catch {
         setGaps([]);
       }
       try {
-        const o = await fetch('/api/planner/optimal').then(r => r.json());
+        const o = await fetch('/api/planner/optimal').then((r) => r.json());
         setOptimal(o.locations || []);
       } catch {
         setOptimal([]);
       }
       try {
-        const r = await fetch('/api/planner/roi').then(r => r.json());
+        const r = await fetch('/api/planner/roi').then((r) => r.json());
         setRoi(r.roi ?? null);
       } catch {
         setRoi(null);
@@ -70,7 +70,7 @@ export default function InfrastructurePlanner() {
         grid.push([lat, lon]);
       }
     }
-    const pred = grid.map(pt => [...pt, predict(pt, optimal)]);
+    const pred = grid.map((pt) => [...pt, predict(pt, optimal)]);
     setPrediction(pred);
   }, [optimal]);
 
@@ -79,10 +79,19 @@ export default function InfrastructurePlanner() {
       <MapContainer center={[0, 0]} zoom={13} style={{ height: '80vh' }}>
         <TileLayer url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png" />
         {gaps.map((poly, idx) => (
-          <Polygon key={`g${idx}`} positions={poly} pathOptions={{ color: 'gray', dashArray: '4' }} />
+          <Polygon
+            key={`g${idx}`}
+            positions={poly}
+            pathOptions={{ color: 'gray', dashArray: '4' }}
+          />
         ))}
         {prediction.map(([lat, lon, s], idx) => (
-          <CircleMarker key={`p${idx}`} center={[lat, lon]} radius={6} pathOptions={{ color: 'green' }} />
+          <CircleMarker
+            key={`p${idx}`}
+            center={[lat, lon]}
+            radius={6}
+            pathOptions={{ color: 'green' }}
+          />
         ))}
         {optimal.map((pt, idx) => (
           <Marker key={`o${idx}`} position={[pt.lat, pt.lon]}>

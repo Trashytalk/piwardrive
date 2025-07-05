@@ -22,8 +22,8 @@ def _arima_forecast(values: list[float], steps: int) -> list[float]:
 
 
 def _prophet_forecast(values: list[float], steps: int) -> list[float]:
-    from prophet import Prophet  # type: ignore
     import pandas as pd
+    from prophet import Prophet  # type: ignore
 
     df = pd.DataFrame({"ds": range(len(values)), "y": values})
     model = Prophet()

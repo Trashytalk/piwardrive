@@ -15,7 +15,7 @@ import os
 from typing import Any
 
 try:  # pragma: no cover - optional dependency may be missing
-    from gps import gps, WATCH_ENABLE, WATCH_NEWSTYLE
+    from gps import WATCH_ENABLE, WATCH_NEWSTYLE, gps
 except Exception as exc:  # pragma: no cover - missing dependency
     gps = None
     WATCH_ENABLE = WATCH_NEWSTYLE = 0  # type: ignore[assignment]

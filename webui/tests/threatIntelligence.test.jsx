@@ -5,8 +5,12 @@ import ThreatIntelligence from '../src/components/ThreatIntelligence.jsx';
 
 describe('ThreatIntelligence', () => {
   let origFetch;
-  beforeEach(() => { origFetch = global.fetch; });
-  afterEach(() => { global.fetch = origFetch; });
+  beforeEach(() => {
+    origFetch = global.fetch;
+  });
+  afterEach(() => {
+    global.fetch = origFetch;
+  });
 
   it('displays threat intelligence data', async () => {
     global.fetch = vi.fn(() =>
@@ -21,7 +25,7 @@ describe('ThreatIntelligence', () => {
             encryption_strength: 90,
             threat_level: 70,
           }),
-      }),
+      })
     );
     render(<ThreatIntelligence />);
     expect(await screen.findByText('Attack Patterns: 1')).toBeInTheDocument();

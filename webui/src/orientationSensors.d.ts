@@ -35,4 +35,6 @@ export interface Mpu6050Reading {
 
 export function readMpu6050(address?: number): Mpu6050Reading | null;
 
-export function getHeading(orientationMap?: OrientationMap): number | null | undefined;
+export function getHeading(
+  orientationMap?: OrientationMap
+): number | null | undefined;

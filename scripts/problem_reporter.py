@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import psutil
 import requests
@@ -36,16 +36,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class ProblemReporter:
     """Automated problem reporting system"""
-    
+
     def __init__(self, config_file: str = '/etc/piwardrive/problem-reporter.conf'):
         self.config = self._load_config(config_file)
         self.device_id = self._get_device_id()
         self.last_report_time = {}
         self.problem_history = []
         self.session = self._create_session()
-        
+
     def _load_config(self, config_file: str) -> Dict[str, Any]:
         """Load configuration from file"""
         default_config = {
@@ -91,7 +92,7 @@ class ProblemReporter:
                 'max_log_lines': 1000
             }
         }
-        
+
         if os.path.exists(config_file):
             try:
                 with open(config_file, 'r') as f:
@@ -100,9 +101,9 @@ class ProblemReporter:
                     self._merge_config(default_config, user_config)
             except Exception as e:
                 logger.warning(f"Could not load config file {config_file}: {e}")
-        
+
         return default_config
-    
+
     def _merge_config(self, base: Dict, overlay: Dict):
         """Recursively merge configuration dictionaries"""
         for key, value in overlay.items():
@@ -110,29 +111,29 @@ class ProblemReporter:
                 self._merge_config(base[key], value)
             else:
                 base[key] = value
-    
+
     def _get_device_id(self) -> str:
         """Get unique device identifier"""
         # Try to get from config first
         device_id = self.config.get('device_id')
         if device_id:
             return device_id
-        
+
         # Try to get from system
         try:
             # Use machine ID if available
             if os.path.exists('/etc/machine-id'):
                 with open('/etc/machine-id', 'r') as f:
                     return f.read().strip()
-            
+
             # Use hostname + MAC address as fallback
             hostname = platform.node()
-            mac = ':'.join(['{:02x}'.format((uuid.getnode() >> i) & 0xff) 
+            mac = ':'.join(['{:02x}'.format((uuid.getnode() >> i) & 0xff)
                            for i in range(0, 8*6, 8)][::-1])
             return f"{hostname}-{mac}"
         except Exception:
             return f"unknown-{int(time.time())}"
-    
+
     def _create_session(self) -> requests.Session:
         """Create HTTP session with retry strategy"""
         session = requests.Session()
@@ -145,72 +146,72 @@ class ProblemReporter:
         session.mount("http://", adapter)
         session.mount("https://", adapter)
         return session
-    
+
     def monitor_and_report(self):
         """Main monitoring loop"""
         logger.info("Starting problem reporter monitoring...")
-        
+
         if not self.config['reporting']['enabled']:
             logger.info("Problem reporting is disabled")
             return
-        
+
         while True:
             try:
                 problems = self._detect_problems()
-                
+
                 if problems:
                     logger.info(f"Detected {len(problems)} problems")
                     for problem in problems:
                         self._handle_problem(problem)
-                
+
                 # Sleep for configured interval
                 sleep_time = self.config['reporting']['interval_minutes'] * 60
                 time.sleep(sleep_time)
-                
+
             except KeyboardInterrupt:
                 logger.info("Shutting down problem reporter...")
                 break
             except Exception as e:
                 logger.error(f"Error in monitoring loop: {e}")
                 time.sleep(60)  # Wait before retrying
-    
+
     def _detect_problems(self) -> List[Dict[str, Any]]:
         """Detect system problems"""
         problems = []
         current_time = datetime.now()
-        
+
         # System resource problems
         problems.extend(self._check_system_resources())
-        
+
         # Service problems
         problems.extend(self._check_services())
-        
+
         # Hardware problems
         problems.extend(self._check_hardware())
-        
+
         # Network problems
         problems.extend(self._check_network())
-        
+
         # Application problems
         problems.extend(self._check_application())
-        
+
         # Filter out problems that were recently reported
         filtered_problems = []
         for problem in problems:
             problem_key = f"{problem['category']}:{problem['type']}"
             last_reported = self.last_report_time.get(problem_key)
-            
+
             if not last_reported or (current_time - last_reported) > timedelta(hours=1):
                 filtered_problems.append(problem)
                 self.last_report_time[problem_key] = current_time
-        
+
         return filtered_problems
-    
+
     def _check_system_resources(self) -> List[Dict[str, Any]]:
         """Check system resource usage"""
         problems = []
         thresholds = self.config['reporting']['report_threshold']
-        
+
         # CPU usage
         cpu_percent = psutil.cpu_percent(interval=1)
         if cpu_percent > thresholds['cpu_percent']:
@@ -222,7 +223,7 @@ class ProblemReporter:
                 'metrics': {'cpu_percent': cpu_percent},
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         # Memory usage
         memory = psutil.virtual_memory()
         if memory.percent > thresholds['memory_percent']:
@@ -238,19 +239,20 @@ class ProblemReporter:
                 },
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         # Disk usage
         for partition in psutil.disk_partitions():
             try:
                 usage = psutil.disk_usage(partition.mountpoint)
                 usage_percent = usage.used / usage.total * 100
-                
+
                 if usage_percent > thresholds['disk_usage_percent']:
                     problems.append({
                         'category': 'system',
                         'type': 'high_disk_usage',
                         'severity': 'warning' if usage_percent < 98 else 'critical',
                         'message': f'High disk usage on {partition.mountpoint}: {usage_percent:.1f}%',
+                            
                         'metrics': {
                             'disk_usage_percent': usage_percent,
                             'disk_used_gb': usage.used / (1024**3),
@@ -261,7 +263,7 @@ class ProblemReporter:
                     })
             except Exception:
                 pass
-        
+
         # Temperature
         temp = self._get_cpu_temperature()
         if temp and temp > thresholds['temperature_celsius']:
@@ -273,14 +275,14 @@ class ProblemReporter:
                 'metrics': {'temperature_celsius': temp},
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         return problems
-    
+
     def _check_services(self) -> List[Dict[str, Any]]:
         """Check critical services"""
         problems = []
         critical_services = ['piwardrive', 'piwardrive-webui', 'gpsd']
-        
+
         for service in critical_services:
             try:
                 result = subprocess.run(
@@ -288,14 +290,16 @@ class ProblemReporter:
                     capture_output=True,
                     text=True
                 )
-                
+
                 if result.stdout.strip() != 'active':
                     problems.append({
                         'category': 'service',
                         'type': 'service_down',
                         'severity': 'critical',
                         'message': f'Critical service {service} is not running',
-                        'metrics': {'service_name': service, 'status': result.stdout.strip()},
+                        'metrics': {'service_name': service,
+                            'status': result.stdout.strip()},
+                            
                         'timestamp': datetime.now().isoformat()
                     })
             except Exception as e:
@@ -307,13 +311,13 @@ class ProblemReporter:
                     'metrics': {'service_name': service, 'error': str(e)},
                     'timestamp': datetime.now().isoformat()
                 })
-        
+
         return problems
-    
+
     def _check_hardware(self) -> List[Dict[str, Any]]:
         """Check hardware status"""
         problems = []
-        
+
         # Check for USB devices (Wi-Fi adapters, GPS)
         try:
             result = subprocess.run(['lsusb'], capture_output=True, text=True)
@@ -335,11 +339,11 @@ class ProblemReporter:
                 'metrics': {'error': str(e)},
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         # Check GPS device
         gps_devices = ['/dev/ttyACM0', '/dev/ttyUSB0', '/dev/ttyAMA0']
         gps_found = any(os.path.exists(device) for device in gps_devices)
-        
+
         if not gps_found:
             problems.append({
                 'category': 'hardware',
@@ -349,38 +353,41 @@ class ProblemReporter:
                 'metrics': {'checked_devices': gps_devices},
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         return problems
-    
+
     def _check_network(self) -> List[Dict[str, Any]]:
         """Check network connectivity"""
         problems = []
-        
+
         # Check internet connectivity
         connectivity_tests = [
             ('google.com', 80),
             ('8.8.8.8', 53)
         ]
-        
+
         internet_available = False
         for host, port in connectivity_tests:
             if self._test_connectivity(host, port):
                 internet_available = True
                 break
-        
+
         if not internet_available:
             problems.append({
                 'category': 'network',
                 'type': 'internet_connectivity_lost',
                 'severity': 'warning',
                 'message': 'Internet connectivity lost',
-                'metrics': {'tested_hosts': [f"{host}:{port}" for host, port in connectivity_tests]},
+                'metrics': {'tested_hosts': [f"{host}:{port}" for host,
+                    port in connectivity_tests]},
+                    
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         # Check local API
         try:
-            response = self.session.get('http://localhost:8000/api/v1/system/health', timeout=5)
+            response = self.session.get('http://localhost:8000/api/v1/system/health',
+                timeout=5)
             if response.status_code != 200:
                 problems.append({
                     'category': 'network',
@@ -399,13 +406,13 @@ class ProblemReporter:
                 'metrics': {'error': str(e)},
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         return problems
-    
+
     def _check_application(self) -> List[Dict[str, Any]]:
         """Check application-specific problems"""
         problems = []
-        
+
         # Check for PiWardrive processes
         piwardrive_processes = []
         for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
@@ -414,7 +421,7 @@ class ProblemReporter:
                     piwardrive_processes.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
-        
+
         if not piwardrive_processes:
             problems.append({
                 'category': 'application',
@@ -424,7 +431,7 @@ class ProblemReporter:
                 'metrics': {'process_count': 0},
                 'timestamp': datetime.now().isoformat()
             })
-        
+
         # Check log files for errors
         log_files = ['/var/log/piwardrive.log', '/var/log/syslog']
         for log_file in log_files:
@@ -433,63 +440,67 @@ class ProblemReporter:
                     with open(log_file, 'r') as f:
                         lines = f.readlines()
                         recent_lines = lines[-100:]  # Last 100 lines
-                        
-                        error_count = sum(1 for line in recent_lines 
-                                        if 'ERROR' in line.upper() or 'CRITICAL' in line.upper())
-                        
+
+                        error_count = sum(1 for line in recent_lines
+                                        if 'ERROR' in line.upper() \or
+                                            'CRITICAL' in line.upper())
+
                         if error_count > 10:  # Many errors in recent logs
                             problems.append({
                                 'category': 'application',
                                 'type': 'high_error_rate',
                                 'severity': 'warning',
                                 'message': f'High error rate in {log_file}: {error_count} errors',
-                                'metrics': {'error_count': error_count, 'log_file': log_file},
+                                    
+                                'metrics': {'error_count': error_count,
+                                    'log_file': log_file},
+                                    
                                 'timestamp': datetime.now().isoformat()
                             })
                 except Exception:
                     pass
-        
+
         return problems
-    
+
     def _handle_problem(self, problem: Dict[str, Any]):
         """Handle detected problem"""
         logger.warning(f"Problem detected: {problem['message']}")
-        
+
         # Add to problem history
         self.problem_history.append(problem)
-        
+
         # Keep only last 100 problems
         if len(self.problem_history) > 100:
             self.problem_history.pop(0)
-        
+
         # Check report rate limiting
         if not self._should_report(problem):
             logger.debug(f"Skipping report due to rate limiting: {problem['type']}")
             return
-        
+
         # Create problem report
         report = self._create_problem_report(problem)
-        
+
         # Send report
         self._send_report(report)
-        
+
         # Send notifications
         self._send_notifications(problem)
-    
+
     def _should_report(self, problem: Dict[str, Any]) -> bool:
         """Check if problem should be reported (rate limiting)"""
         max_reports = self.config['reporting']['max_reports_per_hour']
         current_time = datetime.now()
-        
+
         # Count recent reports of same type
         recent_reports = [
             p for p in self.problem_history
-            if p['type'] == problem['type'] and 
+            if p['type'] == problem['type'] and
                (current_time - datetime.fromisoformat(p['timestamp'])) < timedelta(hours=1)
         ]
-        
+
         return len(recent_reports) < max_reports
-    
+
     def _create_problem_report(self, problem: Dict[str, Any]) -> Dict[str, Any]:
         """Create comprehensive problem report"""
         report = {
@@ -499,38 +510,38 @@ class ProblemReporter:
             'device_info': self._get_device_info(),
             'system_status': self._get_system_status()
         }
-        
+
         # Add logs if configured
         if self.config['data_collection']['include_logs']:
             report['logs'] = self._get_recent_logs()
-        
+
         # Add diagnostics if configured
         if self.config['data_collection']['include_diagnostics']:
             report['diagnostics'] = self._get_diagnostics()
-        
+
         return report
-    
+
     def _send_report(self, report: Dict[str, Any]):
         """Send problem report to configured endpoints"""
         endpoints = self.config['endpoints']
         auth = self.config['authentication']
-        
+
         headers = {
             'Content-Type': 'application/json',
             'User-Agent': f'PiWardrive-ProblemReporter/{self.device_id}'
         }
-        
+
         if auth.get('api_key'):
             headers['X-API-Key'] = auth['api_key']
-        
+
         if auth.get('device_token'):
             headers['X-Device-Token'] = auth['device_token']
-        
+
         # Try endpoints in order
         for endpoint_name, endpoint_url in endpoints.items():
             if not endpoint_url:
                 continue
-                
+
             try:
                 logger.info(f"Sending report to {endpoint_name}: {endpoint_url}")
                 response = self.session.post(
@@ -539,92 +550,93 @@ class ProblemReporter:
                     headers=headers,
                     timeout=10
                 )
-                
+
                 if response.status_code in [200, 201, 202]:
                     logger.info(f"Report sent successfully to {endpoint_name}")
                     return
                 else:
                     logger.warning(f"Report failed to {endpoint_name}: {response.status_code}")
-                    
+
             except Exception as e:
                 logger.warning(f"Failed to send report to {endpoint_name}: {e}")
                 continue
-        
+
         logger.error("Failed to send report to any endpoint")
-    
+
     def _send_notifications(self, problem: Dict[str, Any]):
         """Send problem notifications"""
         notifications = self.config['notifications']
-        
+
         # Email notifications
         if notifications['email']['enabled']:
             self._send_email_notification(problem)
-        
+
         # Webhook notifications
         if notifications['webhook']['enabled']:
             self._send_webhook_notification(problem)
-    
+
     def _send_email_notification(self, problem: Dict[str, Any]):
         """Send email notification"""
         try:
             email_config = self.config['notifications']['email']
-            
+
             msg = MIMEMultipart()
             msg['From'] = email_config['username']
             msg['To'] = ', '.join(email_config['to_addresses'])
             msg['Subject'] = f"PiWardrive Problem Alert - {problem['type']}"
-            
+
             body = f"""
             Device: {self.device_id}
             Problem: {problem['message']}
             Severity: {problem['severity']}
             Time: {problem['timestamp']}
-            
+
             Metrics: {json.dumps(problem['metrics'], indent=2)}
             """
-            
+
             msg.attach(MIMEText(body, 'plain'))
-            
-            server = smtplib.SMTP(email_config['smtp_server'], email_config['smtp_port'])
+
+            server = smtplib.SMTP(email_config['smtp_server'],
+                email_config['smtp_port'])
             server.starttls()
             server.login(email_config['username'], email_config['password'])
             server.send_message(msg)
             server.quit()
-            
+
             logger.info("Email notification sent")
-            
+
         except Exception as e:
             logger.error(f"Failed to send email notification: {e}")
-    
+
     def _send_webhook_notification(self, problem: Dict[str, Any]):
         """Send webhook notification"""
         try:
             webhook_config = self.config['notifications']['webhook']
-            
+
             payload = {
                 'device_id': self.device_id,
                 'problem': problem,
                 'timestamp': datetime.now().isoformat()
             }
-            
+
             headers = {'Content-Type': 'application/json'}
             headers.update(webhook_config.get('headers', {}))
-            
+
             response = self.session.post(
                 webhook_config['url'],
                 json=payload,
                 headers=headers,
                 timeout=10
             )
-            
+
             if response.status_code in [200, 201, 202]:
                 logger.info("Webhook notification sent")
             else:
                 logger.warning(f"Webhook notification failed: {response.status_code}")
-                
+
         except Exception as e:
             logger.error(f"Failed to send webhook notification: {e}")
-    
+
     def _get_device_info(self) -> Dict[str, Any]:
         """Get device information"""
         return {
@@ -634,25 +646,28 @@ class ProblemReporter:
             'uptime': self._get_uptime(),
             'local_ip': self._get_local_ip()
         }
-    
+
     def _get_system_status(self) -> Dict[str, Any]:
         """Get current system status"""
         cpu_temp = self._get_cpu_temperature()
         memory = psutil.virtual_memory()
-        
+
         return {
             'cpu_percent': psutil.cpu_percent(interval=1),
             'cpu_temperature': cpu_temp,
             'memory_percent': memory.percent,
             'disk_usage': self._get_disk_usage(),
-            'load_average': list(os.getloadavg()) if hasattr(os, 'getloadavg') else [0, 0, 0]
+            'load_average': list(os.getloadavg()) if hasattr(os,
+                'getloadavg') else [0,
+                0,
+                0]
         }
-    
+
     def _get_recent_logs(self) -> List[str]:
         """Get recent log entries"""
         logs = []
         max_lines = self.config['data_collection']['max_log_lines']
-        
+
         log_files = ['/var/log/piwardrive.log', '/var/log/syslog']
         for log_file in log_files:
             if os.path.exists(log_file):
@@ -663,9 +678,9 @@ class ProblemReporter:
                         logs.extend([f"{log_file}: {line.strip()}" for line in recent_lines])
                 except Exception:
                     pass
-        
+
         return logs
-    
+
     def _get_diagnostics(self) -> Dict[str, Any]:
         """Get diagnostic information"""
         return {
@@ -673,12 +688,12 @@ class ProblemReporter:
             'network': self._get_network_status(),
             'hardware': self._get_hardware_status()
         }
-    
+
     def _get_service_status(self) -> Dict[str, Any]:
         """Get service status"""
         services = ['piwardrive', 'piwardrive-webui', 'gpsd', 'kismet', 'bettercap']
         status = {}
-        
+
         for service in services:
             try:
                 result = subprocess.run(
@@ -689,9 +704,9 @@ class ProblemReporter:
                 status[service] = result.stdout.strip()
             except Exception:
                 status[service] = 'unknown'
-        
+
         return status
-    
+
     def _get_network_status(self) -> Dict[str, Any]:
         """Get network status"""
         return {
@@ -699,7 +714,7 @@ class ProblemReporter:
             'local_api': self._test_connectivity('localhost', 8000),
             'interfaces': list(psutil.net_if_addrs().keys())
         }
-    
+
     def _get_hardware_status(self) -> Dict[str, Any]:
         """Get hardware status"""
         return {
@@ -707,7 +722,7 @@ class ProblemReporter:
             'gps_device': self._check_gps_device(),
             'temperature': self._get_cpu_temperature()
         }
-    
+
     def _get_usb_devices(self) -> List[str]:
         """Get USB devices"""
         try:
@@ -717,12 +732,12 @@ class ProblemReporter:
         except Exception:
             pass
         return []
-    
+
     def _check_gps_device(self) -> bool:
         """Check if GPS device is present"""
         gps_devices = ['/dev/ttyACM0', '/dev/ttyUSB0', '/dev/ttyAMA0']
         return any(os.path.exists(device) for device in gps_devices)
-    
+
     def _get_cpu_temperature(self) -> Optional[float]:
         """Get CPU temperature"""
         try:
@@ -731,26 +746,29 @@ class ProblemReporter:
                 '/sys/class/thermal/thermal_zone0/temp',
                 '/sys/class/thermal/thermal_zone1/temp'
             ]
-            
+
             for thermal_file in thermal_files:
                 if os.path.exists(thermal_file):
                     with open(thermal_file, 'r') as f:
                         temp = float(f.read().strip()) / 1000.0
                         if temp > 0:
                             return temp
-            
+
             # Try vcgencmd for Raspberry Pi
-            result = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True, text=True)
+            result = subprocess.run(['vcgencmd',
+                'measure_temp'],
+                capture_output=True,
+                text=True)
             if result.returncode == 0:
                 temp_str = result.stdout.strip()
                 if 'temp=' in temp_str:
                     return float(temp_str.split('=')[1].replace("'C", ""))
-                    
+
         except Exception:
             pass
-        
+
         return None
-    
+
     def _get_uptime(self) -> str:
         """Get system uptime"""
         try:
@@ -761,7 +779,7 @@ class ProblemReporter:
             return f"{days}d {hours}h {minutes}m"
         except Exception:
             return "Unknown"
-    
+
     def _get_local_ip(self) -> str:
         """Get local IP address"""
         try:
@@ -771,7 +789,7 @@ class ProblemReporter:
                 return s.getsockname()[0]
         except Exception:
             return "Unknown"
-    
+
     def _get_disk_usage(self) -> Dict[str, float]:
         """Get disk usage for all partitions"""
         usage = {}
@@ -782,7 +800,7 @@ class ProblemReporter:
             except Exception:
                 pass
         return usage
-    
+
     def _test_connectivity(self, host: str, port: int) -> bool:
         """Test connectivity to host:port"""
         try:
@@ -793,12 +811,17 @@ class ProblemReporter:
         except Exception:
             return False
 
+
+
 def main():
     """Main function"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='PiWardrive Problem Reporter')
-    parser.add_argument('--config', '-c', default='/etc/piwardrive/problem-reporter.conf',
+    parser.add_argument('--config',
+        '-c',
+        default='/etc/piwardrive/problem-reporter.conf',
+        
                        help='Configuration file path')
     parser.add_argument('--daemon', '-d', action='store_true',
                        help='Run as daemon')
@@ -806,33 +829,33 @@ def main():
                        help='Test configuration and exit')
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Verbose logging')
-    
+
     args = parser.parse_args()
-    
+
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Create problem reporter
     reporter = ProblemReporter(args.config)
-    
+
     if args.test:
         print("Testing configuration...")
         print(f"Device ID: {reporter.device_id}")
         print(f"Reporting enabled: {reporter.config['reporting']['enabled']}")
         print(f"Configured endpoints: {list(reporter.config['endpoints'].keys())}")
-        
+
         # Test problem detection
         problems = reporter._detect_problems()
         print(f"Current problems detected: {len(problems)}")
         for problem in problems:
             print(f"  - {problem['category']}: {problem['message']}")
-        
+
         sys.exit(0)
-    
+
     if args.daemon:
         # TODO: Implement proper daemon mode
         pass
-    
+
     # Run monitoring
     try:
         reporter.monitor_and_report()

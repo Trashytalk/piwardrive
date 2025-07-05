@@ -6,7 +6,7 @@ export default function DBStats() {
   useEffect(() => {
     const load = () => {
       fetch('/db-stats')
-        .then(r => r.json())
+        .then((r) => r.json())
         .then(setInfo)
         .catch(() => setInfo(null));
     };
@@ -20,5 +20,9 @@ export default function DBStats() {
     .map(([n, c]) => `${n}:${c}`)
     .join(' ');
   const size = info.size_kb != null ? info.size_kb.toFixed(1) + 'KB' : 'N/A';
-  return <div>DB: {size} {parts}</div>;
+  return (
+    <div>
+      DB: {size} {parts}
+    </div>
+  );
 }

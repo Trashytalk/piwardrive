@@ -6,11 +6,11 @@ export default function HealthPlayback({ limit = 100, interval = 1.0 }) {
   useEffect(() => {
     const params = new URLSearchParams({ limit, interval });
     const es = new EventSource(`/sse/history?${params}`);
-    es.onmessage = ev => {
+    es.onmessage = (ev) => {
       try {
         const data = JSON.parse(ev.data);
         if (data.record) {
-          setRecords(prev => [...prev, data.record]);
+          setRecords((prev) => [...prev, data.record]);
         }
       } catch {
         /* ignore */
@@ -30,4 +30,3 @@ export default function HealthPlayback({ limit = 100, interval = 1.0 }) {
     </div>
   );
 }
-

@@ -7,7 +7,11 @@ describe('findSuspiciousAps', () => {
   });
 
   it('flags open networks', () => {
-    const rec = { bssid: 'AA:BB:CC:DD:EE:FF', ssid: 'OpenNet', encryption: 'open' };
+    const rec = {
+      bssid: 'AA:BB:CC:DD:EE:FF',
+      ssid: 'OpenNet',
+      encryption: 'open',
+    };
     expect(findSuspiciousAps([rec])).toEqual([rec]);
   });
 
@@ -24,9 +28,21 @@ describe('findSuspiciousAps', () => {
   });
 
   it('combines open network and duplicates', () => {
-    const r1 = { bssid: 'AA:AA:AA:AA:AA:AA', ssid: 'Open1', encryption: 'open' };
-    const r2 = { bssid: 'AA:AA:AA:AA:AA:AA', ssid: 'Secure', encryption: 'wpa2' };
-    const r3 = { bssid: 'BB:BB:BB:BB:BB:BB', ssid: 'Other', encryption: 'wpa2' };
+    const r1 = {
+      bssid: 'AA:AA:AA:AA:AA:AA',
+      ssid: 'Open1',
+      encryption: 'open',
+    };
+    const r2 = {
+      bssid: 'AA:AA:AA:AA:AA:AA',
+      ssid: 'Secure',
+      encryption: 'wpa2',
+    };
+    const r3 = {
+      bssid: 'BB:BB:BB:BB:BB:BB',
+      ssid: 'Other',
+      encryption: 'wpa2',
+    };
     expect(findSuspiciousAps([r1, r2, r3])).toEqual([r1, r2]);
   });
 });

@@ -1,4 +1,3 @@
-import asyncio
 from piwardrive.services import security_analyzer
 
 

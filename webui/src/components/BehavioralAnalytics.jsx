@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+} from 'chart.js';
 import HeatmapLayer from './HeatmapLayer.jsx';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
@@ -45,7 +51,7 @@ export default function BehavioralAnalytics() {
     return dt > 0 ? dist / dt : 0;
   });
 
-  const labels = activity.map(a => new Date(a[0]).toLocaleTimeString());
+  const labels = activity.map((a) => new Date(a[0]).toLocaleTimeString());
 
   return (
     <div>
@@ -70,13 +76,22 @@ export default function BehavioralAnalytics() {
       <MapContainer center={[0, 0]} zoom={13} style={{ height: '40vh' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <HeatmapLayer show={showHeatmap} />
-        {track.length > 1 && <Polyline positions={track.map(p => [p[0], p[1]])} color="blue" />}
+        {track.length > 1 && (
+          <Polyline positions={track.map((p) => [p[0], p[1]])} color="blue" />
+        )}
       </MapContainer>
       <h3>Speed Analysis</h3>
       <Line
         data={{
           labels: track.map((_, i) => i + 1),
-          datasets: [{ label: 'Speed m/s', data: speed, borderColor: 'red', tension: 0.2 }]
+          datasets: [
+            {
+              label: 'Speed m/s',
+              data: speed,
+              borderColor: 'red',
+              tension: 0.2,
+            },
+          ],
         }}
         options={{ animation: false, scales: { y: { beginAtZero: true } } }}
       />
@@ -84,15 +99,22 @@ export default function BehavioralAnalytics() {
       <Line
         data={{
           labels,
-          datasets: [{ label: 'Activity', data: activity.map(a => a[1]), borderColor: 'green', tension: 0.2 }]
+          datasets: [
+            {
+              label: 'Activity',
+              data: activity.map((a) => a[1]),
+              borderColor: 'green',
+              tension: 0.2,
+            },
+          ],
         }}
         options={{ animation: false, scales: { y: { beginAtZero: true } } }}
       />
       <ul>
-        {track.map(p => (
+        {track.map((p) => (
           <li key={p[2]}>
-            {new Date(p[2]).toLocaleString()} - {anonymize(p[3], privacy)} @ {p[0].toFixed(5)},{' '}
-            {p[1].toFixed(5)}
+            {new Date(p[2]).toLocaleString()} - {anonymize(p[3], privacy)} @{' '}
+            {p[0].toFixed(5)}, {p[1].toFixed(5)}
           </li>
         ))}
       </ul>

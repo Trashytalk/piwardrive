@@ -13,6 +13,7 @@ aiohttp_mod.ClientTimeout = lambda *a, **k: None  # type: ignore[attr-defined]
 aiohttp_mod.ClientError = Exception  # type: ignore[attr-defined]
 sys.modules["aiohttp"] = aiohttp_mod
 from typing import Any
+
 import pytest
 
 from piwardrive import diagnostics
@@ -61,7 +62,9 @@ def test_self_test_restarts_failed_services(monkeypatch: Any) -> None:
         "get_service_statuses",
         lambda: {"kismet": True, "bettercap": False},
     )
-    monkeypatch.setattr(diagnostics.utils, "run_service_cmd", lambda s, a: called.append((s, a)))
+    monkeypatch.setattr(
+        diagnostics.utils, "run_service_cmd", lambda s, a: called.append((s, a))
+    )
 
     result = diagnostics.self_test()
     assert called == [("bettercap", "restart")]

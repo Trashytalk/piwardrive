@@ -25,7 +25,13 @@ describe('scanBluetooth', () => {
       { address: '11:22:33:44:55:66', name: 'Bar' },
     ]);
     const devices = await scanBluetooth(1);
-    expect(devices).toContainEqual({ address: 'AA:BB:CC:DD:EE:FF', name: 'Foo' });
-    expect(devices).toContainEqual({ address: '11:22:33:44:55:66', name: 'Bar' });
+    expect(devices).toContainEqual({
+      address: 'AA:BB:CC:DD:EE:FF',
+      name: 'Foo',
+    });
+    expect(devices).toContainEqual({
+      address: '11:22:33:44:55:66',
+      name: 'Bar',
+    });
   });
 });

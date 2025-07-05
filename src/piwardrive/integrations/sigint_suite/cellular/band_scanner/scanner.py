@@ -9,7 +9,6 @@ from typing import List, Optional, cast
 
 from piwardrive.core import config
 from piwardrive.scheduler import PollScheduler
-
 from piwardrive.sigint_suite.cellular.parsers import parse_band_output
 from piwardrive.sigint_suite.models import BandRecord
 

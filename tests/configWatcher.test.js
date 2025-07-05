@@ -6,7 +6,7 @@ const path = require('path');
 const { watchConfig } = require('../scripts/configWatcher.js');
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 test('watchConfig triggers on change', async () => {
@@ -14,7 +14,9 @@ test('watchConfig triggers on change', async () => {
   const file = path.join(dir, 'config.json');
   fs.writeFileSync(file, '{}');
   let triggered = false;
-  const watcher = watchConfig(file, () => { triggered = true; });
+  const watcher = watchConfig(file, () => {
+    triggered = true;
+  });
   try {
     await sleep(100);
     fs.writeFileSync(file, '{"a":1}');

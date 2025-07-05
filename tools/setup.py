@@ -22,7 +22,6 @@ package_cfg = (
     config.get("tool", {}).get("setuptools", {}).get("packages", {}).get("find", {})
 )
 
-
 setup(
     name=project.get("name", "piwardrive"),
     version=project.get("version", "0.0.0"),

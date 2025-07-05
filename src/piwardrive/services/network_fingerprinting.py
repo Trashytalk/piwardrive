@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Iterable, Any
+from typing import Any, Iterable
 
 from piwardrive import persistence
 
@@ -48,7 +48,7 @@ def _classify(record: dict[str, Any]) -> tuple[str, str]:
 
 def _fingerprint_hash(char: dict[str, Any]) -> str:
     data = json.dumps(char, sort_keys=True).encode()
-    return hashlib.sha1(data).hexdigest()
+    return hashlib.sha256(data).hexdigest()
 
 
 def _make_row(record: dict[str, Any]) -> dict[str, Any]:

@@ -9,7 +9,7 @@ export function setupLogging({ logFile, level = 'INFO', stdout = false } = {}) {
   if (env) {
     if (/^\d+$/.test(env)) {
       const num = parseInt(env, 10);
-      level = Object.keys(LEVELS).find(k => LEVELS[k] === num) || level;
+      level = Object.keys(LEVELS).find((k) => LEVELS[k] === num) || level;
     } else if (LEVELS[env.toUpperCase()]) {
       level = env.toUpperCase();
     }
@@ -26,9 +26,9 @@ export function setupLogging({ logFile, level = 'INFO', stdout = false } = {}) {
 
   return {
     level: current,
-    debug: msg => log('DEBUG', msg),
-    info: msg => log('INFO', msg),
-    warning: msg => log('WARNING', msg),
-    error: msg => log('ERROR', msg)
+    debug: (msg) => log('DEBUG', msg),
+    info: (msg) => log('INFO', msg),
+    warning: (msg) => log('WARNING', msg),
+    error: (msg) => log('ERROR', msg),
   };
 }

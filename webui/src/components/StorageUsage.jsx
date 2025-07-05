@@ -6,8 +6,8 @@ export default function StorageUsage() {
   useEffect(() => {
     const load = () => {
       fetch('/storage')
-        .then(r => r.json())
-        .then(d => setPct(d.percent))
+        .then((r) => r.json())
+        .then((d) => setPct(d.percent))
         .catch(() => setPct(null));
     };
     load();

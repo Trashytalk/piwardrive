@@ -5,14 +5,22 @@ import { execFileSync } from 'child_process';
 
 export function applyStyle(dbPath, { stylePath, name, description } = {}) {
   const lines = [
-    "CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT);",
+    'CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT);',
   ];
-  if (name != null) lines.push(`INSERT OR REPLACE INTO metadata (name,value) VALUES ('name','${name}')`);
-  if (description != null) lines.push(`INSERT OR REPLACE INTO metadata (name,value) VALUES ('description','${description}')`);
+  if (name != null)
+    lines.push(
+      `INSERT OR REPLACE INTO metadata (name,value) VALUES ('name','${name}')`
+    );
+  if (description != null)
+    lines.push(
+      `INSERT OR REPLACE INTO metadata (name,value) VALUES ('description','${description}')`
+    );
   if (stylePath) {
     const style = fs.readFileSync(stylePath, 'utf-8');
     JSON.parse(style);
-    lines.push(`INSERT OR REPLACE INTO metadata (name,value) VALUES ('style','${style.replace(/'/g, "''")}')`);
+    lines.push(
+      `INSERT OR REPLACE INTO metadata (name,value) VALUES ('style','${style.replace(/'/g, "''")}')`
+    );
   }
   execFileSync('sqlite3', [dbPath], { input: lines.join('\n') });
 }
@@ -22,8 +30,10 @@ export function buildMbtiles(folder, output) {
     throw new Error('Folder not found');
   }
   const sql = [];
-  sql.push("CREATE TABLE IF NOT EXISTS tiles (zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BLOB, UNIQUE (zoom_level,tile_column,tile_row));");
-  sql.push("CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT);");
+  sql.push(
+    'CREATE TABLE IF NOT EXISTS tiles (zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BLOB, UNIQUE (zoom_level,tile_column,tile_row));'
+  );
+  sql.push('CREATE TABLE IF NOT EXISTS metadata (name TEXT, value TEXT);');
   for (const rootZ of fs.readdirSync(folder)) {
     const zDir = path.join(folder, rootZ);
     if (!fs.statSync(zDir).isDirectory()) continue;
@@ -40,7 +50,9 @@ export function buildMbtiles(folder, output) {
         const tileRow = Math.pow(2, z) - 1 - y;
         const data = fs.readFileSync(path.join(xDir, file));
         const hex = data.toString('hex');
-        sql.push(`INSERT OR REPLACE INTO tiles (zoom_level,tile_column,tile_row,tile_data) VALUES (${z},${x},${tileRow},X'${hex}')`);
+        sql.push(
+          `INSERT OR REPLACE INTO tiles (zoom_level,tile_column,tile_row,tile_data) VALUES (${z},${x},${tileRow},X'${hex}')`
+        );
       }
     }
   }

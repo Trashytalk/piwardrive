@@ -1,6 +1,5 @@
 import logging
 
-
 try:  # pragma: no cover - optional GUI dependency
     import tkinter as _tk
     from tkinter import messagebox as _messagebox

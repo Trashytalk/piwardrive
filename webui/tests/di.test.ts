@@ -29,8 +29,12 @@ describe('Container', () => {
     const c = new Container();
     const factory = vi.fn(() => ({}));
     c.registerFactory('svc', factory);
-    const results = await Promise.all(Array.from({ length: 10 }, () => Promise.resolve().then(() => c.resolve('svc'))));
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () =>
+        Promise.resolve().then(() => c.resolve('svc'))
+      )
+    );
     expect(factory).toHaveBeenCalledTimes(1);
-    results.forEach(r => expect(r).toBe(results[0]));
+    results.forEach((r) => expect(r).toBe(results[0]));
   });
 });

@@ -13,7 +13,7 @@ export default function VectorTileCustomizer() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mbtiles, style, name, description }),
     })
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(() => setStatus('Updated'))
       .catch(() => setStatus('Error'));
   };
@@ -24,7 +24,7 @@ export default function VectorTileCustomizer() {
       <div>
         <label>
           MBTiles Path
-          <input value={mbtiles} onChange={e => setMbtiles(e.target.value)} />
+          <input value={mbtiles} onChange={(e) => setMbtiles(e.target.value)} />
         </label>
       </div>
       <div>
@@ -32,7 +32,7 @@ export default function VectorTileCustomizer() {
           Style JSON
           <textarea
             value={style}
-            onChange={e => setStyle(e.target.value)}
+            onChange={(e) => setStyle(e.target.value)}
             rows={4}
             cols={40}
           />
@@ -41,7 +41,7 @@ export default function VectorTileCustomizer() {
       <div>
         <label>
           Name
-          <input value={name} onChange={e => setName(e.target.value)} />
+          <input value={name} onChange={(e) => setName(e.target.value)} />
         </label>
       </div>
       <div>
@@ -49,7 +49,7 @@ export default function VectorTileCustomizer() {
           Description
           <input
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </label>
       </div>

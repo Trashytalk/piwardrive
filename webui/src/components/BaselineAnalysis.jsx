@@ -6,8 +6,8 @@ export default function BaselineAnalysis() {
   useEffect(() => {
     const load = () => {
       fetch('/baseline-analysis')
-        .then(r => r.json())
-        .then(d => setResult(d))
+        .then((r) => r.json())
+        .then((d) => setResult(d))
         .catch(() => setResult(null));
     };
     load();

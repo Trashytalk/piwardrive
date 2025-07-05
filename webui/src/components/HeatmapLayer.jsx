@@ -12,7 +12,11 @@ export default function HeatmapLayer({ show }) {
       try {
         const resp = await fetch('/overlay?bins=50');
         const data = await resp.json();
-        const pts = (data.points || []).map(([lat, lon, cnt]) => [lat, lon, cnt]);
+        const pts = (data.points || []).map(([lat, lon, cnt]) => [
+          lat,
+          lon,
+          cnt,
+        ]);
         layer = window.L.heatLayer(pts, { radius: 25 }).addTo(map);
       } catch (e) {
         reportError(e);

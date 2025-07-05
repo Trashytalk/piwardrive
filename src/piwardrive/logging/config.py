@@ -4,7 +4,7 @@ import json
 import logging.config
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class LoggingConfig:
@@ -54,9 +54,9 @@ class LoggingConfig:
         file_config: Dict[str, Any] = {}
         try:
             with open(self.config_path) as f:
-                file_config = json.load(f)
+                _fileconfig = json.load(f)
         except FileNotFoundError:
-            file_config = {}
+            _fileconfig = {}
         except Exception as exc:  # pragma: no cover - configuration may be invalid
             print(f"Failed to load logging config: {exc}")
 

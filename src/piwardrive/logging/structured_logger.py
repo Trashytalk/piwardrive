@@ -3,14 +3,11 @@ import logging
 import os
 import socket
 import threading
-import time
-import uuid
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional, Union
 from contextvars import ContextVar
-from dataclasses import dataclass, asdict
-
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
+from typing import Any, Dict, Optional, Union
 
 from ..fastjson import dumps
 
@@ -65,7 +62,9 @@ class StructuredFormatter(logging.Formatter):
         ctx = log_context.get()
         context_data = asdict(ctx)
         log_data: Dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(
+                record.created, tz=timezone.utc
+            ).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -78,7 +77,11 @@ class StructuredFormatter(logging.Formatter):
             },
         }
 
-        if self.include_extra and hasattr(record, "extra") and isinstance(record.extra, dict):
+        if (
+            self.include_extra
+            and hasattr(record, "extra")
+            and isinstance(record.extra, dict)
+        ):
             log_data["data"] = record.extra
 
         if record.exc_info:
@@ -141,34 +144,52 @@ class PiWardriveLogger:
             from logging.handlers import RotatingFileHandler
 
             file_handler = RotatingFileHandler(
-                log_file, maxBytes=self.config.get("max_bytes", 10_485_760), backupCount=self.config.get("backup_count", 5)
+                log_file,
+                maxBytes=self.config.get("max_bytes", 10_485_760),
+                backupCount=self.config.get("backup_count", 5),
             )
             file_handler.setFormatter(formatter)
             handlers.append(file_handler)
 
         return handlers
 
-    def _log(self, level: int, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def _log(
+        self,
+        level: int,
+        message: str,
+        extra: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> None:
         if not self.logger.isEnabledFor(level):
             return
         record_extra = {"extra": extra} if extra else {"extra": {}}
         self.logger.log(level, message, **record_extra, **kwargs)
 
-    def info(self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def info(
+        self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any
+    ) -> None:
         """Log info message with structured data."""
         self._log(logging.INFO, message, extra, **kwargs)
 
     def error(
-        self, message: str, exc_info: bool = True, extra: Optional[Dict[str, Any]] = None, **kwargs: Any
+        self,
+        message: str,
+        exc_info: bool = True,
+        extra: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> None:
         """Log error message with exception details."""
         self._log(logging.ERROR, message, extra, exc_info=exc_info, **kwargs)
 
-    def debug(self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def debug(
+        self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any
+    ) -> None:
         """Log debug message with structured data."""
         self._log(logging.DEBUG, message, extra, **kwargs)
 
-    def warning(self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any) -> None:
+    def warning(
+        self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any
+    ) -> None:
         """Log warning message with structured data."""
         self._log(logging.WARNING, message, extra, **kwargs)
 
@@ -198,4 +219,3 @@ __all__ = [
     "set_log_context",
     "get_logger",
 ]
-

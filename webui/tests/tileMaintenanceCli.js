@@ -10,7 +10,7 @@ export function runCli(args = []) {
   const out = execFileSync('python', [script, ...args], {
     cwd: path.join(__dirname, '..'),
     env: { ...process.env, PYTHONPATH: path.join('..', 'src') },
-    encoding: 'utf-8'
+    encoding: 'utf-8',
   });
   return JSON.parse(out);
 }

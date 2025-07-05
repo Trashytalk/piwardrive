@@ -6,8 +6,8 @@ export default function FingerprintSummary() {
   useEffect(() => {
     const load = () => {
       fetch('/fingerprints')
-        .then(r => r.json())
-        .then(d => setItems(d.fingerprints || []))
+        .then((r) => r.json())
+        .then((d) => setItems(d.fingerprints || []))
         .catch(() => setItems(null));
     };
     load();

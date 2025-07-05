@@ -13,4 +13,3 @@ def test_forecast_cpu_temp_deterministic():
     assert isinstance(a, list)
     assert len(a) == 3
     assert a == b
-

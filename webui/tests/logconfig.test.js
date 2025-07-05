@@ -38,7 +38,9 @@ describe('setupLogging', () => {
   it('writes to stdout', () => {
     const file = tmpFile('log_out.json');
     if (fs.existsSync(file)) fs.unlinkSync(file);
-    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => {});
+    const write = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => {});
     const logger = setupLogging({ logFile: file, stdout: true });
     logger.warning('stream me');
     const data = JSON.parse(fs.readFileSync(file, 'utf8'));

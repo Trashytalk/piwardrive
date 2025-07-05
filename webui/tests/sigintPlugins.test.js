@@ -6,14 +6,22 @@ import { getPlugin, clearPluginCache } from '../src/sigintPlugins.js';
 let origHome;
 
 describe('sigint plugins', () => {
-  beforeEach(() => { origHome = process.env.HOME; });
-  afterEach(() => { process.env.HOME = origHome; clearPluginCache(); });
+  beforeEach(() => {
+    origHome = process.env.HOME;
+  });
+  afterEach(() => {
+    process.env.HOME = origHome;
+    clearPluginCache();
+  });
 
   it('loads plugin module', () => {
     const tmp = fs.mkdtempSync(path.join(process.cwd(), 'tmp-'));
     const dir = path.join(tmp, '.config', 'piwardrive', 'sigint_plugins');
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'example.js'), 'module.exports.scan = () => [{id:1}];');
+    fs.writeFileSync(
+      path.join(dir, 'example.js'),
+      'module.exports.scan = () => [{id:1}];'
+    );
     process.env.HOME = tmp;
     clearPluginCache();
     const mod = getPlugin('example');

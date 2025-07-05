@@ -66,12 +66,14 @@ async function run(argv = process.argv.slice(2), helpers = {}) {
 }
 
 if (require.main === module) {
-  run().then(r => {
-    console.log(JSON.stringify(r));
-  }).catch(err => {
-    console.error(err.message);
-    process.exit(1);
-  });
+  run()
+    .then((r) => {
+      console.log(JSON.stringify(r));
+    })
+    .catch((err) => {
+      console.error(err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = { run, uploadDb, checkStatus };

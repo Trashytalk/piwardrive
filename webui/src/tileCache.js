@@ -3,7 +3,7 @@ export function deg2num(lat, lon, zoom) {
   const n = Math.pow(2, zoom);
   const x = Math.floor(((lon + 180) / 360) * n);
   const y = Math.floor(
-    (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n
   );
   return [x, y];
 }
@@ -111,7 +111,7 @@ function bearing(p1, p2) {
   const x =
     Math.cos(lat1) * Math.sin(lat2) -
     Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-  return (Math.atan2(y, x) * 180) / Math.PI + 360 % 360;
+  return (Math.atan2(y, x) * 180) / Math.PI + (360 % 360);
 }
 
 function destination(origin, brg, dist) {
@@ -121,7 +121,8 @@ function destination(origin, brg, dist) {
   const lon1 = (origin[1] * Math.PI) / 180;
   const b = (brg * Math.PI) / 180;
   const lat2 = Math.asin(
-    Math.sin(lat1) * Math.cos(ang) + Math.cos(lat1) * Math.sin(ang) * Math.cos(b)
+    Math.sin(lat1) * Math.cos(ang) +
+      Math.cos(lat1) * Math.sin(ang) * Math.cos(b)
   );
   const lon2 =
     lon1 +
@@ -132,7 +133,12 @@ function destination(origin, brg, dist) {
   return [(lat2 * 180) / Math.PI, (((lon2 * 180) / Math.PI + 540) % 360) - 180];
 }
 
-export async function routePrefetch(track, lookahead = 5, delta = 0.01, zoom = 16) {
+export async function routePrefetch(
+  track,
+  lookahead = 5,
+  delta = 0.01,
+  zoom = 16
+) {
   if (track.length < 2) return;
   const p1 = track[track.length - 2];
   const p2 = track[track.length - 1];
@@ -145,13 +151,13 @@ export async function routePrefetch(track, lookahead = 5, delta = 0.01, zoom = 1
     [lat, lon] = destination([lat, lon], brg, step);
     points.push([lat, lon]);
   }
-  const lats = points.map(p => p[0]).concat(p2[0]);
-  const lons = points.map(p => p[1]).concat(p2[1]);
+  const lats = points.map((p) => p[0]).concat(p2[0]);
+  const lons = points.map((p) => p[1]).concat(p2[1]);
   const bbox = [
     Math.min(...lats) - delta,
     Math.min(...lons) - delta,
     Math.max(...lats) + delta,
-    Math.max(...lons) + delta
+    Math.max(...lons) + delta,
   ];
   await prefetchTiles(bbox, zoom);
 }

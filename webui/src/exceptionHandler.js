@@ -20,7 +20,7 @@ export function install({ alertUser = false } = {}) {
   window.onerror = function (msg, src, line, col, error) {
     reportError(error || msg, alertUser);
   };
-  window.addEventListener('unhandledrejection', e => {
+  window.addEventListener('unhandledrejection', (e) => {
     reportError(e.reason, alertUser);
   });
 }

@@ -20,7 +20,7 @@ def _extract_features(rec: Mapping[str, Any]) -> Dict[str, Any]:
 
 def _hash_features(feat: Mapping[str, Any]) -> str:
     data = json.dumps(feat, sort_keys=True).encode()
-    return hashlib.sha1(data).hexdigest()
+    return hashlib.sha256(data).hexdigest()
 
 
 def _classify(rec: Mapping[str, Any]) -> Tuple[str, str]:

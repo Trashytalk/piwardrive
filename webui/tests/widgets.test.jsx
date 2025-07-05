@@ -8,7 +8,11 @@ import { describe, it, expect } from 'vitest';
 
 describe('dashboard widgets', () => {
   it('shows battery metrics', () => {
-    render(<BatteryStatus metrics={{ battery_percent: 88.4, battery_plugged: true }} />);
+    render(
+      <BatteryStatus
+        metrics={{ battery_percent: 88.4, battery_plugged: true }}
+      />
+    );
     expect(screen.getByText('Battery: 88% charging')).toBeInTheDocument();
   });
 
@@ -18,7 +22,11 @@ describe('dashboard widgets', () => {
   });
 
   it('shows service status', () => {
-    render(<ServiceStatus metrics={{ kismet_running: true, bettercap_running: false }} />);
+    render(
+      <ServiceStatus
+        metrics={{ kismet_running: true, bettercap_running: false }}
+      />
+    );
     expect(screen.getByText('Kismet: ok')).toBeInTheDocument();
     expect(screen.getByText('BetterCAP: down')).toBeInTheDocument();
   });

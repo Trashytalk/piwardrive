@@ -9,13 +9,13 @@ export default function EnhancedSettings() {
 
   useEffect(() => {
     fetch('/config')
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setConfig)
       .catch(() => {});
   }, []);
 
   const handleChange = (key, value) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
+    setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
   const save = () => {
@@ -24,7 +24,7 @@ export default function EnhancedSettings() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(config),
     })
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setConfig)
       .catch(() => {});
   };
@@ -39,7 +39,7 @@ export default function EnhancedSettings() {
           <input
             type="text"
             value={config.export_format}
-            onChange={e => handleChange('export_format', e.target.value)}
+            onChange={(e) => handleChange('export_format', e.target.value)}
           />
         </label>
       </div>
@@ -49,7 +49,9 @@ export default function EnhancedSettings() {
           <input
             type="checkbox"
             checked={!!config.integration_enabled}
-            onChange={e => handleChange('integration_enabled', e.target.checked)}
+            onChange={(e) =>
+              handleChange('integration_enabled', e.target.checked)
+            }
           />
         </label>
       </div>
@@ -59,7 +61,9 @@ export default function EnhancedSettings() {
           <input
             type="text"
             value={config.integration_endpoint}
-            onChange={e => handleChange('integration_endpoint', e.target.value)}
+            onChange={(e) =>
+              handleChange('integration_endpoint', e.target.value)
+            }
           />
         </label>
       </div>
@@ -69,7 +73,9 @@ export default function EnhancedSettings() {
           <input
             type="text"
             value={config.integration_api_key}
-            onChange={e => handleChange('integration_api_key', e.target.value)}
+            onChange={(e) =>
+              handleChange('integration_api_key', e.target.value)
+            }
           />
         </label>
       </div>
@@ -84,9 +90,15 @@ export default function EnhancedSettings() {
         <button onClick={() => setTab('security')}>Security</button>
         <button onClick={() => setTab('export')}>Export</button>
       </div>
-      {tab === 'database' && <DatabaseConfig config={config} onChange={handleChange} />}
-      {tab === 'analytics' && <AnalyticsConfig config={config} onChange={handleChange} />}
-      {tab === 'security' && <SecurityConfig config={config} onChange={handleChange} />}
+      {tab === 'database' && (
+        <DatabaseConfig config={config} onChange={handleChange} />
+      )}
+      {tab === 'analytics' && (
+        <AnalyticsConfig config={config} onChange={handleChange} />
+      )}
+      {tab === 'security' && (
+        <SecurityConfig config={config} onChange={handleChange} />
+      )}
       {tab === 'export' && renderExport()}
       <button onClick={save}>Save</button>
     </section>

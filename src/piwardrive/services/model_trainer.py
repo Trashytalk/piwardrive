@@ -13,7 +13,9 @@ class ModelTrainer:
     def __init__(self, scheduler: PollScheduler, interval: int = 3600) -> None:
         self._scheduler = scheduler
         self._event = "ml_trainer"
-        scheduler.schedule(self._event, lambda _dt: run_async_task(self.run()), interval)
+        scheduler.schedule(
+            self._event, lambda _dt: run_async_task(self.run()), interval
+        )
         run_async_task(self.run())
 
     async def run(self) -> None:

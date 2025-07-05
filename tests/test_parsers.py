@@ -1,6 +1,3 @@
-import os
-import sys
-
 from piwardrive.sigint_suite.cellular.parsers import (
     parse_band_output,
     parse_imsi_output,

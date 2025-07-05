@@ -7,19 +7,30 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import * as childProcess from 'child_process';
-import { prefetch, purgeOld, enforceLimit, vacuumMbtiles } from '../src/tileMaintenance.js';
+import {
+  prefetch,
+  purgeOld,
+  enforceLimit,
+  vacuumMbtiles,
+} from '../src/tileMaintenance.js';
 
 let origFetch;
 
 describe('tileMaintenance helpers', () => {
-  beforeEach(() => { origFetch = global.fetch; });
-  afterEach(() => { global.fetch = origFetch; });
+  beforeEach(() => {
+    origFetch = global.fetch;
+  });
+  afterEach(() => {
+    global.fetch = origFetch;
+  });
 
   it('prefetches and cleans tiles', async () => {
-    global.fetch = vi.fn(() => Promise.resolve({
-      ok: true,
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(1))
-    }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(1)),
+      })
+    );
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tiles-'));
     await prefetch([0, 0, 0.1, 0.1], { zoom: 1, folder: dir });
     expect(fetch).toHaveBeenCalled();
@@ -42,7 +53,10 @@ describe('tileMaintenance helpers', () => {
 
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, 'x');
-    fs.writeFileSync(idxPath, JSON.stringify({ [key]: { time: Date.now(), size: 10 } }));
+    fs.writeFileSync(
+      idxPath,
+      JSON.stringify({ [key]: { time: Date.now(), size: 10 } })
+    );
     await enforceLimit(dir, 0);
     expect(fs.existsSync(file)).toBe(false);
     idx = JSON.parse(fs.readFileSync(idxPath, 'utf8'));
@@ -51,6 +65,9 @@ describe('tileMaintenance helpers', () => {
 
   it('vacuumMbtiles runs sqlite3', () => {
     vacuumMbtiles('test.db');
-    expect(childProcess.execFileSync).toHaveBeenCalledWith('sqlite3', ['test.db', 'VACUUM']);
+    expect(childProcess.execFileSync).toHaveBeenCalledWith('sqlite3', [
+      'test.db',
+      'VACUUM',
+    ]);
   });
 });

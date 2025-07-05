@@ -37,4 +37,3 @@ it('exports include exportYaml', async () => {
   const mod = await import('../src/sigintExporter.js');
   expect('exportYaml' in mod).toBe(true);
 });
-

@@ -12,7 +12,6 @@ try:
 except Exception:  # pragma: no cover - fall back if tests replaced module
     from piwardrive.persistence import HealthRecord, load_recent_health
 
-
 EXPORT_FORMATS = ("csv", "json")
 
 

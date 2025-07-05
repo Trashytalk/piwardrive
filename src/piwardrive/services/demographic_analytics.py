@@ -8,7 +8,6 @@ from pathlib import Path
 from statistics import mean
 from typing import Any, Dict, List
 
-
 _DATA_PATH = Path(__file__).resolve().parents[2] / "examples" / "demographic_data.json"
 
 
@@ -30,7 +29,7 @@ def socioeconomic_correlation() -> Dict[str, Any]:
     cov = sum((i - avg_inc) * (a - avg_acc) for i, a in zip(incomes, access))
     var_i = sum((i - avg_inc) ** 2 for i in incomes)
     var_a = sum((a - avg_acc) ** 2 for a in access)
-    corr = cov / (var_i ** 0.5 * var_a ** 0.5) if var_i and var_a else 0.0
+    corr = cov / (var_i**0.5 * var_a**0.5) if var_i and var_a else 0.0
     return {"correlation": corr}
 
 

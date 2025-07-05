@@ -5,7 +5,13 @@ import DeviceFingerprinting from '../src/components/DeviceFingerprinting.jsx';
 
 describe('DeviceFingerprinting', () => {
   it('lists device info', () => {
-    render(<DeviceFingerprinting metrics={{ devices: [{ device_type: 'phone', vendor: 'Apple', confidence: 0.8 }] }} />);
+    render(
+      <DeviceFingerprinting
+        metrics={{
+          devices: [{ device_type: 'phone', vendor: 'Apple', confidence: 0.8 }],
+        }}
+      />
+    );
     expect(screen.getByText(/phone/)).toBeInTheDocument();
     expect(screen.getByText(/Apple/)).toBeInTheDocument();
   });

@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 from importlib import resources
 
-from piwardrive import persistence, config
+from piwardrive import config, persistence
 from piwardrive.scheduler import PollScheduler
 from piwardrive.utils import run_async_task
 

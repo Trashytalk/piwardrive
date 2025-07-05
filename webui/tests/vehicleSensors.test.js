@@ -13,15 +13,21 @@ describe('vehicleSensors', () => {
 
   it('reads values with dummy obd', () => {
     class DummyVal {
-      constructor(v) { this.v = v; }
-      to() { return this.v; }
+      constructor(v) {
+        this.v = v;
+      }
+      to() {
+        return this.v;
+      }
     }
     class DummyConn {
-      query() { return { value: new DummyVal(50) }; }
+      query() {
+        return { value: new DummyVal(50) };
+      }
     }
     setObd({
       OBD: () => new DummyConn(),
-      commands: { ENGINE_LOAD: 'ENGINE_LOAD', RPM: 'RPM' }
+      commands: { ENGINE_LOAD: 'ENGINE_LOAD', RPM: 'RPM' },
     });
     expect(vs.readEngineLoadObd()).toBe(50);
     expect(vs.readRpmObd()).toBe(50);

@@ -1,27 +1,27 @@
 async function updateWidgets() {
-    const widgets = document.getElementById('widgets');
-    if (!widgets) return;
-    const gps = await fetch('/api/gps').then(r => r.json());
-    widgets.innerHTML = `
+  const widgets = document.getElementById('widgets');
+  if (!widgets) return;
+  const gps = await fetch('/api/gps').then((r) => r.json());
+  widgets.innerHTML = `
         <div class="p-2 bg-gray-100 rounded">Lat: ${gps.lat ?? 'N/A'}</div>
         <div class="p-2 bg-gray-100 rounded">Lon: ${gps.lon ?? 'N/A'}</div>
     `;
 }
 
 async function initMap() {
-    const mapEl = document.getElementById('map');
-    if (!mapEl) return;
-    const map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [0, 0],
-        zoom: 1,
-    });
-    const aps = await fetch('/api/aps').then(r => r.json());
-    map.on('load', () => {
-        map.addSource('aps', { type: 'geojson', data: aps });
-        map.addLayer({ id: 'aps', type: 'circle', source: 'aps' });
-    });
+  const mapEl = document.getElementById('map');
+  if (!mapEl) return;
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [0, 0],
+    zoom: 1,
+  });
+  const aps = await fetch('/api/aps').then((r) => r.json());
+  map.on('load', () => {
+    map.addSource('aps', { type: 'geojson', data: aps });
+    map.addLayer({ id: 'aps', type: 'circle', source: 'aps' });
+  });
 }
 
 updateWidgets();

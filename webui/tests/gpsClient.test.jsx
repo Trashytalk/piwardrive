@@ -11,9 +11,11 @@ describe('GPSStatus', () => {
 
   it('fetches fix quality', async () => {
     let origFetch = global.fetch;
-    global.fetch = vi.fn(() => Promise.resolve({
-      json: () => Promise.resolve({ fix: '2D' })
-    }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ fix: '2D' }),
+      })
+    );
     render(<GPSStatus />);
     expect(await screen.findByText('GPS: 2D')).toBeInTheDocument();
     global.fetch = origFetch;

@@ -12,8 +12,8 @@ export default function AnomalyDetection({ metrics }) {
     }
     const load = () => {
       fetch('/anomaly')
-        .then(r => r.json())
-        .then(d => {
+        .then((r) => r.json())
+        .then((d) => {
           setAnomalies(d.anomalies || []);
           setBaseline(d.baseline || null);
         })

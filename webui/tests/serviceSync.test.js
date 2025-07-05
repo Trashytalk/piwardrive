@@ -9,9 +9,11 @@ describe('serviceSync helper', () => {
     const res = await serviceSync(
       { db: 'file.db', url: 'http://x', services: ['a', 'b'] },
       {
-        uploadDb: async (db, url) => { uploaded = { db, url }; },
+        uploadDb: async (db, url) => {
+          uploaded = { db, url };
+        },
         checkStatus: () => true,
-      },
+      }
     );
     expect(uploaded).toEqual({ db: 'file.db', url: 'http://x' });
     expect(res).toEqual({ synced: true, status: { a: true, b: true } });

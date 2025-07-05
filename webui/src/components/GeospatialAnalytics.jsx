@@ -24,7 +24,7 @@ function haversine(p1, p2) {
 function predictSignal(point, aps) {
   return aps.reduce((acc, ap) => {
     const d = haversine(point, [ap.lat, ap.lon]);
-    return acc + (ap.power || 1) / ((d || 1) ** 2);
+    return acc + (ap.power || 1) / (d || 1) ** 2;
   }, 0);
 }
 
@@ -38,25 +38,25 @@ export default function GeospatialAnalytics() {
   useEffect(() => {
     const load = async () => {
       try {
-        const cov = await fetch('/api/coverage').then(r => r.json());
+        const cov = await fetch('/api/coverage').then((r) => r.json());
         setCoverage(cov.points || []);
       } catch {
         setCoverage([]);
       }
       try {
-        const dz = await fetch('/api/dead_zones').then(r => r.json());
+        const dz = await fetch('/api/dead_zones').then((r) => r.json());
         setDeadZones(dz.zones || []);
       } catch {
         setDeadZones([]);
       }
       try {
-        const intf = await fetch('/api/interference').then(r => r.json());
+        const intf = await fetch('/api/interference').then((r) => r.json());
         setInterference(intf.sources || []);
       } catch {
         setInterference([]);
       }
       try {
-        const opt = await fetch('/api/optimal_ap').then(r => r.json());
+        const opt = await fetch('/api/optimal_ap').then((r) => r.json());
         setOptimal(opt.locations || []);
       } catch {
         setOptimal([]);
@@ -77,7 +77,7 @@ export default function GeospatialAnalytics() {
         grid.push([lat, lon]);
       }
     }
-    const pred = grid.map(pt => [...pt, predictSignal(pt, optimal)]);
+    const pred = grid.map((pt) => [...pt, predictSignal(pt, optimal)]);
     setPredicted(pred);
   }, [optimal]);
 
@@ -103,7 +103,11 @@ export default function GeospatialAnalytics() {
         />
       ))}
       {deadZones.map((poly, idx) => (
-        <Polygon key={`d${idx}`} positions={poly} pathOptions={{ color: 'gray', dashArray: '4' }} />
+        <Polygon
+          key={`d${idx}`}
+          positions={poly}
+          pathOptions={{ color: 'gray', dashArray: '4' }}
+        />
       ))}
       {interference.map((src, idx) => (
         <CircleMarker

@@ -1,6 +1,10 @@
 // Remote sync utilities similar to Python remote_sync module
 
-export async function syncDatabaseToServer(dbPath, url, { timeout = 30, retries = 3, rowRange = null } = {}) {
+export async function syncDatabaseToServer(
+  dbPath,
+  url,
+  { timeout = 30, retries = 3, rowRange = null } = {}
+) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
@@ -15,7 +19,7 @@ export async function syncDatabaseToServer(dbPath, url, { timeout = 30, retries 
       return true;
     } catch (e) {
       if (attempt === retries) throw e;
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
     }
   }
   return false;

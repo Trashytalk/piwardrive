@@ -5,7 +5,6 @@ import asyncio
 import logging
 
 from piwardrive.logconfig import setup_logging
-
 from pwutils import database
 
 EXPORT_FORMATS = ("csv", "json", "gpx", "kml")

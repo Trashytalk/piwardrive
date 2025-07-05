@@ -1,6 +1,5 @@
 import os
 import time
-import hmac
 from typing import Optional
 
 import jwt

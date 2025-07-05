@@ -1,5 +1,3 @@
-import os
-import sys
 import types
 
 import piwardrive.vehicle_sensors as vs  # noqa: E402

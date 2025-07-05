@@ -3,14 +3,14 @@ import * as net from 'net';
 const DEFAULT_PATH = '/var/run/gpsd.sock';
 
 export async function getFix(timeoutMs = 1000, socketPath = DEFAULT_PATH) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const client = net.createConnection({ path: socketPath });
     client.on('connect', () => {
       client.write('?WATCH={"enable":true,"json":true};\n');
     });
 
     let buffer = '';
-    const finish = data => {
+    const finish = (data) => {
       cleanup();
       resolve(data);
     };
@@ -23,7 +23,7 @@ export async function getFix(timeoutMs = 1000, socketPath = DEFAULT_PATH) {
       client.destroy();
     }
 
-    client.on('data', chunk => {
+    client.on('data', (chunk) => {
       buffer += chunk.toString();
       let idx;
       while ((idx = buffer.indexOf('\n')) >= 0) {

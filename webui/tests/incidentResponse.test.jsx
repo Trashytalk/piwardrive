@@ -5,8 +5,12 @@ import IncidentResponse from '../src/components/IncidentResponse.jsx';
 
 describe('IncidentResponse', () => {
   let origFetch;
-  beforeEach(() => { origFetch = global.fetch; });
-  afterEach(() => { global.fetch = origFetch; });
+  beforeEach(() => {
+    origFetch = global.fetch;
+  });
+  afterEach(() => {
+    global.fetch = origFetch;
+  });
 
   it('renders incident response metrics', async () => {
     global.fetch = vi.fn(() =>
@@ -18,7 +22,7 @@ describe('IncidentResponse', () => {
             workflows: ['wf'],
             forensics: [1, 2, 3],
           }),
-      }),
+      })
     );
     render(<IncidentResponse />);
     expect(await screen.findByText('Correlations: 1')).toBeInTheDocument();

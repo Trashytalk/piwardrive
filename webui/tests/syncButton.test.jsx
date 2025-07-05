@@ -5,11 +5,20 @@ import SyncButton from '../src/components/SyncButton.jsx';
 
 describe('SyncButton', () => {
   let origFetch;
-  beforeEach(() => { origFetch = global.fetch; });
-  afterEach(() => { global.fetch = origFetch; });
+  beforeEach(() => {
+    origFetch = global.fetch;
+  });
+  afterEach(() => {
+    global.fetch = origFetch;
+  });
 
   it('shows success', async () => {
-    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ uploaded: 2 }) }));
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ uploaded: 2 }),
+      })
+    );
     render(<SyncButton limit={2} />);
     fireEvent.click(screen.getByText('Sync'));
     expect(await screen.findByTestId('result')).toHaveTextContent('uploaded 2');

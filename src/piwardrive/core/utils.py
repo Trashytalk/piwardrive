@@ -8,10 +8,10 @@ import glob
 import logging
 import mmap
 import os
+import pickle
 import subprocess
 import threading
 import time
-import pickle
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -82,7 +82,6 @@ _GPSD_CACHE: _GPSDEntry = {
     "fix": "Unknown",
 }
 
-
 # Track previous network counters for throughput calculations
 # psutil may be replaced with a mock in tests. Avoid touching internals at
 # runtime to prevent import errors when ``psutil._common`` is missing.
@@ -125,7 +124,6 @@ class _DiskUsageEntry(TypedDict):
 
 
 _DISK_USAGE_CACHE: dict[str, _DiskUsageEntry] = {}
-
 
 # Cache for HTTP requests issued via :func:`safe_request`
 # Default TTL in seconds and maximum cache size. ``cachetools.TTLCache``
@@ -186,7 +184,6 @@ _TAIL_FILE_CACHE_LOCK = threading.Lock()
 KISMET_CACHE_SECONDS = 2.0
 WIGLE_CACHE_SECONDS = 30.0
 
-
 if requests_cache is not None:
     HTTP_SESSION = requests_cache.CachedSession(expire_after=SAFE_REQUEST_CACHE_SECONDS)
 else:  # pragma: no cover - fallback without requests_cache
@@ -198,7 +195,6 @@ else:  # pragma: no cover - fallback without requests_cache
             return requests.get(*args, timeout=timeout, **kwargs)
 
     HTTP_SESSION = _DummySession()
-
 
 T = TypeVar("T")
 

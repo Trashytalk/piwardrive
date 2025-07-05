@@ -104,9 +104,12 @@ function validate(cfg) {
   if (cfg.ui_font_size <= 0) throw new Error('ui_font_size must be >0');
   if (cfg.db_cache_size < 0) throw new Error('db_cache_size must be >=0');
   if (cfg.retention_days < 0) throw new Error('retention_days must be >=0');
-  if (cfg.ml_training_epochs < 1) throw new Error('ml_training_epochs must be >0');
-  if (cfg.analytics_alert_threshold < 0) throw new Error('analytics_alert_threshold must be >=0');
-  if (cfg.threat_sensitivity <= 0) throw new Error('threat_sensitivity must be >0');
+  if (cfg.ml_training_epochs < 1)
+    throw new Error('ml_training_epochs must be >0');
+  if (cfg.analytics_alert_threshold < 0)
+    throw new Error('analytics_alert_threshold must be >=0');
+  if (cfg.threat_sensitivity <= 0)
+    throw new Error('threat_sensitivity must be >0');
 }
 
 export function saveConfig(cfg, profile) {

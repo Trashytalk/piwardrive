@@ -1,6 +1,6 @@
 import asyncio
-from unittest.mock import AsyncMock
 import importlib
+from unittest.mock import AsyncMock
 
 
 def test_main_starts_uvicorn(monkeypatch):
