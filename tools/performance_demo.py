@@ -15,7 +15,7 @@ import sys
 import os
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 def print_header(title: str):
     """Print a formatted header."""
@@ -189,7 +189,7 @@ def demo_integration():
     try:
         # This would normally fail due to missing dependencies
         # but we can at least verify the structure
-        service_file = Path(__file__).parent / "src" / "piwardrive" / "service.py"
+        service_file = Path(__file__).parent.parent / "src" / "piwardrive" / "service.py"
         if service_file.exists():
             content = service_file.read_text()
             if "performance_dashboard" in content and "performance_router" in content:
