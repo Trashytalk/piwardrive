@@ -30,9 +30,9 @@ def loads(data: bytes | str) -> Any:
 def dumps(obj: Any, **kwargs: Any) -> str:
     """Serialize ``obj`` to JSON using the chosen backend."""
     _result = _json.dumps(obj, **kwargs)
-    if isinstance(result, bytes):
-        return result.decode()
-    return result
+    if isinstance(_result, bytes):
+        return _result.decode()
+    return _result
 
 
 __all__ = ["loads", "dumps"]

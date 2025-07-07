@@ -12,6 +12,7 @@ from types import ModuleType
 from typing import Any
 from unittest import mock
 
+import pytest
 import requests_cache
 from cachetools import TTLCache
 
@@ -856,3 +857,150 @@ def test_get_disk_usage_cache(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(utils.time, "time", lambda: 4.5)
     assert utils.get_disk_usage("/mnt/ssd") == 80
+
+
+class TestRobustRequest:
+    """Test the robust_request function with retries and exponential backoff."""
+
+    def test_robust_request_success_first_attempt(self, monkeypatch: Any) -> None:
+        """Test robust_request succeeds on first attempt."""
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+
+        mock_request = mock.Mock(return_value=mock_response)
+        monkeypatch.setattr("requests.request", mock_request)
+
+        result = utils.robust_request("http://example.com")
+
+        assert result == mock_response
+        mock_request.assert_called_once_with(
+            "GET", "http://example.com", headers=None, timeout=5.0
+        )
+
+    def test_robust_request_custom_parameters(self, monkeypatch: Any) -> None:
+        """Test robust_request with custom method, headers, and timeout."""
+        mock_response = mock.Mock()
+        mock_request = mock.Mock(return_value=mock_response)
+        monkeypatch.setattr("requests.request", mock_request)
+
+        headers = {"Authorization": "Bearer token"}
+        result = utils.robust_request(
+            "http://example.com/api",
+            method="POST",
+            headers=headers,
+            timeout=10.0,
+        )
+
+        assert result == mock_response
+        mock_request.assert_called_once_with(
+            "POST", "http://example.com/api", headers=headers, timeout=10.0
+        )
+
+    def test_robust_request_retries_on_exception(self, monkeypatch: Any) -> None:
+        """Test robust_request retries on RequestException."""
+        mock_response = mock.Mock()
+
+        # Fail twice, then succeed
+        call_count = 0
+
+        def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise requests.RequestException("Connection failed")
+            return mock_response
+
+        monkeypatch.setattr("requests.request", mock_request)
+        monkeypatch.setattr("time.sleep", mock.Mock())  # Speed up test
+
+        result = utils.robust_request("http://example.com")
+
+        assert result == mock_response
+        assert call_count == 3
+
+    def test_robust_request_exhausts_retries(self, monkeypatch: Any) -> None:
+        """Test robust_request raises exception after exhausting retries."""
+        def mock_request(*args, **kwargs):
+            raise requests.RequestException("Persistent failure")
+
+        monkeypatch.setattr("requests.request", mock_request)
+        monkeypatch.setattr("time.sleep", mock.Mock())  # Speed up test
+
+        with pytest.raises(requests.RequestException, match="Persistent failure"):
+            utils.robust_request("http://example.com")
+
+    def test_robust_request_exponential_backoff(self, monkeypatch: Any) -> None:
+        """Test robust_request uses exponential backoff for delays."""
+        call_count = 0
+
+        def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            raise requests.RequestException("Always fail")
+
+        sleep_calls = []
+
+        def mock_sleep(delay):
+            sleep_calls.append(delay)
+
+        monkeypatch.setattr("requests.request", mock_request)
+        monkeypatch.setattr("time.sleep", mock_sleep)
+
+        with pytest.raises(requests.RequestException):
+            utils.robust_request("http://example.com")
+
+        # Should have called sleep with exponentially increasing delays
+        assert len(sleep_calls) == 2  # 3 attempts = 2 sleeps
+        assert sleep_calls[0] == 1  # First delay (RETRY_DELAY)
+        assert sleep_calls[1] == 2  # Second delay (doubled)
+
+    def test_robust_request_different_request_exceptions(self, monkeypatch: Any) -> None:
+        """Test robust_request handles different types of RequestException."""
+        mock_response = mock.Mock()
+
+        # Test various request exceptions
+        exceptions_to_test = [
+            requests.ConnectionError("Connection failed"),
+            requests.Timeout("Request timed out"),
+            requests.HTTPError("HTTP error"),
+            requests.RequestException("Generic request error"),
+        ]
+
+        for exception in exceptions_to_test:
+            call_count = 0
+
+            def mock_request(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                if call_count == 1:
+                    raise exception
+                return mock_response
+
+            monkeypatch.setattr("requests.request", mock_request)
+            monkeypatch.setattr("time.sleep", mock.Mock())
+
+            result = utils.robust_request("http://example.com")
+            assert result == mock_response
+
+    def test_robust_request_logs_warnings(self, monkeypatch: Any, caplog: Any) -> None:
+        """Test robust_request logs warnings for failed attempts."""
+        call_count = 0
+
+        def mock_request(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count <= 2:
+                raise requests.RequestException("Connection failed")
+            return mock.Mock()
+
+        monkeypatch.setattr("requests.request", mock_request)
+        monkeypatch.setattr("time.sleep", mock.Mock())
+
+        with caplog.at_level(logging.WARNING):
+            utils.robust_request("http://example.com")
+
+        # Should have logged warnings for the failed attempts
+        warning_logs = [record for record in caplog.records if record.levelno == logging.WARNING]
+        assert len(warning_logs) == 2
+        assert "Request failed" in warning_logs[0].message
+        assert "Connection failed" in warning_logs[0].message

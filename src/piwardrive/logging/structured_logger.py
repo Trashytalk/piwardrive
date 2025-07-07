@@ -1,3 +1,16 @@
+"""Structured logging system for PiWardrive.
+
+Provides JSON-formatted logging with context tracking, distributed tracing
+support, and configurable output handlers for the PiWardrive platform.
+
+Features:
+- Structured JSON log output
+- Request-scoped context tracking
+- Distributed tracing support
+- Configurable handlers (console, file, queue)
+- Fallback serialization for complex objects
+- Exception formatting with traceback details
+"""
 import json
 import logging
 import os
@@ -81,10 +94,12 @@ class StructuredFormatter(logging.Formatter):
             self.include_extra
             and hasattr(record, "extra")
             and isinstance(record.extra, dict)
+            and "extra" in record.extra
+            and record.extra["extra"]
         ):
-            log_data["data"] = record.extra
+            log_data["data"] = record.extra["extra"]
 
-        if record.exc_info:
+        if record.exc_info and record.exc_info is not True:
             exc_type = record.exc_info[0].__name__ if record.exc_info[0] else ""
             log_data["exception"] = {
                 "type": exc_type,
@@ -162,8 +177,8 @@ class PiWardriveLogger:
     ) -> None:
         if not self.logger.isEnabledFor(level):
             return
-        record_extra = {"extra": extra} if extra else {"extra": {}}
-        self.logger.log(level, message, **record_extra, **kwargs)
+        record_extra = {"extra": extra} if extra else {}
+        self.logger.log(level, message, extra=record_extra, **kwargs)
 
     def info(
         self, message: str, extra: Optional[Dict[str, Any]] = None, **kwargs: Any
