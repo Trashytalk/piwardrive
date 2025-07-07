@@ -92,7 +92,7 @@ class Interactive3DHeatmap:
 
     def _prepare_dataframe(self, scan_data: List[ScanPoint]) -> pd.DataFrame:
         """Convert scan data to DataFrame"""
-        data = []
+        _data = []
         for point in scan_data:
             data.append(
                 {
@@ -718,7 +718,7 @@ class ProfessionalReporting:
         across {len(scan_data)} measurement points.
 
         Key findings include {open_networks} open networks requiring immediate attention,
-            
+
         with an average signal strength of {avg_signal:.1f} dBm across all detected networks.
 
         The analysis reveals important security implications and provides actionable
@@ -937,7 +937,7 @@ class ComparativeAnalysis:
         self, scan_data: List[ScanPoint], scan_type: str
     ) -> pd.DataFrame:
         """Prepare DataFrame for comparison"""
-        data = []
+        _data = []
         for point in scan_data:
             data.append(
                 {

@@ -168,6 +168,11 @@ class AdvancedThreatIntelligence:
     """Advanced threat intelligence and correlation engine"""
 
     def __init__(self, db_path: str = "threat_intel.db"):
+        """Initialize threat intelligence platform.
+        
+        Args:
+            db_path: Path to threat intelligence database.
+        """
         self.db_path = db_path
         self.indicators = {}
         self.threat_actors = {}
@@ -176,7 +181,7 @@ class AdvancedThreatIntelligence:
         self.setup_database()
 
     def setup_database(self):
-        """Initialize threat intelligence database"""
+        """Initialize threat intelligence database."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
@@ -866,7 +871,7 @@ class AnalyticsEngine:
 
     def compute_statistics(self, data: pd.DataFrame) -> Dict[str, Any]:
         """Compute comprehensive statistics"""
-        stats = {}
+        _stats = {}
 
         for column in data.columns:
             if data[column].dtype in [np.number]:
@@ -936,7 +941,7 @@ class ComplianceAutomation:
 
         rule = self.compliance_rules[rule_id]
         try:
-            result = rule["check_function"](data)
+            _result = rule["check_function"](data)
             rule["status"] = "passed" if result else "failed"
             rule["last_checked"] = datetime.now()
 
@@ -1385,7 +1390,7 @@ def test_compliance():
 
     # Test compliance checks
     test_data = {"encrypted": True, "data_type": "credit_card"}
-    result = compliance.run_compliance_check("encryption_check", test_data)
+    _result = compliance.run_compliance_check("encryption_check", test_data)
     print(f"Compliance check result: {result}")
 
     # Generate report
@@ -1400,7 +1405,7 @@ def test_visualization():
     viz = NextGenVisualization()
 
     # Generate sample data
-    data = pd.DataFrame(
+    _data = pd.DataFrame(
         {
             "x": np.random.randn(100),
             "y": np.random.randn(100),

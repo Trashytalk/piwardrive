@@ -815,7 +815,7 @@ class OfflineNavigationSystem:
         """Load navigation data from file"""
         try:
             with open(filepath, "r") as f:
-                data = json.load(f)
+                _data = json.load(f)
 
             # Load waypoints
             for wp_data in data.get("waypoints", []):
@@ -914,8 +914,8 @@ def demo_offline_navigation():
     position = nav_system.update_position(scan_results=test_scan)
     if position:
         print(
-            f"   Estimated position: ({position.x:.1f},
-                {position.y:.1f}) floor {position.floor}"
+            f"   Estimated position: ({position.x:.1f}, "
+            f"{position.y:.1f}) floor {position.floor}"
         )
         print(f"   Accuracy: {position.accuracy:.1f}m")
         print(f"   Source: {position.source}")
@@ -954,8 +954,8 @@ def demo_offline_navigation():
 
         if dr_position:
             print(
-                f"   Dead reckoning position: ({dr_position.x:.1f},
-                    {dr_position.y:.1f})"
+                f"   Dead reckoning position: ({dr_position.x:.1f}, "
+                f"{dr_position.y:.1f})"
             )
             print(
                 f"   Confidence: {nav_system.dead_reckoning.get_position_confidence():.2f}"

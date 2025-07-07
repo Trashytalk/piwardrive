@@ -1,3 +1,5 @@
+"""Network device fingerprinting and identification services."""
+
 from __future__ import annotations
 
 import hashlib
@@ -47,8 +49,8 @@ def _classify(record: dict[str, Any]) -> tuple[str, str]:
 
 
 def _fingerprint_hash(char: dict[str, Any]) -> str:
-    data = json.dumps(char, sort_keys=True).encode()
-    return hashlib.sha256(data).hexdigest()
+    _data = json.dumps(char, sort_keys=True).encode()
+    return hashlib.sha256(_data).hexdigest()
 
 
 def _make_row(record: dict[str, Any]) -> dict[str, Any]:

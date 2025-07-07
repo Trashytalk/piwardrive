@@ -76,8 +76,9 @@ class DeviceCategory(Enum):
     UNKNOWN = "unknown"
 
 @dataclass
+@dataclass
 class RealTimeEvent:
-    """Real-time event structure"""
+    """Real-time event structure."""
 
     event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = field(default_factory=datetime.now)
@@ -89,7 +90,7 @@ class RealTimeEvent:
 
 @dataclass
 class IoTDeviceProfile:
-    """IoT device profile"""
+    """IoT device profile."""
 
     device_id: str
     mac_address: str
@@ -105,7 +106,7 @@ class IoTDeviceProfile:
 
 @dataclass
 class ComplianceRule:
-    """Compliance rule definition"""
+    """Compliance rule definition."""
 
     rule_id: str
     framework: ComplianceFramework
@@ -117,9 +118,14 @@ class ComplianceRule:
 
 
 class RealTimeDataStreamer:
-    """Real-time data streaming system"""
+    """Real-time data streaming system."""
 
     def __init__(self, port: int = 8765):
+        """Initialize the real-time data streamer.
+        
+        Args:
+            port: WebSocket server port.
+        """
         self.port = port
         self.clients: Set[websockets.WebSocketServerProtocol] = set()
         self.event_queue = asyncio.Queue()
@@ -127,7 +133,7 @@ class RealTimeDataStreamer:
         self.running = False
 
     async def start_server(self):
-        """Start WebSocket server"""
+        """Start WebSocket server."""
         self.running = True
         self.server = await websockets.serve(self.handle_client, "localhost", self.port)
         logger.info(f"Real-time data server started on port {self.port}")
@@ -136,14 +142,19 @@ class RealTimeDataStreamer:
         asyncio.create_task(self.process_events())
 
     async def stop_server(self):
-        """Stop WebSocket server"""
+        """Stop WebSocket server."""
         self.running = False
         if self.server:
             self.server.close()
             await self.server.wait_closed()
 
     async def handle_client(self, websocket, path):
-        """Handle client connections"""
+        """Handle client connections.
+        
+        Args:
+            websocket: WebSocket connection.
+            path: Connection path.
+        """
         self.clients.add(websocket)
         logger.info(f"Client connected: {websocket.remote_address}")
 
@@ -156,7 +167,11 @@ class RealTimeDataStreamer:
             logger.info(f"Client disconnected: {websocket.remote_address}")
 
     async def broadcast_event(self, event: RealTimeEvent):
-        """Broadcast event to all clients"""
+        """Broadcast event to all clients.
+        
+        Args:
+            event: Event to broadcast.
+        """
         if self.clients:
             message = json.dumps(
                 {
@@ -689,7 +704,7 @@ class ComplianceChecker:
             "passed": passed,
             "score": encryption_ratio,
             "details": f"{encrypted_connections}/{total_connections} connections encrypted ({encryption_ratio:.1%})",
-                
+
         }
 
     def _check_access_control(self, network_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -710,7 +725,7 @@ class ComplianceChecker:
             "passed": passed,
             "score": score,
             "details": f"{admin_access_count} administrative access connections detected",
-                
+
         }
 
     def _check_network_segmentation(
@@ -757,7 +772,7 @@ class ComplianceChecker:
             "passed": passed,
             "score": encryption_ratio,
             "details": f"{encrypted_data_flows}/{total_data_flows} data flows encrypted ({encryption_ratio:.1%})",
-                
+
         }
 
 
@@ -848,7 +863,7 @@ class ExecutiveDashboard:
             "Implement network segmentation for IoT devices",
             "Upgrade firmware on 45 devices with known vulnerabilities",
             "Deploy additional monitoring for critical infrastructure",
-            "Conduct security awareness training for staf",
+            "Conduct security awareness training for sta",
             "Review and update incident response procedures",
         ]
 
@@ -929,8 +944,7 @@ def demo_enhanced_capabilities():
     sample_packet = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
     dpi_result = security_analyzer.deep_packet_inspection(sample_packet)
     print(
-        f"   DPI Analysis: Entropy={dpi_result['entropy']:.2f},
-            Patterns={len(dpi_result['suspicious_patterns'])}"
+        f"   DPI Analysis: Entropy={dpi_result['entropy']:.2f}, Patterns={len(dpi_result['suspicious_patterns'])}"
     )
 
     # Test IoT Device Profiler

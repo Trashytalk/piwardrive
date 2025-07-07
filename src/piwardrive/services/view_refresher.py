@@ -1,3 +1,5 @@
+"""Service for periodically refreshing materialized database views."""
+
 from __future__ import annotations
 
 from piwardrive import persistence
@@ -9,6 +11,12 @@ class ViewRefresher:
     """Periodically refresh materialized view tables."""
 
     def __init__(self, scheduler: PollScheduler, interval: int = 3600) -> None:
+        """Initialize the view refresher service.
+        
+        Args:
+            scheduler: The poll scheduler to use for periodic refresh.
+            interval: Refresh interval in seconds (default: 3600 = 1 hour).
+        """
         self._scheduler = scheduler
         self._event = "view_refresher"
         scheduler.schedule(
@@ -17,6 +25,7 @@ class ViewRefresher:
         run_async_task(self.run())
 
     async def run(self) -> None:
+        """Execute the view refresh operation."""
         await persistence.refresh_daily_detection_stats()
         await persistence.refresh_network_coverage_grid()
 

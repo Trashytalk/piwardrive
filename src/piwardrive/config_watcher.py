@@ -1,6 +1,11 @@
-from __future__ import annotations
+"""Filesystem watcher for configuration changes.
 
-"""Filesystem watcher for configuration changes."""
+This module provides functionality to watch configuration files for changes
+and trigger callbacks when modifications occur. It uses the watchdog library
+to monitor file system events and react to configuration file updates.
+"""
+
+from __future__ import annotations
 
 import os
 from typing import Callable

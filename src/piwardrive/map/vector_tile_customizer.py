@@ -87,8 +87,8 @@ def build_mbtiles(folder: str, output: str) -> None:
                     continue
                 db.execute(
                     (
-                        "INSERT OR REPLACE INTO tiles "
-                        "(zoom_level, tile_column, tile_row, tile_data) "
+                        "INSERT OR REPLACE INTO tiles ",
+                        "(zoom_level, tile_column, tile_row, tile_data) ",
                         "VALUES (?, ?, ?, ?)"
                     ),
                     (z_i, x_i, tile_row, data),

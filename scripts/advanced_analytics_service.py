@@ -150,8 +150,8 @@ class AdvancedAnalyticsService:
                     prev_detection = detections_list[i-1]
                     curr_detection = detections_list[i]
 
-                    if prev_detection[3] \and
-                        prev_detection[4]
+                    if prev_detection[3] and \
+                        prev_detection[4] and \
                         curr_detection[3]
                         curr_detection[4]:
                         distance = self._calculate_distance(

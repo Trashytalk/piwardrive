@@ -1,3 +1,8 @@
+"""MySQL/MariaDB export functionality for PiWardrive data.
+
+This module provides functionality to export PiWardrive scan data and health
+records to MySQL or MariaDB databases for external analysis and integration.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,7 +25,6 @@ class MySQLConfig:
 
 async def connect(config: MySQLConfig) -> aiomysql.Connection:
     """Return an ``aiomysql`` connection using ``config``."""
-
     return await aiomysql.connect(
         host=config.host,
         port=config.port,
@@ -32,7 +36,6 @@ async def connect(config: MySQLConfig) -> aiomysql.Connection:
 
 async def init_schema(conn: aiomysql.Connection) -> None:
     """Create database tables if they do not exist."""
-
     async with conn.cursor() as cur:
         await cur.execute(
             """
@@ -132,14 +135,14 @@ async def init_schema(conn: aiomysql.Connection) -> None:
             """
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id, "
+            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON scan_sessions(device_id, ",
             "started_at)"
         )
         await cur.execute(
             "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON scan_sessions(scan_type)"
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat, "
+            "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON scan_sessions(location_start_lat, ",
             "location_start_lon)"
         )
         await cur.execute(
@@ -198,7 +201,7 @@ async def init_schema(conn: aiomysql.Connection) -> None:
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_time ON wifi_detections(detection_timestamp)"
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_wifi_detections_location ON wifi_detections(latitude, "
+            "CREATE INDEX IF NOT EXISTS idx_wifi_detections_location ON wifi_detections(latitude, ",
             "longitude)"
         )
         await cur.execute(
@@ -241,7 +244,7 @@ async def init_schema(conn: aiomysql.Connection) -> None:
             "CREATE INDEX IF NOT EXISTS idx_bt_detections_time ON bluetooth_detections(detection_timestamp)"
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_bt_detections_location ON bluetooth_detections(latitude, "
+            "CREATE INDEX IF NOT EXISTS idx_bt_detections_location ON bluetooth_detections(latitude, ",
             "longitude)"
         )
         await cur.execute(
@@ -278,14 +281,14 @@ async def init_schema(conn: aiomysql.Connection) -> None:
             "CREATE INDEX IF NOT EXISTS idx_cellular_detections_session ON cellular_detections(scan_session_id)"
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_cell ON cellular_detections(cell_id, "
+            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_cell ON cellular_detections(cell_id, ",
             "lac)"
         )
         await cur.execute(
             "CREATE INDEX IF NOT EXISTS idx_cellular_detections_time ON cellular_detections(detection_timestamp)"
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_location ON cellular_detections(latitude, "
+            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_location ON cellular_detections(latitude, ",
             "longitude)"
         )
         await cur.execute(
@@ -315,7 +318,7 @@ async def init_schema(conn: aiomysql.Connection) -> None:
             "CREATE INDEX IF NOT EXISTS idx_gps_tracks_time ON gps_tracks(timestamp)"
         )
         await cur.execute(
-            "CREATE INDEX IF NOT EXISTS idx_gps_tracks_location ON gps_tracks(latitude, "
+            "CREATE INDEX IF NOT EXISTS idx_gps_tracks_location ON gps_tracks(latitude, ",
             "longitude)"
         )
         await cur.execute(
@@ -415,7 +418,6 @@ async def insert_health_records(
     conn: aiomysql.Connection, records: Iterable[HealthRecord]
 ) -> None:
     """Insert ``records`` into ``health_records``."""
-
     rows = [
         (
             r.timestamp,
@@ -443,7 +445,6 @@ async def insert_wifi_observations(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
     """Insert Wi-Fi observation ``records``."""
-
     rows: List[Sequence[Any]] = [
         (
             r.get("bssid"),
@@ -487,6 +488,7 @@ async def _bulk_insert(
 async def insert_scan_sessions(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert scan session records into scan_sessions table."""
     cols = [
         "id",
         "device_id",
@@ -508,6 +510,7 @@ async def insert_scan_sessions(
 async def insert_wifi_detections(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert Wi-Fi detection records into wifi_detections table."""
     cols = [
         "scan_session_id",
         "detection_timestamp",
@@ -551,6 +554,7 @@ async def insert_wifi_detections(
 async def insert_bluetooth_detections(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert Bluetooth detection records into bluetooth_detections table."""
     cols = [
         "scan_session_id",
         "detection_timestamp",
@@ -581,6 +585,7 @@ async def insert_bluetooth_detections(
 async def insert_cellular_detections(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert cellular detection records into cellular_detections table."""
     cols = [
         "scan_session_id",
         "detection_timestamp",
@@ -611,6 +616,7 @@ async def insert_cellular_detections(
 async def insert_gps_tracks(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert GPS track records into gps_tracks table."""
     cols = [
         "scan_session_id",
         "timestamp",
@@ -631,6 +637,7 @@ async def insert_gps_tracks(
 async def insert_network_fingerprints(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert network fingerprint records into network_fingerprints table."""
     cols = [
         "bssid",
         "ssid",
@@ -650,6 +657,7 @@ async def insert_network_fingerprints(
 async def insert_suspicious_activities(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert suspicious activity records into suspicious_activities table."""
     cols = [
         "scan_session_id",
         "activity_type",
@@ -669,6 +677,7 @@ async def insert_suspicious_activities(
 async def insert_network_analytics(
     conn: aiomysql.Connection, records: Iterable[dict[str, Any]]
 ) -> None:
+    """Insert network analytics records into network_analytics table."""
     cols = [
         "bssid",
         "analysis_date",
@@ -703,7 +712,6 @@ async def export_data(
     analytics: Iterable[dict[str, Any]] = (),
 ) -> None:
     """Create schema and export provided records."""
-
     conn = await connect(config)
     try:
         await init_schema(conn)

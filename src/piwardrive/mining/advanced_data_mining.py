@@ -115,7 +115,7 @@ class TemporalPatternMiner:
         if series_name not in self.time_series_data:
             return []
 
-        data = self.time_series_data[series_name]
+        _data = self.time_series_data[series_name]
         if len(data) < min_period * 2:
             return []
 
@@ -147,7 +147,7 @@ class TemporalPatternMiner:
                         confidence=correlation,
                         support=consistency,
                         description=f"Periodic pattern in {series_name} with period {period}",
-                            
+
                         parameters={
                             "period": period,
                             "correlation": correlation,
@@ -174,7 +174,7 @@ class TemporalPatternMiner:
         if series_name not in self.time_series_data:
             return []
 
-        data = self.time_series_data[series_name]
+        _data = self.time_series_data[series_name]
         if len(data) < window_size:
             return []
 
@@ -216,7 +216,7 @@ class TemporalPatternMiner:
         if series_name not in self.time_series_data:
             return []
 
-        data = self.time_series_data[series_name]
+        _data = self.time_series_data[series_name]
         if len(data) < 50:  # Need sufficient data for anomaly detection
             return []
 
@@ -744,7 +744,7 @@ class AssociationRuleMiner:
                                     confidence=confidence,
                                     lift=lift,
                                     description=f"{list(antecedent)} → {list(consequent)}",
-                                        
+
                                 )
                                 rules.append(rule)
 
@@ -804,8 +804,7 @@ class InsightGenerator:
                 if period < 60:  # Less than 1 minute
                     severity = "high"
                     title = "High-frequency periodic activity detected"
-                    description = f"Detected periodic activity with {period}-second intervals,
-                        possibly indicating automated scanning or attacks"
+                    description = f"Detected periodic activity with {period}-second intervals, possibly indicating automated scanning or attacks"
                     recommendations = [
                         "Investigate source of periodic traffic",
                         "Consider implementing rate limiting",
@@ -855,9 +854,7 @@ class InsightGenerator:
                 insight_id="multiple_anomalies_detected",
                 insight_type=InsightType.ANOMALY_DETECTION,
                 title="Multiple anomalies detected",
-                description=f"Detected {len(anomaly_patterns)} anomalous patterns,
-                    indicating potential security concerns",
-                    
+                description=f"Detected {len(anomaly_patterns)} anomalous patterns, indicating potential security concerns",
                 confidence=0.8,
                 severity="high",
                 timestamp=datetime.now(),
@@ -968,7 +965,7 @@ class InsightGenerator:
                 insight_type=InsightType.ALERT,
                 title="Multiple security risks detected",
                 description=f"Identified {security_indicators} security indicators requiring attention",
-                    
+
                 confidence=0.85,
                 severity="high",
                 timestamp=datetime.now(),
@@ -1097,8 +1094,7 @@ class AdvancedDataMiner:
         )
 
         logger.info(
-            f"Data mining completed: {len(results['patterns'])} patterns,
-                {len(results['insights'])} insights"
+            f"Data mining completed: {len(results['patterns'])} patterns, {len(results['insights'])} insights"
         )
 
         return results
@@ -1290,12 +1286,11 @@ def test_advanced_data_mining():
         print(f"  {cluster_type.title()} clustering:")
         for algorithm, result in cluster_data.items():
             print(
-                f"    - {algorithm}: {result['n_clusters']} clusters (score: {result.get('silhouette_score',
-                    0):.2f})"
+                f"    - {algorithm}: {result['n_clusters']} clusters (score: {result.get('silhouette_score', 0):.2f})"
             )
 
     # Get statistics
-    stats = miner.get_mining_statistics()
+    _stats = miner.get_mining_statistics()
     print("\nMining Statistics:")
     print(f"  Total patterns: {stats['total_patterns_discovered']}")
     print(f"  Total insights: {stats['total_insights_generated']}")

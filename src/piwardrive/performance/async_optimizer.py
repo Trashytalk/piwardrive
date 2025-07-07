@@ -36,6 +36,11 @@ class AsyncPerformanceMonitor:
     """Monitor async operation performance and detect bottlenecks."""
 
     def __init__(self, max_metrics: int = 10000):
+        """Initialize the async performance monitor.
+        
+        Args:
+            max_metrics: Maximum number of metrics to store in memory.
+        """
         self.metrics: deque[AsyncMetrics] = deque(maxlen=max_metrics)
         self.active_operations: Dict[str, float] = {}
         self.operation_counts: Dict[str, int] = defaultdict(int)
@@ -122,7 +127,7 @@ class AsyncPerformanceMonitor:
 def monitor_async_performance(
     operation_name: str, monitor: Optional[AsyncPerformanceMonitor] = None
 ):
-    """Decorator to monitor async function performance."""
+    """Monitor async function performance with metrics collection."""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @functools.wraps(func)
@@ -132,7 +137,7 @@ def monitor_async_performance(
 
             operation_id = monitor.start_operation(operation_name)
             try:
-                result = await func(*args, **kwargs)
+                _result = await func(*args, **kwargs)
                 monitor.end_operation(operation_id, success=True)
                 return result
             except Exception as e:
@@ -240,7 +245,7 @@ class AsyncTaskQueue:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get task queue statistics."""
-        stats = dict(self.stats)
+        _stats = dict(self.stats)
         stats["workers"] = len(self.workers)
         stats["running"] = self.running
         if stats["tasks_completed"] > 0:
@@ -325,7 +330,7 @@ class AsyncResourcePool:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get resource pool statistics."""
-        stats = dict(self.stats)
+        _stats = dict(self.stats)
         stats["max_size"] = self.max_size
         stats["created_count"] = self.created_count
         stats["active_count"] = len(self.active_resources)
@@ -503,7 +508,7 @@ class AsyncBatchProcessor:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get batch processing statistics."""
-        stats = dict(self.stats)
+        _stats = dict(self.stats)
         stats["current_batch_size"] = len(self.batch)
         stats["batch_size_limit"] = self.batch_size
         stats["flush_interval"] = self.flush_interval
@@ -515,6 +520,84 @@ class AsyncBatchProcessor:
                 stats["items_processed"] / stats["batches_processed"]
             )
         return stats
+
+
+class AsyncOptimizer:
+    """Main async optimization coordinator that combines all async optimization tools."""
+
+    def __init__(
+        self,
+        max_concurrent_tasks: int = 100,
+        max_queue_size: int = 1000,
+        monitor_slow_threshold: float = 0.1,
+        enable_circuit_breaker: bool = True,
+        enable_rate_limiting: bool = True,
+    ):
+        self.monitor = AsyncPerformanceMonitor()
+        self.monitor.slow_threshold = monitor_slow_threshold
+
+        self.task_queue = AsyncTaskQueue(max_size=max_queue_size)
+        self.resource_pool = AsyncResourcePool(max_size=max_concurrent_tasks)
+
+        self.circuit_breaker = None
+        self.rate_limiter = None
+
+        if enable_circuit_breaker:
+            self.circuit_breaker = AsyncCircuitBreaker(
+                failure_threshold=5,
+                recovery_timeout=30.0,
+                call_timeout=10.0
+            )
+
+        if enable_rate_limiting:
+            self.rate_limiter = AsyncRateLimiter(
+                rate=100,  # 100 requests per second
+                per=1.0
+            )
+
+    async def optimize_coroutine(self, coro: Callable[..., Any], *args, **kwargs) -> Any:
+        """Optimize execution of a coroutine with monitoring and protection."""
+        operation_name = getattr(coro, '__name__', 'unknown')
+        operation_id = self.monitor.start_operation(operation_name)
+
+        try:
+            # Apply rate limiting if enabled
+            if self.rate_limiter:
+                await self.rate_limiter.acquire()
+
+            # Execute through circuit breaker if enabled
+            if self.circuit_breaker:
+                result = await self.circuit_breaker.call(coro, *args, **kwargs)
+            else:
+                result = await coro(*args, **kwargs)
+
+            self.monitor.end_operation(operation_id, success=True)
+            return result
+
+        except Exception as e:
+            self.monitor.end_operation(operation_id, success=False, error=str(e))
+            raise
+
+    async def optimize_batch(self, coros: List[Callable[..., Any]], batch_size: int = 10) -> List[Any]:
+        """Optimize batch execution of coroutines."""
+        processor = AsyncBatchProcessor(batch_size=batch_size)
+
+        async def _execute_coro(coro_func):
+            return await self.optimize_coroutine(coro_func)
+
+        tasks = [_execute_coro(coro) for coro in coros]
+        return await processor.process_batch(tasks)
+
+    def get_performance_stats(self) -> Dict[str, Any]:
+        """Get comprehensive performance statistics."""
+        return self.monitor.get_summary()
+
+    async def cleanup(self):
+        """Clean up resources."""
+        if hasattr(self.task_queue, 'cleanup'):
+            await self.task_queue.cleanup()
+        if hasattr(self.resource_pool, 'cleanup'):
+            await self.resource_pool.cleanup()
 
 
 # Global performance monitor instance

@@ -128,7 +128,7 @@ class GuidedSetupWizard:
                 id="welcome",
                 title="Welcome to PiWardrive",
                 description="Welcome to the PiWardrive setup wizard. This will guide you through the initial configuration.",
-                    
+
                 required=True,
             ),
             SetupStep(
@@ -141,7 +141,7 @@ class GuidedSetupWizard:
                 id="network_config",
                 title="Network Configuration",
                 description="Configure network settings and wireless adapter preferences.",
-                    
+
                 required=True,
             ),
             SetupStep(
@@ -171,17 +171,14 @@ class GuidedSetupWizard:
             SetupStep(
                 id="advanced_features",
                 title="Advanced Features",
-                description="Enable advanced features like notifications,
-                    integrations,
-                    etc.",
-                    
+                description="Enable advanced features like notifications, integrations, etc.",
                 required=False,
             ),
             SetupStep(
                 id="completion",
                 title="Setup Complete",
                 description="Your PiWardrive setup is complete! You can now start using the system.",
-                    
+
                 required=True,
             ),
         ]
@@ -191,7 +188,7 @@ class GuidedSetupWizard:
         try:
             if self.config_path.exists():
                 with open(self.config_path, "r") as f:
-                    data = json.load(f)
+                    _data = json.load(f)
 
                 self.current_step = data.get("current_step", 0)
                 self.wizarddata = data.get("wizard_data", {})
@@ -382,7 +379,7 @@ class InteractiveTutorialSystem:
                 id="nav_1",
                 title="Welcome to PiWardrive",
                 content="Let's take a quick tour of the PiWardrive interface. Click 'Next' to continue.",
-                    
+
                 action="highlight",
                 target="main_menu",
             ),
@@ -390,7 +387,7 @@ class InteractiveTutorialSystem:
                 id="nav_2",
                 title="Main Menu",
                 content="This is the main menu. From here you can access all PiWardrive features.",
-                    
+
                 action="highlight",
                 target="main_menu",
             ),
@@ -423,7 +420,7 @@ class InteractiveTutorialSystem:
                 id="scan_1",
                 title="Starting Your First Scan",
                 content="Let's perform your first wireless scan. Click the 'Start Scan' button.",
-                    
+
                 action="highlight",
                 target="start_scan_button",
             ),
@@ -438,7 +435,7 @@ class InteractiveTutorialSystem:
                 id="scan_3",
                 title="Viewing Results",
                 content="Scan results are displayed here. You can sort and filter them.",
-                    
+
                 action="highlight",
                 target="results_table",
             ),
@@ -457,7 +454,7 @@ class InteractiveTutorialSystem:
                 id="adv_1",
                 title="Advanced Visualization",
                 content="PiWardrive includes advanced visualization features like 3D heatmaps.",
-                    
+
                 action="highlight",
                 target="visualization_tab",
             ),
@@ -465,7 +462,7 @@ class InteractiveTutorialSystem:
                 id="adv_2",
                 title="GPS Integration",
                 content="GPS data is automatically integrated with scan results for location mapping.",
-                    
+
                 action="highlight",
                 target="gps_status",
             ),
@@ -693,7 +690,7 @@ class CustomizableDashboard:
         try:
             if self.dashboard_path.exists():
                 with open(self.dashboard_path, "r") as f:
-                    config = json.load(f)
+                    _config = json.load(f)
 
                 # Load widgets
                 for widget_id, widget_config in config.get("widgets", {}).items():
@@ -784,7 +781,7 @@ class CustomizableDashboard:
             title = widget_config["name"]
 
         if config is None:
-            config = {}
+            _config = {}
 
         widget = DashboardWidget(
             id=widget_id,
@@ -1251,10 +1248,10 @@ if HAS_FLASK:
 
             @self.app.route("/api/setup/step/<step_id>", methods=["POST"])
             def complete_setup_step(step_id):
-                data = request.json or {}
+                _data = request.json or {}
 
                 if step_id == "hardware_detection":
-                    data = self.setup_wizard.perform_hardware_detection()
+                    _data = self.setup_wizard.perform_hardware_detection()
 
                 success = self.setup_wizard.complete_step(step_id, data)
 
@@ -1294,7 +1291,7 @@ if HAS_FLASK:
 
             @self.app.route("/api/dashboard/widget/<widget_id>/data")
             def get_widget_data(widget_id):
-                data = self.dashboard.get_widget_data(widget_id)
+                _data = self.dashboard.get_widget_data(widget_id)
                 return jsonify(data)
 
             @self.app.route("/themes")

@@ -48,7 +48,7 @@ class DFIntegrationManager:
     def _initialize_df_engine(self):
         """Initialize the DF engine."""
         try:
-            config = get_df_config()
+            _config = get_df_config()
             self.df_engine = DFEngine(config)
             logger.info("DF engine initialized for integration")
         except Exception as e:

@@ -21,7 +21,7 @@ def _run_async(
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        result = asyncio.run(coro)
+        _result = asyncio.run(coro)
         fut: Future[T] = Future()
         fut.set_result(result)
         if callback is not None:

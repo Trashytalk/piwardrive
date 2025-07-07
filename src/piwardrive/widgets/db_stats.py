@@ -39,7 +39,7 @@ except Exception:  # pragma: no cover - simple fallback
         fut: Future[T] = Future()
 
         try:
-            result = asyncio.run(coro)
+            _result = asyncio.run(coro)
             fut.set_result(result)
             if callback is not None:
                 callback(result)
@@ -69,7 +69,7 @@ class DBStatsWidget(DashboardWidget):
             try:
                 size = os.path.getsize(_db_path()) / 1024
                 parts = [f"{name}:{cnt}" for name, cnt in counts.items()]
-                stats = " ".join(parts)
+                _stats = " ".join(parts)
                 self.label.text = f"{_('db')}: {size:.1f}KB {stats}"
             except Exception as exc:
                 logging.exception("DBStatsWidget update failed: %s", exc)

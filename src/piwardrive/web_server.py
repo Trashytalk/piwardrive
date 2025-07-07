@@ -34,6 +34,7 @@ def create_app() -> FastAPI:
 
 
 def main() -> None:
+    """Run the PiWardrive web server with default settings."""
     uvicorn.run(create_app(), host="127.0.0.1", port=8000)
 
 

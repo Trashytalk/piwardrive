@@ -1,13 +1,15 @@
-from __future__ import annotations
+"""Database monitoring utilities.
 
-"""Database monitoring utilities."""
+This module provides database performance monitoring, query analysis, and
+health check functionality for PiWardrive database operations.
+"""
+from __future__ import annotations
 
 import logging
 from collections import defaultdict
 from typing import Any, Dict, List
 
 from piwardrive import persistence
-from piwardrive.database_service import db_service
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,8 @@ def get_query_metrics() -> Dict[str, Dict[str, float]]:
 async def health_check() -> bool:
     """Return ``True`` if the database is reachable."""
     try:
-        await db_service.manager.execute("SELECT 1")
+        async with persistence._get_conn() as conn:
+            await conn.execute("SELECT 1")
     except Exception:
         logger.exception("database health check failed")
         return False
@@ -45,8 +48,7 @@ async def analyze_index_usage() -> List[Dict[str, Any]]:
     async with persistence._get_conn() as conn:
         try:
             cur = await conn.execute(
-                "SELECT name,
-                    SUM(pgsize) AS size FROM dbstat WHERE name IN (SELECT name FROM sqlite_master WHERE type='index') GROUP BY name ORDER BY size DESC"
+                "SELECT name, SUM(pgsize) AS size FROM dbstat WHERE name IN (SELECT name FROM sqlite_master WHERE type='index') GROUP BY name ORDER BY size DESC"
             )
             rows = await cur.fetchall()
         except Exception as exc:  # pragma: no cover - dbstat may not exist

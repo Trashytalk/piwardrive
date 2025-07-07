@@ -1,8 +1,17 @@
+"""Lazy widget loading with memory aware cleanup.
+
+This module provides a widget manager that loads dashboard widgets on demand
+and releases them under memory pressure. It helps manage memory usage by
+unloading widgets when memory thresholds are exceeded.
+
+The manager uses weak references to track widget instances and provides
+thread-safe access to widgets through asyncio locks.
+"""
+
 from __future__ import annotations
 
-"""Lazy widget loading with memory aware cleanup."""
-
 import asyncio
+import importlib.util as util
 import os
 import sys
 import weakref
@@ -25,6 +34,15 @@ class LazyWidgetManager:
         memory_monitor: Optional[MemoryMonitor] = None,
         unload_threshold_mb: float = 200.0,
     ) -> None:
+        """Initialize the lazy widget manager.
+        
+        Args:
+            resource_manager: Resource manager for tracking system resources.
+            memory_monitor: Optional memory monitor for tracking memory usage.
+                If not provided, a default MemoryMonitor will be created.
+            unload_threshold_mb: Memory threshold in MB above which widgets
+                may be unloaded to free memory.
+        """
         self._rm = resource_manager
         self._monitor = memory_monitor or MemoryMonitor(history=1)
         self._threshold_mb = unload_threshold_mb

@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import StreamingResponse
 
-from piwardrive import service
+from piwardrive.api.auth import AUTH_DEP
 from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
 from piwardrive.security import sanitize_path, verify_password
@@ -22,11 +22,12 @@ from piwardrive.services import db_monitor
 
 router = APIRouter()
 
-ALLOWED_LOG_PATHS = service.ALLOWED_LOG_PATHS
+# Define allowed log paths
+ALLOWED_LOG_PATHS = ["/var/log/piwardrive"]
 
 
 @router.get("/cpu")
-async def get_cpu(_auth: Any = service.AUTH_DEP) -> service.CPUInfo:
+async def get_cpu(_auth: Any = AUTH_DEP) -> service.CPUInfo:
     return {
         "temp": service.get_cpu_temp(),
         "percent": await service.asyncio.to_thread(
@@ -36,20 +37,20 @@ async def get_cpu(_auth: Any = service.AUTH_DEP) -> service.CPUInfo:
 
 
 @router.get("/ram")
-async def get_ram(_auth: Any = service.AUTH_DEP) -> service.RAMInfo:
+async def get_ram(_auth: Any = AUTH_DEP) -> service.RAMInfo:
     return {"percent": service.get_mem_usage()}
 
 
 @router.get("/storage")
 async def get_storage(
-    path: str = "/mnt/ssd", _auth: Any = service.AUTH_DEP
+    path: str = "/mnt/ssd", _auth: Any = AUTH_DEP
 ) -> service.StorageInfo:
     return {"percent": service.get_disk_usage(path)}
 
 
 @router.get("/orientation")
 async def get_orientation_endpoint(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> service.OrientationInfo:
     orient = await service.asyncio.to_thread(
         service.orientation_sensors.get_orientation_dbus
@@ -59,7 +60,7 @@ async def get_orientation_endpoint(
     if orient:
         angle = service.orientation_sensors.orientation_to_angle(orient)
     else:
-        data = await service.asyncio.to_thread(service.orientation_sensors.read_mpu6050)
+        _data = await service.asyncio.to_thread(service.orientation_sensors.read_mpu6050)
         if data:
             accel = data.get("accelerometer")
             gyro = data.get("gyroscope")
@@ -72,7 +73,7 @@ async def get_orientation_endpoint(
 
 
 @router.get("/vehicle")
-async def get_vehicle_endpoint(_auth: Any = service.AUTH_DEP) -> service.VehicleInfo:
+async def get_vehicle_endpoint(_auth: Any = AUTH_DEP) -> service.VehicleInfo:
     return {
         "speed": await service.asyncio.to_thread(
             service.vehicle_sensors.read_speed_obd
@@ -85,7 +86,7 @@ async def get_vehicle_endpoint(_auth: Any = service.AUTH_DEP) -> service.Vehicle
 
 
 @router.get("/gps")
-async def get_gps_endpoint(_auth: Any = service.AUTH_DEP) -> service.GPSInfo:
+async def get_gps_endpoint(_auth: Any = AUTH_DEP) -> service.GPSInfo:
     try:
         pos = await service.asyncio.to_thread(service.gps_client.get_position)
     except Exception as exc:
@@ -122,12 +123,12 @@ async def get_gps_endpoint(_auth: Any = service.AUTH_DEP) -> service.GPSInfo:
 async def get_logs(
     lines: int = 200,
     path: str = service.DEFAULT_LOG_PATH,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> service.LogsResponse:
     safe = sanitize_path(path)
     if safe not in ALLOWED_LOG_PATHS:
         raise ServiceError("Invalid log path", status_code=400)
-    data = service.async_tail_file(safe, lines)
+    _data = service.async_tail_file(safe, lines)
     if inspect.isawaitable(data):
         lines_out = await data
     else:
@@ -137,7 +138,7 @@ async def get_logs(
 
 @router.get("/db-stats")
 async def get_db_stats_endpoint(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> service.DBStatsResponse:
     counts = await db_service.get_table_counts()
     try:
@@ -148,7 +149,7 @@ async def get_db_stats_endpoint(
 
 
 @router.get("/db-health")
-async def db_health_endpoint(_auth: Any = service.AUTH_DEP) -> dict[str, Any]:
+async def db_health_endpoint(_auth: Any = AUTH_DEP) -> dict[str, Any]:
     healthy = await db_monitor.health_check()
     return {
         "healthy": healthy,
@@ -159,14 +160,14 @@ async def db_health_endpoint(_auth: Any = service.AUTH_DEP) -> dict[str, Any]:
 
 @router.get("/db-index-usage")
 async def db_index_usage_endpoint(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> list[dict[str, Any]]:
     return await db_monitor.analyze_index_usage()
 
 
 @router.get("/lora-scan")
 async def lora_scan_endpoint(
-    iface: str = "lora0", _auth: Any = service.AUTH_DEP
+    iface: str = "lora0", _auth: Any = AUTH_DEP
 ) -> service.LoraScanResponse:
     lines = await service.async_scan_lora(iface)
     return {"count": len(lines), "lines": lines}
@@ -174,11 +175,11 @@ async def lora_scan_endpoint(
 
 @router.post("/service/{name}/{action}")
 async def control_service_endpoint(
-    name: str, action: str, _auth: Any = service.AUTH_DEP
+    name: str, action: str, _auth: Any = AUTH_DEP
 ) -> service.ServiceControlResponse:
     if action not in {"start", "stop", "restart"}:
         raise ServiceError("Invalid action", status_code=400)
-    result = service.run_service_cmd(name, action) or (False, "", "")
+    _result = service.run_service_cmd(name, action) or (False, "", "")
     success, _out, err = result
     if not success:
         msg = err.strip() if isinstance(err, str) else str(err)
@@ -188,23 +189,23 @@ async def control_service_endpoint(
 
 @router.get("/service/{name}")
 async def get_service_status_endpoint(
-    name: str, _auth: Any = service.AUTH_DEP
+    name: str, _auth: Any = AUTH_DEP
 ) -> service.ServiceStatusResponse:
     active = await service.service_status_async(name)
     return {"service": name, "active": active}
 
 
 @router.get("/config")
-async def get_config_endpoint(_auth: Any = service.AUTH_DEP) -> service.ConfigResponse:
+async def get_config_endpoint(_auth: Any = AUTH_DEP) -> service.ConfigResponse:
     return asdict(service.config.load_config())
 
 
 @router.post("/config")
 async def update_config_endpoint(
-    updates: dict[str, Any], _auth: Any = service.AUTH_DEP
+    updates: dict[str, Any], _auth: Any = AUTH_DEP
 ) -> service.ConfigResponse:
     cfg = service.config.load_config()
-    data = asdict(cfg)
+    _data = asdict(cfg)
     for key, value in updates.items():
         if key not in data:
             raise ServiceError(f"Unknown field: {key}", status_code=400)
@@ -221,7 +222,7 @@ async def update_config_endpoint(
 
 @router.get("/webhooks")
 async def get_webhooks_endpoint(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> service.WebhooksResponse:
     cfg = service.config.load_config()
     return {"webhooks": list(cfg.notification_webhooks)}
@@ -229,7 +230,7 @@ async def get_webhooks_endpoint(
 
 @router.post("/webhooks")
 async def update_webhooks_endpoint(
-    urls: list[str], _auth: Any = service.AUTH_DEP
+    urls: list[str], _auth: Any = AUTH_DEP
 ) -> service.WebhooksResponse:
     cfg = service.config.load_config()
     cfg.notification_webhooks = list(urls)
@@ -239,7 +240,7 @@ async def update_webhooks_endpoint(
 
 @router.get("/fingerprints")
 async def list_fingerprints_endpoint(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> dict[str, list[service.FingerprintInfoDict]]:
     items = await db_service.load_fingerprint_info()
     return {"fingerprints": [asdict(i) for i in items]}
@@ -247,7 +248,7 @@ async def list_fingerprints_endpoint(
 
 @router.post("/fingerprints")
 async def add_fingerprint_endpoint(
-    data: dict[str, Any], _auth: Any = service.AUTH_DEP
+    data: dict[str, Any], _auth: Any = AUTH_DEP
 ) -> service.FingerprintInfoDict:
     info = service.FingerprintInfo(
         environment=data.get("environment", ""),
@@ -260,14 +261,14 @@ async def add_fingerprint_endpoint(
 
 @router.get("/geofences")
 async def list_geofences_endpoint(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> list[service.Geofence]:
     return service._load_geofences()
 
 
 @router.post("/geofences")
 async def add_geofence_endpoint(
-    data: dict[str, Any], _auth: Any = service.AUTH_DEP
+    data: dict[str, Any], _auth: Any = AUTH_DEP
 ) -> list[service.Geofence]:
     polys = service._load_geofences()
     polys.append(
@@ -284,7 +285,7 @@ async def add_geofence_endpoint(
 
 @router.put("/geofences/{name}")
 async def update_geofence_endpoint(
-    name: str, updates: dict[str, Any], _auth: Any = service.AUTH_DEP
+    name: str, updates: dict[str, Any], _auth: Any = AUTH_DEP
 ) -> service.Geofence:
     polys = service._load_geofences()
     for poly in polys:
@@ -304,7 +305,7 @@ async def update_geofence_endpoint(
 
 @router.delete("/geofences/{name}")
 async def remove_geofence_endpoint(
-    name: str, _auth: Any = service.AUTH_DEP
+    name: str, _auth: Any = AUTH_DEP
 ) -> service.RemoveResponse:
     polys = service._load_geofences()
     for idx, poly in enumerate(polys):
@@ -322,7 +323,7 @@ _export_layer = service._export_layer
 
 @router.get("/export/aps")
 async def export_access_points(
-    fmt: str = "geojson", _auth: Any = service.AUTH_DEP
+    fmt: str = "geojson", _auth: Any = AUTH_DEP
 ) -> Response:
     records = db_service.load_ap_cache()
     if inspect.isawaitable(records):
@@ -338,7 +339,7 @@ async def export_access_points(
 
 @router.get("/export/bt")
 async def export_bluetooth(
-    fmt: str = "geojson", _auth: Any = service.AUTH_DEP
+    fmt: str = "geojson", _auth: Any = AUTH_DEP
 ) -> Response:
     try:
         from sigint_integration import load_sigint_data

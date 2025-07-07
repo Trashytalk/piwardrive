@@ -81,7 +81,7 @@ def reset_orientation_map() -> None:
         else:
             try:
                 with open(safe, "r", encoding="utf-8") as fh:
-                    data = json.load(fh)
+                    _data = json.load(fh)
                 if isinstance(data, dict):
                     _ORIENTATION_MAP.update(
                         {k.lower(): float(v) for k, v in data.items()}

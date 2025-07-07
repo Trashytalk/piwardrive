@@ -1,3 +1,8 @@
+"""Memory monitoring and leak detection for PiWardrive system.
+
+This module provides memory monitoring capabilities using tracemalloc to track
+memory usage patterns and detect potential memory leaks in the PiWardrive system.
+"""
 import gc
 import logging
 import tracemalloc
@@ -12,6 +17,12 @@ class MemoryMonitor:
     """Track memory usage and detect leaks using ``tracemalloc``."""
 
     def __init__(self, history: int = 5, threshold_mb: float = 10.0) -> None:
+        """Initialize memory monitor with history tracking.
+        
+        Args:
+            history: Number of snapshots to keep in history.
+            threshold_mb: Memory usage threshold in MB for warnings.
+        """
         self.history = history
         self.threshold_mb = threshold_mb
         self._snapshots: Deque[Tuple[float, tracemalloc.Snapshot, float]] = deque(

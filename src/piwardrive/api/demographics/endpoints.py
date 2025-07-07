@@ -6,14 +6,14 @@ from typing import Any, Dict
 
 from fastapi import APIRouter
 
-from piwardrive import service
+from piwardrive.api.auth import AUTH_DEP
 from piwardrive.services import demographic_analytics
 
 router = APIRouter(prefix="/demographics", tags=["demographics"])
 
 
 @router.get("/social")
-async def get_social_insights(_auth: Any = service.AUTH_DEP) -> Dict[str, Any]:
+async def get_social_insights(_auth: Any = AUTH_DEP) -> Dict[str, Any]:
     """Return social analytics derived from demographic data."""
     return {
         "socioeconomic_correlation": demographic_analytics.socioeconomic_correlation(),
@@ -24,13 +24,13 @@ async def get_social_insights(_auth: Any = service.AUTH_DEP) -> Dict[str, Any]:
 
 
 @router.get("/adoption")
-async def get_technology_adoption(_auth: Any = service.AUTH_DEP) -> Dict[str, Any]:
+async def get_technology_adoption(_auth: Any = AUTH_DEP) -> Dict[str, Any]:
     """Return technology adoption metrics."""
     return demographic_analytics.adoption_summary()
 
 
 @router.get("/equity")
-async def get_digital_equity(_auth: Any = service.AUTH_DEP) -> Dict[str, Any]:
+async def get_digital_equity(_auth: Any = AUTH_DEP) -> Dict[str, Any]:
     """Return digital equity analytics."""
     return demographic_analytics.digital_equity_metrics()
 

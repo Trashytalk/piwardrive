@@ -4,7 +4,8 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from piwardrive import persistence, service
+from piwardrive import persistence
+from piwardrive.api.auth import AUTH_DEP
 from piwardrive.analytics import (
     capacity_planning_forecast,
     failure_prediction,
@@ -21,7 +22,7 @@ async def get_network_analytics(
     start: str | None = None,
     end: str | None = None,
     limit: int | None = None,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> list[dict[str, Any]]:
     return await persistence.load_network_analytics(
         bssid=bssid, start=start, end=end, limit=limit
@@ -34,7 +35,7 @@ async def get_daily_stats(
     start: str | None = None,
     end: str | None = None,
     limit: int | None = None,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> list[dict[str, Any]]:
     return await persistence.load_daily_detection_stats(
         session_id=session_id, start=start, end=end, limit=limit
@@ -45,7 +46,7 @@ async def get_daily_stats(
 async def get_coverage_grid(
     limit: int | None = None,
     offset: int = 0,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> list[dict[str, Any]]:
     return await persistence.load_network_coverage_grid(limit=limit, offset=offset)
 
@@ -54,7 +55,7 @@ async def get_coverage_grid(
 async def get_lifecycle_forecast(
     bssid: str | None = None,
     steps: int = 7,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> dict[str, list[float]]:
     rows = await persistence.load_network_analytics(bssid=bssid, limit=50)
     pred, ci = predict_network_lifecycle(rows, steps)
@@ -64,7 +65,7 @@ async def get_lifecycle_forecast(
 @router.get("/capacity")
 async def get_capacity_forecast(
     steps: int = 7,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> dict[str, list[float]]:
     rows = await persistence.load_daily_detection_stats(limit=50)
     pred, ci = capacity_planning_forecast(rows, steps)
@@ -73,7 +74,7 @@ async def get_capacity_forecast(
 
 @router.get("/predictive")
 async def get_predictive_summary(
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> dict[str, Any]:
     lifecycle_rows = await persistence.load_network_analytics(limit=50)
     daily_rows = await persistence.load_daily_detection_stats(limit=50)

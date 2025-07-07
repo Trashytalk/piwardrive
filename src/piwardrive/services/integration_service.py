@@ -1,6 +1,11 @@
-from __future__ import annotations
+"""Helpers for interacting with external services.
 
-"""Helpers for interacting with external services."""
+This module provides utilities for integrating with external APIs and services,
+including rate-limited HTTP clients, authentication handling, and data
+synchronization capabilities for third-party integrations.
+"""
+
+from __future__ import annotations
 
 import json
 import logging
@@ -20,10 +25,30 @@ class APIClient:
     def __init__(
         self, token: str | None = None, *, max_rate: int = 60, window: int = 60
     ) -> None:
+        """Initialize the API client.
+        
+        Args:
+            token: Optional authentication token.
+            max_rate: Maximum requests per window (default 60).
+            window: Rate limiting window in seconds (default 60).
+        """
         self.token = token
         self.rate_limiter = RateLimiter(max_rate, window)
 
     async def request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        """Make an HTTP request with rate limiting and authentication.
+        
+        Args:
+            method: HTTP method (GET, POST, etc.).
+            url: Request URL.
+            **kwargs: Additional arguments passed to httpx.
+            
+        Returns:
+            HTTP response object.
+            
+        Raises:
+            RuntimeError: If rate limit is exceeded.
+        """
         if not self.rate_limiter.should_allow(url):
             raise RuntimeError("rate limit exceeded")
         headers = kwargs.pop("headers", {})
@@ -41,8 +66,8 @@ async def fetch_stix_taxii(
     """Fetch STIX indicators from a TAXII collection."""
     endpoint = f"{url.rstrip('/')}/collections/{collection}/objects"
     resp = await client.request("GET", endpoint)
-    data = resp.json()
-    objects = data.get("objects", []) if isinstance(data, Mapping) else []
+    _data = resp.json()
+    objects = _data.get("objects", []) if isinstance(_data, Mapping) else []
     return [obj for obj in objects if isinstance(obj, Mapping)]
 
 
@@ -84,9 +109,17 @@ class IntegrationMonitor:
     """Store last success state for integrations."""
 
     def __init__(self) -> None:
+        """Initialize the integration monitor with empty status tracking."""
         self.status: dict[str, dict[str, Any]] = {}
 
     def update(self, name: str, ok: bool, message: str | None = None) -> None:
+        """Update the status of an integration.
+        
+        Args:
+            name: Name of the integration.
+            ok: Whether the integration is working correctly.
+            message: Optional status message.
+        """
         self.status[name] = {
             "ok": ok,
             "message": message,
@@ -94,6 +127,11 @@ class IntegrationMonitor:
         }
 
     def get_status(self) -> dict[str, dict[str, Any]]:
+        """Get current status of all tracked integrations.
+        
+        Returns:
+            Dictionary mapping integration names to their status information.
+        """
         return self.status
 
 

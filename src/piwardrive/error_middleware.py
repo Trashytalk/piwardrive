@@ -1,8 +1,8 @@
-import logging
-
 """FastAPI middleware for unified error handling."""
 
 from __future__ import annotations
+
+import logging
 
 from logging import Logger
 from typing import Awaitable, Callable
@@ -20,12 +20,28 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     """Middleware that converts :class:`PiWardriveError` to JSON responses."""
 
     def __init__(self, app: ASGIApp, logger: Logger | None = None) -> None:
+        """Initialize the error handling middleware.
+        
+        Args:
+            app: The ASGI application to wrap.
+            logger: Optional logger instance. If None, creates a logger for this module.
+        """
         super().__init__(app)
         self.logger = logger or get_logger(__name__).logger
 
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]
     ):
+        """Dispatch requests with error handling.
+        
+        Args:
+            request: The incoming HTTP request.
+            call_next: The next middleware/handler in the chain.
+            
+        Returns:
+            JSONResponse with error details if an exception occurs,
+            otherwise the response from the next handler.
+        """
         try:
             return await call_next(request)
         except PiWardriveError as exc:

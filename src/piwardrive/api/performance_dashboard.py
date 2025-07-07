@@ -103,7 +103,7 @@ async def get_realtime_stats(_auth: Any = Depends(AUTH_DEP)):
     """Get real-time update performance statistics."""
     try:
         optimizer = get_global_optimizer()
-        stats = optimizer.get_performance_stats()
+        _stats = optimizer.get_performance_stats()
 
         return {"timestamp": time.time(), "realtime_stats": stats}
 
@@ -123,7 +123,7 @@ async def get_comprehensive_stats(
         except Exception:
             db_path = None
 
-    stats = {"timestamp": time.time(), "collection_time": datetime.now().isoformat()}
+    _stats = {"timestamp": time.time(), "collection_time": datetime.now().isoformat()}
 
     # Database stats
     if db_path:
@@ -256,9 +256,9 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
                     "type": "warning",
                     "category": "async",
                     "message": f"High number of slow operations: {async_summary['slow_operations']}",
-                        
+
                     "recommendation": "Review async operation performance and consider optimization",
-                        
+
                 }
             )
 
@@ -274,7 +274,7 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
                     "category": "websocket",
                     "message": f"High WebSocket error count: {ws_stats['errors']}",
                     "recommendation": "Check WebSocket connection stability and error handling",
-                        
+
                 }
             )
 
@@ -293,9 +293,9 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
                         "type": "info",
                         "category": "database",
                         "message": f"Multiple missing indexes detected: {len(missing_indexes)}",
-                            
+
                         "recommendation": "Consider creating recommended indexes to improve query performance",
-                            
+
                     }
                 )
 
@@ -343,9 +343,9 @@ async def get_performance_recommendations(
                         "priority": "high",
                         "title": "Create Missing Indexes",
                         "description": f"Found {len(missing_indexes)} missing indexes that could improve query performance",
-                            
+
                         "action": "Run database optimization to create recommended indexes",
-                            
+
                         "estimated_impact": "20-50% query performance improvement",
                     }
                 )
@@ -361,12 +361,11 @@ async def get_performance_recommendations(
                         "priority": "medium",
                         "title": "Vacuum Large Tables",
                         "description": f"Found {len(large_tables)} large tables that may benefit from VACUUM",
-                            
+
                         "action": "Run VACUUM on large tables to reclaim space and improve performance",
-                            
-                        "estimated_impact": "10-30% space reduction,
-                            improved query performance",
-                            
+
+                        "estimated_impact": "10-30% space reduction, improved query performance",
+
                     }
                 )
 
@@ -392,7 +391,7 @@ async def get_performance_recommendations(
                         "priority": "medium",
                         "title": "Optimize Slow Async Operations",
                         "description": f"Found {len(slow_operations)} operations with high average execution time",
-                            
+
                         "action": "Review and optimize slow async operations: "
                         + ", ".join(slow_operations[:3]),
                         "estimated_impact": "Improved application responsiveness",
@@ -415,11 +414,11 @@ async def get_performance_recommendations(
                     "priority": "high",
                     "title": "High WebSocket Connection Count",
                     "description": f"Currently handling {ws_stats['active_connections']} WebSocket connections",
-                        
+
                     "action": "Consider implementing connection pooling or load balancing",
-                        
+
                     "estimated_impact": "Improved connection stability and resource usage",
-                        
+
                 }
             )
 
@@ -434,7 +433,7 @@ async def get_performance_recommendations(
             "title": "Enable Performance Monitoring",
             "description": "Set up continuous performance monitoring and alerting",
             "action": "Configure automated performance alerts and regular optimization tasks",
-                
+
             "estimated_impact": "Proactive performance issue detection and resolution",
         }
     )
@@ -454,7 +453,7 @@ async def performance_websocket(websocket):
     try:
         while True:
             # Collect current performance data
-            stats = await get_comprehensive_stats()
+            _stats = await get_comprehensive_stats()
 
             # Send updates to client
             await websocket.send_json(

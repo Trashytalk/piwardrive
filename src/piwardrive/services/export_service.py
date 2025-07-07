@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Advanced export helpers for various formats."""
+
+from __future__ import annotations
 
 import csv
 import json
@@ -41,11 +41,11 @@ async def export_to_kml(path: str) -> None:
         "SELECT latitude AS lat, longitude AS lon " "FROM gps_tracks ORDER BY timestamp"
     )
     aps = await _fetch(
-        "SELECT latitude AS lat, longitude AS lon, ssid, bssid, "
+        "SELECT latitude AS lat, longitude AS lon, ssid, bssid, ",
         "signal_strength_dbm as rssi FROM wifi_detections"
     )
     bts = await _fetch(
-        "SELECT latitude AS lat, longitude AS lon, device_name as name, "
+        "SELECT latitude AS lat, longitude AS lon, device_name as name, ",
         "mac_address as address, rssi_dbm as rssi FROM bluetooth_detections"
     )
     track = [
@@ -59,7 +59,7 @@ async def export_to_kml(path: str) -> None:
 async def export_to_wigle(path: str) -> None:
     """Export Wi-Fi detections to a WiGLE compatible CSV file."""
     rows = await _fetch(
-        "SELECT bssid, ssid, frequency_mhz, channel, first_seen, last_seen, "
+        "SELECT bssid, ssid, frequency_mhz, channel, first_seen, last_seen, ",
         "latitude, longitude FROM wifi_detections"
     )
     fieldnames = [

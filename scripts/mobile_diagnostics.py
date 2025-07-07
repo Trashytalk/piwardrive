@@ -50,7 +50,8 @@ class MobileDiagnostics:
             if self._test_piwardrive_api(ip):
                 print(f"Found PiWardrive device at {ip} (via mDNS)")
                 return ip
-        except:
+        except Exception as e:
+            print(f"mDNS discovery failed: {e}")
             pass
 
         print("No PiWardrive devices found automatically")

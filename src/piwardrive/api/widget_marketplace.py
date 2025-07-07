@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from piwardrive import service
+from piwardrive.api.auth import AUTH_DEP
 
 router = APIRouter(prefix="/widget-marketplace", tags=["widget-marketplace"])
 
@@ -24,14 +24,14 @@ def _load_market() -> dict[str, Any]:
 
 
 @router.get("")
-async def list_market(_auth: Any = service.AUTH_DEP) -> dict[str, Any]:
+async def list_market(_auth: Any = AUTH_DEP) -> dict[str, Any]:
     """Return available marketplace entries."""
     return _load_market()
 
 
 @router.post("/install")
 async def install_widget(
-    data: dict[str, Any], _auth: Any = service.AUTH_DEP
+    data: dict[str, Any], _auth: Any = AUTH_DEP
 ) -> dict[str, Any]:
     """Pretend to install a widget and return success."""
     name = data.get("name", "")

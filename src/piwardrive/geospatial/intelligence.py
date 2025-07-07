@@ -169,7 +169,7 @@ class RSSITrilateration:
         ]
 
         # Solve optimization
-        result = minimize(objective, initial_guess, method="L-BFGS-B")
+        _result = minimize(objective, initial_guess, method="L-BFGS-B")
 
         if result.success:
             # Calculate uncertainty based on residual error
@@ -226,7 +226,7 @@ class FingerprintingDatabase:
                 }
 
             # Add measurement
-            stats = self.fingerprints[location_id][bssid]
+            _stats = self.fingerprints[location_id][bssid]
             stats["rssi_values"].append(measurement.rssi)
             stats["count"] += 1
 
@@ -758,9 +758,8 @@ def test_geospatial_intelligence():
     position = geo_intel.estimate_position(measurements)
     if position:
         print(
-            f"Estimated position: ({position.x:.2f},
-                {position.y:.2f},
-                {position.z:.2f})"
+            f"Estimated position: ({position.x:.2f}, "
+            f"{position.y:.2f}, {position.z:.2f})"
         )
         print(f"Uncertainty: {position.uncertainty:.2f}m")
         print(f"Confidence: {position.confidence.value}")
@@ -782,8 +781,8 @@ def test_geospatial_intelligence():
     fingerprint_position = geo_intel.estimate_position(measurements)
     if fingerprint_position:
         print(
-            f"Fingerprint position: ({fingerprint_position.x:.2f},
-                {fingerprint_position.y:.2f})"
+            f"Fingerprint position: ({fingerprint_position.x:.2f}, "
+            f"{fingerprint_position.y:.2f})"
         )
 
     # Generate some movement data
@@ -811,7 +810,7 @@ def test_geospatial_intelligence():
     print(f"  Rooms: {len(floor_plan.get('rooms', []))}")
 
     # Get positioning statistics
-    stats = geo_intel.get_positioning_stats()
+    _stats = geo_intel.get_positioning_stats()
     print("\nPositioning statistics:")
     print(f"  Total positions: {stats.get('total_positions', 0)}")
     print(f"  Average accuracy: {stats.get('avg_accuracy', 0):.2f}m")

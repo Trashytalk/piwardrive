@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Background analytics processing tasks."""
+
+from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta

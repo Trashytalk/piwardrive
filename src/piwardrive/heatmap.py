@@ -125,7 +125,7 @@ def save_png(hist: Sequence[Sequence[int]], path: str) -> None:
 
     plt.figure(figsize=(3, 3))
     plt.imshow(hist, cmap="hot", origin="lower")
-    plt.axis("of")
+    plt.axis("o")
     plt.tight_layout()
     plt.savefig(path, dpi=100, bbox_inches="tight", pad_inches=0)
     plt.close()

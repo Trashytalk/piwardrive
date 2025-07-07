@@ -130,7 +130,7 @@ def main() -> None:  # pragma: no cover - CLI helper
     )
     args = parser.parse_args()
 
-    data = scan_imsis(args.cmd, with_location=not args.no_location)
+    _data = scan_imsis(args.cmd, with_location=not args.no_location)
     if args.json:
         print(json.dumps(data, indent=2))
     else:

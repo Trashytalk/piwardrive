@@ -1,13 +1,13 @@
 """PiWardrive package initializer."""
 
-import logging
+import logging as stdlib_logging
 import sys
 from importlib import import_module
 from types import ModuleType
 
 from .widget_manager import LazyWidgetManager
 
-logger = logging.getLogger(__name__)
+logger = stdlib_logging.getLogger(__name__)
 
 sigint_suite: ModuleType | None
 

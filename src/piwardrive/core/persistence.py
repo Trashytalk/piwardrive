@@ -37,9 +37,22 @@ class ShardManager:
     """Simple hash-based shard selector."""
 
     def __init__(self, shards: int = 1) -> None:
+        """Initialize the shard manager.
+        
+        Args:
+            shards: Number of database shards to use.
+        """
         self.shards = max(1, shards)
 
     def db_path(self, key: str = "") -> str:
+        """Get database path for a given key.
+        
+        Args:
+            key: Key to determine shard (empty for default).
+            
+        Returns:
+            Path to the appropriate database file.
+        """
         env = os.getenv("PW_DB_PATH")
         if env:
             base = os.path.expanduser(env)
@@ -198,15 +211,15 @@ async def _migration_4(conn: aiosqlite.Connection) -> None:
         """
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON "
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_device_time ON ",
         "scan_sessions(device_id, started_at)"
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON "
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_type ON ",
         "scan_sessions(scan_type)"
     )
     await conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON "
+        "CREATE INDEX IF NOT EXISTS idx_scan_sessions_location ON ",
         "scan_sessions(location_start_lat, location_start_lon)"
     )
 
@@ -474,12 +487,15 @@ async def iter_health_history(
     limit: int | None = None,
     offset: int = 0,
 ) -> AsyncIterator[HealthRecord]:
-    """Yield :class:`HealthRecord` rows between ``start`` and ``end`` with
-    pagination."""
+    """Yield HealthRecord rows between start and end with pagination.
+    
+    This function retrieves health records from the database within the specified
+    time range with optional pagination support.
+    """
     await flush_health_records()
     async with _get_conn() as conn:
         query = (
-            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent",
             " FROM health_records"
         )
         params: list[object] = []
@@ -532,7 +548,7 @@ async def save_app_state(state: AppState) -> None:
         await conn.execute("DELETE FROM app_state WHERE id = 1")
         await conn.execute(
             (
-                "INSERT INTO app_state (id, last_screen, last_start, first_run) "
+                "INSERT INTO app_state (id, last_screen, last_start, first_run) ",
                 "VALUES (1, ?, ?, ?)"
             ),
             (state.last_screen, state.last_start, int(state.first_run)),
@@ -588,7 +604,7 @@ async def save_user(user: User) -> None:
     """Insert or replace ``user`` in the database."""
     async with _get_conn() as conn:
         await conn.execute(
-            "INSERT OR REPLACE INTO users (username, password_hash, token_hash) "
+            "INSERT OR REPLACE INTO users (username, password_hash, token_hash) ",
             "VALUES (?, ?, ?)",
             (user.username, user.password_hash, user.token_hash),
         )
@@ -599,7 +615,7 @@ async def update_user_token(username: str, token_hash: str) -> None:
     """Set ``token_hash`` for ``username``."""
     async with _get_conn() as conn:
         await conn.execute(
-            "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') "
+            "UPDATE users SET token_hash = ?, token_created = strftime('%s','now') ",
             "WHERE username = ?",
             (token_hash, username),
         )
@@ -610,7 +626,7 @@ async def get_user_by_token(token_hash: str) -> User | None:
     """Return ``User`` matching ``token_hash`` if found."""
     async with _get_conn() as conn:
         cur = await conn.execute(
-            "SELECT username, password_hash, token_hash FROM users "
+            "SELECT username, password_hash, token_hash FROM users ",
             "WHERE token_hash = ?",
             (token_hash,),
         )
@@ -665,10 +681,10 @@ async def iter_scan_sessions(
     """Yield ``ScanSession`` rows ordered by ``started_at`` descending."""
     async with _get_conn() as conn:
         query = (
-            "SELECT id, device_id, scan_type, started_at, completed_at, "
-            "duration_seconds, location_start_lat, location_start_lon, "
-            "location_end_lat, location_end_lon, interface_used, "
-            "scan_parameters, total_detections, created_at "
+            "SELECT id, device_id, scan_type, started_at, completed_at, ",
+            "duration_seconds, location_start_lat, location_start_lon, ",
+            "location_end_lat, location_end_lon, interface_used, ",
+            "scan_parameters, total_detections, created_at ",
             "FROM scan_sessions ORDER BY started_at DESC"
         )
         params: list[object] = []
@@ -1154,7 +1170,7 @@ async def refresh_daily_detection_stats() -> None:
                 COUNT(DISTINCT channel) AS channels_used,
                 COUNT(CASE WHEN encryption_type = 'OPEN' THEN 1 END) AS open_networks,
                 COUNT(CASE WHEN encryption_type LIKE '%WEP%' THEN 1 END) AS wep_networks,
-                    
+
                 COUNT(CASE WHEN encryption_type LIKE '%WPA%' THEN 1 END) AS wpa_networks
             FROM wifi_detections
             GROUP BY DATE(detection_timestamp), scan_session_id
@@ -1795,3 +1811,56 @@ async def schedule_maintenance_tasks() -> Dict[str, Any]:
     }
 
     return maintenance_results
+
+
+def get_database_stats() -> Dict[str, Any]:
+    """Get database statistics including size, table counts, and performance metrics."""
+    stats = {
+        "database_size": 0,
+        "table_count": 0,
+        "total_records": 0,
+        "tables": {},
+        "last_updated": datetime.now().isoformat(),
+    }
+    
+    try:
+        with sqlite3.connect(_shard_mgr.db_path()) as conn:
+            # Get database size
+            cursor = conn.execute("PRAGMA page_count")
+            page_count = cursor.fetchone()[0]
+            cursor = conn.execute("PRAGMA page_size")
+            page_size = cursor.fetchone()[0]
+            stats["database_size"] = page_count * page_size
+            
+            # Get table information
+            cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = [row[0] for row in cursor.fetchall()]
+            stats["table_count"] = len(tables)
+            
+            # Get record counts for each table
+            total_records = 0
+            for table in tables:
+                try:
+                    cursor = conn.execute(f"SELECT COUNT(*) FROM {table}")
+                    count = cursor.fetchone()[0]
+                    stats["tables"][table] = count
+                    total_records += count
+                except Exception as e:
+                    logger.warning(f"Could not count records in table {table}: {e}")
+                    stats["tables"][table] = 0
+            
+            stats["total_records"] = total_records
+            
+    except Exception as e:
+        logger.error(f"Error getting database stats: {e}")
+        stats["error"] = str(e)
+    
+    return stats
+
+async def _acquire_connection():
+    """Acquire a database connection from the pool."""
+    return await _get_conn().__aenter__()
+
+async def _release_connection(conn):
+    """Release a database connection back to the pool."""
+    await _release_conn(conn)

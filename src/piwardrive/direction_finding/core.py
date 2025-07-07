@@ -257,7 +257,7 @@ class DFEngine:
         # Process each target
         for bssid, target_measurements in targets.items():
             try:
-                result = await self._process_target(bssid, target_measurements)
+                _result = await self._process_target(bssid, target_measurements)
                 if result:
                     results.append(result)
             except Exception as e:
@@ -285,13 +285,13 @@ class DFEngine:
 
         try:
             # Process with primary algorithm
-            result = await self._run_algorithm(primary_algorithm, bssid, measurements)
+            _result = await self._run_algorithm(primary_algorithm, bssid, measurements)
 
             # If primary algorithm fails, try fallback
             if not result and self.config.fallback_algorithm:
                 fallback_algorithm = self.algorithms.get(self.config.fallback_algorithm)
                 if fallback_algorithm:
-                    result = await self._run_algorithm(
+                    _result = await self._run_algorithm(
                         fallback_algorithm, bssid, measurements
                     )
 

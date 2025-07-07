@@ -36,15 +36,18 @@ class ConnectionMetrics:
 
     @property
     def connection_duration(self) -> float:
+        """Calculate connection duration in seconds."""
         return time.time() - self.connected_at
 
     @property
     def messages_per_second(self) -> float:
+        """Calculate messages per second throughput."""
         duration = self.connection_duration
         return self.messages_sent / duration if duration > 0 else 0
 
     @property
     def bytes_per_second(self) -> float:
+        """Calculate bytes per second throughput."""
         duration = self.connection_duration
         return self.bytes_sent / duration if duration > 0 else 0
 
@@ -54,6 +57,12 @@ class OptimizedWebSocketManager:
     """Optimized WebSocket connection manager with performance monitoring."""
 
     def __init__(self, max_connections: int = 1000, compression: bool = True):
+        """Initialize the WebSocket manager.
+        
+        Args:
+            max_connections: Maximum number of concurrent connections.
+            compression: Enable compression for messages.
+        """
         self.max_connections = max_connections
         self.compression = compression
         self.connections: Dict[str, WebSocket] = {}
@@ -202,7 +211,7 @@ class OptimizedWebSocketManager:
 
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get connection statistics."""
-        stats = dict(self.stats)
+        _stats = dict(self.stats)
         stats["connection_metrics"] = {}
 
         for connection_id, metrics in self.connection_metrics.items():
@@ -237,6 +246,11 @@ class OptimizedSSEManager:
     """Optimized Server-Sent Events manager."""
 
     def __init__(self, max_connections: int = 1000):
+        """Initialize the SSE manager.
+        
+        Args:
+            max_connections: Maximum number of concurrent SSE connections.
+        """
         self.max_connections = max_connections
         self.active_streams: Dict[str, bool] = {}
         self.stream_metrics: Dict[str, ConnectionMetrics] = {}
@@ -339,7 +353,7 @@ class OptimizedSSEManager:
 
     def get_stream_stats(self) -> Dict[str, Any]:
         """Get SSE stream statistics."""
-        stats = dict(self.stats)
+        _stats = dict(self.stats)
         stats["stream_metrics"] = {}
 
         for stream_id, metrics in self.stream_metrics.items():
@@ -359,6 +373,11 @@ class DataStreamOptimizer:
     """Optimizer for data streaming performance."""
 
     def __init__(self, compression_threshold: int = 1024):
+        """Initialize the data stream optimizer.
+        
+        Args:
+            compression_threshold: Minimum data size for compression.
+        """
         self.compression_threshold = compression_threshold
         self.serialization_cache: Dict[str, str] = {}
         self.cache_max_size = 1000
@@ -425,6 +444,7 @@ class RealTimeUpdateOptimizer:
     """Optimizer for real-time updates combining WebSocket and SSE."""
 
     def __init__(self):
+        """Initialize the real-time update optimizer with default components."""
         self.websocket_manager = OptimizedWebSocketManager()
         self.sse_manager = OptimizedSSEManager()
         self.data_optimizer = DataStreamOptimizer()
@@ -564,9 +584,42 @@ class RealTimeUpdateOptimizer:
             self.data_optimizer.serialization_cache = dict(cache_items[-500:])
 
         logger.info(
-            f"Cleaned up {websocket_cleaned} WebSocket connections \and
-                {len(old_throttles)} throttle entries"
+            f"Cleaned up {websocket_cleaned} WebSocket connections \and {len(old_throttles)} throttle entries"
         )
+
+class RealtimeOptimizer:
+    """Main realtime optimization coordinator."""
+
+    def __init__(self):
+        """Initialize the realtime optimizer with all components."""
+        self.websocket_manager = OptimizedWebSocketManager()
+        self.sse_manager = OptimizedSSEManager()
+        self.stream_optimizer = DataStreamOptimizer()
+        self.update_optimizer = RealTimeUpdateOptimizer()
+
+    async def optimize_websocket(self, websocket, client_id: str = None):
+        """Optimize WebSocket connection."""
+        return await self.websocket_manager.add_connection(websocket, client_id)
+
+    async def optimize_sse(self, response):
+        """Optimize Server-Sent Events."""
+        return await self.sse_manager.create_stream(response)
+
+    async def optimize_data_stream(self, data_generator):
+        """Optimize data streaming."""
+        return await self.stream_optimizer.optimize_stream(data_generator)
+
+    async def optimize_updates(self, update_func, interval: float = 1.0):
+        """Optimize real-time updates."""
+        return await self.update_optimizer.schedule_update(update_func, interval)
+
+    async def cleanup(self):
+        """Cleanup all resources."""
+        await self.websocket_manager.cleanup()
+        await self.sse_manager.cleanup()
+        await self.stream_optimizer.cleanup()
+        await self.update_optimizer.cleanup()
+
 
 # Global optimizer instance
 _global_optimizer = RealTimeUpdateOptimizer()
@@ -600,7 +653,7 @@ if __name__ == "__main__":
         for i in range(5):
             connection_id = f"test_conn_{i}"
             # Note: This is a simplified test - in real usage,
-                you'd have actual WebSocket objects
+            # you'd have actual WebSocket objects
             manager.connections[connection_id] = None  # Placeholder
             manager.connection_metrics[connection_id] = ConnectionMetrics(
                 connection_id=connection_id,
@@ -623,7 +676,7 @@ if __name__ == "__main__":
                 metrics.last_activity = time.time()
 
         # Print stats
-        stats = manager.get_connection_stats()
+        _stats = manager.get_connection_stats()
         print("WebSocket Performance Test Results:")
         print(f"Active connections: {stats['active_connections']}")
         print(f"Total messages sent: {stats['messages_sent']}")
@@ -631,8 +684,7 @@ if __name__ == "__main__":
 
         for conn_id, metrics in stats["connection_metrics"].items():
             print(
-                f"{conn_id}: {metrics['messages_per_second']:.1f} msg/s,
-                    {metrics['bytes_per_second']:.1f} bytes/s"
+                f"{conn_id}: {metrics['messages_per_second']:.1f} msg/s, {metrics['bytes_per_second']:.1f} bytes/s"
             )
 
     asyncio.run(test_websocket_performance())

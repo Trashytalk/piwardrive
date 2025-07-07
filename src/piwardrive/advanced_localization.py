@@ -30,7 +30,7 @@ class Config:
 def load_config(path: str | Path) -> Config:
     """Load JSON configuration from ``path``."""
     with open(path, "r", encoding="utf-8") as fh:
-        data = json.load(fh)
+        _data = json.load(fh)
     return Config(**data)
 
 
@@ -78,6 +78,16 @@ def _kalman_1d(series: Iterable[float], q: float, r: float) -> np.ndarray:
 
 
 def apply_kalman_filter(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
+    """Apply Kalman filtering to GPS coordinates for noise reduction.
+    
+    Args:
+        df: DataFrame containing GPS data with 'lat' and 'lon' columns.
+        cfg: Configuration object with Kalman filter settings.
+        
+    Returns:
+        DataFrame with filtered coordinates if Kalman filtering is enabled,
+        otherwise returns the original DataFrame unchanged.
+    """
     if not cfg.kalman_enable or df.empty:
         return df
     df = df.copy()
@@ -95,6 +105,16 @@ def apply_kalman_filter(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
 
 
 def remove_outliers(df: pd.DataFrame, cfg: Config) -> pd.DataFrame:
+    """Remove outlier GPS coordinates using DBSCAN clustering.
+    
+    Args:
+        df: DataFrame containing GPS data with 'lat' and 'lon' columns.
+        cfg: Configuration object with DBSCAN parameters.
+        
+    Returns:
+        DataFrame with outlier points removed. Points labeled as noise
+        by DBSCAN (label -1) are filtered out.
+    """
     if df.empty:
         return df
     coords = df[["lat", "lon"]]
@@ -116,6 +136,16 @@ def rssi_to_distance(rssi: float, reference: float, exponent: float) -> float:
 def estimate_ap_location_centroid(
     ap_data: pd.DataFrame, cfg: Config
 ) -> Tuple[float, float]:
+    """Estimate AP location using RSSI-weighted centroid calculation.
+    
+    Args:
+        ap_data: DataFrame containing AP observations with 'lat', 'lon', 
+                and 'rssi' columns.
+        cfg: Configuration object with centroid calculation parameters.
+        
+    Returns:
+        Tuple of (latitude, longitude) representing the estimated AP location.
+    """
     weights = ap_data["rssi"].apply(
         lambda r: max(0.01, 1 / ((100 - r) ** cfg.centroid_rssi_weight_power))
     )
@@ -125,6 +155,17 @@ def estimate_ap_location_centroid(
 
 
 def localize_aps(df: pd.DataFrame, cfg: Config) -> Dict[str, Tuple[float, float]]:
+    """Localize access points using signal processing and GPS data.
+    
+    Args:
+        df: DataFrame containing WiFi scan data with columns for BSSID,
+            GPS coordinates, RSSI values, and timestamps.
+        cfg: Configuration object with localization parameters.
+        
+    Returns:
+        Dictionary mapping BSSID strings to estimated (latitude, longitude)
+        coordinates for each access point with sufficient data.
+    """
     def _process(ap: pd.DataFrame) -> Tuple[float, float] | None:
         ap = ap.sort_values("gpstime")
         if len(ap) < cfg.min_points_for_confidence:

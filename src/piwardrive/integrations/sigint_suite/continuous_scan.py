@@ -1,3 +1,5 @@
+"""Continuous scanning orchestration for SIGINT suite integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -39,9 +41,9 @@ async def run_continuous_scan(
             async_scan_wifi(),
             async_scan_bluetooth(),
         )
-        result = {"wifi": wifi, "bluetooth": bt}
+        _result = {"wifi": wifi, "bluetooth": bt}
         if on_result:
-            on_result(result)
+            on_result(_result)
 
     while True:
         if queue is not None:

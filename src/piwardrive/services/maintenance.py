@@ -1,6 +1,10 @@
-from __future__ import annotations
+"""Database maintenance and optimization utilities.
 
-"""Database maintenance and optimization utilities."""
+This module provides automated database maintenance functionality including
+cleanup operations, optimization routines, archival processes, and performance
+monitoring for the PiWardrive database systems.
+"""
+from __future__ import annotations
 
 import asyncio
 import csv
@@ -83,7 +87,7 @@ async def generate_health_reports() -> None:
         writer.writerows(asdict(r) for r in records)
 
     plot_path = os.path.join(cfg.reports_dir, f"health_{date}.png")
-    result = await asyncio.to_thread(r_integration.health_summary, csv_path, plot_path)
+    _result = await asyncio.to_thread(r_integration.health_summary, csv_path, plot_path)
     json_path = os.path.join(cfg.reports_dir, f"health_{date}.json")
     with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(result, fh)

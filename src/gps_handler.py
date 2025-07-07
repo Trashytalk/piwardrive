@@ -34,6 +34,13 @@ class GPSHandler:
         *,
         timeout: float = 1.0,
     ) -> None:
+        """Initialize GPS handler.
+        
+        Args:
+            host: GPS daemon host (default: 127.0.0.1)
+            port: GPS daemon port (default: 2947)
+            timeout: Connection timeout in seconds
+        """
         self.host = host or os.getenv("PW_GPSD_HOST", "127.0.0.1")
         self.port = port or int(os.getenv("PW_GPSD_PORT", 2947))
         self.timeout = timeout
@@ -59,7 +66,6 @@ class GPSHandler:
 
     def _get_report(self, timeout: float | None = None) -> Any | None:
         """Return the latest TPV report or ``None`` on timeout/error."""
-
         self._ensure_connection()
         if not self._connected or self._session is None:
             return None
@@ -80,6 +86,14 @@ class GPSHandler:
 
     # Public API -------------------------------------------------------
     def get_position(self, timeout: float | None = None) -> tuple[float, float] | None:
+        """Get current GPS position as (latitude, longitude).
+        
+        Args:
+            timeout: Read timeout in seconds
+            
+        Returns:
+            Tuple of (lat, lon) or None if unavailable
+        """
         report = self._get_report(timeout)
         if not report or getattr(report, "class", None) != "TPV":
             return None
@@ -93,6 +107,14 @@ class GPSHandler:
             return None
 
     def get_accuracy(self, timeout: float | None = None) -> float | None:
+        """Get current GPS accuracy in meters.
+        
+        Args:
+            timeout: Read timeout in seconds
+            
+        Returns:
+            Accuracy in meters or None if unavailable
+        """
         report = self._get_report(timeout)
         if not report or getattr(report, "class", None) != "TPV":
             return None
@@ -106,6 +128,14 @@ class GPSHandler:
             return None
 
     def get_fix_quality(self, timeout: float | None = None) -> str:
+        """Get current GPS fix quality.
+        
+        Args:
+            timeout: Read timeout in seconds
+            
+        Returns:
+            Fix quality string (No Fix, 2D, 3D, DGPS, etc.)
+        """
         report = self._get_report(timeout)
         if not report or getattr(report, "class", None) != "TPV":
             return "Unknown"
@@ -119,6 +149,7 @@ class GPSHandler:
         return "Unknown"
 
     def close(self) -> None:
+        """Close the GPS connection and clean up resources."""
         session = self._session
         self._session = None
         self._connected = False

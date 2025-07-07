@@ -226,7 +226,7 @@ class HardwareValidator:
         """Test if interface supports monitor mode"""
         try:
             # This is a simplified test - in practice would use iwconfig or similar
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["iwconfig", interface], capture_output=True, text=True, timeout=5
             )
             return result.returncode == 0
@@ -413,7 +413,7 @@ class PerformanceTester:
             else:
                 # First run, set as baseline
                 self.baseline_metrics["cpu_baseline"] = metrics
-                result = TestResult.PASS
+                _result = TestResult.PASS
                 message = "CPU performance baseline established"
 
             return TestExecution(
@@ -620,7 +620,7 @@ class StressTester:
                 __result = TestResult.PASS
                 message = "CPU stress test completed successfully"
             else:
-                result = TestResult.FAIL
+                _result = TestResult.FAIL
                 message = (
                     f"CPU stress test failed to fully utilize CPU: {max_cpu_usage:.1f}%"
                 )
@@ -789,7 +789,7 @@ class TestRunner:
                 continue
 
             # Run test
-            result = self._run_single_test(test_case)
+            _result = self._run_single_test(test_case)
             results[test_case.test_id] = result
 
         return results
@@ -824,7 +824,7 @@ class TestRunner:
             for future in concurrent.futures.as_completed(future_to_test):
                 test_case = future_to_test[future]
                 try:
-                    result = future.result()
+                    _result = future.result()
                     results[test_case.test_id] = result
                 except Exception as e:
                     results[test_case.test_id] = TestExecution(
@@ -849,7 +849,7 @@ class TestRunner:
                 test_case.setup_function()
 
             # Run the actual test
-            result = test_case.test_function()
+            _result = test_case.test_function()
 
             # If test function returns TestExecution, use it
             if isinstance(result, TestExecution):

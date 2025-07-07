@@ -36,7 +36,6 @@ R = TypeVar("R")
 
 def _noop(func: Callable[P, R]) -> Callable[P, R]:
     """Identity decorator used when profiling is disabled."""
-
     return func
 
 
@@ -47,7 +46,6 @@ profile: Callable[[Callable[P, R]], Callable[P, R]] = globals().get("profile", _
 
 def _allowed() -> bool:
     """Return ``True`` if LoRa scans are allowed by scheduler rules."""
-
     cfg = config.AppConfig.load()
     rules = cfg.scan_rules.get("lora", {}) if hasattr(cfg, "scan_rules") else {}
     return PollScheduler.check_rules(rules)

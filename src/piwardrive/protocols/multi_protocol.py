@@ -761,9 +761,7 @@ class SDRInterface:
         self.sample_rate = sample_rate
         self.gain = gain
         logger.info(
-            f"SDR configured: {center_frequency/1e6:.1f} MHz,
-                {sample_rate/1e6:.1f} MS/s,
-                {gain} dB"
+            f"SDR configured: {center_frequency/1e6:.1f} MHz, {sample_rate/1e6:.1f} MS/s, {gain} dB"
         )
 
     def start_capture(self):
@@ -1061,7 +1059,7 @@ class MultiProtocolManager:
 
     def get_protocol_statistics(self) -> Dict[str, Any]:
         """Get protocol statistics"""
-        stats = {
+        _stats = {
             "active_protocols": list(self.active_protocols),
             "total_devices": len(self.all_devices),
             "protocol_distribution": {},
@@ -1135,7 +1133,7 @@ def test_multi_protocol_support():
     manager.stop_protocol_scan(RadioProtocol.SDR_GENERIC)
 
     # Get statistics
-    stats = manager.get_protocol_statistics()
+    _stats = manager.get_protocol_statistics()
     print("\nProtocol Statistics:")
     print(f"  Total devices: {stats['total_devices']}")
     print(f"  Active protocols: {stats['active_protocols']}")

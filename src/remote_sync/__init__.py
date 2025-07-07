@@ -78,7 +78,7 @@ async def _make_range_db(src: str, start: int, end: int) -> str:
         )
 
         cur = await src_db.execute(
-            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent"
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, disk_percent",
             " FROM health_records WHERE rowid BETWEEN ? AND ?",
             (start, end),
         )
@@ -89,7 +89,7 @@ async def _make_range_db(src: str, start: int, end: int) -> str:
         )
 
         cur = await src_db.execute(
-            "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache "
+            "SELECT bssid, ssid, encryption, lat, lon, last_time FROM ap_cache ",
             "WHERE rowid BETWEEN ? AND ?",
             (start, end),
         )

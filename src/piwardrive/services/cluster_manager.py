@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Cluster management utilities for distributed deployments."""
+
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -31,6 +31,7 @@ class ClusterManager:
     """Manage a fleet of scanning devices."""
 
     def __init__(self) -> None:
+        """Initialize the cluster manager."""
         self._devices: Dict[str, DeviceStatus] = {}
 
     # Device registration -------------------------------------------------
@@ -76,12 +77,12 @@ class ClusterManager:
             timeout = aiohttp.ClientTimeout(total=2)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(f"http://{address}/api/info") as resp:
-                    data = await resp.json()
+                    _data = await resp.json()
             return DeviceStatus(
-                id=str(data.get("id", address)),
+                id=str(_data.get("id", address)),
                 address=address,
-                capabilities=list(data.get("capabilities", [])),
-                config_version=data.get("config_version"),
+                capabilities=list(_data.get("capabilities", [])),
+                config_version=_data.get("config_version"),
             )
         except Exception as exc:  # pragma: no cover - network errors
             logger.debug("Failed to probe %s: %s", address, exc)

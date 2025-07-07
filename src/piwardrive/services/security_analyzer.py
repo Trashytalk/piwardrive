@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Security analysis helpers for suspicious Wi-Fi activity."""
+
+from __future__ import annotations
 
 import json
 from datetime import datetime
@@ -38,6 +38,14 @@ def _make_row(
 
 
 def detect_hidden_ssids(records: Iterable[Mapping[str, Any]]) -> List[dict[str, Any]]:
+    """Detect access points with hidden SSIDs.
+    
+    Args:
+        records: WiFi detection records to analyze.
+        
+    Returns:
+        List of suspicious activity records for hidden SSIDs.
+    """
     rows: List[dict[str, Any]] = []
     for rec in records:
         if not rec.get("ssid"):
@@ -48,6 +56,14 @@ def detect_hidden_ssids(records: Iterable[Mapping[str, Any]]) -> List[dict[str, 
 
 
 def detect_evil_twins(records: Iterable[Mapping[str, Any]]) -> List[dict[str, Any]]:
+    """Detect potential evil twin access points.
+    
+    Args:
+        records: WiFi detection records to analyze.
+        
+    Returns:
+        List of suspicious activity records for potential evil twins.
+    """
     groups: dict[str, List[Mapping[str, Any]]] = {}
     for rec in records:
         ssid = rec.get("ssid") or ""
@@ -81,6 +97,14 @@ def detect_evil_twins(records: Iterable[Mapping[str, Any]]) -> List[dict[str, An
 
 
 def detect_deauth_attacks(records: Iterable[Mapping[str, Any]]) -> List[dict[str, Any]]:
+    """Detect potential deauth attacks based on signal patterns.
+    
+    Args:
+        records: WiFi detection records to analyze.
+        
+    Returns:
+        List of suspicious activity records for potential deauth attacks.
+    """
     rows: List[dict[str, Any]] = []
     for rec in records:
         if (

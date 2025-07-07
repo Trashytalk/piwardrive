@@ -202,9 +202,9 @@ def set_log_context(**kwargs: Any) -> None:
 
 
 def dataclass_replace(obj: LogContext, **changes: Any) -> LogContext:
-    data = asdict(obj)
-    data.update({k: v for k, v in changes.items() if v is not None})
-    return LogContext(**data)
+    _data = asdict(obj)
+    _data.update({k: v for k, v in changes.items() if v is not None})
+    return LogContext(**_data)
 
 
 def get_logger(name: str, **config: Any) -> PiWardriveLogger:

@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Real-time detection processing service."""
+
+from __future__ import annotations
 
 import asyncio
 import contextlib
@@ -20,6 +20,13 @@ class StreamProcessor:
         listener_queue: int = 100,
         rate_limit: float = 20.0,
     ) -> None:
+        """Initialize the stream processor.
+        
+        Args:
+            max_queue: Maximum size of the processing queue
+            listener_queue: Maximum size of listener queues
+            rate_limit: Rate limit for processing events per second
+        """
         self._queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=max_queue)
         self._listeners: set[asyncio.Queue[dict[str, Any]]] = set()
         self._listener_size = listener_queue
@@ -34,12 +41,14 @@ class StreamProcessor:
         }
 
     async def start(self) -> None:
+        """Start the stream processor task."""
         if self._running:
             return
         self._running = True
         self._task = asyncio.create_task(self._run())
 
     async def stop(self) -> None:
+        """Stop the stream processor task and clean up."""
         self._running = False
         if self._task is not None:
             self._task.cancel()
@@ -48,6 +57,11 @@ class StreamProcessor:
             self._task = None
 
     def register_listener(self) -> asyncio.Queue[dict[str, Any]]:
+        """Register a new listener queue for receiving processed events.
+        
+        Returns:
+            Queue for receiving processed events
+        """
         q: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=self._listener_size)
         self._listeners.add(q)
         if not self._running:
@@ -55,6 +69,11 @@ class StreamProcessor:
         return q
 
     def unregister_listener(self, q: asyncio.Queue[dict[str, Any]]) -> None:
+        """Unregister a listener queue.
+        
+        Args:
+            q: The queue to unregister
+        """
         self._listeners.discard(q)
 
     def _enqueue(self, source: str, records: Iterable[Mapping[str, Any]]) -> None:
@@ -72,12 +91,27 @@ class StreamProcessor:
                 pass
 
     def publish_wifi(self, records: Iterable[Mapping[str, Any]]) -> None:
+        """Publish WiFi detection records for processing.
+        
+        Args:
+            records: WiFi detection records to process
+        """
         self._enqueue("wifi", records)
 
     def publish_bluetooth(self, records: Iterable[Mapping[str, Any]]) -> None:
+        """Publish Bluetooth detection records for processing.
+        
+        Args:
+            records: Bluetooth detection records to process
+        """
         self._enqueue("bluetooth", records)
 
     def publish_cellular(self, records: Iterable[Mapping[str, Any]]) -> None:
+        """Publish cellular detection records for processing.
+        
+        Args:
+            records: Cellular detection records to process
+        """
         self._enqueue("cellular", records)
 
     async def _process_wifi(self, records: list[dict[str, Any]]) -> None:

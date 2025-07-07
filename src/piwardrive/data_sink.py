@@ -34,7 +34,7 @@ async def write_influxdb(
     endpoint = f"{url.rstrip('/')}/api/v2/write"
     params = {"org": org, "bucket": bucket, "precision": "s"}
     headers = {"Authorization": f"Token {token}"}
-    data = "\n".join(records).encode()
+    _data = "\n".join(records).encode()
     async with ClientSession() as session:
         async with session.post(
             endpoint, params=params, data=data, headers=headers

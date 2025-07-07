@@ -1,3 +1,5 @@
+"""Migration 004: Create GPS tracks table."""
+
 from __future__ import annotations
 
 from .base import BaseMigration
@@ -37,8 +39,7 @@ class Migration(BaseMigration):
             "CREATE INDEX IF NOT EXISTS idx_gps_tracks_time ON gps_tracks(timestamp)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_gps_tracks_location ON gps_tracks(latitude,
-                longitude)"
+            "CREATE INDEX IF NOT EXISTS idx_gps_tracks_location ON gps_tracks(latitude, longitude)"
         )
 
     async def rollback(self, conn) -> None:

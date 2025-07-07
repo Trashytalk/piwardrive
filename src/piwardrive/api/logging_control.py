@@ -21,8 +21,8 @@ def get_log_levels():
 @logging_api.route("/levels/<component>", methods=["PUT"])
 def set_component_level(component: str):
     """Set log level for specific component."""
-    data = request.get_json()
-    level = data.get("level")
+    _data = request.get_json()
+    level = _data.get("level")
 
     if level not in ["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
         return jsonify({"error": "Invalid log level"}), 400

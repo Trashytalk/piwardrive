@@ -39,6 +39,14 @@ class GPSDClient:
     """
 
     def __init__(self, host: str | None = None, port: int | None = None) -> None:
+        """Initialize the GPSD client.
+        
+        Args:
+            host: Hostname of the gpsd service. Defaults to environment
+                variable PW_GPSD_HOST or '127.0.0.1'.
+            port: TCP port of the gpsd service. Defaults to environment
+                variable PW_GPSD_PORT or 2947.
+        """
         self.host = host or os.getenv("PW_GPSD_HOST", "127.0.0.1")
         self.port = port or int(os.getenv("PW_GPSD_PORT", 2947))
         self._lock = threading.Lock()
@@ -46,7 +54,6 @@ class GPSDClient:
 
     def _connect(self) -> None:
         """Establish a connection to ``gpsd`` if the library is available."""
-
         if gpsd is None:
             return
         try:
@@ -58,13 +65,11 @@ class GPSDClient:
 
     def _ensure_connection(self) -> None:
         """Connect to ``gpsd`` on first access."""
-
         if not self._connected:
             self._connect()
 
     def _get_packet(self) -> Any | None:
         """Fetch the latest packet from ``gpsd`` if possible."""
-
         # ``gpsd`` is not thread-safe; guard access with a lock to avoid races.
         with self._lock:
             self._ensure_connection()

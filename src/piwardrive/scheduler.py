@@ -24,13 +24,16 @@ class Updatable(Protocol):
 
     update_interval: float
 
-    def update(self) -> Awaitable[None] | None: ...
+    def update(self) -> Awaitable[None] | None:
+        """Update method to be implemented by schedulable widgets."""
+        ...
 
 
 class PollScheduler:
     """Manage named periodic callbacks using ``asyncio``."""
 
     def __init__(self) -> None:
+        """Initialize the poll scheduler with empty task collections."""
         self._tasks: Dict[str, asyncio.Task] = {}
         self._next_runs: Dict[str, float] = {}
         self._durations: Dict[str, float] = {}
@@ -43,7 +46,7 @@ class PollScheduler:
         path = os.path.join(config.CONFIG_DIR, "geofences.json")
         try:
             with open(path, "r", encoding="utf-8") as fh:
-                data = json.load(fh)
+                _data = json.load(fh)
         except Exception:
             return {}
         result: Dict[str, Sequence[tuple[float, float]]] = {}
@@ -75,6 +78,15 @@ class PollScheduler:
 
     @classmethod
     def check_rules(cls, rules: Mapping[str, Any]) -> bool:
+        """Check if scheduling rules allow execution.
+        
+        Args:
+            rules: Dictionary containing scheduling rules including
+                time_ranges and geofences.
+                
+        Returns:
+            True if all rules allow execution, False otherwise.
+        """
         if not cls._match_time(rules.get("time_ranges")):
             return False
         geos = rules.get("geofences")
@@ -114,7 +126,7 @@ class PollScheduler:
                     if self.check_rules(self._rules.get(name, {})):
                         dt = time.time() - last
                         last = time.time()
-                        result = callback(dt)
+                        _result = callback(dt)
                         if inspect.isawaitable(result):
                             await result
                 except asyncio.CancelledError:
@@ -143,7 +155,7 @@ class PollScheduler:
 
         async def _call_update() -> None:
             try:
-                result = widget.update()
+                _result = widget.update()
                 if inspect.isawaitable(result):
                     await result
             except Exception as exc:  # pragma: no cover - UI update failures
@@ -178,6 +190,7 @@ class AsyncScheduler:
     """Manage periodic async callbacks using ``asyncio.create_task``."""
 
     def __init__(self) -> None:
+        """Initialize the async scheduler with empty task collections."""
         self._tasks: Dict[str, asyncio.Task] = {}
         self._next_runs: Dict[str, float] = {}
         self._durations: Dict[str, float] = {}
@@ -196,7 +209,7 @@ class AsyncScheduler:
                 self._next_runs[name] = next_run
                 start = time.perf_counter()
                 try:
-                    result = callback()
+                    _result = callback()
                     if inspect.isawaitable(result):
                         await result
                 except asyncio.CancelledError:

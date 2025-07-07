@@ -1,3 +1,11 @@
+"""Performance monitoring and metrics collection utilities.
+
+This module provides tools for measuring and tracking execution times
+of operations throughout the PiWardrive application. It includes
+context managers for recording timing data and functions for
+retrieving performance statistics.
+"""
+
 from __future__ import annotations
 
 import time
@@ -29,6 +37,7 @@ def get_metrics() -> Dict[str, Dict[str, float]]:
 
 
 def clear() -> None:
+    """Clear all recorded performance metrics."""
     _METRICS.clear()
 
 

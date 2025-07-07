@@ -195,7 +195,7 @@ class LogRetentionManager:
         archive_dir = Path(self.config.get("archive_metadata", "/tmp"))
         for meta_file in archive_dir.glob("*.json"):
             try:
-                data = meta_file.read_text()
+                _data = meta_file.read_text()
             except Exception:
                 continue
             try:

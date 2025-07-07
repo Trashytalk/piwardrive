@@ -43,6 +43,14 @@ class PiWardriveApp:
         container: Container | None = None,
         service_cmd_runner: Callable[..., tuple[bool, str, str]] | None = None,
     ) -> None:
+        """Initialize the PiWardrive application.
+        
+        Args:
+            container: Dependency injection container. If None, a new
+                Container instance will be created.
+            service_cmd_runner: Function for running service commands.
+                If None, uses utils.run_service_cmd.
+        """
         self.container = container or Container()
         self._run_service_cmd = service_cmd_runner or utils.run_service_cmd
         self.config_data: Config = load_config()
@@ -165,7 +173,7 @@ class PiWardriveApp:
             path = os.path.join(os.path.expanduser("~"), f"piwardrive-logs-{ts}.txt")
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            data = "\n".join(utils.tail_file(DEFAULT_LOG_PATH, lines))
+            _data = "\n".join(utils.tail_file(DEFAULT_LOG_PATH, lines))
 
             def _write(p: str, content: str) -> None:
                 with open(p, "w", encoding="utf-8") as fh:
@@ -215,7 +223,7 @@ class PiWardriveApp:
         if stamp is None or stamp == self._config_stamp:
             return
         self._config_stamp = stamp
-        data = load_config()
+        _data = load_config()
         self._updating_config = True
         self.configdata = data
         for key, val in asdict(data).items():

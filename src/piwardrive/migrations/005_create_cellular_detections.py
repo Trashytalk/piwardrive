@@ -1,3 +1,5 @@
+"""Migration 005: Create cellular detections table."""
+
 from __future__ import annotations
 
 from .base import BaseMigration
@@ -41,19 +43,19 @@ class Migration(BaseMigration):
             """
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_session "
+            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_session ",
             "ON cellular_detections(scan_session_id)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_cell "
+            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_cell ",
             "ON cellular_detections(cell_id, lac)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_time "
+            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_time ",
             "ON cellular_detections(detection_timestamp)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_location "
+            "CREATE INDEX IF NOT EXISTS idx_cellular_detections_location ",
             "ON cellular_detections(latitude, longitude)"
         )
 

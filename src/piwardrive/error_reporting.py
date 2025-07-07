@@ -1,3 +1,10 @@
+"""Error reporting and GUI utilities for PiWardrive.
+
+This module provides error reporting capabilities including GUI message
+boxes when available. It gracefully handles environments without GUI
+support by falling back to logging-only error reporting.
+"""
+
 import logging
 
 try:  # pragma: no cover - optional GUI dependency
@@ -12,7 +19,6 @@ _tk_root: object | None = None
 
 def _get_root() -> object | None:
     """Return a hidden ``Tk`` instance or ``None`` when not available."""
-
     global _tk_root
     if _tk is None:
         return None
@@ -37,12 +43,10 @@ class App:
     @staticmethod
     def get_running_app() -> "App | None":
         """Return the current application instance if one exists."""
-
         return App._instance
 
     def show_alert(self, title: str, message: str) -> None:
         """Display ``message`` in a simple popup when possible."""
-
         if _messagebox is None:
             return
         root = self._root if self._root is not None else _get_root()

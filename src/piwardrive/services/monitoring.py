@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Runtime performance monitoring utilities."""
+
+from __future__ import annotations
 
 import logging
 import os

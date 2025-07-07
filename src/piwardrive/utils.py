@@ -34,6 +34,8 @@ except Exception:
         # implementations are unavailable.
         @dataclass
         class MetricsResult:
+            """Stub class for metrics results when core utils are unavailable."""
+            
             aps: list
             clients: list
             handshake_count: int
@@ -41,37 +43,44 @@ except Exception:
         def get_gps_fix_quality(
             *_args: object, **_kwargs: object
         ) -> str:  # type: ignore[misc]
+            """Stub function for GPS fix quality when core utils are unavailable."""
             return "Unknown"
 
         def service_status(
             *_args: object, **_kwargs: object
         ) -> bool:  # type: ignore[misc]
+            """Stub function for service status when core utils are unavailable."""
             return False
 
         def count_bettercap_handshakes(
             *_args: object, **_kwargs: object
         ) -> int:  # type: ignore[misc]
+            """Stub function for counting handshakes when core utils are unavailable."""
             return 0
 
         def get_disk_usage(
             *_args: object, **_kwargs: object
         ) -> float | None:  # type: ignore[misc]
+            """Stub function for disk usage when core utils are unavailable."""
             return None
 
         async def fetch_kismet_devices_async(  # type: ignore[misc]
             *_args: object,
             **_kwargs: object,
         ) -> tuple[list, list]:
+            """Stub function for fetching Kismet devices when core utils are unavailable."""
             return [], []
 
         def run_async_task(
             *_args: object, **_kwargs: object
         ) -> None:  # type: ignore[misc]
+            """Stub function for running async tasks when core utils are unavailable."""
             return None
 
         def get_avg_rssi(
             *_args: object, **_kwargs: object
         ) -> float | None:  # type: ignore[misc]
+            """Stub function for calculating average RSSI when core utils are unavailable."""
             return None
 
         __all__ += [
@@ -94,7 +103,6 @@ def robust_request(
     timeout: float = HTTP_TIMEOUT,
 ) -> requests.Response:
     """Return ``requests.request`` with retries and exponential backoff."""
-
     delay = RETRY_DELAY
     last_exc: Exception | None = None
     for attempt in range(RETRY_ATTEMPTS):

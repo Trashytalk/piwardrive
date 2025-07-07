@@ -10,7 +10,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from piwardrive import service
+from piwardrive.api.auth import AUTH_DEP
 from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
 from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
@@ -23,7 +23,7 @@ router = APIRouter()
 
 @router.get("/status")
 async def get_status(
-    limit: int = 5, _auth: Any = service.AUTH_DEP
+    limit: int = 5, _auth: Any = AUTH_DEP
 ) -> list[HealthRecordDict]:
     records = db_service.load_recent_health(limit)
     if inspect.isawaitable(records):
@@ -36,7 +36,7 @@ async def baseline_analysis_endpoint(
     limit: int = 10,
     days: int = 30,
     threshold: float = 5.0,
-    _auth: Any = service.AUTH_DEP,
+    _auth: Any = AUTH_DEP,
 ) -> BaselineAnalysisResult:
     recent = db_service.load_recent_health(limit)
     if inspect.isawaitable(recent):
@@ -48,7 +48,7 @@ async def baseline_analysis_endpoint(
 
 
 @router.post("/sync")
-async def sync_records(limit: int = 100, _auth: Any = service.AUTH_DEP) -> SyncResponse:
+async def sync_records(limit: int = 100, _auth: Any = AUTH_DEP) -> SyncResponse:
     records = db_service.load_recent_health(limit)
     if inspect.isawaitable(records):
         records = await records
@@ -71,10 +71,11 @@ async def sse_history(
         for rec in records:
             if await request.is_disconnected():
                 break
-            data = {"seq": seq, "record": asdict(rec)}
-            yield f"data: {json.dumps(data)}\n\n"
+            _data = {"seq": seq, "record": asdict(rec)}
+            yield f"data: {json.dumps(_data)}\n\n"
             seq += 1
-            await service.asyncio.sleep(max(interval, service.MIN_EVENT_INTERVAL))
+            import asyncio
+            await asyncio.sleep(max(interval, 0.1))  # MIN_EVENT_INTERVAL replacement
 
     headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
     return StreamingResponse(

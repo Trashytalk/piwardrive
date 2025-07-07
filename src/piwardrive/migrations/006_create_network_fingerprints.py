@@ -1,3 +1,5 @@
+"""Migration 006: Create network fingerprints table."""
+
 from __future__ import annotations
 
 from .base import BaseMigration

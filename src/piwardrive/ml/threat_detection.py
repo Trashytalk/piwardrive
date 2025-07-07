@@ -994,7 +994,7 @@ class OfflineThreatDetector:
                     affected_devices=[bssid, other_bssid],
                     network_context={
                         "ssid": ssid,
-                        "signal_dif": abs(signal_strength - other_signal),
+                        "signal_di": abs(signal_strength - other_signal),
                     },
                 )
 
@@ -1141,8 +1141,8 @@ class OfflineThreatDetector:
             fingerprint_file = self.data_dir / "device_fingerprints.json"
             if fingerprint_file.exists():
                 with open(fingerprint_file, "r") as f:
-                    data = json.load(f)
-                    for mac, fp_data in data.items():
+                    _data = json.load(f)
+                    for mac, fp_data in _data.items():
                         fp_data["last_seen"] = datetime.fromisoformat(
                             fp_data["last_seen"]
                         )

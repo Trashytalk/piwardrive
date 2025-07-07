@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Database analysis query helpers."""
+
+from __future__ import annotations
 
 import hashlib
 import threading
@@ -45,6 +45,11 @@ async def _cached_fetch(
 
 
 async def evil_twin_detection() -> list[dict[str, Any]]:
+    """Detect potential evil twin access points with duplicate SSIDs.
+    
+    Returns:
+        List of SSIDs with multiple BSSIDs that could indicate evil twins.
+    """
     query = """
         SELECT
             ssid,
@@ -62,6 +67,11 @@ async def evil_twin_detection() -> list[dict[str, Any]]:
 
 
 async def signal_strength_analysis() -> list[dict[str, Any]]:
+    """Analyze signal strength patterns across geographical locations.
+    
+    Returns:
+        List of signal strength data grouped by location and BSSID.
+    """
     query = """
         SELECT
             ROUND(latitude, 3) as lat,
@@ -81,6 +91,11 @@ async def signal_strength_analysis() -> list[dict[str, Any]]:
 
 
 async def network_security_analysis() -> list[dict[str, Any]]:
+    """Analyze network security configurations and encryption types.
+    
+    Returns:
+        List of encryption type statistics with counts and percentages.
+    """
     query = """
         SELECT
             encryption_type,
@@ -96,6 +111,11 @@ async def network_security_analysis() -> list[dict[str, Any]]:
 
 
 async def temporal_pattern_analysis() -> list[dict[str, Any]]:
+    """Analyze WiFi detection patterns across time periods.
+    
+    Returns:
+        List of detection statistics grouped by hour and day of week.
+    """
     query = """
         SELECT
             strftime('%H', detection_timestamp) as hour,
@@ -111,6 +131,11 @@ async def temporal_pattern_analysis() -> list[dict[str, Any]]:
 
 
 async def mobile_device_detection() -> list[dict[str, Any]]:
+    """Detect potentially mobile devices based on location and speed patterns.
+    
+    Returns:
+        List of devices with multiple locations or high speeds indicating mobility.
+    """
     query = """
         SELECT
             bssid,
@@ -120,7 +145,7 @@ async def mobile_device_detection() -> list[dict[str, Any]]:
                 3) || ',
                 ' || ROUND(longitude,
                 3)) as unique_locations,
-                
+
             MAX(speed_kmh) as max_speed,
             AVG(signal_strength_dbm) as avg_signal,
             strftime('%s',
@@ -138,6 +163,7 @@ async def mobile_device_detection() -> list[dict[str, Any]]:
 
 
 async def clear_cache() -> None:
+    """Clear both local and remote analysis query caches."""
     with _cache_lock:
         _local_cache.clear()
     await _remote_cache.clear()

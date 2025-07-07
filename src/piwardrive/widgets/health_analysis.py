@@ -48,7 +48,7 @@ class HealthAnalysisWidget(DashboardWidget):
                 if not records:
                     self.label.text = f"{_('health_analysis')}: {_('not_available')}"
                     return
-                stats = compute_health_stats(records)
+                _stats = compute_health_stats(records)
                 self.label.text = (
                     f"{_('temp')}:{stats['temp_avg']:.1f}°C "
                     f"{_('cpu')}:{stats['cpu_avg']:.0f}% "

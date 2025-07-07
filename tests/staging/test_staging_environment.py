@@ -99,8 +99,7 @@ class StagingEnvironmentTester:
 
         # Check status code
         assert response.status_code == endpoint.expected_status, \
-            f"Expected {endpoint.expected_status},
-                got {response.status_code} for {endpoint.path}"
+            f"Expected {endpoint.expected_status}, got {response.status_code} for {endpoint.path}"
 
         # Check response time
         assert response.elapsed.total_seconds() < endpoint.timeout, \
@@ -192,8 +191,7 @@ class TestStagingPerformance:
             end_time = time.perf_counter()
 
             assert response.status_code in [200, 401], f"Endpoint {endpoint} failed"
-            assert (end_time - start_time) < 2.0,
-                f"Endpoint {endpoint} too slow: {end_time - start_time}s"
+            assert (end_time - start_time) < 2.0, f"Endpoint {endpoint} too slow: {end_time - start_time}s"
 
     def test_concurrent_request_handling(self, staging_url):
         """Test concurrent request handling."""
@@ -264,8 +262,7 @@ class TestStagingPerformance:
         success_count = sum(1 for r in results if r)
         success_rate = success_count / len(results)
 
-        assert success_rate >= 0.85,
-            f"Load test success rate too low: {success_rate:.2%}"
+        assert success_rate >= 0.85, f"Load test success rate too low: {success_rate:.2%}"
 
 @pytest.mark.staging
 @pytest.mark.integration

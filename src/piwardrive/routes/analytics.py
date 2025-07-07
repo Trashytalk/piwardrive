@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from piwardrive import persistence, service
+from piwardrive import persistence
+from piwardrive.api.auth import AUTH_DEP
 from piwardrive.database_service import db_service
 from piwardrive.models import ErrorResponse, NetworkAnalyticsRecord, NetworkFingerprint
 
@@ -20,11 +21,11 @@ async def list_fingerprints(
     bssid: str | None = None,
     limit: int = 100,
     offset: int = 0,
-    _auth: None = Depends(service._check_auth),
+    _auth: None = Depends(AUTH_DEP),
 ) -> list[NetworkFingerprint]:
     """Return stored network fingerprint rows."""
     query = (
-        "SELECT id, bssid, fingerprint_hash, classification, risk_level, "
+        "SELECT id, bssid, fingerprint_hash, classification, risk_level, ",
         "tags, created_at FROM network_fingerprints"
     )
     params: list[object] = []
@@ -44,7 +45,7 @@ async def list_fingerprints(
 )
 async def add_fingerprint(
     rec: NetworkFingerprint,
-    _auth: None = Depends(service._check_auth),
+    _auth: None = Depends(AUTH_DEP),
 ) -> None:
     """Insert a new fingerprint record."""
     await persistence.save_network_fingerprints([rec.model_dump(exclude_unset=True)])
@@ -61,11 +62,11 @@ async def list_network_analytics(
     end: str | None = None,
     limit: int = 100,
     offset: int = 0,
-    _auth: None = Depends(service._check_auth),
+    _auth: None = Depends(AUTH_DEP),
 ) -> list[NetworkAnalyticsRecord]:
     """Return rows from ``network_analytics`` filtered by parameters."""
     query = (
-        "SELECT bssid, analysis_date, total_detections, suspicious_score "
+        "SELECT bssid, analysis_date, total_detections, suspicious_score ",
         "FROM network_analytics"
     )
     params: list[object] = []

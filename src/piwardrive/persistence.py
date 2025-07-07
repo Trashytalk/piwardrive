@@ -45,11 +45,11 @@ async def save_fingerprint_info(info: FingerprintInfo) -> None:
     """Append ``info`` to ``fingerprints.json`` under ``CONFIG_DIR``."""
     path = Path(config.CONFIG_DIR) / "fingerprints.json"
     try:
-        data = json.loads(path.read_text()) if path.exists() else []
+        _data = json.loads(path.read_text()) if path.exists() else []
     except Exception:
-        data = []
-    data.append(asdict(info))
-    path.write_text(json.dumps(data))
+        _data = []
+    _data.append(asdict(info))
+    path.write_text(json.dumps(_data))
 
 
 async def load_fingerprint_info() -> list[FingerprintInfo]:
@@ -58,10 +58,10 @@ async def load_fingerprint_info() -> list[FingerprintInfo]:
     if not path.exists():
         return []
     try:
-        data = json.loads(path.read_text())
+        _data = json.loads(path.read_text())
     except Exception:
         return []
-    return [FingerprintInfo(**d) for d in data]
+    return [FingerprintInfo(**d) for d in _data]
 
 
 async def create_user(*_a, **_k) -> None:

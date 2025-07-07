@@ -40,7 +40,7 @@ class OrientationWidget(DashboardWidget):
                 suffix = f" ({angle:.0f}\N{DEGREE SIGN})" if angle is not None else ""
                 self.label.text = f"{_('orientation')}: {orient}{suffix}"
                 return
-            data = orientation_sensors.read_mpu6050()
+            _data = orientation_sensors.read_mpu6050()
             if data and "accelerometer" in data:
                 acc = data["accelerometer"]
                 self.label.text = (

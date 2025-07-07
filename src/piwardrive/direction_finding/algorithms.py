@@ -274,7 +274,7 @@ class RSSTriangulation:
             position_estimate = self._triangulate_position(reference_measurements)
 
             if position_estimate:
-                result = DFResult(
+                _result = DFResult(
                     target_bssid=target_bssid,
                     position=position_estimate,
                     measurements=measurements,
@@ -733,7 +733,7 @@ class MUSICProcessor:
             angle_estimate = self._music_algorithm(iq_data)
 
             if angle_estimate:
-                result = DFResult(
+                _result = DFResult(
                     target_bssid=target_bssid,
                     angle=angle_estimate,
                     measurements=measurements,
@@ -956,7 +956,7 @@ class BeamformingProcessor:
             angle_estimate = self._estimate_angle_from_beamformed(beamformed_signal)
 
             if angle_estimate:
-                result = DFResult(
+                _result = DFResult(
                     target_bssid=target_bssid,
                     angle=angle_estimate,
                     measurements=measurements,

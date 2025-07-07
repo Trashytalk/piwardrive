@@ -1,5 +1,5 @@
 """
-PiWardrive Unified Platform Integration
+PiWardrive Unified Platform Integration.
 
 This module provides the main integration layer that brings together all PiWardrive modules
 into a cohesive, production-ready wireless intelligence platform.
@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
 
 
 class SystemStatus(Enum):
-    """System status enumeration"""
+    """System status enumeration."""
 
     INITIALIZING = "initializing"
     RUNNING = "running"
@@ -70,7 +70,7 @@ class SystemStatus(Enum):
 
 
 class ModuleStatus(Enum):
-    """Module status enumeration"""
+    """Module status enumeration."""
 
     LOADED = "loaded"
     INITIALIZED = "initialized"
@@ -81,7 +81,7 @@ class ModuleStatus(Enum):
 
 @dataclass
 class ModuleInfo:
-    """Module information structure"""
+    """Module information structure."""
 
     name: str
     version: str
@@ -96,7 +96,7 @@ class ModuleInfo:
 
 @dataclass
 class SystemConfiguration:
-    """System configuration structure"""
+    """System configuration structure."""
 
     system_name: str = "PiWardrive"
     version: str = "2.0.0"
@@ -112,9 +112,14 @@ class SystemConfiguration:
 
 
 class PiWardriveUnifiedPlatform:
-    """Main unified platform class"""
+    """Main unified platform class."""
 
     def __init__(self, config_path: Optional[str] = None):
+        """Initialize the unified platform.
+        
+        Args:
+            config_path: Optional path to configuration file.
+        """
         self.config = SystemConfiguration()
         self.status = SystemStatus.INITIALIZING
         self.modules = {}
@@ -140,7 +145,11 @@ class PiWardriveUnifiedPlatform:
         logger.info("PiWardrive Unified Platform initialized")
 
     def load_configuration(self, config_path: str):
-        """Load system configuration from file"""
+        """Load system configuration from file.
+        
+        Args:
+            config_path: Path to the configuration file.
+        """
         try:
             with open(config_path, "r") as f:
                 if config_path.endswith(".yaml") or config_path.endswith(".yml"):
@@ -155,11 +164,15 @@ class PiWardriveUnifiedPlatform:
 
             logger.info(f"Configuration loaded from {config_path}")
 
-        except Exception as e:
+        except (FileNotFoundError, PermissionError) as e:
             logger.error(f"Failed to load configuration: {e}")
+        except (yaml.YAMLError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to parse configuration file: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error loading configuration: {e}")
 
     def _initialize_modules(self):
-        """Initialize all system modules"""
+        """Initialize all system modules."""
         module_configs = {
             "threat_detection": {
                 "class": OfflineThreatDetector,
@@ -327,18 +340,18 @@ class PiWardriveUnifiedPlatform:
                 self.modules[module_name] = module_info
 
     def _setup_apis(self):
-        """Setup REST API endpoints"""
+        """Set up REST API endpoints."""
         self.api_app = Flask(__name__)
         CORS(self.api_app)
 
         @self.api_app.route("/api/v1/status", methods=["GET"])
         def get_system_status():
-            """Get system status"""
+            """Get system status."""
             return jsonify(self.get_system_status())
 
         @self.api_app.route("/api/v1/modules", methods=["GET"])
         def get_modules():
-            """Get all modules"""
+            """Get all modules."""
             modules_data = {}
             for name, module in self.modules.items():
                 modules_data[name] = {
@@ -353,7 +366,7 @@ class PiWardriveUnifiedPlatform:
 
         @self.api_app.route("/api/v1/modules/<module_name>", methods=["GET"])
         def get_module(module_name):
-            """Get specific module"""
+            """Get specific module."""
             if module_name not in self.modules:
                 return jsonify({"error": "Module not found"}), 404
 
@@ -371,7 +384,7 @@ class PiWardriveUnifiedPlatform:
 
         @self.api_app.route("/api/v1/modules/<module_name>/execute", methods=["POST"])
         def execute_module_function(module_name):
-            """Execute module function"""
+            """Execute module function."""
             if module_name not in self.modules:
                 return jsonify({"error": "Module not found"}), 404
 
@@ -405,7 +418,7 @@ class PiWardriveUnifiedPlatform:
 
         @self.api_app.route("/api/v1/scan", methods=["POST"])
         def start_scan():
-            """Start comprehensive scan"""
+            """Start comprehensive scan."""
             try:
                 scan_config = request.json or {}
                 scan_id = self.start_comprehensive_scan(scan_config)
@@ -415,7 +428,7 @@ class PiWardriveUnifiedPlatform:
 
         @self.api_app.route("/api/v1/reports", methods=["GET"])
         def get_reports():
-            """Get available reports"""
+            """Get available reports."""
             try:
                 reports = self.get_available_reports()
                 return jsonify(reports)
@@ -424,7 +437,7 @@ class PiWardriveUnifiedPlatform:
 
         @self.api_app.route("/api/v1/reports/<report_id>", methods=["GET"])
         def get_report(report_id):
-            """Get specific report"""
+            """Get specific report."""
             try:
                 report = self.get_report_by_id(report_id)
                 if report:
@@ -440,19 +453,19 @@ class PiWardriveUnifiedPlatform:
 
         @self.dashboard_app.route("/")
         def dashboard():
-            """Main dashboard"""
+            """Serve main dashboard."""
             return render_template_string(self._get_dashboard_template())
 
         @self.dashboard_app.route("/dashboard/api/status")
         def dashboard_status():
-            """Dashboard API status"""
+            """Get dashboard API status."""
             return jsonify(self.get_system_status())
 
     def _setup_monitoring(self):
-        """Setup system monitoring"""
+        """Set up system monitoring."""
 
         def monitor_system():
-            """System monitoring thread"""
+            """Monitor system thread."""
             while self.status == SystemStatus.RUNNING:
                 try:
                     # Update system metrics
@@ -477,7 +490,7 @@ class PiWardriveUnifiedPlatform:
         logger.info("System monitoring started")
 
     def _update_system_metrics(self):
-        """Update system metrics"""
+        """Update system metrics."""
         for module_name, module in self.modules.items():
             if module.status == ModuleStatus.INITIALIZED and module.instance:
                 try:
@@ -489,7 +502,7 @@ class PiWardriveUnifiedPlatform:
                     logger.warning(f"Failed to get metrics for {module_name}: {e}")
 
     def _check_module_health(self):
-        """Check health of all modules"""
+        """Check health of all modules."""
         for module_name, module in self.modules.items():
             if module.status == ModuleStatus.INITIALIZED and module.instance:
                 try:
@@ -504,7 +517,7 @@ class PiWardriveUnifiedPlatform:
                     module.status = ModuleStatus.ERROR
 
     def _process_events(self):
-        """Process system events"""
+        """Process system events."""
         while not self.event_queue.empty():
             try:
                 event = self.event_queue.get_nowait()
@@ -516,11 +529,11 @@ class PiWardriveUnifiedPlatform:
                 logger.error(f"Event processing error: {e}")
 
     def start_comprehensive_scan(self, config: Dict[str, Any]) -> str:
-        """Start comprehensive scan across all modules"""
+        """Start comprehensive scan across all modules."""
         scan_id = str(uuid.uuid4())
 
         # Create scan configuration
-        _scanconfig = {
+        scan_config = {
             "scan_id": scan_id,
             "timestamp": datetime.now().isoformat(),
             "modules": config.get("modules", list(self.modules.keys())),
@@ -570,7 +583,7 @@ class PiWardriveUnifiedPlatform:
         return scan_id
 
     def _store_scan_results(self, scan_id: str, results: Dict[str, Any]):
-        """Store scan results"""
+        """Store scan results."""
         # In a real implementation, this would store to database
         results_file = f"scan_results_{scan_id}.json"
         with open(results_file, "w") as f:
@@ -579,7 +592,7 @@ class PiWardriveUnifiedPlatform:
         logger.info(f"Scan results stored: {results_file}")
 
     def get_available_reports(self) -> List[Dict[str, Any]]:
-        """Get available reports"""
+        """Get available reports."""
         reports = []
 
         # Look for report files
@@ -597,26 +610,34 @@ class PiWardriveUnifiedPlatform:
                             ),
                         }
                     )
-            except Exception as e:
+            except (FileNotFoundError, PermissionError) as e:
                 logger.warning(f"Failed to read report {report_file}: {e}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Invalid JSON in report {report_file}: {e}")
+            except Exception as e:
+                logger.warning(f"Unexpected error reading report {report_file}: {e}")
 
         return reports
 
     def get_report_by_id(self, report_id: str) -> Optional[Dict[str, Any]]:
-        """Get report by ID"""
+        """Get report by ID."""
         report_file = f"scan_results_{report_id}.json"
 
         if os.path.exists(report_file):
             try:
                 with open(report_file, "r") as f:
                     return json.load(f)
+            except (FileNotFoundError, PermissionError) as e:
+                logger.error(f"Failed to access report {report_id}: {e}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Invalid JSON in report {report_id}: {e}")
             except Exception as e:
-                logger.error(f"Failed to load report {report_id}: {e}")
+                logger.error(f"Unexpected error loading report {report_id}: {e}")
 
         return None
 
     def get_system_status(self) -> Dict[str, Any]:
-        """Get comprehensive system status"""
+        """Get comprehensive system status."""
         uptime = datetime.now() - self.startup_time
 
         module_statuses = {}
@@ -647,7 +668,7 @@ class PiWardriveUnifiedPlatform:
         }
 
     def _get_dashboard_template(self) -> str:
-        """Get dashboard HTML template"""
+        """Get dashboard HTML template."""
         return """
         <!DOCTYPE html>
         <html>
@@ -751,7 +772,7 @@ class PiWardriveUnifiedPlatform:
         """
 
     def start(self):
-        """Start the unified platform"""
+        """Start the unified platform."""
         self.status = SystemStatus.RUNNING
 
         # Start API server
@@ -789,7 +810,7 @@ class PiWardriveUnifiedPlatform:
             self.stop()
 
     def stop(self):
-        """Stop the unified platform"""
+        """Stop the unified platform."""
         self.status = SystemStatus.STOPPED
 
         # Stop all modules
@@ -806,7 +827,7 @@ class PiWardriveUnifiedPlatform:
 
 # Demo and Test Functions
 def create_sample_config():
-    """Create sample configuration file"""
+    """Create sample configuration file."""
     __config = {
         "system_name": "PiWardrive",
         "version": "2.0.0",
@@ -837,13 +858,13 @@ def create_sample_config():
     }
 
     with open("piwardrive_config.yaml", "w") as f:
-        yaml.dump(config, f, default_flow_style=False)
+        yaml.dump(__config, f, default_flow_style=False)
 
     print("Sample configuration created: piwardrive_config.yaml")
 
 
 def demo_unified_platform():
-    """Demo the unified platform"""
+    """Demo the unified platform."""
     print("=== PiWardrive Unified Platform Demo ===\n")
 
     # Create sample configuration

@@ -250,7 +250,7 @@ class DatabaseOptimizer:
                     # Verify the setting
                     if pragma != "optimize":
                         cursor = await db.execute(f"PRAGMA {pragma}")
-                        result = await cursor.fetchone()
+                        _result = await cursor.fetchone()
                         results[pragma] = result[0] if result else "applied"
                     else:
                         results[pragma] = "executed"
@@ -344,8 +344,8 @@ class DatabaseOptimizer:
         # Log slow queries
         if metric.is_slow:
             logger.warning(
-                f"Slow query detected: {execution_time:.3f}s,
-                    {row_count} rows: {query[:200]}..."
+                f"Slow query detected: {execution_time:.3f}s, "
+                f"{row_count} rows: {query[:200]}..."
             )
 
 
@@ -383,7 +383,7 @@ class OptimizedSQLiteConnection:
         start_time = time.time()
 
         cursor = await self.connection.execute(query, parameters)
-        result = await cursor.fetchall()
+        _result = await cursor.fetchall()
 
         execution_time = time.time() - start_time
 

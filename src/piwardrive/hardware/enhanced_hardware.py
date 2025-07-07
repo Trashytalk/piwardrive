@@ -139,8 +139,8 @@ class MultiAdapterManager:
 
         try:
             # Get wireless interfaces
-            result = subprocess.run(["iwconfig"], capture_output=True, text=True)
-            interfaces = self._parse_iwconfig_output(result.stdout)
+            _result = subprocess.run(["iwconfig"], capture_output=True, text=True)
+            interfaces = self._parse_iwconfig_output(_result.stdout)
 
             for interface in interfaces:
                 adapter_info = self._get_adapter_info(interface)
@@ -215,12 +215,12 @@ class MultiAdapterManager:
 
         try:
             # Check iwlist capabilities
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["iwlist", interface, "freq"], capture_output=True, text=True
             )
-            if "5." in result.stdout:
+            if "5." in _result.stdout:
                 capabilities.append("5GHz")
-            if "2." in result.stdout:
+            if "2." in _result.stdout:
                 capabilities.append("2.4GHz")
 
         except Exception as e:
@@ -232,13 +232,13 @@ class MultiAdapterManager:
         """Check if adapter supports monitor mode"""
         try:
             # Try to set monitor mode temporarily
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["iwconfig", interface, "mode", "monitor"],
                 capture_output=True,
                 text=True,
             )
 
-            if result.returncode == 0:
+            if _result.returncode == 0:
                 # Restore managed mode
                 subprocess.run(
                     ["iwconfig", interface, "mode", "managed"],
@@ -269,12 +269,12 @@ class MultiAdapterManager:
         bands = []
 
         try:
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["iwlist", interface, "freq"], capture_output=True, text=True
             )
 
             _frequencies = []
-            for line in result.stdout.split("\n"):
+            for line in _result.stdout.split("\n"):
                 if "Channel" in line and "GHz" in line:
                     if "2.4" in line or "2." in line:
                         if "2.4GHz" not in bands:
@@ -433,8 +433,8 @@ class EnhancedGPSManager:
 
                 if line.startswith("$GPGGA") or line.startswith("$GNGGA"):
                     _gpsdata = self._parse_gga_sentence(line)
-                    if gps_data:
-                        self.current_position = gps_data
+                    if _gpsdata:
+                        self.current_position = _gpsdata
 
                 elif line.startswith("$GPRMC") or line.startswith("$GNRMC"):
                     self._parse_rmc_sentence(line)
@@ -749,12 +749,12 @@ class EnvironmentalSensorManager:
             BME280_ADDR = 0x76
 
             # Read raw data
-            data = self.i2c_bus.read_i2c_block_data(BME280_ADDR, 0xF7, 8)
+            _data = self.i2c_bus.read_i2c_block_data(BME280_ADDR, 0xF7, 8)
 
             # Convert raw data (simplified - would need calibration coefficients)
-            pressure = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
-            temperature = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
-            humidity = (data[6] << 8) | data[7]
+            pressure = (_data[0] << 12) | (_data[1] << 4) | (_data[2] >> 4)
+            temperature = (_data[3] << 12) | (_data[4] << 4) | (_data[5] >> 4)
+            humidity = (_data[6] << 8) | _data[7]
 
             # Apply calibration (simplified)
             temp_c = temperature / 100.0 - 40.0  # Rough approximation
@@ -780,11 +780,11 @@ class EnvironmentalSensorManager:
             TSL2561_ADDR = 0x39
 
             # Read light data
-            data = self.i2c_bus.read_i2c_block_data(TSL2561_ADDR, 0x8C, 4)
+            _data = self.i2c_bus.read_i2c_block_data(TSL2561_ADDR, 0x8C, 4)
 
             # Convert to lux (simplified)
-            ch0 = (data[1] << 8) | data[0]
-            ch1 = (data[3] << 8) | data[2]
+            ch0 = (_data[1] << 8) | _data[0]
+            ch1 = (_data[3] << 8) | _data[2]
 
             # Calculate lux value (simplified)
             ratio = ch1 / ch0 if ch0 > 0 else 0
@@ -937,9 +937,9 @@ class PowerManagementSystem:
         """Set WiFi power level"""
         try:
             # This would set power for all WiFi interfaces
-            result = subprocess.run(["iwconfig"], capture_output=True, text=True)
+            _result = subprocess.run(["iwconfig"], capture_output=True, text=True)
 
-            for line in result.stdout.split("\n"):
+            for line in _result.stdout.split("\n"):
                 if "IEEE 802.11" in line:
                     interface = line.split()[0]
                     subprocess.run(

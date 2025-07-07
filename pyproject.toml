@@ -155,10 +155,14 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
-    "hardware: marks tests that require hardware",
-    "network: marks tests that require network access",
+    "staging: marks tests as staging environment tests",
     "performance: marks tests as performance tests",
+    "security: marks tests as security tests",
     "stress: marks tests as stress tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
 ]
 
 [tool.mypy]

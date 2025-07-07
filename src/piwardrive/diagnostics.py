@@ -1,9 +1,12 @@
-import logging
+"""System diagnostic helpers for PiWardrive.
 
-"""System diagnostic helpers for PiWardrive."""
-
+This module provides comprehensive system diagnostic functionality including
+performance profiling, resource monitoring, health checks, and automated
+diagnostics for the PiWardrive system.
+"""
 from __future__ import annotations
 
+import logging
 import asyncio
 import cProfile
 import gzip
@@ -139,7 +142,7 @@ async def rotate_log_async(path: str, max_files: int = DEFAULT_LOG_ARCHIVES) -> 
     tmp = f"{path}.1"
     os.rename(path, tmp)
     async with aiofiles.open(tmp, "rb") as f_in:
-        data = await f_in.read()
+        _data = await f_in.read()
     async with aiofiles.open(f"{tmp}.gz", "wb") as f_out:
         await f_out.write(gzip.compress(data))
     os.remove(tmp)
@@ -160,7 +163,7 @@ def stop_profiling() -> str | None:
         return None
     _PROFILER.disable()
     s = io.StringIO()
-    stats = pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative")
+    _stats = pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative")
     stats.print_stats(10)
     path = os.getenv("PW_PROFILE_CALLGRIND")
     if path:
@@ -186,7 +189,7 @@ def get_profile_metrics() -> Dict[str, float] | None:
     """Return simple metrics from the active profiler."""
     if _PROFILER is None:
         return None
-    stats = _PROFILER.getstats()
+    _stats = _PROFILER.getstats()
     total = sum(rec.totaltime for rec in stats)
     return {"calls": len(stats), "cumtime": total}
 
@@ -264,6 +267,15 @@ class HealthMonitor:
         daily_summary: bool = False,
         mqtt_client: "MQTTClient | None" = None,
     ) -> None:
+        """Initialize health monitor with scheduler and configuration.
+        
+        Args:
+            scheduler: The poll scheduler to use for monitoring.
+            interval: Monitoring interval in seconds.
+            collector: Optional custom data collector.
+            daily_summary: Whether to generate daily summaries.
+            mqtt_client: Optional MQTT client for notifications.
+        """
         try:
             asyncio.get_running_loop()
         except RuntimeError:

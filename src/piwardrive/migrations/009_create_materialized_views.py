@@ -1,3 +1,5 @@
+"""Migration 009: Create materialized views."""
+
 from __future__ import annotations
 
 from .base import BaseMigration

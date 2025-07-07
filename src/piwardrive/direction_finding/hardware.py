@@ -29,7 +29,7 @@ class HardwareDetector:
 
         try:
             # Try to get adapter info using iwconfig
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["iwconfig"], capture_output=True, text=True, timeout=10
             )
 
@@ -111,7 +111,7 @@ class HardwareDetector:
 
         try:
             # Try to list network interfaces
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["ip", "link", "show"], capture_output=True, text=True, timeout=5
             )
 
@@ -145,7 +145,7 @@ class HardwareDetector:
         """Detect chipset of a specific adapter."""
         try:
             # Try to get driver information
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["ethtool", "-i", adapter_name],
                 capture_output=True,
                 text=True,
@@ -183,7 +183,7 @@ class HardwareDetector:
         """Check if adapter supports monitor mode."""
         try:
             # Try to get supported modes
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["iw", "phy", "phy0", "info"], capture_output=True, text=True, timeout=5
             )
 
@@ -239,7 +239,7 @@ class HardwareDetector:
 
         try:
             # Try to detect RTL-SDR devices
-            result = subprocess.run(
+            _result = subprocess.run(
                 ["rtl_test", "-t"], capture_output=True, text=True, timeout=5
             )
 
@@ -611,7 +611,7 @@ class WiFiAdapter:
         try:
             while self.is_capturing and self.capture_process:
                 # Read packet data
-                data = await self.capture_process.stdout.read(1024)
+                _data = await self.capture_process.stdout.read(1024)
 
                 if not data:
                     break

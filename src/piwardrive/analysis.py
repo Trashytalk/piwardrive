@@ -26,6 +26,7 @@ def compute_health_stats(records: List[HealthRecord]) -> Dict[str, float]:
     disk = [r.disk_percent for r in records]
 
     stats = {
+        "count": len(records),
         "temp_avg": float(fmean(temps)) if temps else math.nan,
         "cpu_avg": float(fmean(cpu)),
         "mem_avg": float(fmean(mem)),

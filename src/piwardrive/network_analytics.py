@@ -62,7 +62,6 @@ def cluster_by_signal(
     the largest cluster for each BSSID is returned. RSSI values are used as
     inverse weights when averaging cluster coordinates.
     """
-
     grouped: Dict[str, list[tuple[float, float, float]]] = defaultdict(list)
     for rec in records:
         bssid = rec.get("bssid")
@@ -119,7 +118,6 @@ def detect_rogue_devices(
     heuristics or if its observed location is far from the centroid computed by
     :func:`cluster_by_signal`.
     """
-
     suspicious = set(id(r) for r in find_suspicious_aps(records))
     rec_list = list(records)
     centroids = cluster_by_signal(rec_list, eps, min_samples)

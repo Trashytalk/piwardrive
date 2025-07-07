@@ -545,8 +545,8 @@ class HealthMonitor:
             return HealthStatus.UNKNOWN
 
         try:
-            result = self.health_checks[service_id]()
-            return HealthStatus.HEALTHY if result else HealthStatus.UNHEALTHY
+            _result = self.health_checks[service_id]()
+            return HealthStatus.HEALTHY if _result else HealthStatus.UNHEALTHY
         except Exception as e:
             logger.error(f"Health check failed for {service_id}: {e}")
             return HealthStatus.UNHEALTHY
@@ -623,17 +623,24 @@ class ConfigurationManager:
     def set_config(self, key: str, value: Any):
         """Set configuration value"""
         keys = key.split(".")
-        config = self.config
+        _config = self.config
 
         for k in keys[:-1]:
-            if k not in config:
-                config[k] = {}
-            config = config[k]
+            if k not in _config:
+                _config[k] = {}
+            _config = _config[k]
 
-        config[keys[-1]] = value
+        _config[keys[-1]] = value
 
     def get_secret(self, secret_path: str) -> Optional[str]:
-        """Get secret from Vault"""
+        """Get secret from Vault.
+        
+        Args:
+            secret_path: Path to the secret.
+            
+        Returns:
+            Secret value or None if not found.
+        """
         if self.vault_client:
             try:
                 response = self.vault_client.secrets.kv.v2.read_secret_version(
@@ -797,7 +804,7 @@ def test_api_gateway():
         service_type=ServiceType.PROCESSING,
         endpoints=["/api/v1/test"],
     )
-    gateway.register_service(service_def)
+    gateway.register_service(_service_def)
 
     print(f"API Gateway configured with {len(gateway.routes)} routes")
 
@@ -902,7 +909,7 @@ def test_deployment_manager():
     )
 
     deployment_id = deployment_manager.deploy_service(
-        service_def, DeploymentStrategy.BLUE_GREEN
+        _service_def, DeploymentStrategy.BLUE_GREEN
     )
     print(f"Deployment ID: {deployment_id}")
 

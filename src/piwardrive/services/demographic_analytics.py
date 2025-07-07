@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Simple demographic analytics using example data."""
+
+from __future__ import annotations
 
 import json
 from functools import lru_cache
@@ -19,6 +19,11 @@ def load_data() -> List[Dict[str, Any]]:
 
 
 def socioeconomic_correlation() -> Dict[str, Any]:
+    """Calculate correlation between median income and technology access.
+    
+    Returns:
+        Dictionary with correlation coefficient.
+    """
     data = load_data()
     incomes = [d.get("median_income", 0.0) for d in data]
     access = [d.get("tech_access", 0.0) for d in data]
@@ -34,6 +39,11 @@ def socioeconomic_correlation() -> Dict[str, Any]:
 
 
 def technology_adoption_patterns() -> Dict[str, Any]:
+    """Analyze technology adoption patterns across regions.
+    
+    Returns:
+        Dictionary with average access and top region data.
+    """
     data = load_data()
     avg_access = mean(d.get("tech_access", 0.0) for d in data)
     top = max(data, key=lambda d: d.get("tech_access", 0.0))
@@ -44,6 +54,11 @@ def technology_adoption_patterns() -> Dict[str, Any]:
 
 
 def digital_divide_assessment() -> Dict[str, Any]:
+    """Assess the digital divide by measuring technology access gap.
+    
+    Returns:
+        Dictionary with access gap measurement.
+    """
     data = load_data()
     values = [d.get("tech_access", 0.0) for d in data]
     if not values:
@@ -52,6 +67,11 @@ def digital_divide_assessment() -> Dict[str, Any]:
 
 
 def community_network_detection() -> Dict[str, Any]:
+    """Detect community networks by clustering geographical locations.
+    
+    Returns:
+        Dictionary with cluster count and regional clusters.
+    """
     data = load_data()
     clusters: Dict[str, List[str]] = {}
     for rec in data:
@@ -64,6 +84,11 @@ def community_network_detection() -> Dict[str, Any]:
 
 
 def adoption_summary() -> Dict[str, Any]:
+    """Generate a comprehensive technology adoption summary.
+    
+    Returns:
+        Dictionary with adoption metrics and statistics.
+    """
     data = load_data()
     avg_access = mean(d.get("tech_access", 0.0) for d in data)
     penetration = mean(d.get("tech_access", 0.0) * d.get("population", 0) for d in data)
@@ -79,6 +104,11 @@ def adoption_summary() -> Dict[str, Any]:
 
 
 def digital_equity_metrics() -> Dict[str, Any]:
+    """Calculate digital equity metrics including connectivity gap and affordability.
+    
+    Returns:
+        Dictionary with equity metrics and accessibility measurements.
+    """
     data = load_data()
     values = [d.get("tech_access", 0.0) for d in data]
     incomes = [d.get("median_income", 0.0) for d in data]

@@ -83,7 +83,7 @@ def identify_expansion_opportunities(
     records: Iterable[Mapping[str, float]],
 ) -> List[str]:
     """Return BSSIDs with large unique location counts suggesting expansion."""
-    result = []
+    _result = []
     for r in records:
         locs = r.get("unique_locations")
         if isinstance(locs, (int, float)) and locs > 100:

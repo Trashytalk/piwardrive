@@ -619,8 +619,8 @@ def test_rf_spectrum_intelligence():
             f"  {rec['rank']}. Channel {rec['channel']} ({rec['frequency']/1e6:.0f} MHz)"
         )
         print(
-            f"     Quality: {rec['quality_score']:.2f},
-                Utilization: {rec['utilization']:.1f}%"
+            f"     Quality: {rec['quality_score']:.2f}, "
+            f"Utilization: {rec['utilization']:.1f}%"
         )
         print(f"     {rec['reason']}")
 

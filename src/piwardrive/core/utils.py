@@ -137,10 +137,10 @@ _SAFE_REQUEST_CACHE: TTLCache[str, requests.Response | Any] = TTLCache(
 _SAFE_REQUEST_CACHE_LOCK = threading.Lock()
 
 # Optional Redis client for cross-process caching
-_REDIS_CLIENT: aioredis.Redis | None = None
+_REDIS_CLIENT: "aioredis.Redis | None" = None
 
 
-def _get_redis_client() -> aioredis.Redis | None:
+def _get_redis_client() -> "aioredis.Redis | None":
     """Return Redis client if ``PIWARDRIVE_REDIS_URL`` is configured."""
     global _REDIS_CLIENT
     if _REDIS_CLIENT is not None:
@@ -233,14 +233,14 @@ def async_ttl_cache(
             if redis_cli is not None:
                 redis_key = f"async_cache:{func.__module__}:{func.__name__}:{hash(key)}"
                 try:
-                    data = await redis_cli.get(redis_key)
+                    _data = await redis_cli.get(redis_key)
                     if data:
                         ts, res = pickle.loads(data)
                         if now is not None and now - ts <= ttl:
                             return res
                 except Exception:
                     logging.debug("Redis get failed", exc_info=True)
-            result = await func(*args, **kwargs)
+            _result = await func(*args, **kwargs)
             async with lock:
                 cache[key] = ((0.0 if now is None else now), result)
             if redis_cli is not None and redis_key is not None:
@@ -382,7 +382,7 @@ def run_async_task(
 
         def _done(f: Future[T]) -> None:
             try:
-                result = f.result()
+                _result = f.result()
             except Exception as exc:  # pragma: no cover - background errors
                 logging.exception("Async task failed: %s", exc)
             else:
@@ -457,7 +457,7 @@ def safe_request(
         report_error(f"Unexpected error for {url}: {exc}")
     if fallback is not None:
         try:
-            result = fallback()
+            _result = fallback()
             if cache_seconds:
                 with _SAFE_REQUEST_CACHE_LOCK:
                     _SAFE_REQUEST_CACHE[url] = result
@@ -637,9 +637,9 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
                 pos = new_pos
             start = 0 if pos < 0 else pos + 1
             text = mm[start:]
-            result = text.decode("utf-8", errors="ignore").splitlines()
+            _result = text.decode("utf-8", errors="ignore").splitlines()
     except (OSError, ValueError):
-        result = []
+        _result = []
     with _TAIL_FILE_CACHE_LOCK:
         _TAIL_FILE_CACHE[path] = (now, mtime, result)
     return result[-lines:]
@@ -925,7 +925,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                     format_error(
                         ErrorCode.KISMET_API_REQUEST_FAILED,
                         (
-                            f"Kismet API request failed: {exc}. "
+                            f"Kismet API request failed: {exc}. ",
                             "Ensure Kismet is running."
                         ),
                     )
@@ -1049,7 +1049,7 @@ def _get_cached_gps_data(force_refresh: bool = False) -> _GPSDEntry | None:
 
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:
     """Return GPS accuracy from cached GPSD data."""
-    data = _get_cached_gps_data(force_refresh)
+    _data = _get_cached_gps_data(force_refresh)
     if not data:
         return None
     return data.get("accuracy")
@@ -1057,7 +1057,7 @@ def get_gps_accuracy(force_refresh: bool = False) -> float | None:
 
 def get_gps_fix_quality(force_refresh: bool = False) -> str:
     """Return human readable GPS fix quality from cached data."""
-    data = _get_cached_gps_data(force_refresh)
+    _data = _get_cached_gps_data(force_refresh)
     if not data:
         return "Unknown"
     return str(data.get("fix", "Unknown"))
@@ -1232,7 +1232,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
         with zipfile.ZipFile(path) as zf:
             for name in zf.namelist():
                 if name.lower().endswith(".kml"):
-                    data = zf.read(name)
+                    _data = zf.read(name)
                     root = ET.fromstring(data)
                     return _parse(root)
         return []

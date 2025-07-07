@@ -29,7 +29,7 @@ async def scan_bluetooth_get(
 ) -> BluetoothScanResponse:
     """Perform a Bluetooth scan and return discovered devices."""
     devices = await bluetooth_scanner.scan_bluetooth_devices(timeout=timeout)
-    result = [BluetoothDevice.model_validate(d.model_dump()) for d in devices]
+    _result = [BluetoothDevice.model_validate(d.model_dump()) for d in devices]
     await bluetooth_scanner.record_bluetooth_detections(result)
     return BluetoothScanResponse(devices=result)
 
@@ -45,7 +45,7 @@ async def scan_bluetooth_post(
 ) -> BluetoothScanResponse:
     """Perform a Bluetooth scan using parameters in the request body."""
     devices = await bluetooth_scanner.scan_bluetooth_devices(timeout=req.timeout)
-    result = [BluetoothDevice.model_validate(d.model_dump()) for d in devices]
+    _result = [BluetoothDevice.model_validate(d.model_dump()) for d in devices]
     await bluetooth_scanner.record_bluetooth_detections(result)
     return BluetoothScanResponse(devices=result)
 
@@ -64,8 +64,8 @@ async def list_bluetooth_detections(
 ) -> list[BluetoothDetection]:
     """Return Bluetooth detection rows from the database."""
     query = (
-        "SELECT id, scan_session_id, detection_timestamp, mac_address, "
-        "device_name, rssi_dbm, latitude, longitude "
+        "SELECT id, scan_session_id, detection_timestamp, mac_address, ",
+        "device_name, rssi_dbm, latitude, longitude ",
         "FROM bluetooth_detections"
     )
     params: list[object] = []

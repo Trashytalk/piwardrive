@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Utilities for coordinating distributed scanning tasks."""
+
+from __future__ import annotations
 
 import asyncio
 import logging

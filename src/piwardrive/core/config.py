@@ -385,7 +385,9 @@ def load_config(profile: Optional[str] = None) -> Config:
         try:
             with open(p, "r", encoding="utf-8") as f:
                 raw = json.load(f)
-            FileConfigModel(**raw)
+            # Only validate non-empty configurations
+            if raw:
+                FileConfigModel(**raw)
         except FileNotFoundError:
             return {}
         except (json.JSONDecodeError, ValidationError) as exc:
@@ -394,13 +396,14 @@ def load_config(profile: Optional[str] = None) -> Config:
         parent = raw.pop("extends", None)
         if parent and parent not in visited:
             visited.add(parent)
-            _parentdata = _load(parent)
+            parent_data = _load(parent)
             return {**parent_data, **raw}
         return raw
 
     data = _load(profile)
     merged = {**DEFAULTS, **data}
-    return Config(**merged)
+    merged_with_env = _apply_env_overrides(merged)
+    return Config(**merged_with_env)
 
 
 def save_config(config: Config, profile: Optional[str] = None) -> None:
@@ -588,3 +591,13 @@ def delete_profile(name: str) -> None:
         os.remove(_profile_path(name))
     except FileNotFoundError:
         pass
+
+
+def create_profile(name: str, config_data: Dict[str, Any]) -> None:
+    """Create a new profile with the given name and configuration data."""
+    profiles_dir = Path(PROFILES_DIR)
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+
+    profile_path = profiles_dir / f"{name}.json"
+    with open(profile_path, "w", encoding="utf-8") as f:
+        json.dump(config_data, f, indent=2)

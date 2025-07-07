@@ -1,6 +1,12 @@
-from __future__ import annotations
+"""Scheduled report generation utilities.
 
-"""Scheduled report generation utilities."""
+This module provides functionality for generating automated reports
+including daily summaries, network detection statistics, and security
+alerts. Reports are generated using configurable templates and can
+be scheduled for regular delivery.
+"""
+
+from __future__ import annotations
 
 import os
 from datetime import datetime, timedelta
@@ -25,6 +31,14 @@ def _render(template: str, data: dict[str, object]) -> str:
 
 
 async def generate_daily_summary(day: datetime) -> str:
+    """Generate a daily summary report for the specified day.
+    
+    Args:
+        day: The date to generate the summary for.
+        
+    Returns:
+        Formatted summary report as a string.
+    """
     start = day.date().isoformat()
     end = (day.date() + timedelta(days=1)).isoformat()
     stats = await persistence.load_daily_detection_stats(start=start, end=end)
@@ -47,12 +61,19 @@ class ReportGeneratorService:
     """Generate daily reports and write them to ``reports_dir``."""
 
     def __init__(self, scheduler: PollScheduler, hour: int = 2) -> None:
+        """Initialize the report generator service.
+        
+        Args:
+            scheduler: Scheduler instance for periodic report generation.
+            hour: Hour of the day to generate reports (default 2 AM).
+        """
         self._scheduler = scheduler
         self._event = "report_generator"
         scheduler.schedule(self._event, lambda _dt: run_async_task(self.run()), 86400)
         run_async_task(self.run())
 
     async def run(self) -> None:
+        """Generate and save the daily report."""
         cfg = config.AppConfig.load()
         os.makedirs(cfg.reports_dir, exist_ok=True)
         day = datetime.utcnow()

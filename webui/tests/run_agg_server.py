@@ -1,3 +1,8 @@
+"""Test module for running aggregation server with mock HealthRecord.
+
+This module provides a mock HealthRecord class and runs the aggregation service
+for testing purposes.
+"""
 import os
 import sys
 import types
@@ -6,6 +11,16 @@ from dataclasses import dataclass
 
 @dataclass
 class HealthRecord:
+    """Mock HealthRecord class for testing aggregation service.
+    
+    Attributes:
+        timestamp: Timestamp of the health record.
+        cpu_temp: CPU temperature measurement, may be None.
+        cpu_percent: CPU usage percentage.
+        memory_percent: Memory usage percentage.
+        disk_percent: Disk usage percentage.
+    """
+
     timestamp: str
     cpu_temp: float | None
     cpu_percent: float

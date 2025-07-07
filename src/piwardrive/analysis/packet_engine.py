@@ -1,6 +1,7 @@
-"""
-Packet Analysis Engine for PiWardrive
+"""Packet Analysis Engine for PiWardrive.
+
 Real-time protocol analysis, topology mapping, and traffic classification
+for comprehensive network intelligence and security monitoring.
 """
 
 import hashlib
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ProtocolType(Enum):
-    """Network protocol types"""
+    """Network protocol types."""
 
     IEEE_802_11 = "802.11"
     ETHERNET = "ethernet"
@@ -35,7 +36,7 @@ class ProtocolType(Enum):
 
 
 class PacketDirection(Enum):
-    """Packet direction"""
+    """Packet direction."""
 
     INBOUND = "inbound"
     OUTBOUND = "outbound"
@@ -44,7 +45,7 @@ class PacketDirection(Enum):
 
 
 class AnomalyType(Enum):
-    """Protocol anomaly types"""
+    """Protocol anomaly types."""
 
     MALFORMED_PACKET = "malformed_packet"
     PROTOCOL_VIOLATION = "protocol_violation"
@@ -56,7 +57,7 @@ class AnomalyType(Enum):
 
 @dataclass
 class PacketHeader:
-    """Generic packet header information"""
+    """Generic packet header information."""
 
     timestamp: float
     length: int
@@ -69,7 +70,7 @@ class PacketHeader:
 
 @dataclass
 class IEEE80211Frame:
-    """IEEE 802.11 frame structure"""
+    """IEEE 802.11 frame structure."""
 
     frame_control: int
     duration: int
@@ -85,7 +86,7 @@ class IEEE80211Frame:
 
 @dataclass
 class NetworkTopologyNode:
-    """Network topology node"""
+    """Network topology node."""
 
     mac_address: str
     ip_address: Optional[str] = None
@@ -150,9 +151,10 @@ class ProtocolAnomaly:
 
 
 class PacketParser:
-    """Packet parsing and protocol analysis"""
+    """Packet parsing and protocol analysis."""
 
     def __init__(self):
+        """Initialize the packet parser with protocol handlers and OUI database."""
         self.oui_database = self._load_oui_database()
         self.protocol_parsers = {
             ProtocolType.IEEE_802_11: self._parse_802_11,
@@ -332,7 +334,7 @@ class PacketParser:
             seq_num = struct.unpack("!I", data[4:8])[0]
             ack_num = struct.unpack("!I", data[8:12])[0]
 
-            _flags = struct.unpack("!H", data[12:14])[0]
+            flags = struct.unpack("!H", data[12:14])[0]
             header_length = (flags >> 12) * 4
 
             tcp_flags = {

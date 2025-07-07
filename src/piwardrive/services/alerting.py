@@ -1,6 +1,10 @@
-from __future__ import annotations
+"""Alerting utilities for system monitoring.
 
-"""Alerting utilities for system monitoring."""
+This module provides comprehensive alerting functionality including email
+notifications, webhook integrations, and rule-based alert management for
+the PiWardrive monitoring system.
+"""
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
@@ -62,12 +66,19 @@ class AlertManager:
     """Evaluate metrics against configured alert rules."""
 
     def __init__(self, rules: Iterable[AlertRule] | None = None) -> None:
+        """Initialize alert manager with optional rules.
+        
+        Args:
+            rules: Initial set of alert rules to load.
+        """
         self.rules = list(rules or [])
 
     def add_rule(self, rule: AlertRule) -> None:
+        """Add an alert rule to the manager."""
         self.rules.append(rule)
 
     async def evaluate(self, metrics: Mapping[str, float]) -> None:
+        """Evaluate all rules against the provided metrics and trigger alerts."""
         for rule in self.rules:
             value = metrics.get(rule.metric)
             if value is None or value < rule.threshold:

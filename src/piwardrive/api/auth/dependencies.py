@@ -33,4 +33,4 @@ async def check_auth(token: str = SECURITY_DEP) -> None:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-AUTH_DEP = Depends(check_auth)
+AUTH_DEP = check_auth

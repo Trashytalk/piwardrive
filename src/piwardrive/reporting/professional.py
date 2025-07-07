@@ -759,7 +759,7 @@ class ComplianceChecker:
         compliance_results = []
 
         for control in controls:
-            result = self._evaluate_control(control, network_data)
+            _result = self._evaluate_control(control, network_data)
             compliance_results.append(result)
 
         return compliance_results

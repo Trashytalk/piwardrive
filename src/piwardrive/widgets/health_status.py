@@ -40,7 +40,7 @@ class HealthStatusWidget(DashboardWidget):
                 monitor = getattr(main, "GLOBAL_HEALTH_MONITOR", None)
             except Exception:
                 monitor = None
-            data = monitor.data if monitor else None
+            _data = monitor.data if monitor else None
             if not data:
                 self.label.text = f"{_('health')}: {_('not_available')}"
                 return

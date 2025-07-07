@@ -1,3 +1,5 @@
+"""Migration 003: Create bluetooth detections table."""
+
 from __future__ import annotations
 
 from .base import BaseMigration
@@ -50,8 +52,7 @@ class Migration(BaseMigration):
             "CREATE INDEX IF NOT EXISTS idx_bt_detections_time ON bluetooth_detections(detection_timestamp)"
         )
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_bt_detections_location ON bluetooth_detections(latitude,
-                longitude)"
+            "CREATE INDEX IF NOT EXISTS idx_bt_detections_location ON bluetooth_detections(latitude, longitude)"
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_bt_detections_rssi ON bluetooth_detections(rssi_dbm)"

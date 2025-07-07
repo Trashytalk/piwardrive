@@ -325,17 +325,13 @@ def main():
     print("\nRunning final quality checks...")
 
     # Flake8 check
-    stdout,
-        stderr,
-        code = run_command("python -m flake8 --config=config/.flake8 src/ main.py service.py",
+    stdout, stderr, code = run_command("python -m flake8 --config=config/.flake8 src/ main.py service.py",
         str(project_root))
     flake8_issues = len(stdout.strip().split('\n')) if stdout.strip() else 0
     print(f"Flake8 issues remaining: {flake8_issues}")
 
     # Mypy check
-    stdout,
-        stderr,
-        code = run_command("python -m mypy src/ --config-file=config/mypy.ini",
+    stdout, stderr, code = run_command("python -m mypy src/ --config-file=config/mypy.ini",
         str(project_root))
     mypy_issues = len(stdout.strip().split('\n')) if stdout.strip() else 0
     print(f"Mypy issues remaining: {mypy_issues}")

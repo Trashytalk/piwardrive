@@ -3,9 +3,7 @@
 # The real implementation lives under ``piwardrive.integrations.sigint_suite``.
 # This thin module allows older import paths used in some tests to keep working.
 try:  # pragma: no cover - optional implementation
-    from piwardrive.integrations.sigint_suite.cellular.tower_tracker.tracker import *  # type: ignore  # noqa: F401,
-        F403,
-        E501
+    from piwardrive.integrations.sigint_suite.cellular.tower_tracker.tracker import *  # type: ignore  # noqa: F401, F403, E501
 except Exception:
     # Minimal stub used when optional integrations are unavailable
     class TowerTracker:

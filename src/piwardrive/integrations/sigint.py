@@ -13,7 +13,7 @@ def load_sigint_data(name: str) -> List[Mapping[str, Any]]:
     path = os.path.join(export_dir, f"{name}.json")
     try:
         with open(path, "r", encoding="utf-8") as fh:
-            data = json.load(fh)
+            _data = json.load(fh)
             if isinstance(data, list):
                 return [dict(r) for r in data if isinstance(r, Mapping)]
     except Exception:

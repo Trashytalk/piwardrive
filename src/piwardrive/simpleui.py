@@ -22,7 +22,6 @@ _tk_root: Any | None = None
 
 def _get_root() -> Any | None:
     """Return a hidden ``Tk`` instance or ``None`` when not available."""
-
     global _tk_root
     if tk is None:
         return None
@@ -74,6 +73,7 @@ class Label:
                 self._widget = None
 
     def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute and update underlying widget if needed."""
         object.__setattr__(self, name, value)
         if name == "text":  # update underlying widget
             widget = getattr(self, "_widget", None)

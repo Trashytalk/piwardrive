@@ -28,6 +28,15 @@ class NotificationManager:
         cpu_temp_threshold: float | None = None,
         disk_percent_threshold: float | None = None,
     ) -> None:
+        """Initialize the notification manager.
+        
+        Args:
+            scheduler: Scheduler instance for periodic checks.
+            interval: Check interval in seconds (default 60).
+            webhooks: List of webhook URLs to send notifications to.
+            cpu_temp_threshold: CPU temperature threshold for alerts.
+            disk_percent_threshold: Disk usage percentage threshold for alerts.
+        """
         self._scheduler = scheduler
         self.webhooks: List[str] = list(webhooks or [])
         cfg = config.AppConfig.load()

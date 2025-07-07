@@ -1,3 +1,5 @@
+"""Network analytics service for processing daily network data."""
+
 from __future__ import annotations
 
 import math
@@ -103,6 +105,12 @@ class NetworkAnalyticsService:
     """Schedule daily network analytics processing."""
 
     def __init__(self, scheduler: PollScheduler, hour: int = 2) -> None:
+        """Initialize the network analytics service.
+        
+        Args:
+            scheduler: The poll scheduler to use for daily processing.
+            hour: Hour of day to run analytics (default: 2 AM).
+        """
         self._scheduler = scheduler
         self._event = "network_analytics"
         scheduler.schedule(self._event, lambda _dt: run_async_task(self.run()), 86400)
@@ -110,6 +118,7 @@ class NetworkAnalyticsService:
         run_async_task(self.run())
 
     async def run(self) -> None:
+        """Execute daily network analytics processing."""
         day = datetime.utcnow().date() - timedelta(days=1)
         await analyze_day(day)
 

@@ -30,7 +30,7 @@ def _load_json(path: str) -> List[Dict[str, Any]]:
         return []
     try:
         with open(path, "r", encoding="utf-8") as fh:
-            data = json.load(fh)
+            _data = json.load(fh)
         if isinstance(data, list):
             return data
     except Exception:
@@ -93,7 +93,7 @@ def main() -> None:  # pragma: no cover - small CLI helper
     parser.add_argument("--json", action="store_true", help="print raw JSON")
     args = parser.parse_args()
 
-    data = load_data(args.export_dir)
+    _data = load_data(args.export_dir)
     if args.json:
         print(json.dumps(data, indent=2))
     else:

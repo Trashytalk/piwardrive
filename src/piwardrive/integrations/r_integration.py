@@ -18,5 +18,5 @@ def health_summary(path: str, plot_path: Optional[str] = None) -> Dict[str, floa
     r_script = Path(__file__).parent / "scripts" / "health_summary.R"
     robjects.r.source(str(r_script))
     r_func = robjects.globalenv["health_summary"]
-    result = r_func(path, plot_path if plot_path is not None else robjects.NULL)
-    return dict(zip(result.names, map(float, list(result))))
+    _result = r_func(path, plot_path if plot_path is not None else robjects.NULL)
+    return dict(zip(_result.names, map(float, list(_result))))

@@ -1,6 +1,10 @@
-from __future__ import annotations
+"""Central aggregation server for PiWardrive units.
 
-"""Central aggregation server for PiWardrive units."""
+This module provides a centralized aggregation service that collects and
+processes data from multiple distributed PiWardrive scanning units for
+comprehensive network analysis and reporting.
+"""
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -101,7 +105,7 @@ async def _merge_points(points: Iterable[Tuple[float, float]]) -> None:
 async def _process_upload(path: str) -> None:
     async with aiosqlite.connect(path) as db:
         cur = await db.execute(
-            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, ",
             "disk_percent FROM health_records"
         )
         recs = await cur.fetchall()
@@ -153,7 +157,7 @@ async def stats() -> Dict[str, float]:  # noqa: V103 - FastAPI route
     # Called by FastAPI as a route handler.
     async with _get_conn() as conn:
         cur = await conn.execute(
-            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, "
+            "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, ",
             "disk_percent FROM health_records"
         )
         rows = await cur.fetchall()
@@ -175,11 +179,16 @@ async def overlay(bins: int = 100) -> Dict[str, List[Tuple[float, float, int]]]:
 
 
 async def main() -> None:
+    """Start the aggregation service server.
+    
+    Initializes the database connection pool and starts the FastAPI server
+    on the configured port to accept connections from PiWardrive units.
+    """
     import uvicorn
 
     await _init_pool()
     port = int(os.getenv("PW_AGG_PORT", str(DEFAULT_PORT)))
-    config = uvicorn.Config(app, host="0.0.0.0", port=port)  # nosec B104
+    _config = uvicorn.Config(app, host="0.0.0.0", port=port)  # nosec B104
     server = uvicorn.Server(config)
     await server.serve()
 

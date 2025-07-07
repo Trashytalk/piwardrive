@@ -1,3 +1,5 @@
+"""Cellular tower scanner implementation."""
+
 import asyncio
 import logging
 import subprocess
