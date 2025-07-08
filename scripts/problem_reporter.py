@@ -19,6 +19,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import signal
+import threading
 
 import psutil
 import requests
@@ -147,7 +149,7 @@ class ProblemReporter:
         session.mount("https://", adapter)
         return session
 
-    def monitor_and_report(self):
+    def monitor_and_report(self, stop_event: Optional[threading.Event] = None):
         """Main monitoring loop"""
         logger.info("Starting problem reporter monitoring...")
 
@@ -155,7 +157,7 @@ class ProblemReporter:
             logger.info("Problem reporting is disabled")
             return
 
-        while True:
+        while not (stop_event and stop_event.is_set()):
             try:
                 problems = self._detect_problems()
 
@@ -164,16 +166,18 @@ class ProblemReporter:
                     for problem in problems:
                         self._handle_problem(problem)
 
-                # Sleep for configured interval
                 sleep_time = self.config['reporting']['interval_minutes'] * 60
-                time.sleep(sleep_time)
+                if stop_event:
+                    if stop_event.wait(sleep_time):
+                        break
+                else:
+                    time.sleep(sleep_time)
 
-            except KeyboardInterrupt:
-                logger.info("Shutting down problem reporter...")
-                break
             except Exception as e:
                 logger.error(f"Error in monitoring loop: {e}")
-                time.sleep(60)  # Wait before retrying
+                if stop_event and stop_event.wait(60):
+                    break
+                time.sleep(60)
 
     def _detect_problems(self) -> List[Dict[str, Any]]:
         """Detect system problems"""
@@ -441,9 +445,11 @@ class ProblemReporter:
                         lines = f.readlines()
                         recent_lines = lines[-100:]  # Last 100 lines
 
-                        error_count = sum(1 for line in recent_lines
-                                        if 'ERROR' in line.upper() \or
-                                            'CRITICAL' in line.upper())
+                        error_count = sum(
+                            1
+                            for line in recent_lines
+                            if 'ERROR' in line.upper() or 'CRITICAL' in line.upper()
+                        )
 
                         if error_count > 10:  # Many errors in recent logs
                             problems.append({
@@ -824,7 +830,9 @@ def main():
         
                        help='Configuration file path')
     parser.add_argument('--daemon', '-d', action='store_true',
-                       help='Run as daemon')
+                       help='Run as daemon in the background')
+    parser.add_argument('--interval', '-i', type=int,
+                       help='Override monitoring interval in minutes')
     parser.add_argument('--test', '-t', action='store_true',
                        help='Test configuration and exit')
     parser.add_argument('--verbose', '-v', action='store_true',
@@ -837,6 +845,9 @@ def main():
 
     # Create problem reporter
     reporter = ProblemReporter(args.config)
+
+    if args.interval:
+        reporter.config['reporting']['interval_minutes'] = args.interval
 
     if args.test:
         print("Testing configuration...")
@@ -852,19 +863,28 @@ def main():
 
         sys.exit(0)
 
-    if args.daemon:
-        # TODO: Implement proper daemon mode
-        pass
+    stop_event = threading.Event()
 
-    # Run monitoring
-    try:
-        reporter.monitor_and_report()
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
-        sys.exit(0)
-    except Exception as e:
-        logger.error(f"Fatal error: {e}")
-        sys.exit(1)
+    def handle_signal(signum, frame):
+        logger.info("Received termination signal")
+        stop_event.set()
+
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
+
+    if args.daemon:
+        thread = threading.Thread(
+            target=reporter.monitor_and_report, args=(stop_event,), daemon=True
+        )
+        thread.start()
+        try:
+            while not stop_event.is_set():
+                time.sleep(1)
+        finally:
+            stop_event.set()
+            thread.join()
+    else:
+        reporter.monitor_and_report(stop_event)
 
 if __name__ == '__main__':
     main()
