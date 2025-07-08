@@ -12,7 +12,7 @@ import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 from weakref import WeakSet
 
 logger = logging.getLogger(__name__)
@@ -42,15 +42,24 @@ class AsyncPerformanceMonitor:
             max_metrics: Maximum number of metrics to store in memory.
         """
         self.metrics: deque[AsyncMetrics] = deque(maxlen=max_metrics)
-        self.active_operations: Dict[str, float] = {}
+        self.active_operations: Dict[str, Tuple[float, float]] = {}
         self.operation_counts: Dict[str, int] = defaultdict(int)
         self.slow_operations: List[AsyncMetrics] = []
         self.slow_threshold = 0.1  # 100ms
 
-    def start_operation(self, operation_name: str) -> str:
-        """Start tracking an async operation."""
+    def start_operation(self, operation_name: str, queued_time: Optional[float] = None) -> str:
+        """Start tracking an async operation.
+
+        Args:
+            operation_name: Name of the operation.
+            queued_time: Timestamp when the task was queued. If provided, the
+                difference between the current time and ``queued_time`` will be
+                stored as the queue duration.
+        """
         operation_id = f"{operation_name}_{time.time()}_{id(self)}"
-        self.active_operations[operation_id] = time.time()
+        start_time = time.time()
+        queue_delay = start_time - queued_time if queued_time is not None else 0.0
+        self.active_operations[operation_id] = (start_time, queue_delay)
         return operation_id
 
     def end_operation(
@@ -60,7 +69,7 @@ class AsyncPerformanceMonitor:
         if operation_id not in self.active_operations:
             return
 
-        start_time = self.active_operations.pop(operation_id)
+        start_time, queue_delay = self.active_operations.pop(operation_id)
         execution_time = time.time() - start_time
 
         # Extract operation name from ID
@@ -69,7 +78,7 @@ class AsyncPerformanceMonitor:
         metric = AsyncMetrics(
             operation_name=operation_name,
             execution_time=execution_time,
-            queue_time=0,  # TODO: Implement queue time tracking
+            queue_time=queue_delay,
             success=success,
             error=error,
             timestamp=time.time(),
@@ -101,6 +110,11 @@ class AsyncPerformanceMonitor:
             "operation_summary": {},
         }
 
+        if self.metrics:
+            summary["avg_queue_time"] = sum(m.queue_time for m in self.metrics) / len(self.metrics)
+            summary["max_queue_time"] = max(m.queue_time for m in self.metrics)
+            summary["min_queue_time"] = min(m.queue_time for m in self.metrics)
+
         for op_name, metrics in operation_metrics.items():
             successful = [m for m in metrics if m.success]
             _failed = [m for m in metrics if not m.success]
@@ -109,6 +123,9 @@ class AsyncPerformanceMonitor:
                 avg_time = sum(m.execution_time for m in metrics) / len(metrics)
                 max_time = max(m.execution_time for m in metrics)
                 min_time = min(m.execution_time for m in metrics)
+                avg_queue = sum(m.queue_time for m in metrics) / len(metrics)
+                max_queue = max(m.queue_time for m in metrics)
+                min_queue = min(m.queue_time for m in metrics)
 
                 summary["operation_summary"][op_name] = {
                     "count": len(metrics),
@@ -119,6 +136,9 @@ class AsyncPerformanceMonitor:
                     "slow_count": len(
                         [m for m in metrics if m.execution_time > self.slow_threshold]
                     ),
+                    "avg_queue_time": avg_queue,
+                    "max_queue_time": max_queue,
+                    "min_queue_time": min_queue,
                 }
 
         return summary
@@ -209,6 +229,10 @@ class AsyncTaskQueue:
                 task_item = await asyncio.wait_for(self.queue.get(), timeout=1.0)
                 priority, queued_time, coro, args, kwargs = task_item
 
+                monitor = get_global_monitor()
+                operation_name = getattr(coro, "__name__", "task")
+                operation_id = monitor.start_operation(operation_name, queued_time=queued_time)
+
                 # Execute the task
                 start_time = time.time()
                 try:
@@ -227,10 +251,12 @@ class AsyncTaskQueue:
                     logger.debug(
                         f"Worker {worker_id} completed task in {execution_time:.3f}s"
                     )
+                    monitor.end_operation(operation_id, success=True)
 
                 except Exception as e:
                     self.stats["tasks_failed"] += 1
                     logger.error(f"Worker {worker_id} task failed: {e}")
+                    monitor.end_operation(operation_id, success=False, error=str(e))
                 finally:
                     self.queue.task_done()
                     self.stats["queue_size"] = self.queue.qsize()
