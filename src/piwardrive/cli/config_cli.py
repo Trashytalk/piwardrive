@@ -61,20 +61,20 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "get":
         if args.url:
             _data = asyncio.run(_api_get(args.url))
-            if args.key not in data:
+            if args.key not in _data:
                 parser.error(f"Unknown key: {args.key}")
-            print(json.dumps(data[args.key]))
+            print(json.dumps(_data[args.key]))
         else:
             _data = asdict(cfg.load_config())
-            if args.key not in data:
+            if args.key not in _data:
                 parser.error(f"Unknown key: {args.key}")
-            print(json.dumps(data[args.key]))
+            print(json.dumps(_data[args.key]))
     elif args.cmd == "set":
         if args.url:
             _data = asyncio.run(_api_get(args.url))
-            if args.key not in data:
+            if args.key not in _data:
                 parser.error(f"Unknown key: {args.key}")
-            value = _parse_value(args.value, data[args.key])
+            value = _parse_value(args.value, _data[args.key])
             updated = asyncio.run(_api_update(args.url, {args.key: value}))
             print(json.dumps(updated[args.key]))
         else:

@@ -345,7 +345,7 @@ class ReportGenerator:
             "executive_summary": data.get("executive_summary", {}),
         }
 
-        return report_data
+        return _report_data
 
     def _get_template_name(self, report_type: ReportType) -> str:
         """Get template name for report type"""

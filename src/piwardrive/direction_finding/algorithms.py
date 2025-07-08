@@ -280,7 +280,7 @@ class RSSTriangulation:
                     measurements=measurements,
                     metadata={"algorithm": "RSS_TRIANGULATION"},
                 )
-                return result
+                return _result
 
         except Exception as e:
             logger.error(f"Triangulation failed: {e}")
@@ -739,7 +739,7 @@ class MUSICProcessor:
                     measurements=measurements,
                     metadata={"algorithm": "MUSIC_AOA"},
                 )
-                return result
+                return _result
 
         except Exception as e:
             logger.error(f"MUSIC processing failed: {e}")
@@ -962,7 +962,7 @@ class BeamformingProcessor:
                     measurements=measurements,
                     metadata={"algorithm": "BEAMFORMING"},
                 )
-                return result
+                return _result
 
         except Exception as e:
             logger.error(f"Beamforming processing failed: {e}")

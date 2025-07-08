@@ -137,9 +137,9 @@ def monitor_async_performance(
 
             operation_id = monitor.start_operation(operation_name)
             try:
-                _result = await func(*args, **kwargs)
+                __result = await func(*args, **kwargs)
                 monitor.end_operation(operation_id, success=True)
-                return result
+                return _result
             except Exception as e:
                 monitor.end_operation(operation_id, success=False, error=str(e))
                 raise
@@ -158,7 +158,7 @@ class AsyncTaskQueue:
         self.queue = asyncio.PriorityQueue()
         self.workers: List[asyncio.Task] = []
         self.running = False
-        self.stats = {
+        self._stats = {
             "tasks_completed": 0,
             "tasks_failed": 0,
             "total_execution_time": 0,
@@ -197,7 +197,7 @@ class AsyncTaskQueue:
         """Add a task to the queue with given priority (lower number = higher priority)."""
         task_item = (priority, time.time(), coro, args, kwargs)
         await self.queue.put(task_item)
-        self.stats["queue_size"] = self.queue.qsize()
+        self._stats["queue_size"] = self.queue.qsize()
 
     async def _worker(self, worker_id: int):
         """Worker coroutine that processes tasks from the queue."""
@@ -221,19 +221,19 @@ class AsyncTaskQueue:
                         )
 
                     execution_time = time.time() - start_time
-                    self.stats["tasks_completed"] += 1
-                    self.stats["total_execution_time"] += execution_time
+                    self._stats["tasks_completed"] += 1
+                    self._stats["total_execution_time"] += execution_time
 
                     logger.debug(
                         f"Worker {worker_id} completed task in {execution_time:.3f}s"
                     )
 
                 except Exception as e:
-                    self.stats["tasks_failed"] += 1
+                    self._stats["tasks_failed"] += 1
                     logger.error(f"Worker {worker_id} task failed: {e}")
                 finally:
                     self.queue.task_done()
-                    self.stats["queue_size"] = self.queue.qsize()
+                    self._stats["queue_size"] = self.queue.qsize()
 
             except asyncio.TimeoutError:
                 # No task available, continue
@@ -246,11 +246,11 @@ class AsyncTaskQueue:
     def get_stats(self) -> Dict[str, Any]:
         """Get task queue statistics."""
         _stats = dict(self.stats)
-        stats["workers"] = len(self.workers)
-        stats["running"] = self.running
-        if stats["tasks_completed"] > 0:
-            stats["avg_execution_time"] = (
-                stats["total_execution_time"] / stats["tasks_completed"]
+        _stats["workers"] = len(self.workers)
+        _stats["running"] = self.running
+        if _stats["tasks_completed"] > 0:
+            _stats["avg_execution_time"] = (
+                _stats["total_execution_time"] / _stats["tasks_completed"]
             )
         return stats
 
@@ -270,7 +270,7 @@ class AsyncResourcePool:
         self.pool: asyncio.Queue[T] = asyncio.Queue(maxsize=max_size)
         self.created_count = 0
         self.active_resources: WeakSet[T] = WeakSet()
-        self.stats = {
+        self._stats = {
             "acquired": 0,
             "released": 0,
             "created": 0,
@@ -283,8 +283,8 @@ class AsyncResourcePool:
         try:
             # Try to get an existing resource
             resource = self.pool.get_nowait()
-            self.stats["acquired"] += 1
-            self.stats["pool_size"] = self.pool.qsize()
+            self._stats["acquired"] += 1
+            self._stats["pool_size"] = self.pool.qsize()
             self.active_resources.add(resource)
             return resource
         except asyncio.QueueEmpty:
@@ -292,15 +292,15 @@ class AsyncResourcePool:
             if self.created_count < self.max_size:
                 resource = await self._create_resource()
                 self.active_resources.add(resource)
-                self.stats["acquired"] += 1
-                self.stats["created"] += 1
+                self._stats["acquired"] += 1
+                self._stats["created"] += 1
                 self.created_count += 1
                 return resource
             else:
                 # Wait for a resource to become available
                 resource = await self.pool.get()
-                self.stats["acquired"] += 1
-                self.stats["pool_size"] = self.pool.qsize()
+                self._stats["acquired"] += 1
+                self._stats["pool_size"] = self.pool.qsize()
                 self.active_resources.add(resource)
                 return resource
 
@@ -309,8 +309,8 @@ class AsyncResourcePool:
         if resource in self.active_resources:
             self.active_resources.discard(resource)
             await self.pool.put(resource)
-            self.stats["released"] += 1
-            self.stats["pool_size"] = self.pool.qsize()
+            self._stats["released"] += 1
+            self._stats["pool_size"] = self.pool.qsize()
 
     async def _create_resource(self) -> T:
         """Create a new resource."""
@@ -331,9 +331,9 @@ class AsyncResourcePool:
     def get_stats(self) -> Dict[str, Any]:
         """Get resource pool statistics."""
         _stats = dict(self.stats)
-        stats["max_size"] = self.max_size
-        stats["created_count"] = self.created_count
-        stats["active_count"] = len(self.active_resources)
+        _stats["max_size"] = self.max_size
+        _stats["created_count"] = self.created_count
+        _stats["active_count"] = len(self.active_resources)
         return stats
 
 
@@ -404,7 +404,7 @@ class AsyncCircuitBreaker:
 
         try:
             if asyncio.iscoroutinefunction(func):
-                __result = await func(*args, **kwargs)
+                ___result = await func(*args, **kwargs)
             else:
                 __result = func(*args, **kwargs)
 
@@ -417,7 +417,7 @@ class AsyncCircuitBreaker:
                     )
                 self.failure_count = 0
 
-            return result
+            return _result
 
         except Exception as e:
             async with self.lock:
@@ -458,7 +458,7 @@ class AsyncBatchProcessor:
         self.batch: List[T] = []
         self.last_flush = time.time()
         self.lock = asyncio.Lock()
-        self.stats = {
+        self._stats = {
             "items_processed": 0,
             "batches_processed": 0,
             "total_processing_time": 0,
@@ -499,9 +499,9 @@ class AsyncBatchProcessor:
                     self.processor(batch_to_process)
 
                 processing_time = time.time() - start_time
-                self.stats["items_processed"] += len(batch_to_process)
-                self.stats["batches_processed"] += 1
-                self.stats["total_processing_time"] += processing_time
+                self._stats["items_processed"] += len(batch_to_process)
+                self._stats["batches_processed"] += 1
+                self._stats["total_processing_time"] += processing_time
 
             except Exception as e:
                 logger.error(f"Batch processing failed: {e}")
@@ -509,15 +509,15 @@ class AsyncBatchProcessor:
     def get_stats(self) -> Dict[str, Any]:
         """Get batch processing statistics."""
         _stats = dict(self.stats)
-        stats["current_batch_size"] = len(self.batch)
-        stats["batch_size_limit"] = self.batch_size
-        stats["flush_interval"] = self.flush_interval
-        if stats["batches_processed"] > 0:
-            stats["avg_processing_time"] = (
-                stats["total_processing_time"] / stats["batches_processed"]
+        _stats["current_batch_size"] = len(self.batch)
+        _stats["batch_size_limit"] = self.batch_size
+        _stats["flush_interval"] = self.flush_interval
+        if _stats["batches_processed"] > 0:
+            _stats["avg_processing_time"] = (
+                _stats["total_processing_time"] / _stats["batches_processed"]
             )
-            stats["avg_batch_size"] = (
-                stats["items_processed"] / stats["batches_processed"]
+            _stats["avg_batch_size"] = (
+                _stats["items_processed"] / _stats["batches_processed"]
             )
         return stats
 
@@ -567,12 +567,12 @@ class AsyncOptimizer:
 
             # Execute through circuit breaker if enabled
             if self.circuit_breaker:
-                result = await self.circuit_breaker.call(coro, *args, **kwargs)
+                _result = await self.circuit_breaker.call(coro, *args, **kwargs)
             else:
-                result = await coro(*args, **kwargs)
+                _result = await coro(*args, **kwargs)
 
             self.monitor.end_operation(operation_id, success=True)
-            return result
+            return _result
 
         except Exception as e:
             self.monitor.end_operation(operation_id, success=False, error=str(e))
@@ -652,10 +652,10 @@ if __name__ == "__main__":
 
         for op_name, stats in summary["operation_summary"].items():
             print(f"\n{op_name}:")
-            print(f"  Count: {stats['count']}")
-            print(f"  Success rate: {stats['success_rate']:.1f}%")
-            print(f"  Avg time: {stats['avg_time']:.3f}s")
-            print(f"  Max time: {stats['max_time']:.3f}s")
-            print(f"  Slow count: {stats['slow_count']}")
+            print(f"  Count: {_stats['count']}")
+            print(f"  Success rate: {_stats['success_rate']:.1f}%")
+            print(f"  Avg time: {_stats['avg_time']:.3f}s")
+            print(f"  Max time: {_stats['max_time']:.3f}s")
+            print(f"  Slow count: {_stats['slow_count']}")
 
     asyncio.run(test_async_performance())
