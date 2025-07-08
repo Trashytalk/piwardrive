@@ -103,6 +103,7 @@ See [DIRECTORY_STRUCTURE.md](DIRECTORY_STRUCTURE.md) for detailed information.
 | [Architecture Overview](documentation/architecture_overview.md) | System design and components |
 | [Performance Tuning](documentation/performance_tuning.md) | Optimization guidelines |
 | [Security Guide](documentation/SECURITY.md) | Security best practices |
+| [Environment Variables](docs/environment.rst) | Runtime options via `PW_*` |
 | [Contributing](documentation/CONTRIBUTING.md) | Development guidelines |
 
 ## 🛠️ Development
