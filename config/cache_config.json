@@ -1,0 +1,8 @@
+{
+  "redis": {
+    "url": "redis://localhost:6379/0",
+    "default_ttl": 3600,
+    "max_connections": 10
+  },
+  "session_ttl": 1800
+}
