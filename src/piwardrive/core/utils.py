@@ -56,6 +56,7 @@ except ImportError:  # pragma: no cover - optional dependency
 import aiohttp
 
 from piwardrive import persistence
+from piwardrive.cache_config import load_cache_config
 
 
 class App:
@@ -141,15 +142,21 @@ _REDIS_CLIENT: "aioredis.Redis | None" = None
 
 
 def _get_redis_client() -> "aioredis.Redis | None":
-    """Return Redis client if ``PIWARDRIVE_REDIS_URL`` is configured."""
+    """Return Redis client using env or ``cache_config.json`` settings."""
     global _REDIS_CLIENT
     if _REDIS_CLIENT is not None:
         return _REDIS_CLIENT
     url = os.getenv("PIWARDRIVE_REDIS_URL")
+    if not url:
+        cfg = load_cache_config().get("redis", {})
+        url = cfg.get("url")
     if not url or aioredis is None:
         return None
     try:
-        _REDIS_CLIENT = aioredis.from_url(url)
+        cfg = load_cache_config().get("redis", {})
+        max_conn = cfg.get("max_connections")
+        kwargs = {"max_connections": int(max_conn)} if max_conn else {}
+        _REDIS_CLIENT = aioredis.from_url(url, **kwargs)
     except Exception:  # pragma: no cover - Redis misconfiguration
         logging.exception("Failed to initialize Redis client")
         _REDIS_CLIENT = None
@@ -926,7 +933,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                         ErrorCode.KISMET_API_REQUEST_FAILED,
                         (
                             f"Kismet API request failed: {exc}. ",
-                            "Ensure Kismet is running."
+                            "Ensure Kismet is running.",
                         ),
                     )
                 )
