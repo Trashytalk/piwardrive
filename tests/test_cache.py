@@ -476,14 +476,16 @@ class TestRedisCacheEdgeCases:
         cache = RedisCache()
         
         mock_client = AsyncMock()
+        mock_client.get.return_value = json.dumps("empty key value")
         
         with mock.patch('piwardrive.cache._get_redis_client', return_value=mock_client):
             # Empty string key
             await cache.set("", "empty key value")
             mock_client.set.assert_called_with("cache:", json.dumps("empty key value"), ex=None)
             
-            await cache.get("")
+            result = await cache.get("")
             mock_client.get.assert_called_with("cache:")
+            assert result == "empty key value"
             
             await cache.invalidate("")
             mock_client.delete.assert_called_with("cache:")

@@ -157,14 +157,25 @@ class PiWardriveLogger:
 
         if log_file:
             from logging.handlers import RotatingFileHandler
+            import os
 
-            file_handler = RotatingFileHandler(
-                log_file,
-                maxBytes=self.config.get("max_bytes", 10_485_760),
-                backupCount=self.config.get("backup_count", 5),
-            )
-            file_handler.setFormatter(formatter)
-            handlers.append(file_handler)
+            try:
+                # Ensure the directory exists
+                log_dir = os.path.dirname(log_file)
+                if log_dir and not os.path.exists(log_dir):
+                    os.makedirs(log_dir, exist_ok=True)
+                    
+                file_handler = RotatingFileHandler(
+                    log_file,
+                    maxBytes=self.config.get("max_bytes", 10_485_760),
+                    backupCount=self.config.get("backup_count", 5),
+                )
+                file_handler.setFormatter(formatter)
+                handlers.append(file_handler)
+            except (OSError, PermissionError, FileNotFoundError, NotADirectoryError) as e:
+                # If file handler creation fails, log a warning and continue with stream handler only
+                import warnings
+                warnings.warn(f"Failed to create file handler for {log_file}: {e}", UserWarning)
 
         return handlers
 

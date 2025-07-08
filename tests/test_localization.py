@@ -171,6 +171,9 @@ class TestRealWorldScenarios:
 
     def test_multiple_locale_switches(self):
         """Test switching between multiple locales."""
+        # Clear any cached values first
+        localization._load_locale.cache_clear()
+        
         # Mock different locale files
         locales = {
             'en': {'greeting': 'Hello', 'farewell': 'Goodbye'},
@@ -178,28 +181,30 @@ class TestRealWorldScenarios:
             'fr': {'greeting': 'Bonjour', 'farewell': 'Au revoir'}
         }
         
-        def mock_open_side_effect(*args, **kwargs):
-            filename = args[0]
+        def mock_open_side_effect(filename, *args, **kwargs):
             for locale, translations in locales.items():
                 if f'{locale}.json' in filename:
-                    return mock.mock_open(read_data=json.dumps(translations))(*args, **kwargs)
+                    return mock.mock_open(read_data=json.dumps(translations))(filename, *args, **kwargs)
             raise FileNotFoundError()
         
         with mock.patch('builtins.open', side_effect=mock_open_side_effect):
             with mock.patch('os.path.join') as mock_join:
-                mock_join.side_effect = lambda base, subdir, filename: f'/fake/{subdir}/{filename}'
+                mock_join.side_effect = lambda *args: f'/fake/{"/".join(args[1:])}'
                 
                 # Test English
+                localization._load_locale.cache_clear()
                 localization.set_locale('en')
                 assert localization.translate('greeting') == 'Hello'
                 assert localization.translate('farewell') == 'Goodbye'
                 
                 # Test Spanish
+                localization._load_locale.cache_clear()
                 localization.set_locale('es')
                 assert localization.translate('greeting') == 'Hola'
                 assert localization.translate('farewell') == 'Adiós'
                 
                 # Test French
+                localization._load_locale.cache_clear()
                 localization.set_locale('fr')
                 assert localization.translate('greeting') == 'Bonjour'
                 assert localization.translate('farewell') == 'Au revoir'
