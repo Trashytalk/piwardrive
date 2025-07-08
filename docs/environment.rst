@@ -89,6 +89,9 @@ General
 ``PW_AGG_PORT``
     Listening port for ``aggregation_service`` (default ``9100``).
 
+``PW_AGG_POOL_SIZE``
+    Connections held in the aggregation service pool (default ``5``).
+
 ``PW_SERVICE_PORT``
     Port for the HTTP API when running ``service.py`` (default ``8000``).
 
@@ -106,6 +109,33 @@ General
 
 ``PIWARDRIVE_RATE_LIMIT_WINDOW``
     Time window in seconds for rate limiting.
+
+``PW_CPU_POOL_SIZE``
+    Worker processes for CPU intensive tasks (default ``os.cpu_count()``).
+
+``PW_DEVICES``
+    Comma-separated list of remote devices discovered by ``ClusterManager``.
+
+``PW_DISABLE_ANOMALY_DETECTION``
+    Set to ``1`` to disable machine learning health checks.
+
+``PW_LOG_LEVEL``
+    Override logging verbosity (e.g. ``DEBUG``).
+
+``PW_JWT_SECRET``
+    Secret used to sign JWT tokens (default ``change-me``).
+
+``PW_JWT_ALG``
+    JWT signing algorithm (default ``HS256``).
+
+``PW_JWT_EXPIRE``
+    Access token lifetime in seconds (default ``3600``).
+
+``PW_JWT_REFRESH``
+    Refresh token lifetime in seconds (default ``86400``).
+
+``PW_REMOTE_SYNC_METRICS``
+    Enable sync metrics when set to ``1``.
 
 ``PW_DB_KEY``
     Passphrase for optional SQLCipher database encryption.
@@ -390,10 +420,20 @@ SIGINT Suite
     Timeout in seconds for ``TOWER_SCAN_CMD`` (default ``10``).
 
 ``EXPORT_DIR``
-    Output directory for scripts under ``piwardrive/integrations/sigint_suite/scripts``.
+    Output directory for scripts under ``piwardrive/integrations/sigint_suite/scripts``
+    (default ``sigint_suite/exports``).
 
 ``SIGINT_EXPORT_DIR``
     Directory searched by :func:`sigint_integration.load_sigint_data`.
+
+``SIGINT_CONFIG_DIR``
+    Base directory for SIGINT assets (default ``~/.config/piwardrive``).
+
+``SIGINT_OUI_PATH``
+    Location of the OUI database CSV (default ``$SIGINT_CONFIG_DIR/oui.csv``).
+
+``SIGINT_TOWER_DB``
+    Cell tower metadata database (default ``$SIGINT_CONFIG_DIR/towers.db``).
 
 ``SIGINT_DEBUG``
     Set to ``1`` to enable debug logging for SIGINT scanners.
