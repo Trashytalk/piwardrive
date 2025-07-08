@@ -24,8 +24,7 @@ from piwardrive.direction_finding import (
     get_df_hardware_capabilities,
     get_df_status,
     initialize_df_integration,
-    start_df_integration,
-    stop_df_integration,
+    start_df_integration,stop_df_integration,
 )
 
 
@@ -77,8 +76,7 @@ def configure_df_system():
     config_updates = {
         'primary_algorithm': DFAlgorithm.RSS_TRIANGULATION,
         'enabled_algorithms': [DFAlgorithm.RSS_TRIANGULATION],
-        'enable_logging': True,
-        'log_level': 'INFO'
+        'enable_logging': True,'log_level': 'INFO'
     }
 
     try:
@@ -96,8 +94,7 @@ def check_hardware_capabilities():
         capabilities = get_df_hardware_capabilities()
 
         logger.info(f"WiFi Adapters: {len(capabilities.get('wifi_adapters', []))}")
-        logger.info(f"Monitor Mode Adapters: {capabilities.get('monitor_mode_adapters',
-            0)}")
+        logger.info(f"Monitor Mode Adapters: {capabilities.get('monitor_mode_adapters',0)}")
         logger.info(f"DF Capable: {capabilities.get('df_capable', False)}")
 
         if capabilities.get('recommended_setup'):
@@ -117,8 +114,7 @@ async def add_example_measurements():
         {'bssid': '00:11:22:33:44:55', 'tx_power': 20, 'position': (40.7128, -74.0060)},
         {'bssid': '00:11:22:33:44:66', 'tx_power': 20, 'position': (40.7138, -74.0070)},
         {'bssid': '00:11:22:33:44:77', 'tx_power': 20, 'position': (40.7118, -74.0050)},
-        {'bssid': '00:11:22:33:44:88', 'tx_power': 20, 'position': (40.7148, -74.0080)},
-    ]
+        {'bssid': '00:11:22:33:44:88', 'tx_power': 20, 'position': (40.7148, -74.0080)},]
 
     # Simulate measurements from different positions
     measurement_positions = [
@@ -145,8 +141,7 @@ async def add_example_measurements():
                 'signal_strength': rssi,
                 'frequency': 2.4e9,
                 'bssid': ap['bssid'],
-                'position': position,
-                'timestamp': time.time()
+                'position': position,'timestamp': time.time()
             }
 
             add_df_measurement(measurement)
@@ -196,8 +191,7 @@ async def demonstrate_configuration_changes():
         # Change triangulation settings
         config_updates = {
             'triangulation': {
-                'min_access_points': 4,
-                'max_position_error': 25.0
+                'min_access_points': 4,'max_position_error': 25.0
             }
         }
 
@@ -224,17 +218,14 @@ class DFResultHandler:
             if data.get('position'):
                 self.positions_estimated += 1
                 position = data['position']
-                logger.info(f"Position estimate: {position['latitude']:.6f},
-                    {position['longitude']:.6f} "
-                           f"(accuracy: {position['accuracy']:.1f}m,
-                               confidence: {position['confidence']:.2f})")
+                logger.info(f"Position estimate: {position['latitude']:.6f},{position['longitude']:.6f} "
+                           f"(accuracy: {position['accuracy']:.1f}m,confidence: {position['confidence']:.2f})")
 
             if data.get('angle'):
                 self.angles_estimated += 1
                 angle = data['angle']
                 logger.info(f"Angle estimate: {angle['azimuth']:.1f}° "
-                           f"(accuracy: {angle['accuracy']:.1f}°,
-                               confidence: {angle['confidence']:.2f})")
+                           f"(accuracy: {angle['accuracy']:.1f}°,confidence: {angle['confidence']:.2f})")
 
         elif event_type == 'integration_started':
             logger.info("DF integration started")
@@ -250,8 +241,7 @@ class DFResultHandler:
         """Get statistics."""
         return {
             'results_received': self.results_received,
-            'positions_estimated': self.positions_estimated,
-            'angles_estimated': self.angles_estimated
+            'positions_estimated': self.positions_estimated,'angles_estimated': self.angles_estimated
         }
 
 async def demonstrate_advanced_features():
@@ -287,8 +277,7 @@ async def demonstrate_advanced_features():
         'path_loss_points': [
             {'distance': 10, 'rssi': -40, 'tx_power': 20},
             {'distance': 20, 'rssi': -50, 'tx_power': 20},
-            {'distance': 50, 'rssi': -65, 'tx_power': 20},
-        ]
+            {'distance': 50, 'rssi': -65, 'tx_power': 20},]
     }
 
     logger.info("Starting calibration...")

@@ -30,7 +30,7 @@ class Config:
 def load_config(path: str | Path) -> Config:
     """Load JSON configuration from ``path``."""
     with open(path, "r", encoding="utf-8") as fh:
-        _data = json.load(fh)
+        data = json.load(fh)
     return Config(**data)
 
 

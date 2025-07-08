@@ -15,20 +15,12 @@ logger = logging.getLogger(__name__)
 async def check_database_status(db_path: str) -> Dict[str, Any]:
     """Check current database status without complex imports."""
     status = {
-        "database_path": db_path,
-        "database_exists": os.path.exists(db_path),
-        "schema_version": 0,
-        "tables_present": [],
-        "indexes_present": [],
-        "migration_table_exists": False,
-        "applied_migrations": [],
-        "recommendations": []
+        "database_path": db_path,"database_exists": os.path.exists(db_path),"schema_version": 0,"tables_present": [],"indexes_present": [],"migration_table_exists": False,"applied_migrations": [],"recommendations": []
     }
 
     if not status["database_exists"]:
         status["recommendations"].append({
-            "type": "critical",
-            "description": "Database does not exist - needs initialization"
+            "type": "critical","description": "Database does not exist - needs initialization"
         })
         return status
 
@@ -76,30 +68,24 @@ async def check_database_status(db_path: str) -> Dict[str, Any]:
 
         # Check for expected tables
         expected_tables = [
-            "scan_sessions", "wifi_detections", "bluetooth_detections",
-            "cellular_detections", "gps_tracks", "network_fingerprints",
-            "suspicious_activities", "network_analytics"
+            "scan_sessions", "wifi_detections", "bluetooth_detections","cellular_detections", "gps_tracks", "network_fingerprints","suspicious_activities", "network_analytics"
         ]
 
         missing_tables = [t for t in expected_tables if t not in status["tables_present"]]
         if missing_tables:
             status["recommendations"].append({
-                "type": "critical",
-                "description": f"Missing tables: {', '.join(missing_tables)}"
+                "type": "critical","description": f"Missing tables: {', '.join(missing_tables)}"
             })
 
         # Check for critical indexes
         critical_indexes = [
-            "idx_wifi_detections_bssid", "idx_wifi_detections_time",
-            "idx_wifi_detections_location", "idx_bt_detections_mac",
-            "idx_cellular_detections_cell", "idx_gps_tracks_location"
+            "idx_wifi_detections_bssid", "idx_wifi_detections_time","idx_wifi_detections_location", "idx_bt_detections_mac","idx_cellular_detections_cell", "idx_gps_tracks_location"
         ]
 
         missing_indexes = [i for i in critical_indexes if i not in status["indexes_present"]]
         if missing_indexes:
             status["recommendations"].append({
-                "type": "performance",
-                "description": f"Missing indexes: {', '.join(missing_indexes)}"
+                "type": "performance","description": f"Missing indexes: {', '.join(missing_indexes)}"
             })
 
         conn.close()
@@ -116,9 +102,7 @@ async def main():
 
     # Try to find the database
     possible_paths = [
-        os.path.expanduser("~/.config/piwardrive/app.db"),
-        os.path.join(os.getcwd(), "app.db"),
-        os.path.join(os.getcwd(), "data", "app.db")
+        os.path.expanduser("~/.config/piwardrive/app.db"),os.path.join(os.getcwd(), "app.db"),os.path.join(os.getcwd(), "data", "app.db")
     ]
 
     db_path = None
@@ -140,10 +124,8 @@ async def main():
     if status["applied_migrations"]:
         print(f"Applied Migrations: {status['applied_migrations']}")
 
-    print(f"\nTables Present ({len(status['tables_present'])}): {',
-        '.join(status['tables_present'])}")
-    print(f"Indexes Present ({len(status['indexes_present'])}): {',
-        '.join(status['indexes_present'])}")
+    print(f"\nTables Present ({len(status['tables_present'])}): {','.join(status['tables_present'])}")
+    print(f"Indexes Present ({len(status['indexes_present'])}): {','.join(status['indexes_present'])}")
 
     if status["recommendations"]:
         print(f"\n=== RECOMMENDATIONS ===")

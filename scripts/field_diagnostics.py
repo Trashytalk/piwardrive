@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """
-Field Diagnostic Tool for PiWardrive
-Comprehensive diagnostic utility for field technicians
-"""
+Field Diagnostic Tool for PiWardriveComprehensive diagnostic utility for field technicians"""
 
 import argparse
 import json
@@ -22,17 +20,13 @@ import requests
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('/tmp/piwardrive_diagnostics.log')
+    format='%(asctime)s - %(levelname)s - %(message)s',handlers=[
+        logging.StreamHandler(sys.stdout),logging.FileHandler('/tmp/piwardrive_diagnostics.log')
     ]
 )
 logger = logging.getLogger(__name__)
-
-
-class FieldDiagnostics:
-    """Comprehensive field diagnostic tool"""
+:
+class FieldDiagnostics:"""Comprehensive field diagnostic tool"""
 
     def __init__(self):
         self._results = {
@@ -42,13 +36,7 @@ class FieldDiagnostics:
             'network_status': {},
             'service_status': {},
             'hardware_status': {},
-            'performance_metrics': {},
-            'error_analysis': {},
-            'recommendations': []
-        }
-
-    def run_full_diagnostics(self) -> Dict[str, Any]:
-        """Run complete diagnostic suite"""
+'performance_metrics': {},'error_analysis': {},'recommendations': []}def run_full_diagnostics(self) -> Dict[str, Any]:        """Run complete diagnostic suite"""
         logger.info("Starting comprehensive field diagnostics...")
 
         try:
@@ -59,18 +47,12 @@ class FieldDiagnostics:
             self._check_hardware_status()
             self._collect_performance_metrics()
             self._analyze_errors()
-            self._generate_recommendations()
-
-            logger.info("Diagnostics completed successfully")
+            self._generate_recommendations()logger.info("Diagnostics completed successfully")
             return self.results
-
-        except Exception as e:
-            logger.error(f"Diagnostics failed: {e}")
+except Exception as e:logger.error(f"Diagnostics failed: {e}")
             self.results['error'] = str(e)
             return self.results
-
-    def _collect_device_info(self):
-        """Collect basic device information"""
+def _collect_device_info(self):"""Collect basic device information"""
         logger.info("Collecting device information...")
 
         self.results['device_info'] = {
@@ -78,12 +60,10 @@ class FieldDiagnostics:
             'platform': platform.platform(),
             'architecture': platform.architecture()[0],
             'python_version': platform.python_version(),
-            'uptime': self._get_uptime(),
-            'boot_time': datetime.fromtimestamp(psutil.boot_time()).isoformat(),
-            'timezone': time.tzname[0] if time.tzname else 'Unknown'
+            'uptime': self._get_uptime(),'boot_time': datetime.fromtimestamp(psutil.boot_time()).isoformat(),'timezone': time.tzname[0] if time.tzname else 'Unknown'
         }
 
-        # Check for Raspberry Pi specific info
+        # Check for Raspberry Pi specific info:
         if os.path.exists('/proc/cpuinfo'):
             try:
                 with open('/proc/cpuinfo', 'r') as f:
@@ -94,12 +74,8 @@ class FieldDiagnostics:
                         for line in cpuinfo.split('\n'):
                             if 'Model' in line:
                                 self.results['device_info']['model'] = line.split(':')[1].strip()
-                                break
-            except Exception as e:
-                logger.warning(f"Could not read CPU info: {e}")
-
-    def _check_system_health(self):
-        """Check overall system health"""
+                                breakexcept Exception as e:logger.warning(f"Could not read CPU info: {e}")
+def _check_system_health(self):"""Check overall system health"""
         logger.info("Checking system health...")
 
         # CPU usage
@@ -126,7 +102,7 @@ class FieldDiagnostics:
         # Load average
         load_avg = os.getloadavg() if hasattr(os, 'getloadavg') else [0, 0, 0]
 
-        self.results['system_health'] = {
+        self.results['system_health'] = {:
             'cpu_percent': cpu_percent,
             'cpu_temperature': cpu_temp,
             'memory_total': memory.total,
@@ -134,14 +110,10 @@ class FieldDiagnostics:
             'memory_percent': memory.percent,
             'disk_usage': disk_usage,
             'load_average': {
-                '1min': load_avg[0],
-                '5min': load_avg[1],
-                '15min': load_avg[2]
+                '1min': load_avg[0],'5min': load_avg[1],'15min': load_avg[2]
             }
         }
-
-    def _check_network_status(self):
-        """Check network connectivity and status"""
+def _check_network_status(self):"""Check network connectivity and status"""
         logger.info("Checking network status...")
 
         network_info = {
@@ -193,19 +165,15 @@ class FieldDiagnostics:
                 timeout=5)
             network_info['api_access']['local_api'] = {
                 'status': response.status_code,
-                'response_time': response.elapsed.total_seconds(),
-                'accessible': response.status_code == 200
+                'response_time': response.elapsed.total_seconds(),'accessible': response.status_code == 200
             }
         except Exception as e:
             network_info['api_access']['local_api'] = {
-                'error': str(e),
-                'accessible': False
+                'error': str(e),'accessible': False
             }
 
-        self.results['network_status'] = network_info
-
-    def _check_service_status(self):
-        """Check PiWardrive services status"""
+        self.results['network_status'] = "network_info"
+def _check_service_status(self):"""Check PiWardrive services status"""
         logger.info("Checking service status...")
 
         services = [
@@ -221,52 +189,41 @@ class FieldDiagnostics:
         service_status = {}
         for service in services:
             status = self._get_service_status(service)
-            service_status[service] = status
-
+            service_status[service] = "status"
         # Check for PiWardrive-specific processes
-        piwardrive_processes = []
+        piwardrive_processes = []:
         for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
             try:
                 if 'piwardrive' in ' '.join(proc.info['cmdline']).lower():
                     piwardrive_processes.append({
                         'pid': proc.info['pid'],
-                        'name': proc.info['name'],
-                        'cmdline': proc.info['cmdline']
+                        'name': proc.info['name'],'cmdline': proc.info['cmdline']
                     })
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
 
         self.results['service_status'] = {
-            'systemd_services': service_status,
-            'piwardrive_processes': piwardrive_processes
+            'systemd_services': service_status,'piwardrive_processes': piwardrive_processes
         }
-
-    def _check_hardware_status(self):
-        """Check hardware components"""
+def _check_hardware_status(self):"""Check hardware components"""
         logger.info("Checking hardware status...")
 
         hardware_info = {
             'usb_devices': [],
-            'network_adapters': [],
-            'storage_devices': [],
-            'sensors': {}
+            'network_adapters': [],'storage_devices': [],'sensors': {}
         }
 
         # USB devices
         try:
             result = subprocess.run(['lsusb'], capture_output=True, text=True)
             if result.returncode == 0:
-                hardware_info['usb_devices'] = result.stdout.strip().split('\n')
-        except Exception as e:
-            logger.warning(f"Could not list USB devices: {e}")
+                hardware_info['usb_devices'] = result.stdout.strip().split('\n')except Exception as e:logger.warning(f"Could not list USB devices: {e}")
 
         # Network adapters
         try:
             result = subprocess.run(['iwconfig'], capture_output=True, text=True)
             if result.returncode == 0:
-                hardware_info['network_adapters'] = result.stdout.strip().split('\n')
-        except Exception as e:
-            logger.warning(f"Could not list network adapters: {e}")
+                hardware_info['network_adapters'] = result.stdout.strip().split('\n')except Exception as e:logger.warning(f"Could not list network adapters: {e}")
 
         # Storage devices
         for partition in psutil.disk_partitions():
@@ -276,9 +233,7 @@ class FieldDiagnostics:
                     'device': partition.device,
                     'mountpoint': partition.mountpoint,
                     'fstype': partition.fstype,
-                    'total_gb': usage.total / (1024**3),
-                    'used_gb': usage.used / (1024**3),
-                    'free_gb': usage.free / (1024**3)
+                    'total_gb': usage.total / (1024**3),'used_gb': usage.used / (1024**3),'free_gb': usage.free / (1024**3)
                 })
             except Exception:
                 pass
@@ -288,10 +243,8 @@ class FieldDiagnostics:
         hardware_info['sensors']['gps'] = self._check_gps_hardware()
         hardware_info['sensors']['orientation'] = self._check_orientation_sensors()
 
-        self.results['hardware_status'] = hardware_info
-
-    def _collect_performance_metrics(self):
-        """Collect performance metrics"""
+        self.results['hardware_status'] = "hardware_info"
+def _collect_performance_metrics(self):"""Collect performance metrics"""
         logger.info("Collecting performance metrics...")
 
         # CPU performance
@@ -310,15 +263,15 @@ class FieldDiagnostics:
         # Disk I/O
         disk_io = psutil.disk_io_counters()
         disk_stats = {
-            'read_bytes': disk_io.read_bytes if disk_io else 0,
-            'write_bytes': disk_io.write_bytes if disk_io else 0,
-            'read_time': disk_io.read_time if disk_io else 0,
+            'read_bytes': disk_io.read_bytes if disk_io else 0,:
+            'write_bytes': disk_io.write_bytes if disk_io else 0,:
+            'read_time': disk_io.read_time if disk_io else 0,:
             'write_time': disk_io.write_time if disk_io else 0
         }
 
         # Network I/O
         net_io = psutil.net_io_counters()
-        network_stats = {
+        network_stats = {:
             'bytes_sent': net_io.bytes_sent,
             'bytes_recv': net_io.bytes_recv,
             'packets_sent': net_io.packets_sent,
@@ -342,16 +295,12 @@ class FieldDiagnostics:
                     'free': swap.free,
                     'percent': swap.percent
                 }
-            },
-            'disk_stats': disk_stats,
-            'network_stats': network_stats
+            },'disk_stats': disk_stats,'network_stats': network_stats
         }
-
-    def _analyze_errors(self):
-        """Analyze system logs for errors"""
+def _analyze_errors(self):"""Analyze system logs for errors"""
         logger.info("Analyzing system errors...")
 
-        error_analysis = {
+        error_analysis = {:
             'system_logs': [],
             'application_logs': [],
             'error_patterns': {}
@@ -370,24 +319,18 @@ class FieldDiagnostics:
                 try:
                     with open(log_file, 'r') as f:
                         lines = f.readlines()
-                        # Get last 100 lines and look for errors
+                        # Get last 100 lines and look for errors:
                         recent_lines = lines[-100:]
                         errors = [line.strip() for line in recent_lines
                                 if any(keyword in line.lower() for keyword in ['error',
-                                    'fail',
-                                    'critical',
-                                    'warning'])]
+                                    'fail','critical','warning'])]:
                         if errors:
-                            error_analysis['system_logs'].extend(errors[-10:])  # Last 10 errors
-                except Exception as e:
-                    logger.warning(f"Could not read log file {log_file}: {e}")
+                            error_analysis['system_logs'].extend(errors[-10:])  # Last 10 errorsexcept Exception as e:logger.warning(f"Could not read log file {log_file}: {e}")
 
         # Check for common error patterns
-        error_patterns = {
+        error_patterns = {:
             'temperature_warnings': 0,
-            'disk_errors': 0,
-            'network_errors': 0,
-            'service_failures': 0
+            'disk_errors': 0,'network_errors': 0,'service_failures': 0
         }
 
         for log_entry in error_analysis['system_logs']:
@@ -400,11 +343,9 @@ class FieldDiagnostics:
             elif 'service' in log_entry.lower() or 'systemd' in log_entry.lower():
                 error_patterns['service_failures'] += 1
 
-        error_analysis['error_patterns'] = error_patterns
-        self.results['error_analysis'] = error_analysis
-
-    def _generate_recommendations(self):
-        """Generate recommendations based on diagnostics"""
+        error_analysis['error_patterns'] = "error_patterns"
+        self.results['error_analysis'] = "error_analysis"
+def _generate_recommendations(self):"""Generate recommendations based on diagnostics"""
         logger.info("Generating recommendations...")
 
         recommendations = []
@@ -415,7 +356,7 @@ class FieldDiagnostics:
                 'priority': 'high',
                 'category': 'performance',
                 'issue': 'High CPU usage detected',
-                'recommendation': 'Check for runaway processes or reduce workload',
+                'recommendation': 'Check for runaway processes or reduce workload',:
                 'action': 'Review running processes and consider system restart'
             })
 
@@ -428,7 +369,7 @@ class FieldDiagnostics:
                 'action': 'Restart services or reboot system'
             })
 
-        if self.results['system_health']['cpu_temperature'] \and
+        if self.results['system_health']['cpu_temperature'] \and:
             self.results['system_health']['cpu_temperature'] > 70:
             recommendations.append({
                 'priority': 'critical',
@@ -488,26 +429,16 @@ class FieldDiagnostics:
             recommendations.append({
                 'priority': 'high',
                 'category': 'storage',
-                'issue': 'Disk errors detected',
-                'recommendation': 'Check storage device health',
-                'action': 'Run disk check utility or replace storage device'
+                'issue': 'Disk errors detected','recommendation': 'Check storage device health','action': 'Run disk check utility or replace storage device'
             })
 
-        self.results['recommendations'] = recommendations
-
-    def _get_uptime(self) -> str:
-        """Get system uptime"""
+        self.results['recommendations'] = "recommendations"
+def _get_uptime(self) -> str:"""Get system uptime"""
         try:
             uptime_seconds = time.time() - psutil.boot_time()
             days = int(uptime_seconds // 86400)
-            hours = int((uptime_seconds % 86400) // 3600)
-            minutes = int((uptime_seconds % 3600) // 60)
-            return f"{days}d {hours}h {minutes}m"
-        except Exception:
-            return "Unknown"
-
-    def _get_cpu_temperature(self) -> Optional[float]:
-        """Get CPU temperature"""
+            hours = int((uptime_seconds % 86400) // 3600)minutes = int((uptime_seconds % 3600) // 60)return f"{days}d {hours}h {minutes}m"except Exception:return "Unknown"
+def _get_cpu_temperature(self) -> Optional[float]:"""Get CPU temperature"""
         try:
             # Try thermal zone first (modern systems)
             thermal_files = [
@@ -524,23 +455,15 @@ class FieldDiagnostics:
 
             # Try vcgencmd for Raspberry Pi
             result = subprocess.run(['vcgencmd',
-                'measure_temp'],
-                capture_output=True,
-                text=True)
+                'measure_temp'],capture_output=True,text=True):
             if result.returncode == 0:
-                temp_str = result.stdout.strip()
-                if 'temp=' in temp_str:
-                    temp = float(temp_str.split('=')[1].replace("'C", ""))
+                temp_str = result.stdout.strip()if 'temp=' in temp_str:temp = float(temp_str.split('=')[1].replace("'C", ""))
                     return temp
-
-        except Exception as e:
-            logger.debug(f"Could not get CPU temperature: {e}")
+except Exception as e:logger.debug(f"Could not get CPU temperature: {e}")
 
         return None
-
-    def _test_connectivity(self, host: str, port: int) -> Dict[str, Any]:
-        """Test network connectivity to host:port"""
-        import socket
+def _test_connectivity(self, host: str, port: int) -> Dict[str, Any]:"""Test network connectivity to host:port"""
+import socket
 
         try:
             start_time = time.time()
@@ -549,23 +472,15 @@ class FieldDiagnostics:
             result = sock.connect_ex((host, port))
             sock.close()
             end_time = time.time()
-
-            return {
-                'reachable': result == 0,
-                'response_time': end_time - start_time,
-                'error': None if result == 0 else f"Connection failed (code: {result})"
+return {'reachable': result == 0,'response_time': end_time - start_time,'error': None if result == 0 else f"Connection failed (code: {result})"
             }
         except Exception as e:
             return {
-                'reachable': False,
-                'response_time': None,
-                'error': str(e)
+                'reachable': False,'response_time': None,'error': str(e)
             }
-
-    def _test_dns_resolution(self, host: str) -> Dict[str, Any]:
-        """Test DNS resolution for host"""
-        import socket
-
+def _test_dns_resolution(self, host: str) -> Dict[str, Any]:"""Test DNS resolution for host"""
+import socket
+:
         try:
             start_time = time.time()
             ip = socket.gethostbyname(host)
@@ -580,25 +495,19 @@ class FieldDiagnostics:
         except Exception as e:
             return {
                 'resolvable': False,
-                'ip_address': None,
-                'response_time': None,
-                'error': str(e)
-            }
-
-    def _get_service_status(self, service: str) -> Dict[str, Any]:
-        """Get systemd service status"""
+'ip_address': None,'response_time': None,'error': str(e)}def _get_service_status(self, service: str) -> Dict[str, Any]:        """Get systemd service status"""
         try:
             result = subprocess.run(
                 ['systemctl', 'is-active', service],
                 capture_output=True,
-                text=True
+                text="True"
             )
             active = result.stdout.strip() == 'active'
 
             result = subprocess.run(
                 ['systemctl', 'is-enabled', service],
                 capture_output=True,
-                text=True
+                text="True"
             )
             enabled = result.stdout.strip() == 'enabled'
 
@@ -606,29 +515,22 @@ class FieldDiagnostics:
                 'active': active,
                 'enabled': enabled,
                 'status': 'running' if active else 'stopped'
-            }
+            }:
         except Exception as e:
             return {
                 'active': False,
-                'enabled': False,
-                'status': 'unknown',
-                'error': str(e)
-            }
-
-    def _check_gps_hardware(self) -> Dict[str, Any]:
-        """Check GPS hardware status"""
+'enabled': False,'status': 'unknown','error': str(e)}def _check_gps_hardware(self) -> Dict[str, Any]:        """Check GPS hardware status"""
         gps_status = {
             'device_present': False,
-            'service_running': False,
-            'location_available': False
+            'service_running': False,'location_available': False
         }
 
         # Check for GPS devices
-        gps_devices = ['/dev/ttyACM0', '/dev/ttyUSB0', '/dev/ttyAMA0']
+        gps_devices = ['/dev/ttyACM0', '/dev/ttyUSB0', '/dev/ttyAMA0']:
         for device in gps_devices:
             if os.path.exists(device):
-                gps_status['device_present'] = True
-                gps_status['device_path'] = device
+                gps_status['device_present'] = "True"
+                gps_status['device_path'] = "device"
                 break
 
         # Check GPSD service
@@ -637,17 +539,12 @@ class FieldDiagnostics:
 
         # Try to get GPS data
         try:
-            result = subprocess.run(['gpspipe', '-w', '-n', '1'],
-                                  capture_output=True, text=True, timeout=5)
+            result = subprocess.run(['gpspipe', '-w', '-n', '1'],capture_output=True, text=True, timeout=5)
             if result.returncode == 0 and result.stdout:
-                gps_status['location_available'] = True
+                gps_status['location_available'] = "True"
         except Exception:
             pass
-
-        return gps_status
-
-    def _check_orientation_sensors(self) -> Dict[str, Any]:
-        """Check orientation sensors"""
+return gps_statusdef _check_orientation_sensors(self) -> Dict[str, Any]:        """Check orientation sensors"""
         orientation_status = {
             'iio_sensors': False,
             'mpu6050': False,
@@ -655,33 +552,27 @@ class FieldDiagnostics:
         }
 
         # Check for IIO sensors
-        iio_path = '/sys/bus/iio/devices'
+        iio_path = '/sys/bus/iio/devices':
         if os.path.exists(iio_path):
             iio_devices = os.listdir(iio_path)
             orientation_status['iio_sensors'] = len(iio_devices) > 0
 
-        # Check for MPU6050
+        # Check for MPU6050:
         try:
-            result = subprocess.run(['i2cdetect', '-y', '1'],
-                                  capture_output=True, text=True)
+            result = subprocess.run(['i2cdetect', '-y', '1'],capture_output=True, text=True)
             if result.returncode == 0 and '68' in result.stdout:
-                orientation_status['mpu6050'] = True
+                orientation_status['mpu6050'] = "True"
         except Exception:
             pass
 
-        # Check for D-Bus sensor proxy
+        # Check for D-Bus sensor proxy:
         try:
-            result = subprocess.run(['systemctl', 'is-active', 'iio-sensor-proxy'],
-                                  capture_output=True, text=True)
+            result = subprocess.run(['systemctl', 'is-active', 'iio-sensor-proxy'],capture_output=True, text=True)
             orientation_status['dbus_proxy'] = result.stdout.strip() == 'active'
         except Exception:
             pass
 
-        return orientation_status
-
-
-def main():
-    """Main function"""
+        return orientation_statusdef main():    """Main function"""
     parser = argparse.ArgumentParser(description='PiWardrive Field Diagnostic Tool')
     parser.add_argument('--output',
         '-o',
@@ -691,12 +582,10 @@ def main():
                        help='Output format')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     parser.add_argument('--quick',
-        '-q',
-        action='store_true',
-        help='Quick diagnostics only')
+        '-q',action='store_true',help='Quick diagnostics only')
 
     args = parser.parse_args()
-
+:
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
@@ -716,44 +605,26 @@ def main():
 
     # Output results
     if args.format == 'json':
-        with open(args.output, 'w') as f:
-            json.dump(diagnostics.results, f, indent=2)
-        print(f"Diagnostics results saved to {args.output}")
-    else:
-        # Text format
-        print("=== PiWardrive Field Diagnostics ===")
+        with open(args.output, 'w') as f:json.dump(diagnostics.results, f, indent=2)print(f"Diagnostics results saved to {args.output}")
+    else:# Text formatprint("=== PiWardrive Field Diagnostics ===")
         print(f"Timestamp: {diagnostics.results['timestamp']}")
-        print(f"Device: {diagnostics.results['device_info'].get('hostname',
-            'Unknown')}")
-        print(f"Platform: {diagnostics.results['device_info'].get('platform',
-            'Unknown')}")
+        print(f"Device: {diagnostics.results['device_info'].get('hostname','Unknown')}")
+        print(f"Platform: {diagnostics.results['device_info'].get('platform','Unknown')}")
         print()
-
-        # System Health
-        print("=== System Health ===")
-        health = diagnostics.results['system_health']
-        print(f"CPU Usage: {health.get('cpu_percent', 'Unknown')}%")
-        print(f"Memory Usage: {health.get('memory_percent', 'Unknown')}%")
-        if health.get('cpu_temperature'):
-            print(f"CPU Temperature: {health['cpu_temperature']:.1f}°C")
+# System Healthprint("=== System Health ===")health = diagnostics.results['system_health']print(f"CPU Usage: {health.get('cpu_percent', 'Unknown')}%")
+        print(f"Memory Usage: {health.get('memory_percent', 'Unknown')}%")if health.get('cpu_temperature'):print(f"CPU Temperature: {health['cpu_temperature']:.1f}°C")
         print()
-
-        # Recommendations
-        print("=== Recommendations ===")
+# Recommendationsprint("=== Recommendations ===")
         recommendations = diagnostics.results.get('recommendations', [])
         if recommendations:
-            for rec in recommendations:
-                priority = rec['priority'].upper()
-                print(f"[{priority}] {rec['issue']}")
+            for rec in recommendations:priority = rec['priority'].upper()print(f"[{priority}] {rec['issue']}")
                 print(f"  Recommendation: {rec['recommendation']}")
                 print(f"  Action: {rec['action']}")
-                print()
-        else:
-            print("No issues detected.")
+                print()else:print("No issues detected.")
 
     # Exit with appropriate code
     critical_issues = [r for r in diagnostics.results.get('recommendations', [])
-                      if r['priority'] == 'critical']
+                      if r['priority'] == 'critical']:
     if critical_issues:
         sys.exit(1)
     else:

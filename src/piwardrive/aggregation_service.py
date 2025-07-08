@@ -188,7 +188,7 @@ async def main() -> None:
 
     await _init_pool()
     port = int(os.getenv("PW_AGG_PORT", str(DEFAULT_PORT)))
-    _config = uvicorn.Config(app, host="0.0.0.0", port=port)  # nosec B104
+    config = uvicorn.Config(app, host="0.0.0.0", port=port)  # nosec B104
     server = uvicorn.Server(config)
     await server.serve()
 

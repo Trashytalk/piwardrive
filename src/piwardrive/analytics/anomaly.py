@@ -19,7 +19,7 @@ class HealthAnomalyDetector:
 
     def fit(self, records: Iterable[HealthRecord]) -> None:
         """Train the detector on historical ``records``."""
-        _data = [[r.cpu_temp, r.cpu_percent] for r in records if r.cpu_temp is not None]
+        data = [[r.cpu_temp, r.cpu_percent] for r in records if r.cpu_temp is not None]
         if not data:
             self._fitted = False
             return

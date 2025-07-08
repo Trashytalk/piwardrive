@@ -69,29 +69,16 @@ class PerformanceTestFixture:
         # Performance-optimized configuration
         perf_config = {
             "database": {
-                "path": os.path.join(self.test_dir, "perf_test.db"),
-                "type": "sqlite",
-                "pool_size": 20,
-                "connection_timeout": 30
-            },
-            "logging": {
+                "path": os.path.join(self.test_dir, "perf_test.db"),"type": "sqlite","pool_size": 20,"connection_timeout": 30
+            },"logging": {
                 "level": "WARNING",  # Reduce logging overhead
                 "file": os.path.join(self.test_dir, "perf_test.log")
-            },
-            "webui": {
-                "port": 0,
-                "host": "127.0.0.1",
-                "workers": 4
-            },
-            "network": {
-                "scan_interval": 1,
-                "batch_size": 100,
-                "mock_data": True
-            },
-            "performance": {
-                "enable_profiling": True,
-                "memory_monitoring": True,
-                "cpu_monitoring": True
+            },"webui": {
+                "port": 0,"host": "127.0.0.1","workers": 4
+            },"network": {
+                "scan_interval": 1,"batch_size": 100,"mock_data": True
+            },"performance": {
+                "enable_profiling": True,"memory_monitoring": True,"cpu_monitoring": True
             }
         }
 
@@ -113,8 +100,7 @@ class PerformanceTestFixture:
         self.start_time = time.time()
 
     def stop_monitoring(self,
-        operation_name: str,
-        operations_count: int = 1) -> PerformanceMetrics:
+        operation_name: str,operations_count: int = 1) -> PerformanceMetrics:
         """Stop monitoring and collect metrics."""
         end_time = time.time()
         duration = end_time - self.start_time
@@ -131,8 +117,7 @@ class PerformanceTestFixture:
             throughput=operations_count / duration if duration > 0 else 0,
             latency=duration / operations_count if operations_count > 0 else 0,
             success_rate=1.0,  # Will be updated by specific tests
-            error_count=0,
-            additional_metrics={}
+            error_count=0,additional_metrics={}
         )
 
         self.metrics.append(metrics)
@@ -189,12 +174,10 @@ class TestDatabasePerformance:
         for metrics in perf_fixture.metrics:
             if 'bulk_insert' in metrics.name:
                 # Should handle at least 100 inserts per second
-                assert metrics.throughput >= 100,
-                    f"Throughput too low: {metrics.throughput}"
+                assert metrics.throughput >= 100,f"Throughput too low: {metrics.throughput}"
 
                 # Memory usage should be reasonable
-                assert metrics.memory_usage < 500 * 1024 * 1024,
-                    f"Memory usage too high: {metrics.memory_usage}"
+                assert metrics.memory_usage < 500 * 1024 * 1024,f"Memory usage too high: {metrics.memory_usage}"
 
     def test_query_performance(self, perf_fixture):
         """Test database query performance."""
@@ -209,22 +192,15 @@ class TestDatabasePerformance:
                 'ssid': f'QueryTestNetwork{i}',
                 'bssid': f'00:11:22:33:{i//256:02d}:{i%256:02d}',
                 'signal_strength': -45 - (i % 40),
-                'frequency': 2412 + (i % 13),
-                'timestamp': int(time.time()) + i
+                'frequency': 2412 + (i % 13),'timestamp': int(time.time()) + i
             })
 
         persistence.bulk_insert_networks(test_data)
 
         # Test different query types
         query_tests = [
-            ("get_all_networks", lambda: persistence.get_networks()),
-            ("get_networks_by_ssid",
-                lambda: persistence.get_networks_by_ssid("QueryTestNetwork1000")),
-                
-            ("get_recent_networks", lambda: persistence.get_recent_networks(1000)),
-            ("get_networks_by_signal",
-                lambda: persistence.get_networks_by_signal_range(-50,
-                -40))
+            ("get_all_networks", lambda: persistence.get_networks()),("get_networks_by_ssid",lambda: persistence.get_networks_by_ssid("QueryTestNetwork1000")),("get_recent_networks", lambda: persistence.get_recent_networks(1000)),("get_networks_by_signal",
+                lambda: persistence.get_networks_by_signal_range(-50,-40))
         ]
 
         for query_name, query_func in query_tests:
@@ -253,8 +229,7 @@ class TestDatabasePerformance:
                         'ssid': f'ConcurrentNetwork{worker_id}_{i}',
                         'bssid': f'00:11:22:33:{worker_id:02d}:{i%256:02d}',
                         'signal_strength': -50 - i,
-                        'frequency': 2412 + i,
-                        'timestamp': int(time.time())
+                        'frequency': 2412 + i,'timestamp': int(time.time())
                     }
                     persistence.store_network(network_data)
                 else:
@@ -285,8 +260,7 @@ class TestDatabasePerformance:
         for metrics in perf_fixture.metrics:
             if 'concurrent_access' in metrics.name:
                 # Should maintain reasonable throughput under concurrency
-                assert metrics.throughput >= 50,
-                    f"Concurrent throughput too low: {metrics.throughput}"
+                assert metrics.throughput >= 50,f"Concurrent throughput too low: {metrics.throughput}"
 
 
 class TestNetworkScannerPerformance:
@@ -310,8 +284,7 @@ class TestNetworkScannerPerformance:
                         'ssid': f'HighVolumeNetwork{i}',
                         'bssid': f'00:11:22:33:{i//256:02d}:{i%256:02d}',
                         'signal_strength': -45 - (i % 40),
-                        'frequency': 2412 + (i % 13),
-                        'timestamp': int(time.time())
+                        'frequency': 2412 + (i % 13),'timestamp': int(time.time())
                     })
                 return results
 
@@ -322,8 +295,7 @@ class TestNetworkScannerPerformance:
 
         # Verify scan performance
         metrics = perf_fixture.metrics[-1]
-        assert metrics.throughput >= 500,
-            f"Scan throughput too low: {metrics.throughput}"
+        assert metrics.throughput >= 500,f"Scan throughput too low: {metrics.throughput}"
         assert len(results) == 1000, "Not all scan results processed"
 
     def test_continuous_scanning_performance(self, perf_fixture):
@@ -343,8 +315,7 @@ class TestNetworkScannerPerformance:
                         'ssid': f'ContinuousNetwork{i}',
                         'bssid': f'00:11:22:33:44:{i:02d}',
                         'signal_strength': -45 - (i % 40),
-                        'frequency': 2412 + (i % 13),
-                        'timestamp': int(time.time())
+                        'frequency': 2412 + (i % 13),'timestamp': int(time.time())
                     })
                 return results
 
@@ -359,8 +330,7 @@ class TestNetworkScannerPerformance:
         # Verify continuous scanning performance
         metrics = perf_fixture.metrics[-1]
         assert scanner.scan_count == 10, "Not all scans completed"
-        assert metrics.duration < 5.0,
-            f"Continuous scanning too slow: {metrics.duration}s"
+        assert metrics.duration < 5.0,f"Continuous scanning too slow: {metrics.duration}s"
 
 
 class TestWebUIPerformance:
@@ -378,15 +348,11 @@ class TestWebUIPerformance:
         try:
             # Test different API endpoints
             endpoints = [
-                "/api/status",
-                "/api/networks",
-                "/api/networks/recent",
-                "/api/analysis/summary"
+                "/api/status","/api/networks","/api/networks/recent","/api/analysis/summary"
             ]
 
             for endpoint in endpoints:
-                with perf_fixture.performance_context(f"api_response_{endpoint.replace('/',
-                    '_')}",
+                with perf_fixture.performance_context(f"api_response_{endpoint.replace('/','_')}",
                     1):
                     response = requests.get(f"http://127.0.0.1:{port}{endpoint}")
                     assert response.status_code == 200
@@ -395,8 +361,7 @@ class TestWebUIPerformance:
             for metrics in perf_fixture.metrics:
                 if 'api_response' in metrics.name:
                     # API responses should be fast
-                    assert metrics.latency < 0.5,
-                        f"API response too slow: {metrics.latency}s"
+                    assert metrics.latency < 0.5,f"API response too slow: {metrics.latency}s"
 
         finally:
             server.stop()
@@ -418,10 +383,7 @@ class TestWebUIPerformance:
 
                 for i in range(requests_per_user):
                     try:
-                        endpoints = ["/api/status",
-                            "/api/networks",
-                            "/",
-                            "/api/analysis/summary"]
+                        endpoints = ["/api/status","/api/networks","/","/api/analysis/summary"]
                         endpoint = endpoints[i % len(endpoints)]
 
                         response = session.get(f"http://127.0.0.1:{port}{endpoint}")
@@ -466,12 +428,10 @@ class TestWebUIPerformance:
             for metrics in perf_fixture.metrics:
                 if 'concurrent_load' in metrics.name:
                     # Should maintain high success rate
-                    assert metrics.success_rate >= 0.95,
-                        f"Success rate too low: {metrics.success_rate}"
+                    assert metrics.success_rate >= 0.95,f"Success rate too low: {metrics.success_rate}"
 
                     # Should maintain reasonable throughput
-                    assert metrics.throughput >= 10,
-                        f"Throughput too low under load: {metrics.throughput}"
+                    assert metrics.throughput >= 10,f"Throughput too low under load: {metrics.throughput}"
 
         finally:
             server.stop()
@@ -495,8 +455,7 @@ class TestAnalysisPerformance:
                 'ssid': f'AnalysisTestNetwork{i}',
                 'bssid': f'00:11:22:33:{i//256:02d}:{i%256:02d}',
                 'signal_strength': -45 - (i % 40),
-                'frequency': 2412 + (i % 13),
-                'timestamp': int(time.time()) + i
+                'frequency': 2412 + (i % 13),'timestamp': int(time.time()) + i
             })
 
         persistence.bulk_insert_networks(test_data)
@@ -505,12 +464,8 @@ class TestAnalysisPerformance:
         analysis_engine = AnalysisEngine(config)
 
         analysis_operations = [
-            ("network_analysis", lambda: analysis_engine.analyze_networks()),
-            ("signal_analysis", lambda: analysis_engine.analyze_signal_strength()),
-            ("frequency_analysis",
-                lambda: analysis_engine.analyze_frequency_distribution()),
-                
-            ("temporal_analysis", lambda: analysis_engine.analyze_temporal_patterns())
+            ("network_analysis", lambda: analysis_engine.analyze_networks()),("signal_analysis", lambda: analysis_engine.analyze_signal_strength()),("frequency_analysis",
+                lambda: analysis_engine.analyze_frequency_distribution()),("temporal_analysis", lambda: analysis_engine.analyze_temporal_patterns())
         ]
 
         for operation_name, operation_func in analysis_operations:
@@ -536,8 +491,7 @@ class TestAnalysisPerformance:
                     'ssid': f'RealTimeNetwork{i}',
                     'bssid': f'00:11:22:33:44:{i%256:02d}',
                     'signal_strength': -45 - (i % 40),
-                    'frequency': 2412 + (i % 13),
-                    'timestamp': int(time.time())
+                    'frequency': 2412 + (i % 13),'timestamp': int(time.time())
                 }
 
         with perf_fixture.performance_context("real_time_analysis", 1000):
@@ -547,8 +501,7 @@ class TestAnalysisPerformance:
 
         # Verify real-time analysis performance
         metrics = perf_fixture.metrics[-1]
-        assert metrics.throughput >= 100,
-            f"Real-time analysis throughput too low: {metrics.throughput}"
+        assert metrics.throughput >= 100,f"Real-time analysis throughput too low: {metrics.throughput}"
 
 
 class TestMemoryPerformance:
@@ -560,10 +513,7 @@ class TestMemoryPerformance:
 
         # Test different memory usage scenarios
         scenarios = [
-            ("idle_memory", lambda: time.sleep(1)),
-            ("light_load", lambda: self._simulate_light_load(config)),
-            ("heavy_load", lambda: self._simulate_heavy_load(config)),
-            ("sustained_load", lambda: self._simulate_sustained_load(config))
+            ("idle_memory", lambda: time.sleep(1)),("light_load", lambda: self._simulate_light_load(config)),("heavy_load", lambda: self._simulate_heavy_load(config)),("sustained_load", lambda: self._simulate_sustained_load(config))
         ]
 
         for scenario_name, scenario_func in scenarios:
@@ -574,12 +524,10 @@ class TestMemoryPerformance:
         for metrics in perf_fixture.metrics:
             if metrics.name in ["idle_memory", "light_load"]:
                 # Should use reasonable memory for light loads
-                assert metrics.memory_usage < 100 * 1024 * 1024,
-                    f"Memory usage too high: {metrics.memory_usage}"
+                assert metrics.memory_usage < 100 * 1024 * 1024,f"Memory usage too high: {metrics.memory_usage}"
             elif metrics.name in ["heavy_load", "sustained_load"]:
                 # Should handle heavy loads without excessive memory
-                assert metrics.memory_usage < 500 * 1024 * 1024,
-                    f"Memory usage too high: {metrics.memory_usage}"
+                assert metrics.memory_usage < 500 * 1024 * 1024,f"Memory usage too high: {metrics.memory_usage}"
 
     def _simulate_light_load(self, config):
         """Simulate light system load."""
@@ -592,8 +540,7 @@ class TestMemoryPerformance:
                 'ssid': f'LightLoadNetwork{i}',
                 'bssid': f'00:11:22:33:44:{i:02d}',
                 'signal_strength': -50,
-                'frequency': 2412,
-                'timestamp': int(time.time())
+                'frequency': 2412,'timestamp': int(time.time())
             }
             persistence.store_network(network_data)
 
@@ -609,8 +556,7 @@ class TestMemoryPerformance:
                 'ssid': f'HeavyLoadNetwork{i}',
                 'bssid': f'00:11:22:33:{i//256:02d}:{i%256:02d}',
                 'signal_strength': -45 - (i % 40),
-                'frequency': 2412 + (i % 13),
-                'timestamp': int(time.time()) + i
+                'frequency': 2412 + (i % 13),'timestamp': int(time.time()) + i
             })
 
         persistence.bulk_insert_networks(test_data)
@@ -632,8 +578,7 @@ class TestMemoryPerformance:
                     'ssid': f'SustainedLoadNetwork{batch}_{i}',
                     'bssid': f'00:11:22:33:{batch:02d}:{i%256:02d}',
                     'signal_strength': -45 - (i % 40),
-                    'frequency': 2412 + (i % 13),
-                    'timestamp': int(time.time()) + i
+                    'frequency': 2412 + (i % 13),'timestamp': int(time.time()) + i
                 })
 
             persistence.bulk_insert_networks(test_data)
@@ -668,8 +613,7 @@ class TestAsyncPerformance:
             for i in range(100):
                 batch.append({
                     'id': f'{batch_id}_{i}',
-                    'data': f'test_data_{batch_id}_{i}',
-                    'timestamp': time.time()
+                    'data': f'test_data_{batch_id}_{i}','timestamp': time.time()
                 })
             test_batches.append(batch)
 
@@ -685,8 +629,7 @@ class TestAsyncPerformance:
 
         # Verify async processing performance
         metrics = perf_fixture.metrics[-1]
-        assert metrics.throughput >= 100,
-            f"Async processing throughput too low: {metrics.throughput}"
+        assert metrics.throughput >= 100,f"Async processing throughput too low: {metrics.throughput}"
         assert len(results) == 10, "Not all batches processed"
 
     @pytest.mark.asyncio
@@ -703,8 +646,7 @@ class TestAsyncPerformance:
         concurrency_levels = [10, 50, 100]
 
         for concurrency in concurrency_levels:
-            with perf_fixture.performance_context(f"async_concurrent_{concurrency}",
-                concurrency):
+            with perf_fixture.performance_context(f"async_concurrent_{concurrency}",concurrency):
                 # Start concurrent operations
                 tasks = []
                 for i in range(concurrency):
@@ -717,8 +659,7 @@ class TestAsyncPerformance:
             # Verify concurrent performance
             metrics = perf_fixture.metrics[-1]
             assert len(results) == concurrency, "Not all operations completed"
-            assert metrics.duration < 1.0,
-                f"Concurrent operations too slow: {metrics.duration}s"
+            assert metrics.duration < 1.0,f"Concurrent operations too slow: {metrics.duration}s"
 
 
 class TestStressTest:
@@ -740,8 +681,7 @@ class TestStressTest:
             for connection_count in connection_counts:
                 successful_connections = 0
 
-                with perf_fixture.performance_context(f"max_connections_{connection_count}",
-                    connection_count):
+                with perf_fixture.performance_context(f"max_connections_{connection_count}",connection_count):
                     def make_connection(conn_id):
                         try:
                             response = requests.get(f"http://127.0.0.1:{port}/api/status",
@@ -770,8 +710,7 @@ class TestStressTest:
                 if 'max_connections' in metrics.name:
                     # Should handle reasonable connection loads
                     if '50' in metrics.name or '100' in metrics.name:
-                        assert metrics.success_rate >= 0.95,
-                            f"Connection success rate too low: {metrics.success_rate}"
+                        assert metrics.success_rate >= 0.95,f"Connection success rate too low: {metrics.success_rate}"
 
         finally:
             server.stop()
@@ -820,12 +759,10 @@ class TestStressTest:
             memory_growth = (memory_samples[-1] - memory_samples[0]) / len(memory_samples)
 
             # Memory growth should be minimal
-            assert memory_growth < 1024 * 1024,
-                f"Potential memory leak detected: {memory_growth} bytes/cycle"
+            assert memory_growth < 1024 * 1024,f"Potential memory leak detected: {memory_growth} bytes/cycle"
 
 
-def generate_performance_report(metrics_list: List[PerformanceMetrics]) -> Dict[str,
-    Any]:
+def generate_performance_report(metrics_list: List[PerformanceMetrics]) -> Dict[str,Any]:
     """Generate a comprehensive performance report."""
     report = {
         'summary': {

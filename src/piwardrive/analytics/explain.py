@@ -19,7 +19,7 @@ def compute_feature_importance(
             model, "feature_names_in_", [str(i) for i in range(X_arr.shape[1])]
         )
         return {str(n): float(v) for n, v in zip(names, model.feature_importances_)}
-    _result = permutation_importance(model, X_arr, y_arr, n_repeats=5, random_state=0)
+    result = permutation_importance(model, X_arr, y_arr, n_repeats=5, random_state=0)
     names = getattr(model, "feature_names_in_", [str(i) for i in range(X_arr.shape[1])])
     return {str(n): float(v) for n, v in zip(names, result.importances_mean)}
 

@@ -13,6 +13,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
+import requests
 import requests_cache
 from cachetools import TTLCache
 
@@ -266,11 +267,8 @@ def test_load_kml_parses_features(tmp_path: Any) -> None:
     kml_content = (
         "<?xml version='1.0' encoding='UTF-8'?>"
         "<kml xmlns='http://www.opengis.net/kml/2.2'>"
-        "<Placemark><name>Line</name><LineString><coordinates>0,
-            0 1,
-            1</coordinates></LineString></Placemark>"
-        "<Placemark><name>Pt</name><Point><coordinates>2,
-            2</coordinates></Point></Placemark>"
+        "<Placemark><name>Line</name><LineString><coordinates>0,0 1,1</coordinates></LineString></Placemark>"
+        "<Placemark><name>Pt</name><Point><coordinates>2,2</coordinates></Point></Placemark>"
         "</kml>"
     )
     kml_path = tmp_path / "test.kml"
@@ -284,8 +282,7 @@ def test_load_kmz_parses_features(tmp_path: Any) -> None:
     kml_content = (
         "<?xml version='1.0' encoding='UTF-8'?>"
         "<kml xmlns='http://www.opengis.net/kml/2.2'>"
-        "<Placemark><name>Pt</name><Point><coordinates>3,
-            3</coordinates></Point></Placemark>"
+        "<Placemark><name>Pt</name><Point><coordinates>3,3</coordinates></Point></Placemark>"
         "</kml>"
     )
     kmz_path = tmp_path / "test.kmz"

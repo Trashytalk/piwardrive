@@ -21,32 +21,21 @@ def client():
 
 def test_performance_dashboard_stats(client):
     """Test the performance dashboard stats endpoint."""
-    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,
-        \
-         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,
-             \
+    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,\
+         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,\
          patch("piwardrive.api.performance_dashboard.RealtimeOptimizer") as mock_rt_opt:
 
         # Mock the optimizers
         mock_db_opt.return_value.get_stats.return_value = {
-            "total_queries": 1000,
-            "avg_query_time": 0.05,
-            "slow_queries": 10,
-            "total_connections": 50
+            "total_queries": 1000,"avg_query_time": 0.05,"slow_queries": 10,"total_connections": 50
         }
 
         mock_async_opt.return_value.get_stats.return_value = {
-            "total_operations": 500,
-            "avg_operation_time": 0.1,
-            "failed_operations": 5,
-            "queue_size": 10
+            "total_operations": 500,"avg_operation_time": 0.1,"failed_operations": 5,"queue_size": 10
         }
 
         mock_rt_opt.return_value.get_stats.return_value = {
-            "total_connections": 25,
-            "avg_response_time": 0.02,
-            "failed_connections": 2,
-            "data_throughput": 1000
+            "total_connections": 25,"avg_response_time": 0.02,"failed_connections": 2,"data_throughput": 1000
         }
 
         # Test the stats endpoint
@@ -76,29 +65,21 @@ def test_performance_dashboard_stats(client):
 
 def test_performance_dashboard_alerts(client):
     """Test the performance dashboard alerts endpoint."""
-    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,
-        \
-         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,
-             \
+    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,\
+         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,\
          patch("piwardrive.api.performance_dashboard.RealtimeOptimizer") as mock_rt_opt:
 
         # Mock the alerts
         mock_db_opt.return_value.get_alerts.return_value = [
-            {"level": "warning",
-                "message": "High query count detected",
-                "timestamp": "2024-01-01T00:00:00Z"}
+            {"level": "warning","message": "High query count detected","timestamp": "2024-01-01T00:00:00Z"}
         ]
 
         mock_async_opt.return_value.get_alerts.return_value = [
-            {"level": "critical",
-                "message": "High failure rate",
-                "timestamp": "2024-01-01T00:01:00Z"}
+            {"level": "critical","message": "High failure rate","timestamp": "2024-01-01T00:01:00Z"}
         ]
 
         mock_rt_opt.return_value.get_alerts.return_value = [
-            {"level": "info",
-                "message": "Connection limit reached",
-                "timestamp": "2024-01-01T00:02:00Z"}
+            {"level": "info","message": "Connection limit reached","timestamp": "2024-01-01T00:02:00Z"}
         ]
 
         # Test the alerts endpoint
@@ -121,10 +102,8 @@ def test_performance_dashboard_alerts(client):
 
 def test_performance_dashboard_recommendations(client):
     """Test the performance dashboard recommendations endpoint."""
-    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,
-        \
-         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,
-             \
+    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,\
+         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,\
          patch("piwardrive.api.performance_dashboard.RealtimeOptimizer") as mock_rt_opt:
 
         # Mock the recommendations
@@ -137,10 +116,7 @@ def test_performance_dashboard_recommendations(client):
         ]
 
         mock_rt_opt.return_value.get_recommendations.return_value = [
-            {"type": "connection_limit",
-                "current": 100,
-                "recommended": 200,
-                "impact": "low"}
+            {"type": "connection_limit","current": 100,"recommended": 200,"impact": "low"}
         ]
 
         # Test the recommendations endpoint
@@ -163,19 +139,14 @@ def test_performance_dashboard_recommendations(client):
 
 def test_performance_dashboard_optimize(client):
     """Test the performance dashboard optimize endpoint."""
-    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,
-        \
-         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,
-             \
+    with patch("piwardrive.api.performance_dashboard.DatabaseOptimizer") as mock_db_opt,\
+         patch("piwardrive.api.performance_dashboard.AsyncOptimizer") as mock_async_opt,\
          patch("piwardrive.api.performance_dashboard.RealtimeOptimizer") as mock_rt_opt:
 
         # Mock the optimization methods
-        mock_db_opt.return_value.optimize.return_value = {"status": "success",
-            "message": "Database optimized"}
-        mock_async_opt.return_value.optimize.return_value = {"status": "success",
-            "message": "Async optimized"}
-        mock_rt_opt.return_value.optimize.return_value = {"status": "success",
-            "message": "Realtime optimized"}
+        mock_db_opt.return_value.optimize.return_value = {"status": "success","message": "Database optimized"}
+        mock_async_opt.return_value.optimize.return_value = {"status": "success","message": "Async optimized"}
+        mock_rt_opt.return_value.optimize.return_value = {"status": "success","message": "Realtime optimized"}
 
         # Test database optimization
         response = client.post("/performance/optimize", json={"component": "database"})

@@ -423,7 +423,7 @@ class PacketParser:
         try:
             # Parse DNS header
             query_id = struct.unpack("!H", data[0:2])[0]
-            _flags = struct.unpack("!H", data[2:4])[0]
+            flags = struct.unpack("!H", data[2:4])[0]
 
             # Extract flag bits
             qr = (flags >> 15) & 0x1

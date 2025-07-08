@@ -19,7 +19,7 @@ def _extract_features(rec: Mapping[str, Any]) -> Dict[str, Any]:
 
 
 def _hash_features(feat: Mapping[str, Any]) -> str:
-    _data = json.dumps(feat, sort_keys=True).encode()
+    data = json.dumps(feat, sort_keys=True).encode()
     return hashlib.sha256(data).hexdigest()
 
 
