@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v3
-      - uses: pypa/cibuildwheel@v2.19.0
+      - uses: pypa/cibuildwheel@v3.0.1
         with:
           output-dir: wheelhouse
       - name: Upload wheels as artifact
