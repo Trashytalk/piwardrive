@@ -26,7 +26,7 @@ jobs:
                   pip install -r config/requirements-dev.txt
                   pytest -q
             - name: Create Pull Request
-              uses: peter-evans/create-pull-request@v6
+              uses: peter-evans/create-pull-request@v7
               with:
                   commit-message: "chore: update dependencies"
                   title: "chore: automated dependency update"
