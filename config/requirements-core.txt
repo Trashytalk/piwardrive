@@ -30,7 +30,7 @@ defusedxml>=0.7.1,<0.8.0
 
 # ===== SYSTEM & HARDWARE INTERFACE =====
 # System monitoring and hardware interfaces
-psutil>=5.9.6,<6.0.0
+psutil>=5.9.6,<8.0.0
 watchdog>=6.0.0,<7.0.0
 
 # ===== NETWORKING & COMMUNICATION =====
