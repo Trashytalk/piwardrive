@@ -1,24 +1,21 @@
 from __future__ import annotations
 
-import logging
-
 """System information and configuration routes."""
 
 import inspect
 import os
 from dataclasses import asdict
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Request, Response
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Response
 
 from piwardrive.api.auth import AUTH_DEP
 from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
-from piwardrive.security import sanitize_path, verify_password
+from piwardrive.security import sanitize_path
 from piwardrive.services import db_monitor
+from piwardrive import service
 
 router = APIRouter()
 
@@ -60,7 +57,7 @@ async def get_orientation_endpoint(
     if orient:
         angle = service.orientation_sensors.orientation_to_angle(orient)
     else:
-        _data = await service.asyncio.to_thread(service.orientation_sensors.read_mpu6050)
+        data = await service.asyncio.to_thread(service.orientation_sensors.read_mpu6050)
         if data:
             accel = data.get("accelerometer")
             gyro = data.get("gyroscope")
@@ -128,7 +125,7 @@ async def get_logs(
     safe = sanitize_path(path)
     if safe not in ALLOWED_LOG_PATHS:
         raise ServiceError("Invalid log path", status_code=400)
-    _data = service.async_tail_file(safe, lines)
+    data = service.async_tail_file(safe, lines)
     if inspect.isawaitable(data):
         lines_out = await data
     else:
@@ -179,7 +176,7 @@ async def control_service_endpoint(
 ) -> service.ServiceControlResponse:
     if action not in {"start", "stop", "restart"}:
         raise ServiceError("Invalid action", status_code=400)
-    _result = service.run_service_cmd(name, action) or (False, "", "")
+    result = service.run_service_cmd(name, action) or (False, "", "")
     success, _out, err = result
     if not success:
         msg = err.strip() if isinstance(err, str) else str(err)
@@ -205,7 +202,7 @@ async def update_config_endpoint(
     updates: dict[str, Any], _auth: Any = AUTH_DEP
 ) -> service.ConfigResponse:
     cfg = service.config.load_config()
-    _data = asdict(cfg)
+    data = asdict(cfg)
     for key, value in updates.items():
         if key not in data:
             raise ServiceError(f"Unknown field: {key}", status_code=400)
@@ -322,9 +319,7 @@ _export_layer = service._export_layer
 
 
 @router.get("/export/aps")
-async def export_access_points(
-    fmt: str = "geojson", _auth: Any = AUTH_DEP
-) -> Response:
+async def export_access_points(fmt: str = "geojson", _auth: Any = AUTH_DEP) -> Response:
     records = db_service.load_ap_cache()
     if inspect.isawaitable(records):
         records = await records
@@ -338,9 +333,7 @@ async def export_access_points(
 
 
 @router.get("/export/bt")
-async def export_bluetooth(
-    fmt: str = "geojson", _auth: Any = AUTH_DEP
-) -> Response:
+async def export_bluetooth(fmt: str = "geojson", _auth: Any = AUTH_DEP) -> Response:
     try:
         from sigint_integration import load_sigint_data
 

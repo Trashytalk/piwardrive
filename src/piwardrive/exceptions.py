@@ -12,7 +12,7 @@ class PiWardriveError(Exception):
         self, message: str, *, status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR
     ) -> None:
         """Initialize PiWardrive base error.
-        
+
         Args:
             message: Error message.
             status_code: HTTP status code for the error.
@@ -26,7 +26,7 @@ class ConfigurationError(PiWardriveError):
 
     def __init__(self, message: str) -> None:
         """Initialize configuration error.
-        
+
         Args:
             message: Error message.
         """
@@ -40,7 +40,7 @@ class DatabaseError(PiWardriveError):
         self, message: str, *, status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR
     ) -> None:
         """Initialize database error.
-        
+
         Args:
             message: Error message.
             status_code: HTTP status code for the error.
@@ -55,7 +55,7 @@ class ServiceError(PiWardriveError):
         self, message: str, *, status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR
     ) -> None:
         """Initialize service error.
-        
+
         Args:
             message: Error message.
             status_code: HTTP status code for the error.

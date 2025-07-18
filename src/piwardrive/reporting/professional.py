@@ -6,7 +6,7 @@ Interactive HTML reports, compliance checking, and professional documentation
 import json
 import logging
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -335,7 +335,7 @@ class ReportGenerator:
         javascript_code = self._get_javascript_code(data)
 
         # Prepare base data
-        _reportdata = {
+        _report_data = {
             "css_styles": css_styles,
             "javascript_code": javascript_code,
             "metadata": data.get("metadata", {}),
@@ -642,8 +642,8 @@ class ReportGenerator:
         """Get JavaScript code for interactive charts"""
         network_stats = data.get("network_stats", {})
 
-        _encryption_data = json.dumps(network_stats.get("encryption_breakdown", {}))
-        _vendor_data = json.dumps(network_stats.get("vendor_distribution", {}))
+        json.dumps(network_stats.get("encryption_breakdown", {}))
+        json.dumps(network_stats.get("vendor_distribution", {}))
 
         return """
         document.addEventListener('DOMContentLoaded', function() {{
@@ -759,7 +759,7 @@ class ComplianceChecker:
         compliance_results = []
 
         for control in controls:
-            _result = self._evaluate_control(control, network_data)
+            result = self._evaluate_control(control, network_data)
             compliance_results.append(result)
 
         return compliance_results

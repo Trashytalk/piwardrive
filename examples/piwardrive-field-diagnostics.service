@@ -1,0 +1,38 @@
+[Unit]
+Description=PiWardrive Field Diagnostics Daemon
+Documentation=https://github.com/user/piwardrive
+After=network.target piwardrive.service
+Wants=piwardrive.service
+
+[Service]
+Type=simple
+User=piwardrive
+Group=piwardrive
+WorkingDirectory=/opt/piwardrive
+ExecStart=/usr/bin/python3 /opt/piwardrive/field-tools/field_diagnostics.py --daemon
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/tmp /var/log/piwardrive
+ProtectHome=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+# Resource limits
+LimitNOFILE=1024
+LimitNPROC=512
+MemoryMax=256M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

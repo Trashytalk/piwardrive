@@ -37,7 +37,7 @@ async def write_influxdb(
     _data = "\n".join(records).encode()
     async with ClientSession() as session:
         async with session.post(
-            endpoint, params=params, data=data, headers=headers
+            endpoint, params=params, data=_data, headers=headers
         ) as resp:
             resp.raise_for_status()
 

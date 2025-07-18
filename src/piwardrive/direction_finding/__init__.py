@@ -34,7 +34,6 @@ from .hardware import AntennaArrayManager, HardwareDetector, WiFiAdapterManager
 from .integration import (
     DFIntegrationManager,
     add_df_measurement,
-    configure_df,
     get_df_hardware_capabilities,
     get_df_integration_manager,
     get_df_status,

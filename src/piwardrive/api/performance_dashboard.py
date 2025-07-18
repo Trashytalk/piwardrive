@@ -8,7 +8,7 @@ database, async, and real-time performance metrics.
 import asyncio
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -16,16 +16,14 @@ from fastapi.templating import Jinja2Templates
 
 from piwardrive.api.auth import AUTH_DEP
 from piwardrive.performance.async_optimizer import get_global_monitor
-from piwardrive.performance.db_optimizer import (
-    DatabaseOptimizer,
-    run_performance_analysis,
-)
+from piwardrive.performance.db_optimizer import DatabaseOptimizer
 from piwardrive.performance.realtime_optimizer import get_global_optimizer
 
 router = APIRouter(prefix="/performance", tags=["performance"])
 
 # Templates directory - adjust path as needed
 templates = Jinja2Templates(directory="templates")
+
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def performance_dashboard(request: Request, _auth: Any = Depends(AUTH_DEP)):
@@ -34,6 +32,7 @@ async def performance_dashboard(request: Request, _auth: Any = Depends(AUTH_DEP)
         "performance_dashboard.html",
         {"request": request, "title": "Performance Dashboard"},
     )
+
 
 @router.get("/api/database/stats")
 async def get_database_stats(
@@ -86,6 +85,7 @@ async def get_database_stats(
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
 @router.get("/api/async/stats")
 async def get_async_stats(_auth: Any = Depends(AUTH_DEP)):
     """Get async performance statistics."""
@@ -98,17 +98,19 @@ async def get_async_stats(_auth: Any = Depends(AUTH_DEP)):
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
 @router.get("/api/realtime/stats")
 async def get_realtime_stats(_auth: Any = Depends(AUTH_DEP)):
     """Get real-time update performance statistics."""
     try:
         optimizer = get_global_optimizer()
-        _stats = optimizer.get_performance_stats()
+        realtime_stats = optimizer.get_performance_stats()
 
-        return {"timestamp": time.time(), "realtime_stats": stats}
+        return {"timestamp": time.time(), "realtime_stats": realtime_stats}
 
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
 
 @router.get("/api/comprehensive")
 async def get_comprehensive_stats(
@@ -123,20 +125,18 @@ async def get_comprehensive_stats(
         except Exception:
             db_path = None
 
-    _stats = {"timestamp": time.time(), "collection_time": datetime.now().isoformat()}
+    stats = {"timestamp": time.time(), "collection_time": datetime.now().isoformat()}
 
     # Database stats
     if db_path:
         try:
             optimizer = DatabaseOptimizer(db_path)
-            _tablestats = await optimizer.get_table_stats()
+            table_stats = await optimizer.get_table_stats()
 
             stats["database"] = {
                 "table_count": len(table_stats),
-                "total_rows": sum(stats["row_count"] for stats in table_stats.values()),
-                "total_size_mb": sum(
-                    stats["size_mb"] for stats in table_stats.values()
-                ),
+                "total_rows": sum(stat["row_count"] for stat in table_stats.values()),
+                "total_size_mb": sum(stat["size_mb"] for stat in table_stats.values()),
                 "tables": table_stats,
             }
         except Exception as e:
@@ -153,12 +153,13 @@ async def get_comprehensive_stats(
     # Real-time stats
     try:
         optimizer = get_global_optimizer()
-        _realtimestats = optimizer.get_performance_stats()
+        realtime_stats = optimizer.get_performance_stats()
         stats["realtime"] = realtime_stats
     except Exception as e:
         stats["realtime"] = {"error": str(e)}
 
     return stats
+
 
 @router.post("/api/database/optimize")
 async def optimize_database(
@@ -190,6 +191,7 @@ async def optimize_database(
 
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
 
 @router.get("/api/performance/history")
 async def get_performance_history(hours: int = 24, _auth: Any = Depends(AUTH_DEP)):
@@ -240,6 +242,7 @@ async def get_performance_history(hours: int = 24, _auth: Any = Depends(AUTH_DEP
 
     return history
 
+
 @router.get("/api/performance/alerts")
 async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
     """Get performance alerts and recommendations."""
@@ -256,9 +259,7 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
                     "type": "warning",
                     "category": "async",
                     "message": f"High number of slow operations: {async_summary['slow_operations']}",
-
                     "recommendation": "Review async operation performance and consider optimization",
-
                 }
             )
 
@@ -274,7 +275,6 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
                     "category": "websocket",
                     "message": f"High WebSocket error count: {ws_stats['errors']}",
                     "recommendation": "Check WebSocket connection stability and error handling",
-
                 }
             )
 
@@ -293,9 +293,7 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
                         "type": "info",
                         "category": "database",
                         "message": f"Multiple missing indexes detected: {len(missing_indexes)}",
-
                         "recommendation": "Consider creating recommended indexes to improve query performance",
-
                     }
                 )
 
@@ -313,6 +311,7 @@ async def get_performance_alerts(_auth: Any = Depends(AUTH_DEP)):
         )
 
     return {"timestamp": time.time(), "alerts": alerts, "alert_count": len(alerts)}
+
 
 @router.get("/api/performance/recommendations")
 async def get_performance_recommendations(
@@ -343,9 +342,7 @@ async def get_performance_recommendations(
                         "priority": "high",
                         "title": "Create Missing Indexes",
                         "description": f"Found {len(missing_indexes)} missing indexes that could improve query performance",
-
                         "action": "Run database optimization to create recommended indexes",
-
                         "estimated_impact": "20-50% query performance improvement",
                     }
                 )
@@ -361,11 +358,8 @@ async def get_performance_recommendations(
                         "priority": "medium",
                         "title": "Vacuum Large Tables",
                         "description": f"Found {len(large_tables)} large tables that may benefit from VACUUM",
-
                         "action": "Run VACUUM on large tables to reclaim space and improve performance",
-
                         "estimated_impact": "10-30% space reduction, improved query performance",
-
                     }
                 )
 
@@ -391,7 +385,6 @@ async def get_performance_recommendations(
                         "priority": "medium",
                         "title": "Optimize Slow Async Operations",
                         "description": f"Found {len(slow_operations)} operations with high average execution time",
-
                         "action": "Review and optimize slow async operations: "
                         + ", ".join(slow_operations[:3]),
                         "estimated_impact": "Improved application responsiveness",
@@ -414,11 +407,8 @@ async def get_performance_recommendations(
                     "priority": "high",
                     "title": "High WebSocket Connection Count",
                     "description": f"Currently handling {ws_stats['active_connections']} WebSocket connections",
-
                     "action": "Consider implementing connection pooling or load balancing",
-
                     "estimated_impact": "Improved connection stability and resource usage",
-
                 }
             )
 
@@ -433,7 +423,6 @@ async def get_performance_recommendations(
             "title": "Enable Performance Monitoring",
             "description": "Set up continuous performance monitoring and alerting",
             "action": "Configure automated performance alerts and regular optimization tasks",
-
             "estimated_impact": "Proactive performance issue detection and resolution",
         }
     )
@@ -444,6 +433,7 @@ async def get_performance_recommendations(
         "recommendation_count": len(recommendations),
     }
 
+
 # WebSocket endpoint for real-time performance updates
 @router.websocket("/ws/performance")
 async def performance_websocket(websocket):
@@ -453,7 +443,7 @@ async def performance_websocket(websocket):
     try:
         while True:
             # Collect current performance data
-            _stats = await get_comprehensive_stats()
+            stats = await get_comprehensive_stats()
 
             # Send updates to client
             await websocket.send_json(
@@ -467,6 +457,7 @@ async def performance_websocket(websocket):
         print(f"Performance WebSocket error: {e}")
     finally:
         await websocket.close()
+
 
 # Include the router in your main application:
 # app.include_router(router)

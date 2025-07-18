@@ -5,7 +5,8 @@ Focused code quality improvements for main target modules.
 
 import re
 from pathlib import Path
-from typing import Dict, List
+from typing import List
+
 
 def fix_unused_imports(file_path: Path, unused_imports: List[str]) -> bool:
     """Remove unused imports from a file."""

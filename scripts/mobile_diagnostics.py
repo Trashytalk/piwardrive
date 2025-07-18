@@ -6,6 +6,7 @@ Lightweight diagnostic tool that can be run from a mobile device or laptop
 
 import argparse
 import json
+import logging
 import socket
 import subprocess
 import sys
@@ -52,7 +53,6 @@ class MobileDiagnostics:
                 return ip
         except Exception as e:
             print(f"mDNS discovery failed: {e}")
-            pass
 
         print("No PiWardrive devices found automatically")
         return None
@@ -334,6 +334,259 @@ class MobileDiagnostics:
             pass
         return None
 
+    def run_daemon_mode(self):
+        """Run in daemon mode for continuous monitoring"""
+        print("🔄 Starting mobile diagnostics daemon mode...")
+        logging.info("Starting mobile diagnostics daemon mode")
+
+        # Set up signal handlers for graceful shutdown
+        import signal
+        import time
+
+        def signal_handler(signum, frame):
+            logging.info(f"Received signal {signum}, shutting down daemon")
+            print("🛑 Daemon shutting down...")
+            sys.exit(0)
+
+        signal.signal(signal.SIGTERM, signal_handler)
+        signal.signal(signal.SIGINT, signal_handler)
+
+        # Main daemon loop
+        scan_interval = 300  # 5 minutes
+
+        while True:
+            try:
+                print(f"🔍 Scanning for PiWardrive devices...")
+                devices = scan_network_for_devices()
+
+                if devices:
+                    print(f"📱 Found {len(devices)} devices")
+
+                    for device in devices:
+                        try:
+                            # Update base URL for this device
+                            self.base_url = f"http://{device['ip']}:{device.get('port', 8000)}"
+
+                            # Run quick diagnostics
+                            results = self.run_quick_check()
+
+                            # Check for critical issues
+                            critical_issues = [
+                                r for r in results["recommendations"]
+                                if r["priority"] == "critical"
+                            ]
+
+                            if critical_issues:
+                                self._send_daemon_alert(device, critical_issues)
+
+                            # Save results with timestamp
+                            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            output_file = f"/tmp/mobile_diagnostics_{device['ip']}_{timestamp}.json"
+
+                            with open(output_file, 'w') as f:
+                                json.dump(results, f, indent=2)
+
+                            logging.info(f"Diagnostics completed for {device['ip']}")
+
+                        except Exception as e:
+                            logging.error(f"Error diagnosing device {device['ip']}: {e}")
+
+                else:
+                    print("❌ No PiWardrive devices found")
+                    logging.info("No PiWardrive devices found in scan")
+
+                print(f"😴 Sleeping for {scan_interval} seconds...")
+                time.sleep(scan_interval)
+
+            except Exception as e:
+                logging.error(f"Error in daemon mode: {e}")
+                time.sleep(60)  # Wait 1 minute before retrying
+
+    def _send_daemon_alert(self, device: Dict[str, Any], issues: List[Dict[str, Any]]):
+        """Send alert for critical issues in daemon mode"""
+        try:
+            # Write to syslog
+            import syslog
+            syslog.openlog("piwardrive-mobile-diagnostics")
+
+            device_info = f"{device['ip']} ({device.get('hostname', 'unknown')})"
+
+            for issue in issues:
+                message = f"CRITICAL: {device_info} - {issue['issue']}"
+                syslog.syslog(syslog.LOG_ERR, message)
+                print(f"🚨 ALERT: {message}")
+
+            syslog.closelog()
+
+            # Also write to dedicated alert file
+            alert_file = "/tmp/piwardrive_mobile_alerts.log"
+            with open(alert_file, 'a') as f:
+                timestamp = datetime.now().isoformat()
+                issue_summary = ', '.join([i['issue'] for i in issues])
+                f.write(f"{timestamp}: CRITICAL ALERT - {device_info} - {issue_summary}\n")
+
+        except Exception as e:
+            logging.error(f"Failed to send alert: {e}")
+
+
+def get_local_ip() -> Optional[str]:
+    """Get local IP address"""
+    try:
+        import socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+    except:
+        return None
+
+
+def probe_piwardrive_device(ip: str) -> Optional[Dict[str, Any]]:
+    """Probe a specific IP for PiWardrive device"""
+    try:
+        # Try health endpoint first
+        response = requests.get(f"http://{ip}:8000/api/v1/system/health", timeout=2)
+        if response.status_code == 200:
+            health_data = response.json()
+
+            # Get device info
+            device_info = {
+                "ip": ip,
+                "status": "healthy",
+                "health": health_data
+            }
+
+            # Try to get additional info
+            try:
+                info_response = requests.get(f"http://{ip}:8000/api/info", timeout=2)
+                if info_response.status_code == 200:
+                    info_data = info_response.json()
+                    device_info.update({
+                        "device_id": info_data.get("id"),
+                        "version": info_data.get("version"),
+                        "capabilities": info_data.get("capabilities", [])
+                    })
+            except:
+                pass
+
+            return device_info
+    except Exception:
+        pass
+
+    # Try legacy API endpoint
+    try:
+        response = requests.get(f"http://{ip}:8000/api/status", timeout=2)
+        if response.status_code == 200:
+            return {
+                "ip": ip,
+                "status": "responding",
+                "api_version": "legacy"
+            }
+    except Exception:
+        pass
+
+    return None
+
+
+def discover_via_broadcast() -> List[Dict[str, Any]]:
+    """Discover devices via UDP broadcast"""
+    devices = []
+
+    try:
+        import socket
+
+        # Create UDP socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.settimeout(2)
+
+        # Send discovery broadcast
+        discovery_msg = b"PIWARDRIVE_DISCOVERY_REQUEST"
+        sock.sendto(discovery_msg, ('<broadcast>', 9999))
+
+        # Listen for responses
+        start_time = time.time()
+        while time.time() - start_time < 3:  # 3 second timeout
+            try:
+                data, addr = sock.recvfrom(1024)
+                if data.startswith(b"PIWARDRIVE_DISCOVERY_RESPONSE"):
+                    device_info = {
+                        "ip": addr[0],
+                        "status": "discovered",
+                        "discovery_method": "broadcast"
+                    }
+
+                    # Parse response data if available
+                    try:
+                        response_data = data.decode('utf-8').split(':', 1)
+                        if len(response_data) > 1:
+                            import json
+                            device_data = json.loads(response_data[1])
+                            device_info.update(device_data)
+                    except:
+                        pass
+
+                    devices.append(device_info)
+            except socket.timeout:
+                break
+
+        sock.close()
+    except Exception:
+        pass
+
+    return devices
+
+
+def scan_network_for_devices() -> List[Dict[str, Any]]:
+    """Scan network for PiWardrive devices"""
+    devices = []
+
+    # Get local network range
+    local_ip = get_local_ip()
+    if not local_ip:
+        return devices
+
+    network = ".".join(local_ip.split(".")[:-1]) + "."
+
+    # Common IP addresses to check
+    common_ips = [
+        "1", "100", "101", "150", "200", "10", "11", "12", "20", "21", "22",
+        "50", "51", "52", "99", "102", "103", "104", "105", "110", "111", "112"
+    ]
+
+    print("Scanning network range for PiWardrive devices...")
+
+    # Scan common IPs
+    for ip_suffix in common_ips:
+        test_ip = f"{network}{ip_suffix}"
+        device_info = probe_piwardrive_device(test_ip)
+        if device_info:
+            devices.append(device_info)
+            print(f"  Found device at {test_ip}")
+
+    # Try mDNS resolution
+    try:
+        import socket
+        ip = socket.gethostbyname("piwardrive.local")
+        if ip not in [d['ip'] for d in devices]:
+            device_info = probe_piwardrive_device(ip)
+            if device_info:
+                devices.append(device_info)
+                print(f"  Found device at {ip} (via mDNS)")
+    except Exception:
+        pass
+
+    # Try broadcast discovery (if available)
+    try:
+        broadcast_devices = discover_via_broadcast()
+        for device in broadcast_devices:
+            if device['ip'] not in [d['ip'] for d in devices]:
+                devices.append(device)
+                print(f"  Found device at {device['ip']} (via broadcast)")
+    except Exception:
+        pass
+
+    return devices
+
 
 def print_results(results: Dict[str, Any]):
     """Print diagnostic results in a readable format"""
@@ -413,12 +666,35 @@ def main():
         "--support", action="store_true", help="Generate support bundle"
     )
     parser.add_argument("--json", action="store_true", help="Output results as JSON")
+    parser.add_argument("--daemon", action="store_true", help="Run in daemon mode")
 
     args = parser.parse_args()
 
     if args.scan:
         print("Scanning for PiWardrive devices...")
-        # TODO: Implement network scanning
+
+        # Perform network scan
+        devices = scan_network_for_devices()
+
+        if not devices:
+            print("❌ No PiWardrive devices found on network")
+            print("   Make sure devices are powered on and accessible")
+            return
+
+        print(f"✅ Found {len(devices)} PiWardrive device(s):")
+        for i, device in enumerate(devices, 1):
+            print(f"   {i}. {device['ip']} - {device['status']}")
+            if device.get("capabilities"):
+                print(f"      Capabilities: {', '.join(device['capabilities'])}")
+            if device.get("version"):
+                print(f"      Version: {device['version']}")
+            if device.get("device_id"):
+                print(f"      Device ID: {device['device_id']}")
+            print()
+
+        if args.json:
+            print(json.dumps(devices, indent=2))
+
         return
 
     # Create diagnostic tool
@@ -463,6 +739,10 @@ def main():
             print(f"✅ Support bundle available at: {url}")
         else:
             print("❌ Failed to generate support bundle")
+        return
+
+    if args.daemon:
+        diagnostics.run_daemon_mode()
         return
 
     # Run diagnostics

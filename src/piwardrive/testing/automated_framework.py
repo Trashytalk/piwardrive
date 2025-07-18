@@ -11,11 +11,10 @@ import subprocess
 import tempfile
 import threading
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 
@@ -226,7 +225,7 @@ class HardwareValidator:
         """Test if interface supports monitor mode"""
         try:
             # This is a simplified test - in practice would use iwconfig or similar
-            _result = subprocess.run(
+            result = subprocess.run(
                 ["iwconfig", interface], capture_output=True, text=True, timeout=5
             )
             return result.returncode == 0
@@ -403,17 +402,17 @@ class PerformanceTester:
                 metrics["performance_ratio"] = performance_ratio
 
                 if performance_ratio < 0.8:  # Performance degraded by more than 20%
-                    __result = TestResult.FAIL
+                    result = TestResult.FAIL
                     message = (
                         f"CPU performance degraded: {performance_ratio:.2f}x baseline"
                     )
                 else:
-                    __result = TestResult.PASS
+                    result = TestResult.PASS
                     message = f"CPU performance OK: {performance_ratio:.2f}x baseline"
             else:
                 # First run, set as baseline
                 self.baseline_metrics["cpu_baseline"] = metrics
-                _result = TestResult.PASS
+                result = TestResult.PASS
                 message = "CPU performance baseline established"
 
             return TestExecution(
@@ -447,7 +446,7 @@ class PerformanceTester:
 
             # Allocate and fill memory
             data_size = 100_000_000  # 100 MB
-            _testdata = bytearray(data_size)
+            test_data = bytearray(data_size)
 
             # Fill with pattern
             for i in range(0, data_size, 1000):
@@ -569,7 +568,6 @@ class StressTester:
         try:
             # Start CPU stress test
             cpu_count = psutil.cpu_count()
-            _processes = []
 
             def cpu_stress_worker():
                 # CPU intensive loop
@@ -617,10 +615,10 @@ class StressTester:
 
             # Determine result based on system stability
             if max_cpu_usage > 95:
-                __result = TestResult.PASS
+                result = TestResult.PASS
                 message = "CPU stress test completed successfully"
             else:
-                _result = TestResult.FAIL
+                result = TestResult.FAIL
                 message = (
                     f"CPU stress test failed to fully utilize CPU: {max_cpu_usage:.1f}%"
                 )
@@ -653,7 +651,7 @@ class StressTester:
         try:
             # Get available memory
             memory_info = psutil.virtual_memory()
-            _available_mb = memory_info.available // (1024 * 1024)
+            memory_info.available // (1024 * 1024)
 
             # Allocate memory gradually
             allocated_memory = []
@@ -789,7 +787,7 @@ class TestRunner:
                 continue
 
             # Run test
-            _result = self._run_single_test(test_case)
+            result = self._run_single_test(test_case)
             results[test_case.test_id] = result
 
         return results
@@ -824,7 +822,7 @@ class TestRunner:
             for future in concurrent.futures.as_completed(future_to_test):
                 test_case = future_to_test[future]
                 try:
-                    _result = future.result()
+                    result = future.result()
                     results[test_case.test_id] = result
                 except Exception as e:
                     results[test_case.test_id] = TestExecution(
@@ -849,7 +847,7 @@ class TestRunner:
                 test_case.setup_function()
 
             # Run the actual test
-            _result = test_case.test_function()
+            result = test_case.test_function()
 
             # If test function returns TestExecution, use it
             if isinstance(result, TestExecution):

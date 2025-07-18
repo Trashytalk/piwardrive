@@ -5,7 +5,6 @@ from __future__ import annotations
 import inspect
 import json
 import time
-from typing import Any
 
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
@@ -33,7 +32,7 @@ async def ws_aps(websocket: WebSocket) -> None:
             service.logger.debug("ws_aps: fetched %d aps in %.6fs", len(new), load_time)
             if new:
                 last_time = max(r["last_time"] for r in new)
-            _data = {
+            data = {
                 "seq": seq,
                 "timestamp": time.time(),
                 "aps": new,
@@ -74,7 +73,7 @@ async def sse_aps(request: Request) -> StreamingResponse:
             )
             if new:
                 last_time = max(r["last_time"] for r in new)
-            _data = {
+            data = {
                 "seq": seq,
                 "timestamp": time.time(),
                 "aps": new,
@@ -98,7 +97,7 @@ async def ws_status(websocket: WebSocket) -> None:
     error_count = 0
     try:
         while True:
-            _data = {
+            data = {
                 "seq": seq,
                 "timestamp": time.time(),
                 "status": await service.get_status(),
@@ -127,7 +126,7 @@ async def sse_status(request: Request) -> StreamingResponse:
         while True:
             if await request.is_disconnected():
                 break
-            _data = {
+            data = {
                 "seq": seq,
                 "timestamp": time.time(),
                 "status": await service.get_status(),

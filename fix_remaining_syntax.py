@@ -3,10 +3,9 @@
 Enhanced syntax error fix script with specific patterns for each error type.
 """
 
-import os
 import re
-import ast
 from pathlib import Path
+
 
 def fix_unterminated_string_literals(file_path):
     """Fix unterminated string literals."""

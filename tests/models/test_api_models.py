@@ -7,9 +7,7 @@ Tests all Pydantic models for API request/response validation.
 
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
 
 import pytest
 from pydantic import ValidationError
@@ -18,22 +16,22 @@ from pydantic import ValidationError
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from piwardrive.models.api_models import (
-    WiFiScanRequest,
     AccessPoint,
-    WiFiScanResponse,
-    BluetoothScanRequest,
-    BluetoothDevice,
-    BluetoothScanResponse,
-    SystemStats,
-    ErrorResponse,
-    CellularScanRequest,
-    CellTower,
-    CellularScanResponse,
     BluetoothDetection,
+    BluetoothDevice,
+    BluetoothScanRequest,
+    BluetoothScanResponse,
+    CellTower,
     CellularDetection,
+    CellularScanRequest,
+    CellularScanResponse,
+    ErrorResponse,
+    NetworkAnalyticsRecord,
     NetworkFingerprint,
     SuspiciousActivity,
-    NetworkAnalyticsRecord,
+    SystemStats,
+    WiFiScanRequest,
+    WiFiScanResponse,
 )
 
 
@@ -57,7 +55,7 @@ class TestWiFiModels:
         # Should accept valid timeout
         request = WiFiScanRequest(timeout=10)
         assert request.timeout == 10
-        
+
         # Should accept None timeout
         request = WiFiScanRequest(timeout=None)
         assert request.timeout is None
@@ -74,7 +72,7 @@ class TestWiFiModels:
             "vendor": "RaspberryPi",
             "heading": 180.0,
         }
-        
+
         ap = AccessPoint(**ap_data)
         assert ap.ssid == "TestNetwork"
         assert ap.bssid == "AA:BB:CC:DD:EE:FF"
@@ -114,7 +112,7 @@ class TestWiFiModels:
         """Test WiFiScanResponse with access points."""
         ap1 = AccessPoint(ssid="Net1", bssid="AA:BB:CC:DD:EE:01")
         ap2 = AccessPoint(ssid="Net2", bssid="AA:BB:CC:DD:EE:02")
-        
+
         response = WiFiScanResponse(access_points=[ap1, ap2])
         assert len(response.access_points) == 2
         assert response.access_points[0].ssid == "Net1"
@@ -160,7 +158,7 @@ class TestBluetoothModels:
         """Test BluetoothScanResponse with devices."""
         device1 = BluetoothDevice(address="AA:BB:CC:DD:EE:01", name="Device1")
         device2 = BluetoothDevice(address="AA:BB:CC:DD:EE:02")
-        
+
         response = BluetoothScanResponse(devices=[device1, device2])
         assert len(response.devices) == 2
         assert response.devices[0].name == "Device1"
@@ -190,12 +188,7 @@ class TestCellularModels:
 
     def test_cell_tower_full_data(self):
         """Test CellTower with all fields."""
-        tower = CellTower(
-            tower_id="12345",
-            rssi="-60",
-            lat=51.5,
-            lon=-0.1
-        )
+        tower = CellTower(tower_id="12345", rssi="-60", lat=51.5, lon=-0.1)
         assert tower.tower_id == "12345"
         assert tower.rssi == "-60"
         assert tower.lat == 51.5
@@ -215,7 +208,7 @@ class TestCellularModels:
         """Test CellularScanResponse with towers."""
         tower1 = CellTower(tower_id="123", rssi="-60")
         tower2 = CellTower(tower_id="456", rssi="-70")
-        
+
         response = CellularScanResponse(towers=[tower1, tower2])
         assert len(response.towers) == 2
         assert response.towers[0].tower_id == "123"
@@ -227,11 +220,7 @@ class TestSystemModels:
 
     def test_system_stats_required_fields(self):
         """Test SystemStats with required fields."""
-        stats = SystemStats(
-            cpu_percent=15.5,
-            memory_percent=45.2,
-            disk_percent=70.1
-        )
+        stats = SystemStats(cpu_percent=15.5, memory_percent=45.2, disk_percent=70.1)
         assert stats.cpu_percent == 15.5
         assert stats.memory_percent == 45.2
         assert stats.disk_percent == 70.1
@@ -240,10 +229,7 @@ class TestSystemModels:
     def test_system_stats_with_temperature(self):
         """Test SystemStats with temperature."""
         stats = SystemStats(
-            cpu_percent=15.5,
-            memory_percent=45.2,
-            disk_percent=70.1,
-            temp_celsius=52.3
+            cpu_percent=15.5, memory_percent=45.2, disk_percent=70.1, temp_celsius=52.3
         )
         assert stats.temp_celsius == 52.3
 
@@ -251,7 +237,7 @@ class TestSystemModels:
         """Test SystemStats validation fails without required fields."""
         with pytest.raises(ValidationError):
             SystemStats()
-        
+
         with pytest.raises(ValidationError):
             SystemStats(cpu_percent=15.5)  # Missing other required fields
 
@@ -265,7 +251,7 @@ class TestSystemModels:
         """Test ErrorResponse validation fails without required fields."""
         with pytest.raises(ValidationError):
             ErrorResponse()
-        
+
         with pytest.raises(ValidationError):
             ErrorResponse(code="404")  # Missing message
 
@@ -278,7 +264,7 @@ class TestDatabaseModels:
         detection = BluetoothDetection(
             scan_session_id="session123",
             detection_timestamp="2023-12-01T10:00:00Z",
-            mac_address="AA:BB:CC:DD:EE:FF"
+            mac_address="AA:BB:CC:DD:EE:FF",
         )
         assert detection.scan_session_id == "session123"
         assert detection.detection_timestamp == "2023-12-01T10:00:00Z"
@@ -296,7 +282,7 @@ class TestDatabaseModels:
             device_name="Phone",
             rssi_dbm=-50,
             latitude=51.5,
-            longitude=-0.1
+            longitude=-0.1,
         )
         assert detection.id == 1
         assert detection.device_name == "Phone"
@@ -307,8 +293,7 @@ class TestDatabaseModels:
     def test_cellular_detection_required_fields(self):
         """Test CellularDetection with required fields."""
         detection = CellularDetection(
-            scan_session_id="session123",
-            detection_timestamp="2023-12-01T10:00:00Z"
+            scan_session_id="session123", detection_timestamp="2023-12-01T10:00:00Z"
         )
         assert detection.scan_session_id == "session123"
         assert detection.detection_timestamp == "2023-12-01T10:00:00Z"
@@ -327,7 +312,7 @@ class TestDatabaseModels:
             mnc=10,
             signal_strength_dbm=-80,
             latitude=51.5,
-            longitude=-0.1
+            longitude=-0.1,
         )
         assert detection.id == 1
         assert detection.cell_id == 12345
@@ -339,8 +324,7 @@ class TestDatabaseModels:
     def test_network_fingerprint_required_fields(self):
         """Test NetworkFingerprint with required fields."""
         fingerprint = NetworkFingerprint(
-            bssid="AA:BB:CC:DD:EE:FF",
-            fingerprint_hash="abc123def456"
+            bssid="AA:BB:CC:DD:EE:FF", fingerprint_hash="abc123def456"
         )
         assert fingerprint.bssid == "AA:BB:CC:DD:EE:FF"
         assert fingerprint.fingerprint_hash == "abc123def456"
@@ -353,7 +337,7 @@ class TestDatabaseModels:
             scan_session_id="session123",
             activity_type="rogue_ap",
             severity="high",
-            detected_at="2023-12-01T10:00:00Z"
+            detected_at="2023-12-01T10:00:00Z",
         )
         assert activity.scan_session_id == "session123"
         assert activity.activity_type == "rogue_ap"
@@ -363,8 +347,7 @@ class TestDatabaseModels:
     def test_network_analytics_record_required_fields(self):
         """Test NetworkAnalyticsRecord with required fields."""
         record = NetworkAnalyticsRecord(
-            bssid="AA:BB:CC:DD:EE:FF",
-            analysis_date="2023-12-01"
+            bssid="AA:BB:CC:DD:EE:FF", analysis_date="2023-12-01"
         )
         assert record.bssid == "AA:BB:CC:DD:EE:FF"
         assert record.analysis_date == "2023-12-01"
@@ -379,13 +362,13 @@ class TestSerialization:
         """Test WiFiScanResponse JSON serialization."""
         ap = AccessPoint(ssid="TestNet", bssid="AA:BB:CC:DD:EE:FF")
         response = WiFiScanResponse(access_points=[ap])
-        
+
         # Test serialization
         json_data = response.model_dump()
         assert "access_points" in json_data
         assert len(json_data["access_points"]) == 1
         assert json_data["access_points"][0]["ssid"] == "TestNet"
-        
+
         # Test JSON string serialization
         json_str = response.model_dump_json()
         parsed = json.loads(json_str)
@@ -395,7 +378,7 @@ class TestSerialization:
         """Test BluetoothScanResponse JSON serialization."""
         device = BluetoothDevice(address="AA:BB:CC:DD:EE:FF", name="Phone")
         response = BluetoothScanResponse(devices=[device])
-        
+
         json_data = response.model_dump()
         assert json_data["devices"][0]["address"] == "AA:BB:CC:DD:EE:FF"
         assert json_data["devices"][0]["name"] == "Phone"
@@ -403,12 +386,9 @@ class TestSerialization:
     def test_system_stats_json_serialization(self):
         """Test SystemStats JSON serialization."""
         stats = SystemStats(
-            cpu_percent=15.5,
-            memory_percent=45.2,
-            disk_percent=70.1,
-            temp_celsius=52.3
+            cpu_percent=15.5, memory_percent=45.2, disk_percent=70.1, temp_celsius=52.3
         )
-        
+
         json_data = stats.model_dump()
         assert json_data["cpu_percent"] == 15.5
         assert json_data["temp_celsius"] == 52.3
@@ -416,7 +396,7 @@ class TestSerialization:
     def test_error_response_json_serialization(self):
         """Test ErrorResponse JSON serialization."""
         error = ErrorResponse(code="404", message="Not found")
-        
+
         json_data = error.model_dump()
         assert json_data["code"] == "404"
         assert json_data["message"] == "Not found"
@@ -427,12 +407,13 @@ class TestModelConfig:
 
     def test_from_attributes_config(self):
         """Test that models can be created from object attributes."""
+
         # Create a simple object with attributes
         class SimpleObject:
             def __init__(self):
                 self.address = "AA:BB:CC:DD:EE:FF"
                 self.name = "Test Device"
-        
+
         obj = SimpleObject()
         device = BluetoothDevice.model_validate(obj)
         assert device.address == "AA:BB:CC:DD:EE:FF"
@@ -444,11 +425,11 @@ class TestModelConfig:
         ap = AccessPoint(ssid=None, bssid=None)
         assert ap.ssid is None
         assert ap.bssid is None
-        
+
         # Test default factory for lists
         wifi_response = WiFiScanResponse()
         assert wifi_response.access_points == []
-        
+
         bluetooth_response = BluetoothScanResponse()
         assert bluetooth_response.devices == []
 
@@ -464,10 +445,18 @@ class TestModelConfig:
         """Test that model examples are included in JSON schema."""
         access_point_schema = AccessPoint.model_json_schema()
         bluetooth_device_schema = BluetoothDevice.model_json_schema()
-        
+
         # Should have examples defined in the schema (checking for 'example' which is Pydantic's format)
-        assert "example" in access_point_schema or "examples" in access_point_schema or "$defs" in access_point_schema
-        assert "example" in bluetooth_device_schema or "examples" in bluetooth_device_schema or "$defs" in bluetooth_device_schema
+        assert (
+            "example" in access_point_schema
+            or "examples" in access_point_schema
+            or "$defs" in access_point_schema
+        )
+        assert (
+            "example" in bluetooth_device_schema
+            or "examples" in bluetooth_device_schema
+            or "$defs" in bluetooth_device_schema
+        )
 
 
 if __name__ == "__main__":

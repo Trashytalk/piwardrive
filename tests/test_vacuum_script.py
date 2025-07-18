@@ -1,5 +1,4 @@
 import sys
-from types import SimpleNamespace
 
 
 def test_vacuum_script(monkeypatch):

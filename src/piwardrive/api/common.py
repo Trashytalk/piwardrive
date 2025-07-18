@@ -1,9 +1,19 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from typing import Any, Callable, Awaitable, NamedTuple
 
 from fastapi import Body, Depends
 from fastapi.security import OAuth2PasswordBearer
+
+
+class MetricsResult(NamedTuple):
+    """Simple metrics result container"""
+
+    metrics: list
+    timestamps: list
+    count: int
+
 
 try:
     import utils as _utils
@@ -44,11 +54,11 @@ def error_json(code: int, message: str | None = None) -> dict[str, str]:
     return {"code": str(int(code)), "message": message}
 
 
-async def _default_fetch_metrics_async(*_a: Any, **_k: Any) -> "MetricsResult":
-    return _utils.MetricsResult([], [], 0)  # type: ignore[attr-defined]
+async def _default_fetch_metrics_async(*_a: Any, **_k: Any) -> MetricsResult:
+    return MetricsResult([], [], 0)
 
 
-fetch_metrics_async: Callable[..., Awaitable["MetricsResult"]] = getattr(
+fetch_metrics_async: Callable[..., Awaitable[MetricsResult]] = getattr(
     _utils, "fetch_metrics_async", _default_fetch_metrics_async
 )
 get_avg_rssi = getattr(_utils, "get_avg_rssi", lambda *_a, **_k: None)

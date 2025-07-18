@@ -106,7 +106,7 @@ class NetworkAnalyticsService:
 
     def __init__(self, scheduler: PollScheduler, hour: int = 2) -> None:
         """Initialize the network analytics service.
-        
+
         Args:
             scheduler: The poll scheduler to use for daily processing.
             hour: Hour of day to run analytics (default: 2 AM).

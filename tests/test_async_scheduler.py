@@ -1,7 +1,6 @@
 import asyncio
 import importlib
 import sys
-from types import ModuleType, SimpleNamespace
 from typing import Any
 
 import pytest

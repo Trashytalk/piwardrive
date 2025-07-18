@@ -9,13 +9,7 @@ from __future__ import annotations
 from typing import Any, List
 
 from . import persistence
-from .db import (
-    DatabaseAdapter,
-    DatabaseManager,
-    MySQLAdapter,
-    PostgresAdapter,
-    SQLiteAdapter,
-)
+from .db import DatabaseAdapter, DatabaseManager, SQLiteAdapter
 from .persistence import DashboardSettings, FingerprintInfo, HealthRecord, User
 
 
@@ -24,7 +18,7 @@ class DatabaseService:
 
     def __init__(self, adapter: DatabaseAdapter | None = None) -> None:
         """Initialize database service.
-        
+
         Args:
             adapter: Database adapter to use (defaults to SQLite).
         """
@@ -42,10 +36,10 @@ class DatabaseService:
 
     async def load_recent_health(self, limit: int = 10) -> List[HealthRecord]:
         """Load recent health records.
-        
+
         Args:
             limit: Maximum number of records to return.
-            
+
         Returns:
             List of health records.
         """
@@ -55,11 +49,11 @@ class DatabaseService:
         self, start: str | None = None, end: str | None = None
     ) -> List[HealthRecord]:
         """Load health history within a date range.
-        
+
         Args:
             start: Start date (optional).
             end: End date (optional).
-            
+
         Returns:
             List of health records.
         """
@@ -67,7 +61,7 @@ class DatabaseService:
 
     async def save_health_record(self, record: HealthRecord) -> None:
         """Save a health record.
-        
+
         Args:
             record: Health record to save.
         """
@@ -75,7 +69,7 @@ class DatabaseService:
 
     async def purge_old_health(self, days: int) -> None:
         """Purge health records older than specified days.
-        
+
         Args:
             days: Number of days to retain.
         """
@@ -87,10 +81,10 @@ class DatabaseService:
 
     async def load_ap_cache(self, after: float | None = None) -> List[dict[str, Any]]:
         """Load access point cache.
-        
+
         Args:
             after: Timestamp to load cache after (optional).
-            
+
         Returns:
             List of cached access points.
         """
@@ -98,7 +92,7 @@ class DatabaseService:
 
     async def save_dashboard_settings(self, settings: DashboardSettings) -> None:
         """Save dashboard settings.
-        
+
         Args:
             settings: Dashboard settings to save.
         """
@@ -106,7 +100,7 @@ class DatabaseService:
 
     async def load_dashboard_settings(self) -> DashboardSettings:
         """Load dashboard settings.
-        
+
         Returns:
             Dashboard settings.
         """
@@ -114,7 +108,7 @@ class DatabaseService:
 
     async def save_fingerprint_info(self, info: FingerprintInfo) -> None:
         """Save fingerprint information.
-        
+
         Args:
             info: Fingerprint info to save.
         """
@@ -122,7 +116,7 @@ class DatabaseService:
 
     async def load_fingerprint_info(self) -> List[FingerprintInfo]:
         """Load fingerprint information.
-        
+
         Returns:
             List of fingerprint info.
         """
@@ -130,7 +124,7 @@ class DatabaseService:
 
     async def save_gps_tracks(self, records: List[dict[str, Any]]) -> None:
         """Save GPS track records.
-        
+
         Args:
             records: GPS track records to save.
         """
@@ -138,7 +132,7 @@ class DatabaseService:
 
     async def save_suspicious_activities(self, records: List[dict[str, Any]]) -> None:
         """Save suspicious activity records.
-        
+
         Args:
             records: Suspicious activity records to save.
         """
@@ -146,10 +140,10 @@ class DatabaseService:
 
     async def count_suspicious_activities(self, since: str | None = None) -> int:
         """Count suspicious activities since a date.
-        
+
         Args:
             since: Date to count from (optional).
-            
+
         Returns:
             Number of suspicious activities.
         """
@@ -157,10 +151,10 @@ class DatabaseService:
 
     async def load_recent_suspicious(self, limit: int = 10) -> List[dict[str, Any]]:
         """Load recent suspicious activities.
-        
+
         Args:
             limit: Maximum number of records to return.
-            
+
         Returns:
             List of suspicious activities.
         """
@@ -168,7 +162,7 @@ class DatabaseService:
 
     async def get_table_counts(self) -> dict[str, int]:
         """Get counts for all tables.
-        
+
         Returns:
             Dictionary of table names to counts.
         """
@@ -176,7 +170,7 @@ class DatabaseService:
 
     def db_path(self) -> str:
         """Get database file path.
-        
+
         Returns:
             Path to database file.
         """
@@ -184,10 +178,10 @@ class DatabaseService:
 
     async def get_user(self, username: str) -> User | None:
         """Get user by username.
-        
+
         Args:
             username: Username to lookup.
-            
+
         Returns:
             User object or None if not found.
         """
@@ -195,7 +189,7 @@ class DatabaseService:
 
     async def save_user(self, user: User) -> None:
         """Save user to database.
-        
+
         Args:
             user: User object to save.
         """
@@ -203,7 +197,7 @@ class DatabaseService:
 
     async def update_user_token(self, username: str, token_hash: str) -> None:
         """Update user's token hash.
-        
+
         Args:
             username: Username to update.
             token_hash: New token hash.
@@ -212,10 +206,10 @@ class DatabaseService:
 
     async def get_user_by_token(self, token_hash: str) -> User | None:
         """Get user by token hash.
-        
+
         Args:
             token_hash: Token hash to lookup.
-            
+
         Returns:
             User object or None if not found.
         """

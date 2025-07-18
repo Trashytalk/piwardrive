@@ -11,12 +11,12 @@ from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
 from piwardrive.security import hash_secret, verify_password
 
-from ..health.models import (  # types shared
+from ..health.models import (
     AuthLoginResponse,
-    LogoutResponse,
+    LogoutResponse,  # types shared
     TokenResponse,
 )
-from .dependencies import AUTH_DEP, SECURITY_DEP, ensure_default_user
+from .dependencies import SECURITY_DEP, ensure_default_user
 
 router = APIRouter()
 

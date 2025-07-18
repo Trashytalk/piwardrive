@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
 from piwardrive import persistence
 from piwardrive.api.auth import AUTH_DEP
@@ -26,7 +26,7 @@ async def list_fingerprints(
     """Return stored network fingerprint rows."""
     query = (
         "SELECT id, bssid, fingerprint_hash, classification, risk_level, ",
-        "tags, created_at FROM network_fingerprints"
+        "tags, created_at FROM network_fingerprints",
     )
     params: list[object] = []
     if bssid:
@@ -67,7 +67,7 @@ async def list_network_analytics(
     """Return rows from ``network_analytics`` filtered by parameters."""
     query = (
         "SELECT bssid, analysis_date, total_detections, suspicious_score ",
-        "FROM network_analytics"
+        "FROM network_analytics",
     )
     params: list[object] = []
     clauses: list[str] = []

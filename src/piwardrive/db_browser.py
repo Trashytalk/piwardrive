@@ -18,7 +18,7 @@ class _DBHandler(http.server.BaseHTTPRequestHandler):
             with sqlite3.connect(self.db_path) as conn:
                 cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
                 tables = [r[0] for r in cur.fetchall()]
-                __data = {
+                data = {
                     # The table names come from sqlite_master and are not user supplied
                     t: conn.execute(
                         f"SELECT * FROM {t} LIMIT 100"

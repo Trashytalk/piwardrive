@@ -5,8 +5,8 @@ Script to fix syntax errors identified in the code analysis.
 
 import os
 import re
-import sys
 from pathlib import Path
+
 
 def fix_unterminated_strings(file_path):
     """Fix unterminated string literals by properly joining broken lines."""

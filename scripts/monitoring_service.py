@@ -7,25 +7,20 @@ import asyncio
 import logging
 import sys
 from datetime import datetime, timedelta
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
-from piwardrive.core.persistence import (
-    _get_conn,
-    analyze_database_performance,
-    backup_database,
-    cleanup_old_data,
-    count_suspicious_activities,
-    load_daily_detection_stats,
-    vacuum_database,
-    validate_detection_data,
-)
+from piwardrive.core.persistence import (_get_conn,
+                                         analyze_database_performance,
+                                         backup_database, cleanup_old_data,
+                                         count_suspicious_activities,
+                                         load_daily_detection_stats,
+                                         vacuum_database,
+                                         validate_detection_data)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

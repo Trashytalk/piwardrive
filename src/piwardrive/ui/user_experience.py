@@ -10,24 +10,15 @@ import json
 import logging
 import os
 import uuid
-from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 # Web framework imports
 try:
-    from flask import (
-        Flask,
-        jsonify,
-        redirect,
-        render_template,
-        request,
-        session,
-        url_for,
-    )
-    from flask_socketio import SocketIO, emit, join_room, leave_room
+    from flask import Flask, jsonify, redirect, render_template, request, url_for
+    from flask_socketio import SocketIO
 
     HAS_FLASK = True
 except ImportError:
@@ -35,13 +26,14 @@ except ImportError:
 
 # UI framework imports
 try:
-    from tkinter import filedialog, messagebox, ttk
+    pass
 
     HAS_TKINTER = True
 except ImportError:
     HAS_TKINTER = False
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class SetupStep:
@@ -61,6 +53,7 @@ class SetupStep:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+
 @dataclass
 class TutorialStep:
     """Individual tutorial step"""
@@ -74,6 +67,7 @@ class TutorialStep:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
 
 @dataclass
 class DashboardWidget:
@@ -90,6 +84,7 @@ class DashboardWidget:
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
+
 @dataclass
 class Theme:
     """Theme configuration"""
@@ -103,7 +98,6 @@ class Theme:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
-
 
 
 class GuidedSetupWizard:
@@ -128,7 +122,6 @@ class GuidedSetupWizard:
                 id="welcome",
                 title="Welcome to PiWardrive",
                 description="Welcome to the PiWardrive setup wizard. This will guide you through the initial configuration.",
-
                 required=True,
             ),
             SetupStep(
@@ -141,7 +134,6 @@ class GuidedSetupWizard:
                 id="network_config",
                 title="Network Configuration",
                 description="Configure network settings and wireless adapter preferences.",
-
                 required=True,
             ),
             SetupStep(
@@ -178,7 +170,6 @@ class GuidedSetupWizard:
                 id="completion",
                 title="Setup Complete",
                 description="Your PiWardrive setup is complete! You can now start using the system.",
-
                 required=True,
             ),
         ]
@@ -188,7 +179,7 @@ class GuidedSetupWizard:
         try:
             if self.config_path.exists():
                 with open(self.config_path, "r") as f:
-                    _data = json.load(f)
+                    data = json.load(f)
 
                 self.current_step = data.get("current_step", 0)
                 self.wizarddata = data.get("wizard_data", {})
@@ -205,7 +196,7 @@ class GuidedSetupWizard:
     def _save_progress(self):
         """Save setup progress to file"""
         try:
-            __data = {
+            data = {
                 "current_step": self.current_step,
                 "wizard_data": self.wizard_data,
                 "completed_steps": [
@@ -292,10 +283,7 @@ class GuidedSetupWizard:
     def perform_hardware_detection(self) -> Dict[str, Any]:
         """Perform hardware detection step"""
         try:
-            from ..hardware.enhanced_hardware import (
-                EnhancedGPSManager,
-                MultiAdapterManager,
-            )
+            from ..hardware.enhanced_hardware import MultiAdapterManager
 
             results = {
                 "wireless_adapters": [],
@@ -379,7 +367,6 @@ class InteractiveTutorialSystem:
                 id="nav_1",
                 title="Welcome to PiWardrive",
                 content="Let's take a quick tour of the PiWardrive interface. Click 'Next' to continue.",
-
                 action="highlight",
                 target="main_menu",
             ),
@@ -387,7 +374,6 @@ class InteractiveTutorialSystem:
                 id="nav_2",
                 title="Main Menu",
                 content="This is the main menu. From here you can access all PiWardrive features.",
-
                 action="highlight",
                 target="main_menu",
             ),
@@ -420,7 +406,6 @@ class InteractiveTutorialSystem:
                 id="scan_1",
                 title="Starting Your First Scan",
                 content="Let's perform your first wireless scan. Click the 'Start Scan' button.",
-
                 action="highlight",
                 target="start_scan_button",
             ),
@@ -435,7 +420,6 @@ class InteractiveTutorialSystem:
                 id="scan_3",
                 title="Viewing Results",
                 content="Scan results are displayed here. You can sort and filter them.",
-
                 action="highlight",
                 target="results_table",
             ),
@@ -454,7 +438,6 @@ class InteractiveTutorialSystem:
                 id="adv_1",
                 title="Advanced Visualization",
                 content="PiWardrive includes advanced visualization features like 3D heatmaps.",
-
                 action="highlight",
                 target="visualization_tab",
             ),
@@ -462,7 +445,6 @@ class InteractiveTutorialSystem:
                 id="adv_2",
                 title="GPS Integration",
                 content="GPS data is automatically integrated with scan results for location mapping.",
-
                 action="highlight",
                 target="gps_status",
             ),
@@ -690,7 +672,7 @@ class CustomizableDashboard:
         try:
             if self.dashboard_path.exists():
                 with open(self.dashboard_path, "r") as f:
-                    _config = json.load(f)
+                    config = json.load(f)
 
                 # Load widgets
                 for widget_id, widget_config in config.get("widgets", {}).items():
@@ -743,7 +725,7 @@ class CustomizableDashboard:
     def _save_dashboard_config(self):
         """Save dashboard configuration to file"""
         try:
-            __config = {
+            config = {
                 "widgets": {
                     widget_id: widget.to_dict()
                     for widget_id, widget in self.widgets.items()
@@ -775,13 +757,13 @@ class CustomizableDashboard:
             raise ValueError(f"Unknown widget type: {widget_type}")
 
         widget_id = f"{widget_type}_{uuid.uuid4().hex[:8]}"
-        _widgetconfig = self.widget_types[widget_type]
+        widget_config = self.widget_types[widget_type]
 
         if title is None:
             title = widget_config["name"]
 
         if config is None:
-            _config = {}
+            config = {}
 
         widget = DashboardWidget(
             id=widget_id,
@@ -1205,6 +1187,7 @@ body {{
 
         return css
 
+
 # Flask web interface (if Flask is available)
 if HAS_FLASK:
 
@@ -1248,10 +1231,10 @@ if HAS_FLASK:
 
             @self.app.route("/api/setup/step/<step_id>", methods=["POST"])
             def complete_setup_step(step_id):
-                _data = request.json or {}
+                data = request.json or {}
 
                 if step_id == "hardware_detection":
-                    _data = self.setup_wizard.perform_hardware_detection()
+                    self.setup_wizard.perform_hardware_detection()
 
                 success = self.setup_wizard.complete_step(step_id, data)
 
@@ -1291,7 +1274,7 @@ if HAS_FLASK:
 
             @self.app.route("/api/dashboard/widget/<widget_id>/data")
             def get_widget_data(widget_id):
-                _data = self.dashboard.get_widget_data(widget_id)
+                data = self.dashboard.get_widget_data(widget_id)
                 return jsonify(data)
 
             @self.app.route("/themes")
@@ -1307,6 +1290,7 @@ if HAS_FLASK:
         def run(self, host="0.0.0.0", port=5000, debug=False):
             """Run the web interface"""
             self.socketio.run(self.app, host=host, port=port, debug=debug)
+
 
 # Example usage functions
 def example_setup_wizard():
@@ -1396,6 +1380,7 @@ def example_theme_system():
 
     return themes
 
+
 if __name__ == "__main__":
     # Configure logging
     logging.basicConfig(level=logging.INFO)
@@ -1410,4 +1395,4 @@ if __name__ == "__main__":
     if HAS_FLASK:
         web_interface = WebInterface()
         logger.info("Starting web interface on http://localhost:5000")
-        web_interface.run(debug=True)
+        web_interface.run(debug=False)

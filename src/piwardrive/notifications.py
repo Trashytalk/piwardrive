@@ -29,7 +29,7 @@ class NotificationManager:
         disk_percent_threshold: float | None = None,
     ) -> None:
         """Initialize the notification manager.
-        
+
         Args:
             scheduler: Scheduler instance for periodic checks.
             interval: Check interval in seconds (default 60).

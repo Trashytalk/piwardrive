@@ -25,7 +25,7 @@ class MBTiles:
                 cur = db.execute(
                     (
                         "SELECT tile_data FROM tiles WHERE zoom_level=? ",
-                        "AND tile_column=? AND tile_row=?"
+                        "AND tile_column=? AND tile_row=?",
                     ),
                     (z, x, y),
                 )

@@ -341,7 +341,7 @@ class RSSTriangulation:
 
         # Perform optimization
         try:
-            __result = minimize(
+            result = minimize(
                 objective,
                 x0,
                 method="L-BFGS-B",
@@ -722,7 +722,7 @@ class MUSICProcessor:
             return None
 
         # Extract IQ data from measurements
-        _iqdata = self._extract_iq_data(measurements)
+        iq_data = self._extract_iq_data(measurements)
 
         if iq_data is None or iq_data.shape[0] < self.antenna_config.num_elements:
             logger.warning("Insufficient IQ data for MUSIC processing")

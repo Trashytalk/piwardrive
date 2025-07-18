@@ -1,22 +1,43 @@
+from __future__ import annotations
+
+
+# TODO: Stub for TaskQueue (replace with real implementation)
+class TaskQueue:
+    pass
+
+
 """Background task queue system for PiWardrive.
 
 This module provides a simple asyncio-based task queue for handling
 background jobs and worker pools in an asynchronous environment.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any, Awaitable, Callable
 
 
+# TODO: Stub for Task
+class Task:
+    pass
+
+
+# TODO: Stub for TaskPriority
+class TaskPriority:
+    pass
+
+
+# TODO: Stub for BackgroundTaskQueue
 class BackgroundTaskQueue:
+    pass
+
+
+class BackgroundTaskQueueImpl:
     """Simple asyncio-based worker pool for background jobs."""
 
     def __init__(self, workers: int = 1) -> None:
         """Initialize the background task queue.
-        
+
         Args:
             workers: Number of worker tasks to spawn.
         """
@@ -63,7 +84,7 @@ class PriorityTaskQueue:
 
     def __init__(self, workers: int = 1) -> None:
         """Initialize the priority task queue.
-        
+
         Args:
             workers: Number of worker tasks to spawn.
         """
@@ -104,7 +125,7 @@ class PriorityTaskQueue:
 
     def enqueue(self, func: Callable[[], Awaitable[Any]], priority: int = 0) -> None:
         """Queue a function with priority (lower numbers = higher priority).
-        
+
         Args:
             func: Function to execute.
             priority: Task priority (lower numbers execute first).

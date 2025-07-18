@@ -18,7 +18,7 @@ class ResourceManager:
 
     def __init__(self) -> None:
         """Initialize the resource manager.
-        
+
         Sets up empty collections for tracking finalizers and async tasks.
         """
         self._finalizers: list[weakref.finalize] = []
@@ -33,12 +33,12 @@ class ResourceManager:
     @contextmanager
     def open_file(self, path: str, mode: str = "r", **kwargs: Any) -> Iterable[Any]:
         """Open a file with automatic cleanup registration.
-        
+
         Args:
             path: File path to open.
             mode: File mode (default 'r').
             **kwargs: Additional arguments passed to open().
-            
+
         Yields:
             File handle that will be automatically closed.
         """
@@ -52,11 +52,11 @@ class ResourceManager:
     @contextmanager
     def open_db(self, path: str, **kwargs: Any) -> Iterable[sqlite3.Connection]:
         """Open a SQLite database connection with automatic cleanup.
-        
+
         Args:
             path: Database file path.
             **kwargs: Additional arguments passed to sqlite3.connect().
-            
+
         Yields:
             SQLite connection that will be automatically closed.
         """

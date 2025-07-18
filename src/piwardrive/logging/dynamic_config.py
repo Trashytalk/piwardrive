@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import json
 import threading
 from pathlib import Path

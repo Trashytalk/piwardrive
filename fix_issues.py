@@ -4,7 +4,6 @@ Script to fix common Python code quality issues
 """
 import re
 from pathlib import Path
-from typing import List, Tuple
 
 
 def fix_unused_imports(content: str) -> str:

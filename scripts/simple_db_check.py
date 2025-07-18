@@ -7,7 +7,7 @@ import asyncio
 import logging
 import os
 import sqlite3
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

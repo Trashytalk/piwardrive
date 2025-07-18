@@ -30,9 +30,7 @@ async def list_market(_auth: Any = AUTH_DEP) -> dict[str, Any]:
 
 
 @router.post("/install")
-async def install_widget(
-    data: dict[str, Any], _auth: Any = AUTH_DEP
-) -> dict[str, Any]:
+async def install_widget(data: dict[str, Any], _auth: Any = AUTH_DEP) -> dict[str, Any]:
     """Pretend to install a widget and return success."""
     name = data.get("name", "")
     # Real installation would fetch and place plugin files

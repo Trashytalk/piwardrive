@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from importlib import resources
-from typing import Sequence
-
 from piwardrive import export, persistence
 
 
@@ -17,7 +14,7 @@ async def _fetch_all(query: str) -> list[dict[str, object]]:
 
 async def export_wifi_detections(path: str, fmt: str = "csv") -> None:
     """Export WiFi detection records to file.
-    
+
     Args:
         path: Output file path
         fmt: Export format (default: csv)
@@ -28,7 +25,7 @@ async def export_wifi_detections(path: str, fmt: str = "csv") -> None:
 
 async def export_bluetooth_detections(path: str, fmt: str = "csv") -> None:
     """Export Bluetooth detection records to file.
-    
+
     Args:
         path: Output file path
         fmt: Export format (default: csv)
@@ -39,7 +36,7 @@ async def export_bluetooth_detections(path: str, fmt: str = "csv") -> None:
 
 async def export_cellular_detections(path: str, fmt: str = "csv") -> None:
     """Export cellular detection records to file.
-    
+
     Args:
         path: Output file path
         fmt: Export format (default: csv)
@@ -50,7 +47,7 @@ async def export_cellular_detections(path: str, fmt: str = "csv") -> None:
 
 async def export_gps_tracks(path: str, fmt: str = "kml") -> None:
     """Export GPS track records to file.
-    
+
     Args:
         path: Output file path
         fmt: Export format (default: kml)

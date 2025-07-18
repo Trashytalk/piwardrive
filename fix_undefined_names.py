@@ -4,8 +4,8 @@ Script to fix critical undefined name issues in PiWardrive.
 """
 
 import os
-import re
 from pathlib import Path
+
 
 def fix_undefined_names():
     """Fix undefined name issues in key files."""

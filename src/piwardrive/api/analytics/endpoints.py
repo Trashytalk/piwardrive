@@ -5,13 +5,13 @@ from typing import Any
 from fastapi import APIRouter
 
 from piwardrive import persistence
-from piwardrive.api.auth import AUTH_DEP
 from piwardrive.analytics import (
     capacity_planning_forecast,
     failure_prediction,
     identify_expansion_opportunities,
     predict_network_lifecycle,
 )
+from piwardrive.api.auth import AUTH_DEP
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 

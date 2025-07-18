@@ -5,13 +5,10 @@ Identifies imports, undefined names, unused variables, missing docstrings, and c
 """
 
 import ast
-import os
 import re
-import sys
 from pathlib import Path
-from typing import List, Dict, Any, Set, Tuple
-import subprocess
-import json
+from typing import Any, Dict, List
+
 
 class ComprehensiveCodeAnalyzer:
     def __init__(self, root_path: str):

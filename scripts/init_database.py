@@ -261,7 +261,12 @@ def _migration_9_network_analytics(self, cursor):"""Migration 9: Network analyti
                 coverage_radius_meters REAL,
                 mobility_score REAL,
                 encryption_changes INTEGER,
-                ssid_changes INTEGER,channel_changes INTEGER,suspicious_score REAL,last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,UNIQUE(bssid, analysis_date)            )        """)
+                ssid_changes INTEGER,
+                channel_changes INTEGER,
+                suspicious_score REAL,
+                last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(bssid, analysis_date)
+            )        """)
 # Indexescursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_bssid ON network_analytics(bssid)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_date ON network_analytics(analysis_date)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_suspicious ON network_analytics(suspicious_score)")cursor.execute("INSERT OR REPLACE INTO schema_migrations (version) VALUES (9)")

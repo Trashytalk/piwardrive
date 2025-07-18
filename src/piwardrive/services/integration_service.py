@@ -26,7 +26,7 @@ class APIClient:
         self, token: str | None = None, *, max_rate: int = 60, window: int = 60
     ) -> None:
         """Initialize the API client.
-        
+
         Args:
             token: Optional authentication token.
             max_rate: Maximum requests per window (default 60).
@@ -37,15 +37,15 @@ class APIClient:
 
     async def request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
         """Make an HTTP request with rate limiting and authentication.
-        
+
         Args:
             method: HTTP method (GET, POST, etc.).
             url: Request URL.
             **kwargs: Additional arguments passed to httpx.
-            
+
         Returns:
             HTTP response object.
-            
+
         Raises:
             RuntimeError: If rate limit is exceeded.
         """
@@ -114,7 +114,7 @@ class IntegrationMonitor:
 
     def update(self, name: str, ok: bool, message: str | None = None) -> None:
         """Update the status of an integration.
-        
+
         Args:
             name: Name of the integration.
             ok: Whether the integration is working correctly.
@@ -128,7 +128,7 @@ class IntegrationMonitor:
 
     def get_status(self) -> dict[str, dict[str, Any]]:
         """Get current status of all tracked integrations.
-        
+
         Returns:
             Dictionary mapping integration names to their status information.
         """

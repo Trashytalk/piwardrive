@@ -51,6 +51,16 @@ if [ -f "examples/piwardrive-problem-reporter.service" ]; then
     systemctl daemon-reload
 fi
 
+# Install daemon service files
+print_info "Installing daemon services..."
+if [ -f "examples/piwardrive-field-diagnostics.service" ]; then
+    cp examples/piwardrive-field-diagnostics.service /etc/systemd/system/
+fi
+
+if [ -f "examples/piwardrive-mobile-diagnostics.service" ]; then
+    cp examples/piwardrive-mobile-diagnostics.service /etc/systemd/system/
+fi
+
 # Install field diagnostic tools
 print_info "Installing field diagnostic tools..."
 cp scripts/field_diagnostics.py /opt/piwardrive/field-tools/
@@ -62,6 +72,88 @@ chmod +x /opt/piwardrive/field-tools/*.py
 print_info "Creating command shortcuts..."
 ln -sf /opt/piwardrive/field-tools/field_diagnostics.py /usr/local/bin/piwardrive-field-diag
 ln -sf /opt/piwardrive/field-tools/mobile_diagnostics.py /usr/local/bin/piwardrive-mobile-diag
+
+# Create daemon control scripts
+print_info "Creating daemon control scripts..."
+cat > /usr/local/bin/piwardrive-field-daemon << 'EOF'
+#!/bin/bash
+# PiWardrive Field Diagnostics Daemon Control Script
+
+case "$1" in
+    start)
+        echo "Starting PiWardrive field diagnostics daemon..."
+        systemctl start piwardrive-field-diagnostics
+        ;;
+    stop)
+        echo "Stopping PiWardrive field diagnostics daemon..."
+        systemctl stop piwardrive-field-diagnostics
+        ;;
+    restart)
+        echo "Restarting PiWardrive field diagnostics daemon..."
+        systemctl restart piwardrive-field-diagnostics
+        ;;
+    status)
+        systemctl status piwardrive-field-diagnostics
+        ;;
+    enable)
+        echo "Enabling PiWardrive field diagnostics daemon..."
+        systemctl enable piwardrive-field-diagnostics
+        ;;
+    disable)
+        echo "Disabling PiWardrive field diagnostics daemon..."
+        systemctl disable piwardrive-field-diagnostics
+        ;;
+    logs)
+        journalctl -u piwardrive-field-diagnostics -f
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status|enable|disable|logs}"
+        exit 1
+        ;;
+esac
+EOF
+
+chmod +x /usr/local/bin/piwardrive-field-daemon
+
+cat > /usr/local/bin/piwardrive-mobile-daemon << 'EOF'
+#!/bin/bash
+# PiWardrive Mobile Diagnostics Daemon Control Script
+
+case "$1" in
+    start)
+        echo "Starting PiWardrive mobile diagnostics daemon..."
+        systemctl start piwardrive-mobile-diagnostics
+        ;;
+    stop)
+        echo "Stopping PiWardrive mobile diagnostics daemon..."
+        systemctl stop piwardrive-mobile-diagnostics
+        ;;
+    restart)
+        echo "Restarting PiWardrive mobile diagnostics daemon..."
+        systemctl restart piwardrive-mobile-diagnostics
+        ;;
+    status)
+        systemctl status piwardrive-mobile-diagnostics
+        ;;
+    enable)
+        echo "Enabling PiWardrive mobile diagnostics daemon..."
+        systemctl enable piwardrive-mobile-diagnostics
+        ;;
+    disable)
+        echo "Disabling PiWardrive mobile diagnostics daemon..."
+        systemctl disable piwardrive-mobile-diagnostics
+        ;;
+    logs)
+        journalctl -u piwardrive-mobile-diagnostics -f
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status|enable|disable|logs}"
+        exit 1
+        ;;
+esac
+EOF
+
+chmod +x /usr/local/bin/piwardrive-mobile-daemon
 
 # Set up log rotation
 print_info "Setting up log rotation..."
@@ -190,6 +282,12 @@ print_info "Field Support Tools Installed:"
 print_info "- Field diagnostics: piwardrive-field-diag"
 print_info "- Mobile diagnostics: piwardrive-mobile-diag" 
 print_info "- Problem reporter service: systemctl start piwardrive-problem-reporter"
+print_info "- Field daemon control: piwardrive-field-daemon"
+print_info "- Mobile daemon control: piwardrive-mobile-daemon"
+print_info ""
+print_info "Daemon Services Available:"
+print_info "- Field diagnostics daemon: systemctl start piwardrive-field-diagnostics"
+print_info "- Mobile diagnostics daemon: systemctl start piwardrive-mobile-diagnostics"
 print_info ""
 print_info "Documentation available at:"
 print_info "- /opt/piwardrive/field-tools/QUICK_REFERENCE.txt"
@@ -199,3 +297,6 @@ print_info "Next steps:"
 print_info "1. Configure problem reporter: edit /etc/piwardrive/problem-reporter.conf"
 print_info "2. Start problem reporter: systemctl start piwardrive-problem-reporter"
 print_info "3. Test diagnostics: piwardrive-field-diag --test"
+print_info "4. Enable daemon mode: piwardrive-field-daemon enable"
+print_info "5. Start daemon: piwardrive-field-daemon start"
+print_info "6. Check daemon logs: piwardrive-field-daemon logs"

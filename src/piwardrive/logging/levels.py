@@ -1,6 +1,6 @@
 import logging
 from enum import IntEnum
-from typing import Any, Callable, Dict, Optional, Set
+from typing import Any, Callable, Dict
 
 
 class PiWardriveLogLevel(IntEnum):

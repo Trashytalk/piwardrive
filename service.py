@@ -1,3 +1,9 @@
+# TODO: Stub for list_widgets (replace with real implementation)
+def list_widgets(*args, **kwargs):
+    return []
+# TODO: Stub for get_system_status (replace with real implementation)
+def get_system_status(*args, **kwargs):
+    return {}
 """
 Entry point for :mod:`piwardrive.service` when running from the repo.
 

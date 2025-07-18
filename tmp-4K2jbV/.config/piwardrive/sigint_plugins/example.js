@@ -1,0 +1,1 @@
+module.exports.scan = () => [{id:1}];

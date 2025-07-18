@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Visualization libraries
 import matplotlib.pyplot as plt
@@ -32,9 +32,6 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from matplotlib.collections import LineCollection
-from matplotlib.patches import Circle, Polygon, Rectangle
-from plotly.subplots import make_subplots
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -620,8 +617,8 @@ class AdvancedVisualizationEngine:
         fig = go.Figure()
 
         # Create timeline plot
-        _timestamps = [event.timestamp for event in events]
-        _event_types = [event.event_type for event in events]
+        [event.timestamp for event in events]
+        [event.event_type for event in events]
 
         # Group by event type
         event_groups = defaultdict(list)
@@ -1086,7 +1083,7 @@ def demo_advanced_visualization():
         custom_options={"node_size": 30, "node_color": "lightblue"},
     )
 
-    _fig_network = viz_engine.create_network_topology(nodes, edges, config_network)
+    viz_engine.create_network_topology(nodes, edges, config_network)
     print(f"   Created network topology with {len(nodes)} nodes and {len(edges)} edges")
 
     # Test custom scripting

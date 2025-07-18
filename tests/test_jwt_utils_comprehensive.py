@@ -5,13 +5,13 @@ Comprehensive test suite for jwt_utils.py module.
 Tests JWT token creation, verification, and security functionality.
 """
 
-import pytest
+import os
 import sys
 import time
-import os
-import unittest.mock as mock
-from unittest.mock import patch, Mock
 from pathlib import Path
+from unittest.mock import patch
+
+import pytest
 
 # Add source directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -30,6 +30,7 @@ class TestJWTConstants:
         with patch.dict(os.environ, {}, clear=True):
             # Re-import to get fresh environment values
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.SECRET == "change-me"
 
@@ -38,6 +39,7 @@ class TestJWTConstants:
         custom_secret = "my-secret-key-123"
         with patch.dict(os.environ, {"PW_JWT_SECRET": custom_secret}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.SECRET == custom_secret
 
@@ -45,6 +47,7 @@ class TestJWTConstants:
         """Test default ALGORITHM value."""
         with patch.dict(os.environ, {}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.ALGORITHM == "HS256"
 
@@ -53,6 +56,7 @@ class TestJWTConstants:
         custom_alg = "HS512"
         with patch.dict(os.environ, {"PW_JWT_ALG": custom_alg}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.ALGORITHM == custom_alg
 
@@ -60,6 +64,7 @@ class TestJWTConstants:
         """Test default ACCESS_EXPIRE value."""
         with patch.dict(os.environ, {}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.ACCESS_EXPIRE == 3600
 
@@ -68,6 +73,7 @@ class TestJWTConstants:
         custom_expire = "7200"
         with patch.dict(os.environ, {"PW_JWT_EXPIRE": custom_expire}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.ACCESS_EXPIRE == 7200
 
@@ -75,6 +81,7 @@ class TestJWTConstants:
         """Test default REFRESH_EXPIRE value."""
         with patch.dict(os.environ, {}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.REFRESH_EXPIRE == 86400
 
@@ -83,6 +90,7 @@ class TestJWTConstants:
         custom_refresh = "172800"
         with patch.dict(os.environ, {"PW_JWT_REFRESH": custom_refresh}, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
             assert jwt_utils.REFRESH_EXPIRE == 172800
 
@@ -94,12 +102,14 @@ class TestCreateAccessToken:
         """Test basic access token creation."""
         username = "testuser"
         token = jwt_utils.create_access_token(username)
-        
+
         assert isinstance(token, str)
         assert len(token) > 0
-        
+
         # Verify token can be decoded
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["sub"] == username
         assert "exp" in payload
 
@@ -107,22 +117,26 @@ class TestCreateAccessToken:
         """Test access token creation with custom expiry."""
         username = "testuser"
         custom_expire = 1800  # 30 minutes
-        
-        with patch('time.time', return_value=1000000):
+
+        with patch("time.time", return_value=1000000):
             token = jwt_utils.create_access_token(username, expires_in=custom_expire)
-        
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["sub"] == username
         assert payload["exp"] == 1000000 + custom_expire
 
     def test_create_access_token_default_expiry(self):
         """Test access token creation with default expiry."""
         username = "testuser"
-        
-        with patch('time.time', return_value=1000000):
+
+        with patch("time.time", return_value=1000000):
             token = jwt_utils.create_access_token(username)
-        
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["exp"] == 1000000 + jwt_utils.ACCESS_EXPIRE
 
     def test_create_access_token_various_usernames(self):
@@ -134,20 +148,24 @@ class TestCreateAccessToken:
             "user_with_underscores",
             "user-with-hyphens",
         ]
-        
+
         for username in usernames:
             token = jwt_utils.create_access_token(username)
-            payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+            payload = pyjwt.decode(
+                token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+            )
             assert payload["sub"] == username
 
     def test_create_access_token_time_consistency(self):
         """Test that token expiry is based on current time."""
         username = "testuser"
         current_time = int(time.time())
-        
+
         token = jwt_utils.create_access_token(username)
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
-        
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
+
         # Allow for small time differences during test execution
         assert abs(payload["exp"] - (current_time + jwt_utils.ACCESS_EXPIRE)) <= 2
 
@@ -159,12 +177,14 @@ class TestCreateRefreshToken:
         """Test basic refresh token creation."""
         username = "testuser"
         token = jwt_utils.create_refresh_token(username)
-        
+
         assert isinstance(token, str)
         assert len(token) > 0
-        
+
         # Verify token can be decoded
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["sub"] == username
         assert payload["type"] == "refresh"
         assert "exp" in payload
@@ -173,11 +193,13 @@ class TestCreateRefreshToken:
         """Test refresh token creation with custom expiry."""
         username = "testuser"
         custom_expire = 172800  # 2 days
-        
-        with patch('time.time', return_value=1000000):
+
+        with patch("time.time", return_value=1000000):
             token = jwt_utils.create_refresh_token(username, expires_in=custom_expire)
-        
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["sub"] == username
         assert payload["type"] == "refresh"
         assert payload["exp"] == 1000000 + custom_expire
@@ -185,38 +207,46 @@ class TestCreateRefreshToken:
     def test_create_refresh_token_default_expiry(self):
         """Test refresh token creation with default expiry."""
         username = "testuser"
-        
-        with patch('time.time', return_value=1000000):
+
+        with patch("time.time", return_value=1000000):
             token = jwt_utils.create_refresh_token(username)
-        
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["exp"] == 1000000 + jwt_utils.REFRESH_EXPIRE
 
     def test_create_refresh_token_type_field(self):
         """Test that refresh tokens have correct type field."""
         username = "testuser"
         token = jwt_utils.create_refresh_token(username)
-        
-        payload = pyjwt.decode(token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
+
+        payload = pyjwt.decode(
+            token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
         assert payload["type"] == "refresh"
 
     def test_create_refresh_token_vs_access_token(self):
         """Test difference between refresh and access tokens."""
         username = "testuser"
-        
+
         access_token = jwt_utils.create_access_token(username)
         refresh_token = jwt_utils.create_refresh_token(username)
-        
-        access_payload = pyjwt.decode(access_token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
-        refresh_payload = pyjwt.decode(refresh_token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM])
-        
+
+        access_payload = pyjwt.decode(
+            access_token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
+        refresh_payload = pyjwt.decode(
+            refresh_token, jwt_utils.SECRET, algorithms=[jwt_utils.ALGORITHM]
+        )
+
         # Both should have same username
         assert access_payload["sub"] == refresh_payload["sub"] == username
-        
+
         # Only refresh token should have type field
         assert "type" not in access_payload
         assert refresh_payload["type"] == "refresh"
-        
+
         # Refresh token should expire later than access token
         assert refresh_payload["exp"] > access_payload["exp"]
 
@@ -228,7 +258,7 @@ class TestVerifyToken:
         """Test verification of valid access token."""
         username = "testuser"
         token = jwt_utils.create_access_token(username)
-        
+
         result = jwt_utils.verify_token(token)
         assert result == username
 
@@ -236,38 +266,38 @@ class TestVerifyToken:
         """Test verification of valid refresh token."""
         username = "testuser"
         token = jwt_utils.create_refresh_token(username)
-        
+
         result = jwt_utils.verify_token(token)
         assert result == username
 
     def test_verify_invalid_token(self):
         """Test verification of invalid token."""
         invalid_token = "invalid.jwt.token"
-        
+
         result = jwt_utils.verify_token(invalid_token)
         assert result is None
 
     def test_verify_expired_token(self):
         """Test verification of expired token."""
         username = "testuser"
-        
+
         # Create token that expires immediately
-        with patch('time.time', return_value=1000000):
+        with patch("time.time", return_value=1000000):
             token = jwt_utils.create_access_token(username, expires_in=0)
-        
+
         # Wait a bit to ensure expiry
         time.sleep(0.1)
-        
+
         result = jwt_utils.verify_token(token)
         assert result is None
 
     def test_verify_token_wrong_secret(self):
         """Test verification with wrong secret."""
         username = "testuser"
-        
+
         # Create token with current secret
         token = jwt_utils.create_access_token(username)
-        
+
         # Try to verify with different secret
         wrong_secret = "wrong-secret"
         try:
@@ -275,9 +305,9 @@ class TestVerifyToken:
             assert False, "Should have raised exception"
         except pyjwt.PyJWTError:
             pass  # Expected
-        
+
         # Our verify function should return None for invalid signature
-        with patch.object(jwt_utils, 'SECRET', wrong_secret):
+        with patch.object(jwt_utils, "SECRET", wrong_secret):
             result = jwt_utils.verify_token(token)
             assert result is None
 
@@ -285,7 +315,7 @@ class TestVerifyToken:
         """Test verification with wrong algorithm."""
         username = "testuser"
         token = jwt_utils.create_access_token(username)
-        
+
         # Try to decode with wrong algorithm - should fail in jwt.decode
         try:
             pyjwt.decode(token, jwt_utils.SECRET, algorithms=["HS512"])
@@ -302,7 +332,7 @@ class TestVerifyToken:
             "header.payload.signature.extra",  # Too many parts
             "invalid_base64.invalid_base64.invalid_base64",
         ]
-        
+
         for token in malformed_tokens:
             result = jwt_utils.verify_token(token)
             assert result is None
@@ -312,7 +342,7 @@ class TestVerifyToken:
         # Create token manually without 'sub' field
         payload = {"exp": int(time.time()) + 3600}
         token = pyjwt.encode(payload, jwt_utils.SECRET, algorithm=jwt_utils.ALGORITHM)
-        
+
         result = jwt_utils.verify_token(token)
         assert result is None
 
@@ -323,46 +353,46 @@ class TestJWTSecurity:
     def test_token_uniqueness(self):
         """Test that tokens are unique for same user."""
         username = "testuser"
-        
+
         # Create multiple tokens with slight time differences
         tokens = []
         for _ in range(5):
             tokens.append(jwt_utils.create_access_token(username))
             time.sleep(0.01)  # Small delay to ensure different timestamps
-        
+
         # All tokens should be different
         assert len(set(tokens)) == len(tokens)
 
     def test_secret_isolation(self):
         """Test that different secrets produce different tokens."""
         username = "testuser"
-        
+
         # Create token with default secret
         token1 = jwt_utils.create_access_token(username)
-        
+
         # Create token with different secret
-        with patch.object(jwt_utils, 'SECRET', 'different-secret'):
+        with patch.object(jwt_utils, "SECRET", "different-secret"):
             token2 = jwt_utils.create_access_token(username)
-        
+
         assert token1 != token2
-        
+
         # First token should not verify with second secret
-        with patch.object(jwt_utils, 'SECRET', 'different-secret'):
+        with patch.object(jwt_utils, "SECRET", "different-secret"):
             result = jwt_utils.verify_token(token1)
             assert result is None
 
     def test_algorithm_isolation(self):
         """Test that different algorithms produce different tokens."""
         username = "testuser"
-        
+
         # Create token with HS256
-        with patch.object(jwt_utils, 'ALGORITHM', 'HS256'):
+        with patch.object(jwt_utils, "ALGORITHM", "HS256"):
             token1 = jwt_utils.create_access_token(username)
-        
+
         # Create token with HS512 (but same secret)
-        with patch.object(jwt_utils, 'ALGORITHM', 'HS512'):
+        with patch.object(jwt_utils, "ALGORITHM", "HS512"):
             token2 = jwt_utils.create_access_token(username)
-        
+
         assert token1 != token2
 
 
@@ -372,19 +402,19 @@ class TestJWTIntegration:
     def test_full_token_lifecycle(self):
         """Test complete token creation and verification cycle."""
         username = "integration_test_user"
-        
+
         # Create access token
         access_token = jwt_utils.create_access_token(username)
         assert isinstance(access_token, str)
-        
+
         # Create refresh token
         refresh_token = jwt_utils.create_refresh_token(username)
         assert isinstance(refresh_token, str)
-        
+
         # Verify both tokens
         assert jwt_utils.verify_token(access_token) == username
         assert jwt_utils.verify_token(refresh_token) == username
-        
+
         # Tokens should be different
         assert access_token != refresh_token
 
@@ -396,18 +426,19 @@ class TestJWTIntegration:
             "PW_JWT_EXPIRE": "1800",
             "PW_JWT_REFRESH": "604800",
         }
-        
+
         with patch.dict(os.environ, test_config, clear=True):
             import importlib
+
             importlib.reload(jwt_utils)
-            
+
             username = "envtest"
             token = jwt_utils.create_access_token(username)
-            
+
             # Verify token with new configuration
             result = jwt_utils.verify_token(token)
             assert result == username
-            
+
             # Check that new values are used
             assert jwt_utils.SECRET == "test-secret-123"
             assert jwt_utils.ALGORITHM == "HS512"
@@ -416,16 +447,15 @@ class TestJWTIntegration:
 
     def test_error_handling_scenarios(self):
         """Test various error scenarios."""
-        username = "errortest"
-        
+
         # Test with None input
         result = jwt_utils.verify_token(None)
         assert result is None
-        
+
         # Test with empty string
         result = jwt_utils.verify_token("")
         assert result is None
-        
+
         # Test with non-string input (should cause PyJWTError)
         with pytest.raises(AttributeError):
             jwt_utils.verify_token(12345)

@@ -20,10 +20,10 @@ import math
 import time
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +46,7 @@ class PathfindingAlgorithm(Enum):
     A_STAR = "a_star"
     BREADTH_FIRST = "breadth_first"
     DEPTH_FIRST = "depth_first"
+
 
 @dataclass
 class Position:
@@ -77,6 +78,7 @@ class Position:
             "source": self.source,
         }
 
+
 @dataclass
 class Waypoint:
     """Navigation waypoint"""
@@ -100,6 +102,7 @@ class Waypoint:
             "created_at": self.created_at.isoformat(),
             "metadata": self.metadata,
         }
+
 
 @dataclass
 class Route:
@@ -133,6 +136,7 @@ class Route:
 
         self.estimated_time = self.total_distance / walking_speed
         return self.estimated_time
+
 
 @dataclass
 class Breadcrumb:
@@ -560,7 +564,6 @@ class Pathfinder:
         return path[::-1]
 
 
-
 class OfflineNavigationSystem:
     """Main offline navigation system"""
 
@@ -785,7 +788,7 @@ class OfflineNavigationSystem:
 
     def save_navigation_data(self, filepath: str):
         """Save navigation data to file"""
-        __data = {
+        data = {
             "waypoints": [wp.to_dict() for wp in self.waypoints.values()],
             "breadcrumbs": [
                 {
@@ -815,7 +818,7 @@ class OfflineNavigationSystem:
         """Load navigation data from file"""
         try:
             with open(filepath, "r") as f:
-                _data = json.load(f)
+                data = json.load(f)
 
             # Load waypoints
             for wp_data in data.get("waypoints", []):
@@ -995,6 +998,7 @@ def demo_offline_navigation():
         "waypoints_loaded": len(nav_system.waypoints),
         "breadcrumbs_collected": len(nav_system.breadcrumbs),
     }
+
 
 if __name__ == "__main__":
     demo_offline_navigation()

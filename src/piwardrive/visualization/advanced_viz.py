@@ -8,9 +8,9 @@ Provides interactive 3D heatmaps,
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
@@ -18,21 +18,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import (
-    Image,
-    Paragraph,
-    SimpleDocTemplate,
-    Spacer,
-    Table,
-    TableStyle,
-)
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from scipy.interpolate import griddata
-from scipy.spatial.distance import cdist
 from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +83,7 @@ class Interactive3DHeatmap:
 
     def _prepare_dataframe(self, scan_data: List[ScanPoint]) -> pd.DataFrame:
         """Convert scan data to DataFrame"""
-        _data = []
+        data = []
         for point in scan_data:
             data.append(
                 {
@@ -293,7 +284,7 @@ class TimeSeriesAnalysis:
         top_ssids = df["ssid"].value_counts().head(5).index
 
         for ssid in top_ssids:
-            _ssiddata = df[df["ssid"] == ssid].copy()
+            ssid_data = df[df["ssid"] == ssid].copy()
             ssid_data["moving_avg"] = (
                 ssid_data["signal"]
                 .rolling(window=self.window_size, min_periods=1)
@@ -454,7 +445,7 @@ class GeospatialClustering:
             fig = self._create_cluster_visualization(df)
 
             # Generate cluster analysis
-            _analysis = self._analyze_clusters(df, cluster_stats)
+            analysis = self._analyze_clusters(df, cluster_stats)
 
             return {
                 "clustered_data": df,
@@ -469,7 +460,7 @@ class GeospatialClustering:
 
     def _generate_cluster_stats(self, df: pd.DataFrame) -> List[Dict]:
         """Generate statistics for each cluster"""
-        __stats = []
+        stats = []
 
         for cluster_id in df["cluster"].unique():
             if cluster_id == -1:  # Skip noise points
@@ -555,11 +546,11 @@ class GeospatialClustering:
 
     def _analyze_clusters(self, df: pd.DataFrame, stats: List[Dict]) -> Dict[str, Any]:
         """Analyze clustering results"""
-        _total_aps = len(df)
+        total_aps = len(df)
         clustered_aps = len(df[df["cluster"] != -1])
         noise_aps = len(df[df["cluster"] == -1])
 
-        _analysis = {
+        analysis = {
             "total_access_points": total_aps,
             "clustered_access_points": clustered_aps,
             "noise_points": noise_aps,
@@ -708,9 +699,9 @@ class ProfessionalReporting:
         story.append(Paragraph("Executive Summary", self.styles["SectionHeader"]))
 
         # Calculate key metrics
-        _total_aps = len(set(point.bssid for point in scan_data))
+        len(set(point.bssid for point in scan_data))
         _open_networks = sum(1 for point in scan_data if point.encryption == "Open")
-        _avg_signal = np.mean([point.signal_strength for point in scan_data])
+        np.mean([point.signal_strength for point in scan_data])
 
         summary_text = """
         This report presents the results of a comprehensive wireless security assessment
@@ -803,8 +794,8 @@ class ProfessionalReporting:
             Paragraph("Geospatial Clustering Analysis", self.styles["SectionHeader"])
         )
 
-        _analysis = cluster_results.get("analysis", {})
-        __stats = cluster_results.get("statistics", [])
+        cluster_results.get("analysis", {})
+        cluster_results.get("statistics", [])
 
         clustering_text = """
         Geospatial clustering analysis identified {analysis.get('num_clusters',
@@ -937,7 +928,7 @@ class ComparativeAnalysis:
         self, scan_data: List[ScanPoint], scan_type: str
     ) -> pd.DataFrame:
         """Prepare DataFrame for comparison"""
-        _data = []
+        data = []
         for point in scan_data:
             data.append(
                 {

@@ -26,13 +26,13 @@ import threading
 import time
 import weakref
 import zlib
-from collections import defaultdict, deque
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import lz4.frame
 import numpy as np
@@ -69,6 +69,7 @@ class CompressionType(Enum):
     LZ4 = "lz4"
     ZLIB = "zlib"
 
+
 @dataclass
 class SystemMetrics:
     """System performance metrics"""
@@ -95,6 +96,7 @@ class SystemMetrics:
             "process_count": self.process_count,
         }
 
+
 @dataclass
 class PerformanceProfile:
     """Performance profiling data"""
@@ -114,7 +116,6 @@ class PerformanceProfile:
             "cumulative_time": self.cumulative_time,
             "average_time": self.average_time,
         }
-
 
 
 class SystemMonitor:
@@ -388,7 +389,6 @@ class IntelligentCache:
         return total_size
 
 
-
 class DataCompressor:
     """Data compression utilities"""
 
@@ -441,7 +441,6 @@ class DataCompressor:
     def get_stats(self) -> Dict[str, Any]:
         """Get compression statistics"""
         return self.compression_stats.copy()
-
 
 
 class DatabaseOptimizer:
@@ -786,7 +785,6 @@ class MemoryOptimizer:
         self.weak_refs.discard(ref)
 
 
-
 class PerformanceProfiler:
     """Performance profiling utilities"""
 
@@ -813,8 +811,8 @@ class PerformanceProfiler:
             stats.print_stats(10)  # Top 10 functions
 
             # Extract key metrics
-            _total_calls = stats.total_calls
-            _total_time = stats.total_tt
+            stats.total_calls
+            stats.total_tt
 
             # Get top function
             if stats.stats:
@@ -824,7 +822,7 @@ class PerformanceProfiler:
                 profile = PerformanceProfile(
                     function_name=f"{top_func[0]}:{top_func[1]}({top_func[2]})",
                     call_count=top_stats[0],
-                    _total_time =top_stats[2],
+                    _total_time=top_stats[2],
                     cumulative_time=top_stats[3],
                     average_time=top_stats[2] / top_stats[0] if top_stats[0] > 0 else 0,
                 )
@@ -843,7 +841,6 @@ class PerformanceProfiler:
             "completed_profiles": len(self.profiles),
             "profile_data": [profile.to_dict() for profile in self.profiles.values()],
         }
-
 
 
 class PerformanceOptimizer:
@@ -1036,7 +1033,7 @@ def demo_performance_optimization():
     print("\n5. Memory Optimization:")
 
     # Create some objects to optimize
-    _test_objects = [list(range(1000)) for _ in range(100)]
+    [list(range(1000)) for _ in range(100)]
 
     memory_before = optimizer.memory_optimizer.monitor_memory()
     optimization_results = optimizer.memory_optimizer.optimize_memory()
@@ -1058,7 +1055,7 @@ def demo_performance_optimization():
         return sum(data)
 
     optimizer.profiler.start_profiling("test_profile")
-    __result = test_function()
+    test_function()
     profile_data = optimizer.profiler.stop_profiling("test_profile")
 
     if profile_data:
@@ -1094,7 +1091,6 @@ def demo_performance_optimization():
         "name, "
         "value, "
         "timestamp) VALUES (?, ?, ?, ?)",
-            
         test_data,
     )
     conn.commit()
@@ -1173,6 +1169,7 @@ def demo_performance_optimization():
             "objects_collected", 0
         ),
     }
+
 
 if __name__ == "__main__":
     demo_performance_optimization()

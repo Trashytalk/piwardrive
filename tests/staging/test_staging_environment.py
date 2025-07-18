@@ -11,7 +11,7 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 import aiohttp
 import pytest
@@ -21,6 +21,7 @@ import requests
 @dataclass
 class EndpointTest:
     """Test configuration for an API endpoint."""
+
     path: str
     method: str = "GET"
     expected_status: int = 200
@@ -34,16 +35,14 @@ class StagingEnvironmentTester:
     """Main class for staging environment testing."""
 
     def __init__(self, base_url: str = "http://staging.piwardrive.local"):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         self.session.timeout = 30
 
         # Configure auth if needed
-        self.auth_token = os.getenv('STAGING_AUTH_TOKEN')
+        self.auth_token = os.getenv("STAGING_AUTH_TOKEN")
         if self.auth_token:
-            self.session.headers.update({
-                'Authorization': f'Bearer {self.auth_token}'
-            })
+            self.session.headers.update({"Authorization": f"Bearer {self.auth_token}"})
 
     def test_health_check(self):
         """Test basic health check endpoint."""
@@ -51,9 +50,9 @@ class StagingEnvironmentTester:
         assert response.status_code == 200
 
         health_data = response.json()
-        assert health_data.get('status') == 'healthy'
-        assert 'timestamp' in health_data
-        assert 'version' in health_data
+        assert health_data.get("status") == "healthy"
+        assert "timestamp" in health_data
+        assert "version" in health_data
 
     def test_database_connectivity(self):
         """Test database connectivity."""
@@ -61,21 +60,21 @@ class StagingEnvironmentTester:
         assert response.status_code == 200
 
         db_health = response.json()
-        assert db_health.get('status') == 'healthy'
-        assert 'connection_time' in db_health
-        assert db_health['connection_time'] < 1.0  # Should connect within 1 second
+        assert db_health.get("status") == "healthy"
+        assert "connection_time" in db_health
+        assert db_health["connection_time"] < 1.0  # Should connect within 1 second
 
     def test_critical_endpoints(self):
         """Test all critical API endpoints."""
         critical_endpoints = [
-            EndpointTest('/api/wifi/networks', 'GET', 200),
-            EndpointTest('/api/bluetooth/devices', 'GET', 200),
-            EndpointTest('/api/status', 'GET', 200),
-            EndpointTest('/api/config', 'GET', 200),
-            EndpointTest('/api/health', 'GET', 200),
-            EndpointTest('/api/metrics', 'GET', 200),
-            EndpointTest('/api/logs', 'GET', 200, auth_required=True),
-            EndpointTest('/api/admin/stats', 'GET', 200, auth_required=True),
+            EndpointTest("/api/wifi/networks", "GET", 200),
+            EndpointTest("/api/bluetooth/devices", "GET", 200),
+            EndpointTest("/api/status", "GET", 200),
+            EndpointTest("/api/config", "GET", 200),
+            EndpointTest("/api/health", "GET", 200),
+            EndpointTest("/api/metrics", "GET", 200),
+            EndpointTest("/api/logs", "GET", 200, auth_required=True),
+            EndpointTest("/api/admin/stats", "GET", 200, auth_required=True),
         ]
 
         for endpoint in critical_endpoints:
@@ -94,21 +93,24 @@ class StagingEnvironmentTester:
             url,
             json=endpoint.payload,
             headers=headers,
-            timeout=endpoint.timeout
+            timeout=endpoint.timeout,
         )
 
         # Check status code
-        assert response.status_code == endpoint.expected_status, \
-            f"Expected {endpoint.expected_status}, got {response.status_code} for {endpoint.path}"
+        assert (
+            response.status_code == endpoint.expected_status
+        ), f"Expected {endpoint.expected_status}, got {response.status_code} for {endpoint.path}"
 
         # Check response time
-        assert response.elapsed.total_seconds() < endpoint.timeout, \
-            f"Response time {response.elapsed.total_seconds()}s exceeded timeout {endpoint.timeout}s"
+        assert (
+            response.elapsed.total_seconds() < endpoint.timeout
+        ), f"Response time {response.elapsed.total_seconds()}s exceeded timeout {endpoint.timeout}s"
 
         # Check content type for JSON endpoints
-        if endpoint.expected_status == 200 and endpoint.path.startswith('/api/'):
-            assert 'application/json' in response.headers.get('content-type', ''), \
-                f"Expected JSON response for {endpoint.path}"
+        if endpoint.expected_status == 200 and endpoint.path.startswith("/api/"):
+            assert "application/json" in response.headers.get(
+                "content-type", ""
+            ), f"Expected JSON response for {endpoint.path}"
 
     def test_external_service_integration(self):
         """Test external service integrations."""
@@ -117,14 +119,14 @@ class StagingEnvironmentTester:
         if response.status_code != 503:  # Service unavailable is acceptable
             assert response.status_code == 200
             wigle_data = response.json()
-            assert 'status' in wigle_data
+            assert "status" in wigle_data
 
         # Test weather API integration
         response = self.session.get(f"{self.base_url}/api/external/weather/test")
         if response.status_code != 503:
             assert response.status_code == 200
             weather_data = response.json()
-            assert 'status' in weather_data
+            assert "status" in weather_data
 
     def test_websocket_connectivity(self):
         """Test WebSocket connections."""
@@ -133,8 +135,9 @@ class StagingEnvironmentTester:
         response = self.session.get(f"{self.base_url}/api/websocket/info")
         if response.status_code == 200:
             ws_info = response.json()
-            assert 'websocket_url' in ws_info
-            assert 'supported_protocols' in ws_info
+            assert "websocket_url" in ws_info
+            assert "supported_protocols" in ws_info
+
 
 @pytest.mark.staging
 class TestStagingEnvironment:
@@ -143,7 +146,7 @@ class TestStagingEnvironment:
     @pytest.fixture(scope="class")
     def staging_tester(self):
         """Create staging environment tester."""
-        base_url = os.getenv('STAGING_URL', 'http://staging.piwardrive.local')
+        base_url = os.getenv("STAGING_URL", "http://staging.piwardrive.local")
         return StagingEnvironmentTester(base_url)
 
     def test_basic_connectivity(self, staging_tester):
@@ -166,6 +169,7 @@ class TestStagingEnvironment:
         """Test WebSocket connectivity."""
         staging_tester.test_websocket_connectivity()
 
+
 @pytest.mark.staging
 @pytest.mark.performance
 class TestStagingPerformance:
@@ -174,15 +178,15 @@ class TestStagingPerformance:
     @pytest.fixture(scope="class")
     def staging_url(self):
         """Get staging URL."""
-        return os.getenv('STAGING_URL', 'http://staging.piwardrive.local')
+        return os.getenv("STAGING_URL", "http://staging.piwardrive.local")
 
     def test_api_response_times(self, staging_url):
         """Test API response times meet requirements."""
         endpoints = [
-            '/api/wifi/networks',
-            '/api/bluetooth/devices',
-            '/api/status',
-            '/health'
+            "/api/wifi/networks",
+            "/api/bluetooth/devices",
+            "/api/status",
+            "/health",
         ]
 
         for endpoint in endpoints:
@@ -191,10 +195,13 @@ class TestStagingPerformance:
             end_time = time.perf_counter()
 
             assert response.status_code in [200, 401], f"Endpoint {endpoint} failed"
-            assert (end_time - start_time) < 2.0, f"Endpoint {endpoint} too slow: {end_time - start_time}s"
+            assert (
+                end_time - start_time
+            ) < 2.0, f"Endpoint {endpoint} too slow: {end_time - start_time}s"
 
     def test_concurrent_request_handling(self, staging_url):
         """Test concurrent request handling."""
+
         def make_request():
             try:
                 response = requests.get(f"{staging_url}/api/status", timeout=10)
@@ -225,21 +232,24 @@ class TestStagingPerformance:
         assert response_time < 1.0, f"Database health check too slow: {response_time}s"
 
         # Check reported connection time
-        if 'connection_time' in db_health:
-            assert db_health['connection_time'] < 0.5, \
-                f"Database connection too slow: {db_health['connection_time']}s"
+        if "connection_time" in db_health:
+            assert (
+                db_health["connection_time"] < 0.5
+            ), f"Database connection too slow: {db_health['connection_time']}s"
 
     def test_memory_usage(self, staging_url):
         """Test memory usage is within acceptable limits."""
         response = requests.get(f"{staging_url}/api/system/stats", timeout=10)
         if response.status_code == 200:
             stats = response.json()
-            if 'memory_usage_percent' in stats:
-                assert stats['memory_usage_percent'] < 85.0, \
-                    f"Memory usage too high: {stats['memory_usage_percent']}%"
+            if "memory_usage_percent" in stats:
+                assert (
+                    stats["memory_usage_percent"] < 85.0
+                ), f"Memory usage too high: {stats['memory_usage_percent']}%"
 
     def test_load_testing(self, staging_url):
         """Perform basic load testing."""
+
         async def make_async_request(session, url):
             try:
                 async with session.get(url, timeout=10) as response:
@@ -262,7 +272,10 @@ class TestStagingPerformance:
         success_count = sum(1 for r in results if r)
         success_rate = success_count / len(results)
 
-        assert success_rate >= 0.85, f"Load test success rate too low: {success_rate:.2%}"
+        assert (
+            success_rate >= 0.85
+        ), f"Load test success rate too low: {success_rate:.2%}"
+
 
 @pytest.mark.staging
 @pytest.mark.integration
@@ -272,120 +285,105 @@ class TestStagingIntegration:
     @pytest.fixture(scope="class")
     def staging_url(self):
         """Get staging URL."""
-        return os.getenv('STAGING_URL', 'http://staging.piwardrive.local')
+        return os.getenv("STAGING_URL", "http://staging.piwardrive.local")
 
     def test_full_wifi_scan_workflow(self, staging_url):
         """Test complete WiFi scanning workflow."""
         # Start a scan
         response = requests.post(f"{staging_url}/api/wifi/scan/start", timeout=30)
         if response.status_code == 200:
-            scan_id = response.json().get('scan_id')
+            scan_id = response.json().get("scan_id")
 
             # Wait for scan to complete
             timeout = 60
             start_time = time.time()
             while time.time() - start_time < timeout:
                 status_response = requests.get(
-                    f"{staging_url}/api/wifi/scan/{scan_id}/status",
-                    timeout=10
+                    f"{staging_url}/api/wifi/scan/{scan_id}/status", timeout=10
                 )
                 if status_response.status_code == 200:
                     status = status_response.json()
-                    if status.get('status') == 'completed':
+                    if status.get("status") == "completed":
                         break
                 time.sleep(2)
 
             # Get scan results
             results_response = requests.get(
-                f"{staging_url}/api/wifi/scan/{scan_id}/results",
-                timeout=10
+                f"{staging_url}/api/wifi/scan/{scan_id}/results", timeout=10
             )
             assert results_response.status_code == 200
 
             results = results_response.json()
-            assert 'networks' in results
-            assert isinstance(results['networks'], list)
+            assert "networks" in results
+            assert isinstance(results["networks"], list)
 
     def test_bluetooth_scan_workflow(self, staging_url):
         """Test complete Bluetooth scanning workflow."""
         # Start a Bluetooth scan
         response = requests.post(f"{staging_url}/api/bluetooth/scan/start", timeout=30)
         if response.status_code == 200:
-            scan_id = response.json().get('scan_id')
+            scan_id = response.json().get("scan_id")
 
             # Wait for scan to complete
             timeout = 60
             start_time = time.time()
             while time.time() - start_time < timeout:
                 status_response = requests.get(
-                    f"{staging_url}/api/bluetooth/scan/{scan_id}/status",
-                    timeout=10
+                    f"{staging_url}/api/bluetooth/scan/{scan_id}/status", timeout=10
                 )
                 if status_response.status_code == 200:
                     status = status_response.json()
-                    if status.get('status') == 'completed':
+                    if status.get("status") == "completed":
                         break
                 time.sleep(2)
 
             # Get scan results
             results_response = requests.get(
-                f"{staging_url}/api/bluetooth/scan/{scan_id}/results",
-                timeout=10
+                f"{staging_url}/api/bluetooth/scan/{scan_id}/results", timeout=10
             )
             assert results_response.status_code == 200
 
             results = results_response.json()
-            assert 'devices' in results
-            assert isinstance(results['devices'], list)
+            assert "devices" in results
+            assert isinstance(results["devices"], list)
 
     def test_data_export_workflow(self, staging_url):
         """Test data export functionality."""
         # Request data export
         export_request = {
-            'format': 'json',
-            'date_range': {
-                'start': '2024-01-01',
-                'end': '2024-12-31'
-            },
-            'data_types': ['wifi', 'bluetooth']
+            "format": "json",
+            "date_range": {"start": "2024-01-01", "end": "2024-12-31"},
+            "data_types": ["wifi", "bluetooth"],
         }
 
         response = requests.post(
-            f"{staging_url}/api/export/request",
-            json=export_request,
-            timeout=30
+            f"{staging_url}/api/export/request", json=export_request, timeout=30
         )
 
         if response.status_code == 200:
-            export_id = response.json().get('export_id')
+            export_id = response.json().get("export_id")
 
             # Wait for export to complete
             timeout = 120
             start_time = time.time()
             while time.time() - start_time < timeout:
                 status_response = requests.get(
-                    f"{staging_url}/api/export/{export_id}/status",
-                    timeout=10
+                    f"{staging_url}/api/export/{export_id}/status", timeout=10
                 )
                 if status_response.status_code == 200:
                     status = status_response.json()
-                    if status.get('status') == 'completed':
+                    if status.get("status") == "completed":
                         break
                 time.sleep(5)
 
             # Check export file availability
             download_response = requests.get(
-                f"{staging_url}/api/export/{export_id}/download",
-                timeout=30
+                f"{staging_url}/api/export/{export_id}/download", timeout=30
             )
             assert download_response.status_code == 200
             assert len(download_response.content) > 0
 
+
 if __name__ == "__main__":
     # Run staging tests
-    pytest.main([
-        __file__,
-        "-v",
-        "-m", "staging",
-        "--tb=short"
-    ])
+    pytest.main([__file__, "-v", "-m", "staging", "--tb=short"])

@@ -1,7 +1,6 @@
 import asyncio
 
 from piwardrive.sigint_suite.bluetooth.scanner import (
-    BluetoothDevice,
     _async_scan_bluetoothctl,
     _scan_bluetoothctl,
 )

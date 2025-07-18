@@ -18,7 +18,7 @@ class MQTTClient:
         topic: str = "piwardrive/status",
     ) -> None:
         """Initialize MQTT client.
-        
+
         Args:
             host: MQTT broker host
             port: MQTT broker port
@@ -39,7 +39,7 @@ class MQTTClient:
 
     def publish(self, payload: Any) -> None:
         """Publish a payload to the default topic.
-        
+
         Args:
             payload: Data to publish (will be JSON encoded)
         """

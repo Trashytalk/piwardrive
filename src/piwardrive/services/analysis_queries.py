@@ -46,7 +46,7 @@ async def _cached_fetch(
 
 async def evil_twin_detection() -> list[dict[str, Any]]:
     """Detect potential evil twin access points with duplicate SSIDs.
-    
+
     Returns:
         List of SSIDs with multiple BSSIDs that could indicate evil twins.
     """
@@ -68,7 +68,7 @@ async def evil_twin_detection() -> list[dict[str, Any]]:
 
 async def signal_strength_analysis() -> list[dict[str, Any]]:
     """Analyze signal strength patterns across geographical locations.
-    
+
     Returns:
         List of signal strength data grouped by location and BSSID.
     """
@@ -92,7 +92,7 @@ async def signal_strength_analysis() -> list[dict[str, Any]]:
 
 async def network_security_analysis() -> list[dict[str, Any]]:
     """Analyze network security configurations and encryption types.
-    
+
     Returns:
         List of encryption type statistics with counts and percentages.
     """
@@ -112,7 +112,7 @@ async def network_security_analysis() -> list[dict[str, Any]]:
 
 async def temporal_pattern_analysis() -> list[dict[str, Any]]:
     """Analyze WiFi detection patterns across time periods.
-    
+
     Returns:
         List of detection statistics grouped by hour and day of week.
     """
@@ -132,7 +132,7 @@ async def temporal_pattern_analysis() -> list[dict[str, Any]]:
 
 async def mobile_device_detection() -> list[dict[str, Any]]:
     """Detect potentially mobile devices based on location and speed patterns.
-    
+
     Returns:
         List of devices with multiple locations or high speeds indicating mobility.
     """

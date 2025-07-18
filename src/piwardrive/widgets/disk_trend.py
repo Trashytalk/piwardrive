@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from piwardrive.localization import _
 from piwardrive.utils import get_disk_usage
 
 from .base import DashboardWidget

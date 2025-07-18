@@ -1,5 +1,3 @@
-import logging
-
 from .config import LoggingConfig
 from .structured_logger import (
     LogContext,

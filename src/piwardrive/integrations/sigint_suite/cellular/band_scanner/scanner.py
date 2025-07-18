@@ -88,7 +88,7 @@ def main() -> None:
     parser.add_argument("--json", action="store_true", help="print results as JSON")
     args = parser.parse_args()
 
-    _data = scan_bands(args.cmd)
+    data = scan_bands(args.cmd)
     if args.json:
         print(json.dumps([r.model_dump() for r in data], indent=2))
     else:

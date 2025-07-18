@@ -7,7 +7,7 @@ import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 import aiohttp
 

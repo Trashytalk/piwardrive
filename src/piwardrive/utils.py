@@ -35,7 +35,7 @@ except Exception:
         @dataclass
         class MetricsResult:
             """Stub class for metrics results when core utils are unavailable."""
-            
+
             aps: list
             clients: list
             handshake_count: int

@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from .config import DFConfiguration, config_manager, get_df_config
+from .config import config_manager, get_df_config
 from .core import DFEngine, DFMeasurement, DFResult
 from .hardware import HardwareDetector
 
@@ -48,7 +48,7 @@ class DFIntegrationManager:
     def _initialize_df_engine(self):
         """Initialize the DF engine."""
         try:
-            _config = get_df_config()
+            config = get_df_config()
             self.df_engine = DFEngine(config)
             logger.info("DF engine initialized for integration")
         except Exception as e:

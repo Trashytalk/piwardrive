@@ -23,12 +23,11 @@ import queue
 import threading
 import time
 import uuid
-from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 from flask import Flask, jsonify, render_template_string, request
@@ -116,7 +115,7 @@ class PiWardriveUnifiedPlatform:
 
     def __init__(self, config_path: Optional[str] = None):
         """Initialize the unified platform.
-        
+
         Args:
             config_path: Optional path to configuration file.
         """
@@ -146,7 +145,7 @@ class PiWardriveUnifiedPlatform:
 
     def load_configuration(self, config_path: str):
         """Load system configuration from file.
-        
+
         Args:
             config_path: Path to the configuration file.
         """

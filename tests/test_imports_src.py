@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from test_imports import _setup_dummy_modules
 
 PKG_ROOT = Path(__file__).resolve().parents[1] / "src" / "piwardrive"

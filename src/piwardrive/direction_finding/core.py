@@ -152,13 +152,7 @@ class DFEngine:
 
     def _initialize_algorithms(self):
         """Initialize DF algorithms based on configuration."""
-        from .algorithms import (
-            BeamformingProcessor,
-            MUSICProcessor,
-            PathLossCalculator,
-            RSSTriangulation,
-            SignalMapper,
-        )
+        from .algorithms import BeamformingProcessor, MUSICProcessor, RSSTriangulation
 
         for algorithm in self.config.enabled_algorithms:
             try:
@@ -257,7 +251,7 @@ class DFEngine:
         # Process each target
         for bssid, target_measurements in targets.items():
             try:
-                _result = await self._process_target(bssid, target_measurements)
+                result = await self._process_target(bssid, target_measurements)
                 if result:
                     results.append(result)
             except Exception as e:
@@ -285,13 +279,13 @@ class DFEngine:
 
         try:
             # Process with primary algorithm
-            _result = await self._run_algorithm(primary_algorithm, bssid, measurements)
+            result = await self._run_algorithm(primary_algorithm, bssid, measurements)
 
             # If primary algorithm fails, try fallback
             if not result and self.config.fallback_algorithm:
                 fallback_algorithm = self.algorithms.get(self.config.fallback_algorithm)
                 if fallback_algorithm:
-                    _result = await self._run_algorithm(
+                    result = await self._run_algorithm(
                         fallback_algorithm, bssid, measurements
                     )
 

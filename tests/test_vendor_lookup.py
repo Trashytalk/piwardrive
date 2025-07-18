@@ -3,8 +3,6 @@ import logging
 import os
 import sys
 
-from piwardrive.sigint_suite import paths
-
 
 def _reload_module(monkeypatch, tmp_path):
     monkeypatch.setenv("SIGINT_CONFIG_DIR", str(tmp_path))

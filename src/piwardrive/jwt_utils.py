@@ -19,11 +19,11 @@ REFRESH_EXPIRE = int(os.getenv("PW_JWT_REFRESH", "86400"))
 
 def create_access_token(username: str, expires_in: int = ACCESS_EXPIRE) -> str:
     """Create a JWT access token for a user.
-    
+
     Args:
         username: Username to encode in the token.
         expires_in: Token expiration time in seconds.
-        
+
     Returns:
         Encoded JWT access token string.
     """
@@ -33,11 +33,11 @@ def create_access_token(username: str, expires_in: int = ACCESS_EXPIRE) -> str:
 
 def create_refresh_token(username: str, expires_in: int = REFRESH_EXPIRE) -> str:
     """Create a JWT refresh token for a user.
-    
+
     Args:
         username: Username to encode in the token.
         expires_in: Token expiration time in seconds.
-        
+
     Returns:
         Encoded JWT refresh token string.
     """
@@ -51,10 +51,10 @@ def create_refresh_token(username: str, expires_in: int = REFRESH_EXPIRE) -> str
 
 def verify_token(token: str) -> Optional[str]:
     """Verify a JWT token and extract the username.
-    
+
     Args:
         token: JWT token string to verify.
-        
+
     Returns:
         Username from the token if valid, None if invalid or expired.
     """

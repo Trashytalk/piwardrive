@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Callable, Dict, List, Union
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -101,22 +101,18 @@ class PluginInterface(abc.ABC):
     @abc.abstractmethod
     def initialize(self, context: PluginContext) -> bool:
         """Initialize the plugin"""
-        pass
 
     @abc.abstractmethod
     def execute(self, input_data: Any) -> Any:
         """Execute plugin functionality"""
-        pass
 
     @abc.abstractmethod
     def cleanup(self) -> bool:
         """Cleanup plugin resources"""
-        pass
 
     @abc.abstractmethod
     def get_metadata(self) -> PluginMetadata:
         """Get plugin metadata"""
-        pass
 
 
 class VisualizationPlugin(PluginInterface):
@@ -125,12 +121,10 @@ class VisualizationPlugin(PluginInterface):
     @abc.abstractmethod
     def render(self, data: Any, config: Dict[str, Any]) -> str:
         """Render visualization"""
-        pass
 
     @abc.abstractmethod
     def get_supported_formats(self) -> List[str]:
         """Get supported output formats"""
-        pass
 
 
 class AnalysisPlugin(PluginInterface):
@@ -139,12 +133,10 @@ class AnalysisPlugin(PluginInterface):
     @abc.abstractmethod
     def analyze(self, data: Any) -> Dict[str, Any]:
         """Perform analysis"""
-        pass
 
     @abc.abstractmethod
     def get_analysis_type(self) -> str:
         """Get analysis type"""
-        pass
 
 
 class HardwarePlugin(PluginInterface):
@@ -153,17 +145,14 @@ class HardwarePlugin(PluginInterface):
     @abc.abstractmethod
     def connect(self) -> bool:
         """Connect to hardware"""
-        pass
 
     @abc.abstractmethod
     def disconnect(self) -> bool:
         """Disconnect from hardware"""
-        pass
 
     @abc.abstractmethod
     def scan(self) -> List[Dict[str, Any]]:
         """Perform hardware scan"""
-        pass
 
 
 class PluginValidator:
@@ -706,11 +695,11 @@ def demo_plugin_architecture():
 
     # Test visualization plugin
     test_data = [1, 2, 3, 4, 5]
-    _vizresult = plugin_api.call_endpoint("execute_plugin", "viz_example", test_data)
+    viz_result = plugin_api.call_endpoint("execute_plugin", "viz_example", test_data)
     print(f"   Visualization result: {viz_result}")
 
     # Test analysis plugin
-    _analysisresult = plugin_api.call_endpoint(
+    analysis_result = plugin_api.call_endpoint(
         "execute_plugin", "analysis_example", test_data
     )
     print(f"   Analysis result: {analysis_result}")

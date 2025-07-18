@@ -1,0 +1,180 @@
+/* Dashboard Layout Styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.dashboard-widget {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-widget h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.dashboard-widget.error {
+  background: #f8d7da;
+  border-color: #f1aeb5;
+}
+
+.dashboard-widget.loading {
+  background: #e2e3e5;
+  border-color: #c6c8ca;
+}
+
+/* Status indicators */
+.status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.status-indicator.online {
+  background-color: #28a745;
+}
+
+.status-indicator.offline {
+  background-color: #dc3545;
+}
+
+.status-indicator.warning {
+  background-color: #ffc107;
+}
+
+/* Service control buttons */
+.service-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.service-control button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #007bff;
+  background: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.service-control button:hover {
+  background: #0056b3;
+}
+
+.service-control button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Metrics display */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 0.5rem;
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.metric-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #495057;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+/* Connection status bar */
+.connection-status-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  transition: transform 0.3s ease;
+}
+
+.connection-status-bar.online {
+  background: #d4edda;
+  color: #155724;
+}
+
+.connection-status-bar.offline {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.connection-status-bar.poor {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .service-control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .service-control button {
+    width: 100%;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .dashboard-widget {
+    background: #343a40;
+    border-color: #495057;
+    color: #f8f9fa;
+  }
+  
+  .dashboard-widget h3 {
+    color: #f8f9fa;
+  }
+  
+  .metric-item {
+    background: #495057;
+    border-color: #6c757d;
+  }
+  
+  .metric-value {
+    color: #f8f9fa;
+  }
+  
+  .metric-label {
+    color: #adb5bd;
+  }
+}

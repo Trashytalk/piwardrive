@@ -5,12 +5,11 @@ Identifies imports, errors, docstrings, formatting, variables, and other issues.
 """
 
 import ast
-import os
 import re
-import sys
-from pathlib import Path
-from typing import List, Dict, Any, Tuple
 import subprocess
+from pathlib import Path
+from typing import Any, Dict, List
+
 
 class CodeAnalyzer:
     def __init__(self, root_path: str):

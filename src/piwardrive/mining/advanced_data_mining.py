@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
-from sklearn.decomposition import PCA
 from sklearn.ensemble import IsolationForest
 from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
@@ -45,6 +44,7 @@ class InsightType(Enum):
     RECOMMENDATION = "recommendation"
     ALERT = "alert"
 
+
 @dataclass
 class Pattern:
     """Discovered pattern representation"""
@@ -58,6 +58,7 @@ class Pattern:
     discovery_time: datetime
     data_points: List[Any] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
 
 @dataclass
 class Insight:
@@ -74,6 +75,7 @@ class Insight:
     recommendations: List[str] = field(default_factory=list)
     supporting_data: Dict[str, Any] = field(default_factory=dict)
     related_patterns: List[str] = field(default_factory=list)
+
 
 @dataclass
 class Association:
@@ -115,14 +117,14 @@ class TemporalPatternMiner:
         if series_name not in self.time_series_data:
             return []
 
-        _data = self.time_series_data[series_name]
+        data = self.time_series_data[series_name]
         if len(data) < min_period * 2:
             return []
 
         patterns = []
 
         # Convert to numerical values for analysis
-        _timestamps = [point[0] for point in data]
+        timestamps = [point[0] for point in data]
         values = [self._extract_numeric_value(point[1]) for point in data]
 
         if not all(isinstance(v, (int, float)) for v in values):
@@ -147,7 +149,6 @@ class TemporalPatternMiner:
                         confidence=correlation,
                         support=consistency,
                         description=f"Periodic pattern in {series_name} with period {period}",
-
                         parameters={
                             "period": period,
                             "correlation": correlation,
@@ -174,7 +175,7 @@ class TemporalPatternMiner:
         if series_name not in self.time_series_data:
             return []
 
-        _data = self.time_series_data[series_name]
+        data = self.time_series_data[series_name]
         if len(data) < window_size:
             return []
 
@@ -216,7 +217,7 @@ class TemporalPatternMiner:
         if series_name not in self.time_series_data:
             return []
 
-        _data = self.time_series_data[series_name]
+        data = self.time_series_data[series_name]
         if len(data) < 50:  # Need sufficient data for anomaly detection
             return []
 
@@ -421,7 +422,6 @@ class ClusteringAnalyzer:
             return {}
 
         # Network features for clustering
-        _features = ["channel", "signal_strength", "encryption_type", "vendor_score"]
 
         feature_matrix = []
         network_ids = []
@@ -744,7 +744,6 @@ class AssociationRuleMiner:
                                     confidence=confidence,
                                     lift=lift,
                                     description=f"{list(antecedent)} → {list(consequent)}",
-
                                 )
                                 rules.append(rule)
 
@@ -876,7 +875,7 @@ class InsightGenerator:
         insights = []
 
         networks = data.get("networks", [])
-        _devices = data.get("devices", [])
+        data.get("devices", [])
 
         if networks:
             # Analyze encryption distribution
@@ -965,7 +964,6 @@ class InsightGenerator:
                 insight_type=InsightType.ALERT,
                 title="Multiple security risks detected",
                 description=f"Identified {security_indicators} security indicators requiring attention",
-
                 confidence=0.85,
                 severity="high",
                 timestamp=datetime.now(),
@@ -999,7 +997,6 @@ class InsightGenerator:
         """Convert severity to numeric score for sorting"""
         scores = {"critical": 4, "high": 3, "medium": 2, "low": 1, "info": 0}
         return scores.get(severity, 0)
-
 
 
 class AdvancedDataMiner:
@@ -1190,6 +1187,7 @@ class AdvancedDataMiner:
 
         return summary
 
+
 # Example usage and testing
 def test_advanced_data_mining():
     """Test advanced data mining functionality"""
@@ -1290,13 +1288,14 @@ def test_advanced_data_mining():
             )
 
     # Get statistics
-    _stats = miner.get_mining_statistics()
+    stats = miner.get_mining_statistics()
     print("\nMining Statistics:")
     print(f"  Total patterns: {stats['total_patterns_discovered']}")
     print(f"  Total insights: {stats['total_insights_generated']}")
     print(f"  Mining sessions: {stats['mining_sessions']}")
 
     print("Advanced Data Mining test completed!")
+
 
 if __name__ == "__main__":
     test_advanced_data_mining()

@@ -63,7 +63,7 @@ class MaintenanceJobManager:
                 "started": datetime.utcnow().isoformat(),
             }
             try:
-                _result = func()
+                result = func()
                 if inspect.isawaitable(result):
                     await result
             except Exception as exc:  # pragma: no cover - background errors

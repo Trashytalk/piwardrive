@@ -81,7 +81,7 @@ def build_mbtiles(folder: str, output: str) -> None:
                 tile_row = (2**z_i - 1) - y_i  # TMS
                 try:
                     with open(os.path.join(root, f), "rb") as fh:
-                        __data = fh.read()
+                        data = fh.read()
                 except OSError as exc:
                     logging.exception("Failed to read tile %s: %s", f, exc)
                     continue
@@ -89,7 +89,7 @@ def build_mbtiles(folder: str, output: str) -> None:
                     (
                         "INSERT OR REPLACE INTO tiles ",
                         "(zoom_level, tile_column, tile_row, tile_data) ",
-                        "VALUES (?, ?, ?, ?)"
+                        "VALUES (?, ?, ?, ?)",
                     ),
                     (z_i, x_i, tile_row, data),
                 )

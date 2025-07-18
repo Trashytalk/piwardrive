@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Iterable, List
 
 from ..analysis import compute_health_stats
-from ..persistence import HealthRecord, _get_conn, flush_health_records
 from ..cpu_pool import run_cpu_bound
+from ..persistence import HealthRecord, _get_conn, flush_health_records
 
 
 async def load_baseline_health(days: int, limit: int) -> List[HealthRecord]:
@@ -45,9 +45,6 @@ def analyze_health_baseline(
         "delta": delta,
         "anomalies": anomalies,
     }
-
-
-from ..cpu_pool import run_cpu_bound
 
 
 async def analyze_health_baseline_async(

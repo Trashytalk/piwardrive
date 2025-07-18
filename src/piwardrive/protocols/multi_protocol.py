@@ -7,11 +7,10 @@ import logging
 import struct
 import threading
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +46,7 @@ class DeviceType(Enum):
     CELLULAR_BASE_STATION = "cellular_base_station"
     CELLULAR_DEVICE = "cellular_device"
 
+
 @dataclass
 class RadioDevice:
     """Generic radio device representation"""
@@ -63,6 +63,7 @@ class RadioDevice:
     capabilities: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class BLEDevice:
     """Bluetooth Low Energy device"""
@@ -78,6 +79,7 @@ class BLEDevice:
     connectable: bool = True
     first_seen: datetime = field(default_factory=datetime.now)
     last_seen: datetime = field(default_factory=datetime.now)
+
 
 @dataclass
 class ZigbeeDevice:
@@ -96,6 +98,7 @@ class ZigbeeDevice:
     first_seen: datetime = field(default_factory=datetime.now)
     last_seen: datetime = field(default_factory=datetime.now)
 
+
 @dataclass
 class ZWaveDevice:
     """Z-Wave device representation"""
@@ -111,6 +114,7 @@ class ZWaveDevice:
     routing_slaves: List[int] = field(default_factory=list)
     first_seen: datetime = field(default_factory=datetime.now)
     last_seen: datetime = field(default_factory=datetime.now)
+
 
 @dataclass
 class LoRaWANDevice:
@@ -128,6 +132,7 @@ class LoRaWANDevice:
     frame_counter: int = 0
     first_seen: datetime = field(default_factory=datetime.now)
     last_seen: datetime = field(default_factory=datetime.now)
+
 
 @dataclass
 class CellularDevice:
@@ -290,7 +295,6 @@ class BLEScanner:
         return uuids
 
 
-
 class ZigbeeScanner:
     """Zigbee protocol scanner"""
 
@@ -402,7 +406,6 @@ class ZigbeeScanner:
         return list(self.devices.values())
 
 
-
 class ZWaveScanner:
     """Z-Wave protocol scanner"""
 
@@ -500,7 +503,6 @@ class ZWaveScanner:
     def get_devices(self) -> List[ZWaveDevice]:
         """Get discovered Z-Wave devices"""
         return list(self.devices.values())
-
 
 
 class LoRaWANScanner:
@@ -614,7 +616,6 @@ class LoRaWANScanner:
     def get_devices(self) -> List[LoRaWANDevice]:
         """Get discovered LoRaWAN devices"""
         return list(self.devices.values())
-
 
 
 class CellularScanner:
@@ -744,7 +745,6 @@ class CellularScanner:
         return list(self.base_stations.values())
 
 
-
 class SDRInterface:
     """Software Defined Radio interface"""
 
@@ -790,7 +790,7 @@ class SDRInterface:
         signal2 = 0.5 * np.exp(1j * 2 * np.pi * 5e6 * t)  # 5 MHz offset
         noise = 0.1 * (np.random.randn(len(t)) + 1j * np.random.randn(len(t)))
 
-        _iqdata = signal1 + signal2 + noise
+        iq_data = signal1 + signal2 + noise
 
         # Notify callbacks with IQ data
         for callback in self.callbacks:
@@ -1059,7 +1059,7 @@ class MultiProtocolManager:
 
     def get_protocol_statistics(self) -> Dict[str, Any]:
         """Get protocol statistics"""
-        _stats = {
+        stats = {
             "active_protocols": list(self.active_protocols),
             "total_devices": len(self.all_devices),
             "protocol_distribution": {},
@@ -1081,6 +1081,7 @@ class MultiProtocolManager:
         stats["cellular_base_stations"] = len(self.cellular_scanner.get_base_stations())
 
         return stats
+
 
 # Example usage and testing
 def test_multi_protocol_support():
@@ -1133,7 +1134,7 @@ def test_multi_protocol_support():
     manager.stop_protocol_scan(RadioProtocol.SDR_GENERIC)
 
     # Get statistics
-    _stats = manager.get_protocol_statistics()
+    stats = manager.get_protocol_statistics()
     print("\nProtocol Statistics:")
     print(f"  Total devices: {stats['total_devices']}")
     print(f"  Active protocols: {stats['active_protocols']}")
@@ -1151,6 +1152,7 @@ def test_multi_protocol_support():
         print(f"  {device.device_id}: {device.metadata.get('name', 'Unknown')}")
 
     print("Multi-Protocol Support test completed!")
+
 
 if __name__ == "__main__":
     test_multi_protocol_support()

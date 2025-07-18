@@ -16,16 +16,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Import DF components
-from piwardrive.direction_finding import (
-    DFAlgorithm,
-    PathLossModel,
-    add_df_measurement,
-    configure_df,
-    get_df_hardware_capabilities,
-    get_df_status,
-    initialize_df_integration,
-    start_df_integration,stop_df_integration,
-)
+from piwardrive.direction_finding import (DFAlgorithm, PathLossModel,
+                                          add_df_measurement, configure_df,
+                                          get_df_hardware_capabilities,
+                                          get_df_status,
+                                          initialize_df_integration,
+                                          start_df_integration,
+                                          stop_df_integration)
 
 
 async def main():
@@ -33,7 +30,7 @@ async def main():
     logger.info("Starting PiWardrive Direction Finding Example")
 
     # Initialize DF integration
-    _df_manager = initialize_df_integration()
+    initialize_df_integration()
 
     # Configure DF system
     configure_df_system()
@@ -252,7 +249,7 @@ async def demonstrate_advanced_features():
     result_handler = DFResultHandler()
 
     # Get DF manager and add callback
-    _df_manager = initialize_df_integration()
+    initialize_df_integration()
     df_manager.add_result_callback(result_handler.handle_result)
 
     # Demonstrate calibration

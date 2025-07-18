@@ -6,7 +6,6 @@ Fixes flake8 and mypy issues systematically
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
 def run_black_and_isort(src_dir: Path) -> None:
@@ -211,7 +210,6 @@ def fix_complexity_issues(content: str, file_path: Path) -> str:
     lines = content.split("\n")
     fixed_lines = []
 
-    _in_complex_function = False
 
     for line in lines:
         # Add early returns to reduce complexity where possible

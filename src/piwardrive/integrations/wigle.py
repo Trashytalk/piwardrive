@@ -46,7 +46,7 @@ async def fetch_wigle_networks(
         async with aiohttp.ClientSession(timeout=timeout) as session:
             async with session.get(url, params=params, auth=auth) as resp:
                 resp.raise_for_status()
-                _data = await resp.json()
+                data = await resp.json()
     except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
         logging.error("WiGLE request failed: %s", exc)
         return []

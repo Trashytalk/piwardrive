@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import shlex
-from typing import List, Optional, Tuple
+from typing import Optional
 
 
 def build_cmd_args(

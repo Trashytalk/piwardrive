@@ -12,7 +12,7 @@ class ModelTrainer:
 
     def __init__(self, scheduler: PollScheduler, interval: int = 3600) -> None:
         """Initialize the model trainer.
-        
+
         Args:
             scheduler: Scheduler instance for periodic retraining
             interval: Training interval in seconds (default: 3600)

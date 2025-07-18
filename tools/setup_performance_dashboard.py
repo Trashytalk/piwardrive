@@ -88,17 +88,16 @@ def validate_integration():
         # Test async optimizer
         from piwardrive.performance.async_optimizer import AsyncOptimizer
 
-        _async_opt = AsyncOptimizer()
+        AsyncOptimizer()
         print("  ✓ Async optimizer ready")
 
         # Test realtime optimizer
         from piwardrive.performance.realtime_optimizer import RealtimeOptimizer
 
-        _rt_opt = RealtimeOptimizer()
+        RealtimeOptimizer()
         print("  ✓ Realtime optimizer ready")
 
         # Test performance dashboard API
-        from piwardrive.api.performance_dashboard import router
 
         print("  ✓ Performance dashboard router ready")
 

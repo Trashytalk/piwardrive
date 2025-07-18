@@ -4,9 +4,9 @@ This module provides comprehensive system diagnostic functionality including
 performance profiling, resource monitoring, health checks, and automated
 diagnostics for the PiWardrive system.
 """
+
 from __future__ import annotations
 
-import logging
 import asyncio
 import cProfile
 import gzip
@@ -142,7 +142,7 @@ async def rotate_log_async(path: str, max_files: int = DEFAULT_LOG_ARCHIVES) -> 
     tmp = f"{path}.1"
     os.rename(path, tmp)
     async with aiofiles.open(tmp, "rb") as f_in:
-        _data = await f_in.read()
+        data = await f_in.read()
     async with aiofiles.open(f"{tmp}.gz", "wb") as f_out:
         await f_out.write(gzip.compress(data))
     os.remove(tmp)
@@ -163,7 +163,7 @@ def stop_profiling() -> str | None:
         return None
     _PROFILER.disable()
     s = io.StringIO()
-    _stats = pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative")
+    stats = pstats.Stats(_PROFILER, stream=s).strip_dirs().sort_stats("cumulative")
     stats.print_stats(10)
     path = os.getenv("PW_PROFILE_CALLGRIND")
     if path:
@@ -189,7 +189,7 @@ def get_profile_metrics() -> Dict[str, float] | None:
     """Return simple metrics from the active profiler."""
     if _PROFILER is None:
         return None
-    _stats = _PROFILER.getstats()
+    stats = _PROFILER.getstats()
     total = sum(rec.totaltime for rec in stats)
     return {"calls": len(stats), "cumtime": total}
 
@@ -268,7 +268,7 @@ class HealthMonitor:
         mqtt_client: "MQTTClient | None" = None,
     ) -> None:
         """Initialize health monitor with scheduler and configuration.
-        
+
         Args:
             scheduler: The poll scheduler to use for monitoring.
             interval: Monitoring interval in seconds.
@@ -400,7 +400,7 @@ class HealthMonitor:
         plot_path = os.path.join(cfg.reports_dir, f"health_{date}.png")
 
         try:
-            __result = await asyncio.to_thread(
+            result = await asyncio.to_thread(
                 r_integration.health_summary, csv_path, plot_path
             )
         except PiWardriveError as exc:  # pragma: no cover - optional

@@ -516,9 +516,9 @@ def test_safe_request_retries(monkeypatch: Any) -> None:
         def raise_for_status(self) -> None:
             pass
 
-    def get(url: str,
-        timeout: int = 5,
-        expire_after=None) -> Resp:  # type: ignore[override]
+    def get(
+        url: str, timeout: int = 5, expire_after=None
+    ) -> Resp:  # type: ignore[override]
         calls.append(url)
         if len(calls) == 1:
             raise Exception("boom")
@@ -917,6 +917,7 @@ class TestRobustRequest:
 
     def test_robust_request_exhausts_retries(self, monkeypatch: Any) -> None:
         """Test robust_request raises exception after exhausting retries."""
+
         def mock_request(*args, **kwargs):
             raise requests.RequestException("Persistent failure")
 
@@ -951,7 +952,9 @@ class TestRobustRequest:
         assert sleep_calls[0] == 1  # First delay (RETRY_DELAY)
         assert sleep_calls[1] == 2  # Second delay (doubled)
 
-    def test_robust_request_different_request_exceptions(self, monkeypatch: Any) -> None:
+    def test_robust_request_different_request_exceptions(
+        self, monkeypatch: Any
+    ) -> None:
         """Test robust_request handles different types of RequestException."""
         mock_response = mock.Mock()
 
@@ -997,7 +1000,9 @@ class TestRobustRequest:
             utils.robust_request("http://example.com")
 
         # Should have logged warnings for the failed attempts
-        warning_logs = [record for record in caplog.records if record.levelno == logging.WARNING]
+        warning_logs = [
+            record for record in caplog.records if record.levelno == logging.WARNING
+        ]
         assert len(warning_logs) == 2
         assert "Request failed" in warning_logs[0].message
         assert "Connection failed" in warning_logs[0].message

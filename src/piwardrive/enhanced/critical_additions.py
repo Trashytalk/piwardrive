@@ -18,22 +18,10 @@ import json
 import logging
 import uuid
 from collections import defaultdict, deque
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, List, Set
 
 import numpy as np
 import websockets
@@ -75,6 +63,7 @@ class DeviceCategory(Enum):
     SECURITY = "security"
     UNKNOWN = "unknown"
 
+
 @dataclass
 @dataclass
 class RealTimeEvent:
@@ -87,6 +76,7 @@ class RealTimeEvent:
     severity: SecurityLevel = SecurityLevel.LOW
     data: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
 
 @dataclass
 class IoTDeviceProfile:
@@ -103,6 +93,7 @@ class IoTDeviceProfile:
     vulnerabilities: List[str] = field(default_factory=list)
     last_seen: datetime = field(default_factory=datetime.now)
     risk_score: float = 0.0
+
 
 @dataclass
 class ComplianceRule:
@@ -122,7 +113,7 @@ class RealTimeDataStreamer:
 
     def __init__(self, port: int = 8765):
         """Initialize the real-time data streamer.
-        
+
         Args:
             port: WebSocket server port.
         """
@@ -150,7 +141,7 @@ class RealTimeDataStreamer:
 
     async def handle_client(self, websocket, path):
         """Handle client connections.
-        
+
         Args:
             websocket: WebSocket connection.
             path: Connection path.
@@ -168,7 +159,7 @@ class RealTimeDataStreamer:
 
     async def broadcast_event(self, event: RealTimeEvent):
         """Broadcast event to all clients.
-        
+
         Args:
             event: Event to broadcast.
         """
@@ -704,7 +695,6 @@ class ComplianceChecker:
             "passed": passed,
             "score": encryption_ratio,
             "details": f"{encrypted_connections}/{total_connections} connections encrypted ({encryption_ratio:.1%})",
-
         }
 
     def _check_access_control(self, network_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -725,7 +715,6 @@ class ComplianceChecker:
             "passed": passed,
             "score": score,
             "details": f"{admin_access_count} administrative access connections detected",
-
         }
 
     def _check_network_segmentation(
@@ -772,7 +761,6 @@ class ComplianceChecker:
             "passed": passed,
             "score": encryption_ratio,
             "details": f"{encrypted_data_flows}/{total_data_flows} data flows encrypted ({encryption_ratio:.1%})",
-
         }
 
 
@@ -889,7 +877,6 @@ class ExecutiveDashboard:
         }
 
 
-
 def demo_enhanced_capabilities():
     """Demonstrate enhanced capabilities"""
     print("PiWardrive Enhanced Capabilities Demo")
@@ -897,7 +884,7 @@ def demo_enhanced_capabilities():
 
     # Test Real-time Data Streaming
     print("\n1. Real-time Data Streaming:")
-    _streamer = RealTimeDataStreamer()
+    RealTimeDataStreamer()
 
     # Create sample events
     events = [
@@ -1041,6 +1028,7 @@ def demo_enhanced_capabilities():
         "compliance_score": compliance_results["overall_score"],
         "executive_summary": executive_summary,
     }
+
 
 if __name__ == "__main__":
     demo_enhanced_capabilities()

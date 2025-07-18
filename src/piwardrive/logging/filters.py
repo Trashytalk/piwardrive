@@ -2,7 +2,7 @@ import logging
 import re
 import time
 from collections import defaultdict, deque
-from typing import Any, Dict, List, Optional, Pattern
+from typing import Any, Dict, List, Pattern
 
 
 class ContentFilter:

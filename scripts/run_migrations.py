@@ -12,13 +12,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 :
 try:
     from piwardrive.core.persistence import _get_conn
-from piwardrive.migrations.runner import (
-        run_pending_migrations,)
+
+from piwardrive.migrations.runner import run_pending_migrations
+
         check_migration_statusexcept ImportError as e:print(f"Import error: {e}")
 print("Installing dependencies...")import subprocesssubprocess.run([sys.executable, "-m", "pip", "install", "aiosqlite"])
 from piwardrive.core.persistence import _get_conn
-from piwardrive.migrations.runner import (
-        run_pending_migrations,)
+from piwardrive.migrations.runner import run_pending_migrations
+
         check_migration_status
 
 logging.basicConfig(level=logging.INFO)
@@ -46,6 +47,7 @@ async def main():"""Main migration function."""
 if applied_count > 0:print(f"✅ Successfully applied {applied_count} migrations")else:print("✅ Database is already up to date")print("\n=== Migration completed successfully! ===")
 except Exception as e:print(f"❌ Migration failed: {e}")
 import traceback
+
         traceback.print_exc()
 sys.exit(1)if __name__ == "__main__":
     asyncio.run(main())

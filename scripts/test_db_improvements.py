@@ -86,7 +86,7 @@ try:
             channel_changes INTEGER,
             suspicious_score REAL,
             last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (bssid, analysis_date)
+            UNIQUE(bssid, analysis_date)
         )
     """
     )

@@ -6,13 +6,12 @@ Advanced indoor positioning, floor plan generation, and spatial analytics
 import logging
 import math
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy.optimize import minimize
-from scipy.spatial.distance import cdist
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +35,7 @@ class LocationConfidence(Enum):
     LOW = "low"
     UNKNOWN = "unknown"
 
+
 @dataclass
 class Position:
     """3D position with uncertainty"""
@@ -48,6 +48,7 @@ class Position:
     timestamp: datetime
     method: PositioningMethod
 
+
 @dataclass
 class AccessPointLocation:
     """Access point with known location"""
@@ -59,6 +60,7 @@ class AccessPointLocation:
     antenna_gain: float
     frequency: float
 
+
 @dataclass
 class RSSIMeasurement:
     """RSSI measurement from access point"""
@@ -69,6 +71,7 @@ class RSSIMeasurement:
     channel: int
     frequency: float
 
+
 @dataclass
 class FloorPlanNode:
     """Node in floor plan graph"""
@@ -77,6 +80,7 @@ class FloorPlanNode:
     position: Position
     node_type: str  # 'room', 'corridor', 'junction', 'entrance'
     properties: Dict
+
 
 @dataclass
 class FloorPlanEdge:
@@ -88,6 +92,7 @@ class FloorPlanEdge:
     traversable: bool
     properties: Dict
 
+
 @dataclass
 class Room:
     """Room definition"""
@@ -98,6 +103,7 @@ class Room:
     center: Tuple[float, float]
     area: float
     floor_level: int
+
 
 @dataclass
 class MovementPattern:
@@ -169,7 +175,7 @@ class RSSITrilateration:
         ]
 
         # Solve optimization
-        _result = minimize(objective, initial_guess, method="L-BFGS-B")
+        result = minimize(objective, initial_guess, method="L-BFGS-B")
 
         if result.success:
             # Calculate uncertainty based on residual error
@@ -226,7 +232,7 @@ class FingerprintingDatabase:
                 }
 
             # Add measurement
-            _stats = self.fingerprints[location_id][bssid]
+            stats = self.fingerprints[location_id][bssid]
             stats["rssi_values"].append(measurement.rssi)
             stats["count"] += 1
 
@@ -403,7 +409,6 @@ class FloorPlanGenerator:
     def _extract_room_corners(self, room_mask: np.ndarray) -> List[Tuple[float, float]]:
         """Extract corner coordinates of a room"""
         # Find contour of the room
-        _contours = []
 
         # Simple corner detection (could be improved with OpenCV)
         coords = np.where(room_mask)
@@ -683,6 +688,7 @@ class GeospatialIntelligence:
 
         return (max_x - min_x) * (max_y - min_y)
 
+
 # Example usage and testing
 def test_geospatial_intelligence():
     """Test geospatial intelligence functionality"""
@@ -792,7 +798,7 @@ def test_geospatial_intelligence():
             RSSIMeasurement("00:11:22:33:44:66", -55 - i, datetime.now(), 11, 2.462e9),
             RSSIMeasurement("00:11:22:33:44:77", -50 - i, datetime.now(), 1, 2.412e9),
         ]
-        _pos = geo_intel.estimate_position(test_measurements)
+        geo_intel.estimate_position(test_measurements)
 
     # Test movement analysis
     patterns = geo_intel.analyze_movement_patterns()
@@ -810,13 +816,14 @@ def test_geospatial_intelligence():
     print(f"  Rooms: {len(floor_plan.get('rooms', []))}")
 
     # Get positioning statistics
-    _stats = geo_intel.get_positioning_stats()
+    stats = geo_intel.get_positioning_stats()
     print("\nPositioning statistics:")
     print(f"  Total positions: {stats.get('total_positions', 0)}")
     print(f"  Average accuracy: {stats.get('avg_accuracy', 0):.2f}m")
     print(f"  Coverage area: {stats.get('coverage_area', 0):.2f}m²")
 
     print("Geospatial Intelligence Platform test completed!")
+
 
 if __name__ == "__main__":
     test_geospatial_intelligence()

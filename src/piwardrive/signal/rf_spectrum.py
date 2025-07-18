@@ -7,7 +7,7 @@ import logging
 import math
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from scipy import signal
@@ -27,6 +27,7 @@ class InterferenceType(Enum):
     BABY_MONITOR = "baby_monitor"
     UNKNOWN = "unknown"
 
+
 @dataclass
 class FrequencyBand:
     """Frequency band definition"""
@@ -37,6 +38,7 @@ class FrequencyBand:
     bandwidth: float
     name: str
 
+
 @dataclass
 class SpectrumSample:
     """Spectrum analysis sample"""
@@ -45,6 +47,7 @@ class SpectrumSample:
     power_dbm: float
     timestamp: float
     channel: Optional[int] = None
+
 
 @dataclass
 class InterferenceSource:
@@ -58,6 +61,7 @@ class InterferenceSource:
     duration: float
     location: Optional[Tuple[float, float]] = None
 
+
 @dataclass
 class ChannelUtilization:
     """Channel utilization metrics"""
@@ -68,6 +72,7 @@ class ChannelUtilization:
     interference_level: float
     recommended_power: float
     quality_score: float
+
 
 @dataclass
 class PropagationModel:
@@ -108,7 +113,6 @@ class FFTProcessor:
             spectrum, height=threshold, distance=10, prominence=10
         )
         return peaks.tolist()
-
 
 
 class InterferenceDetector:
@@ -579,6 +583,7 @@ class RFSpectrumIntelligence:
 
         return f"Channel {channel.channel}: {', '.join(reasons)}"
 
+
 # Example usage and testing
 def test_rf_spectrum_intelligence():
     """Test RF spectrum intelligence functionality"""
@@ -633,6 +638,7 @@ def test_rf_spectrum_intelligence():
         print(f"  Distance {distance}m: Path loss = {path_loss:.1f} dB")
 
     print("RF Spectrum Intelligence test completed!")
+
 
 if __name__ == "__main__":
     test_rf_spectrum_intelligence()

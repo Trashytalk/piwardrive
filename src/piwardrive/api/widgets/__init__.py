@@ -26,12 +26,14 @@ class DashboardSettingsResponse(TypedDict):
     layout: List[Dict[str, Any]]
     widgets: List[str]
 
+
 router = APIRouter()
 
 
 async def _collect_widget_metrics() -> WidgetMetrics:
     # Import here to avoid circular imports
     from piwardrive.api.system import collect_widget_metrics
+
     return await collect_widget_metrics()
 
 

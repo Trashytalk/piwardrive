@@ -35,7 +35,7 @@ class LazyWidgetManager:
         unload_threshold_mb: float = 200.0,
     ) -> None:
         """Initialize the lazy widget manager.
-        
+
         Args:
             resource_manager: Resource manager for tracking system resources.
             memory_monitor: Optional memory monitor for tracking memory usage.

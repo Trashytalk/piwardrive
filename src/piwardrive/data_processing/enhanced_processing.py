@@ -13,17 +13,14 @@ import statistics
 import threading
 from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Union
 
 import geojson
 import numpy as np
 import pandas as pd
 from scipy import stats
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
@@ -194,8 +191,8 @@ class AdvancedFilteringEngine:
             lon_field = rule_config.get("lon_field", "longitude")
 
             def geospatial_rule(data):
-                _lat = data.get(lat_field)
-                _lon = data.get(lon_field)
+                lat = data.get(lat_field)
+                lon = data.get(lon_field)
 
                 if lat is None or lon is None:
                     return False
@@ -215,7 +212,8 @@ class AdvancedFilteringEngine:
         if rule_names is None:
             rule_names = list(self.rules.keys())
 
-        _filtereddata = []
+        filtered_data = []
+
         for item in data:
             passes_all = True
             for rule_name in rule_names:
@@ -529,7 +527,7 @@ class ExportFormatExpansion:
 
         # Add advanced calculated fields
         if advanced_fields:
-            _enhanceddata = []
+            enhanced_data = []
             for item in data:
                 enhanced_item = item.copy()
 
@@ -556,7 +554,6 @@ class ExportFormatExpansion:
 
                 enhanced_data.append(enhanced_item)
 
-            __data = enhanced_data
             all_fields.update(
                 [
                     "coordinate_string",
@@ -605,16 +602,16 @@ class ExportFormatExpansion:
 
         for item in data:
             if "latitude" in item and "longitude" in item:
-                _lat = item["latitude"]
-                _lon = item["longitude"]
+                item["latitude"]
+                item["longitude"]
 
                 # Determine style based on signal strength
                 signal_strength = item.get("signal_strength", -100)
-                _style = "signal_strong" if signal_strength > -60 else "signal_weak"
+                "signal_strong" if signal_strength > -60 else "signal_weak"
 
                 # Create placemark
-                _name = item.get("ssid", "Unknown SSID")
-                _description = self._create_kml_description(item)
+                item.get("ssid", "Unknown SSID")
+                self._create_kml_description(item)
 
                 kml_content += """
     <Placemark>
@@ -675,8 +672,8 @@ class ExportFormatExpansion:
 
     def _create_kml_description(self, item: Dict[str, Any]) -> str:
         """Create KML description from item data"""
-        _description = "<table>"
-
+        description = "<table>"
+        
         key_fields = [
             "ssid",
             "bssid",
@@ -694,8 +691,7 @@ class ExportFormatExpansion:
                 elif field == "timestamp":
                     value = datetime.fromisoformat(value).strftime("%Y-%m-%d %H:%M:%S")
 
-                description += f"<tr><td><b>{field.replace('_',
-                    ' ').title()}:</b></td><td>{value}</td></tr>"
+                description += f"<tr><td><b>{field.replace('_', ' ').title()}:</b></td><td>{value}</td></tr>"
 
         description += "</table>"
         return description

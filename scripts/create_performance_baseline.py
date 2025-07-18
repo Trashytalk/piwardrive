@@ -12,9 +12,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import psutil
+
+from piwardrive.performance import (AsyncOptimizer, DatabaseOptimizer,
+                                    RealtimeOptimizer)
+
 # Add src to path for importssys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from piwardrive.performance import AsyncOptimizer, DatabaseOptimizer, RealtimeOptimizer
 :
 class PerformanceBaseline:"""Creates and manages performance baselines."""def __init__(self, baseline_file: str = "performance_baseline.json"):
         self.baseline_file = Path(baseline_file)

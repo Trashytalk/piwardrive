@@ -12,12 +12,11 @@ import os
 import smtplib
 import sqlite3
 import time
-from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from email.mime.multipart import MimeMultipart
 from email.mime.text import MimeText
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import psutil
@@ -316,7 +315,7 @@ class PerformanceMonitor:
             start_time = time.perf_counter()
             with sqlite3.connect(self.database_path) as conn:
                 conn.execute("SELECT COUNT(*) FROM performance_metrics")
-                _result = conn.fetchone()
+                conn.fetchone()
             end_time = time.perf_counter()
 
             query_time = end_time - start_time

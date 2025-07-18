@@ -29,7 +29,7 @@ async def scan_cellular_get(
 ) -> CellularScanResponse:
     """Perform a cellular scan and return discovered towers."""
     towers = await cellular_scanner.scan_cell_towers(timeout=timeout)
-    _result = [CellTower.model_validate(t.__dict__) for t in towers]
+    result = [CellTower.model_validate(t.__dict__) for t in towers]
     await cellular_scanner.record_cellular_detections(result)
     return CellularScanResponse(towers=result)
 
@@ -45,7 +45,7 @@ async def scan_cellular_post(
 ) -> CellularScanResponse:
     """Perform a cellular scan using parameters in the request body."""
     towers = await cellular_scanner.scan_cell_towers(timeout=req.timeout)
-    _result = [CellTower.model_validate(t.__dict__) for t in towers]
+    result = [CellTower.model_validate(t.__dict__) for t in towers]
     await cellular_scanner.record_cellular_detections(result)
     return CellularScanResponse(towers=result)
 
@@ -65,7 +65,7 @@ async def list_cellular_detections(
     """Return cellular detection rows from the database."""
     query = (
         "SELECT id, scan_session_id, detection_timestamp, cell_id, lac, mcc, ",
-        "mnc, signal_strength_dbm, latitude, longitude FROM cellular_detections"
+        "mnc, signal_strength_dbm, latitude, longitude FROM cellular_detections",
     )
     params: list[object] = []
     clauses: list[str] = []

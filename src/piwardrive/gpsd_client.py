@@ -40,7 +40,7 @@ class GPSDClient:
 
     def __init__(self, host: str | None = None, port: int | None = None) -> None:
         """Initialize the GPSD client.
-        
+
         Args:
             host: Hostname of the gpsd service. Defaults to environment
                 variable PW_GPSD_HOST or '127.0.0.1'.

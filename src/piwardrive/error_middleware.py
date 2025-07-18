@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from logging import Logger
 from typing import Awaitable, Callable
 
@@ -21,7 +19,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: ASGIApp, logger: Logger | None = None) -> None:
         """Initialize the error handling middleware.
-        
+
         Args:
             app: The ASGI application to wrap.
             logger: Optional logger instance. If None, creates a logger for this module.
@@ -33,11 +31,11 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]
     ):
         """Dispatch requests with error handling.
-        
+
         Args:
             request: The incoming HTTP request.
             call_next: The next middleware/handler in the chain.
-            
+
         Returns:
             JSONResponse with error details if an exception occurs,
             otherwise the response from the next handler.

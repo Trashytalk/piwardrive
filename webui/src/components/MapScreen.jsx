@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { reportError } from '../exceptionHandler.js';
+import { enhancedFetch } from '../utils/networkErrorHandler.js';
+import { LoadingSpinner } from './LoadingStates.jsx';
+import { InlineError } from './ErrorDisplay.jsx';
 import { MapContainer, TileLayer, Marker, Popup, Polygon } from 'react-leaflet';
 import HeatmapLayer from './HeatmapLayer.jsx';
 import 'leaflet/dist/leaflet.css';
@@ -42,6 +45,8 @@ export default function MapScreen() {
   const [geofences, setGeofences] = useState([]);
   const geofencesRef = useRef([]);
   const [prefetchProgress, setPrefetchProgress] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const track = useRef([]);
   const [config, setConfig] = useState(null);
   const conf = useRef({ poll: 5, max: 30, thresh: 1.0 });
@@ -95,7 +100,8 @@ export default function MapScreen() {
     const poll = async () => {
       if (!active) return;
       try {
-        const resp = await fetch('/gps');
+        setError(null);
+        const resp = await enhancedFetch('/gps');
         const data = await resp.json();
         if (data && data.lat != null && data.lon != null) {
           const pos = [data.lat, data.lon];
@@ -132,6 +138,7 @@ export default function MapScreen() {
           }
         }
       } catch (e) {
+        setError(new Error(`GPS polling failed: ${e.message}`));
         reportError(e);
       }
       if (active) timer.current = setTimeout(poll, interval);
@@ -302,6 +309,16 @@ export default function MapScreen() {
           style={{ marginLeft: '1em' }}
         />
       </div>
+      
+      {error && (
+        <InlineError 
+          error={error}
+          onDismiss={() => setError(null)}
+        />
+      )}
+      
+      {loading && <LoadingSpinner />}
+      
       <MapContainer center={center} zoom={zoom} style={{ height: '80vh' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <HeatmapLayer show={showHeatmap} />

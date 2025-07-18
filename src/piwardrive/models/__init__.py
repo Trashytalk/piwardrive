@@ -2,8 +2,8 @@
 
 from .api_models import (
     AccessPoint,
-    BluetoothDevice,
     BluetoothDetection,
+    BluetoothDevice,
     BluetoothScanRequest,
     BluetoothScanResponse,
     CellTower,

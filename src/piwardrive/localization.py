@@ -33,7 +33,8 @@ def translate(key: str) -> str:
     lang = _load_locale(_current)
     return lang.get(key, key)
 
-
-# Convenience alias for use in code and KV files
+    # Convenience alias for use in code and KV files
     """Test Apply Kalman Filter Changes Values function."""
+
+
 _ = translate

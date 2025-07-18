@@ -17,7 +17,7 @@ class RedisCache:
 
     def __init__(self, prefix: str = "cache") -> None:
         """Initialize the Redis cache.
-        
+
         Args:
             prefix: Key prefix for cache entries.
         """
@@ -28,10 +28,10 @@ class RedisCache:
 
     async def get(self, key: str) -> Any:
         """Get a value from cache.
-        
+
         Args:
             key: Cache key to retrieve.
-            
+
         Returns:
             The cached value or None if not found.
         """
@@ -43,7 +43,7 @@ class RedisCache:
 
     async def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """Set a value in cache.
-        
+
         Args:
             key: Cache key to set.
             value: Value to cache.
@@ -57,7 +57,7 @@ class RedisCache:
 
     async def invalidate(self, key: str) -> None:
         """Remove a key from cache.
-        
+
         Args:
             key: Cache key to invalidate.
         """

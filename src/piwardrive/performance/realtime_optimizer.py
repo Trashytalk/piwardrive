@@ -11,16 +11,15 @@ import json
 import logging
 import time
 from collections import defaultdict, deque
-from contextlib import asynccontextmanager
-from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional, Set
-from weakref import WeakSet
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Optional, Set
 
 from fastapi import Request, WebSocket
 from fastapi.responses import StreamingResponse
 from starlette.websockets import WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ConnectionMetrics:
@@ -52,13 +51,12 @@ class ConnectionMetrics:
         return self.bytes_sent / duration if duration > 0 else 0
 
 
-
 class OptimizedWebSocketManager:
     """Optimized WebSocket connection manager with performance monitoring."""
 
     def __init__(self, max_connections: int = 1000, compression: bool = True):
         """Initialize the WebSocket manager.
-        
+
         Args:
             max_connections: Maximum number of concurrent connections.
             compression: Enable compression for messages.
@@ -211,7 +209,7 @@ class OptimizedWebSocketManager:
 
     def get_connection_stats(self) -> Dict[str, Any]:
         """Get connection statistics."""
-        _stats = dict(self.stats)
+        stats = dict(self.stats)
         stats["connection_metrics"] = {}
 
         for connection_id, metrics in self.connection_metrics.items():
@@ -247,7 +245,7 @@ class OptimizedSSEManager:
 
     def __init__(self, max_connections: int = 1000):
         """Initialize the SSE manager.
-        
+
         Args:
             max_connections: Maximum number of concurrent SSE connections.
         """
@@ -353,7 +351,7 @@ class OptimizedSSEManager:
 
     def get_stream_stats(self) -> Dict[str, Any]:
         """Get SSE stream statistics."""
-        _stats = dict(self.stats)
+        stats = dict(self.stats)
         stats["stream_metrics"] = {}
 
         for stream_id, metrics in self.stream_metrics.items():
@@ -374,7 +372,7 @@ class DataStreamOptimizer:
 
     def __init__(self, compression_threshold: int = 1024):
         """Initialize the data stream optimizer.
-        
+
         Args:
             compression_threshold: Minimum data size for compression.
         """
@@ -439,7 +437,6 @@ class DataStreamOptimizer:
         return gzip.compress(data.encode("utf-8"))
 
 
-
 class RealTimeUpdateOptimizer:
     """Optimizer for real-time updates combining WebSocket and SSE."""
 
@@ -466,7 +463,7 @@ class RealTimeUpdateOptimizer:
         self.update_throttle[throttle_key] = now
 
         # Optimize data for streaming
-        _optimizeddata = self.data_optimizer.optimize_data_for_streaming(data)
+        optimized_data = self.data_optimizer.optimize_data_for_streaming(data)
 
         message = {"type": update_type, "timestamp": now, "data": optimized_data}
 
@@ -535,7 +532,7 @@ class RealTimeUpdateOptimizer:
                         break
 
                     # Optimize data for streaming
-                    _optimizeddata = self.data_optimizer.optimize_data_for_streaming(
+                    optimized_data = self.data_optimizer.optimize_data_for_streaming(
                         data
                     )
 
@@ -587,6 +584,7 @@ class RealTimeUpdateOptimizer:
             f"Cleaned up {websocket_cleaned} WebSocket connections \and {len(old_throttles)} throttle entries"
         )
 
+
 class RealtimeOptimizer:
     """Main realtime optimization coordinator."""
 
@@ -629,6 +627,7 @@ def get_global_optimizer() -> RealTimeUpdateOptimizer:
     """Get the global real-time update optimizer."""
     return _global_optimizer
 
+
 async def optimize_real_time_performance():
     """Apply real-time performance optimizations."""
     optimizer = get_global_optimizer()
@@ -642,6 +641,7 @@ async def optimize_real_time_performance():
     asyncio.create_task(cleanup_task())
 
     logger.info("Real-time performance optimizations applied")
+
 
 if __name__ == "__main__":
 
@@ -676,7 +676,7 @@ if __name__ == "__main__":
                 metrics.last_activity = time.time()
 
         # Print stats
-        _stats = manager.get_connection_stats()
+        stats = manager.get_connection_stats()
         print("WebSocket Performance Test Results:")
         print(f"Active connections: {stats['active_connections']}")
         print(f"Total messages sent: {stats['messages_sent']}")

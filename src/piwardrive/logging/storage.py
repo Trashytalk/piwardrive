@@ -13,7 +13,17 @@ class StorageBackend:
     """Base class for storage backends."""
 
     async def upload(self, file_path: str, file_hash: str) -> bool:
-        raise NotImplementedError
+        """
+        Upload a file to the storage backend.
+
+        Args:
+            file_path: Path to the file to upload
+            file_hash: Hash of the file for verification
+
+        Returns:
+            bool: True if upload successful, False otherwise
+        """
+        raise NotImplementedError("Subclasses must implement upload method")
 
 
 class LocalStorageBackend(StorageBackend):
@@ -195,7 +205,7 @@ class LogRetentionManager:
         archive_dir = Path(self.config.get("archive_metadata", "/tmp"))
         for meta_file in archive_dir.glob("*.json"):
             try:
-                _data = meta_file.read_text()
+                data = meta_file.read_text()
             except Exception:
                 continue
             try:

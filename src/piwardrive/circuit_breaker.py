@@ -15,7 +15,7 @@ class CircuitBreaker:
 
     def __init__(self, max_failures: int = 3, reset_timeout: float = 30.0) -> None:
         """Initialize the circuit breaker.
-        
+
         Args:
             max_failures: Maximum number of failures before opening circuit.
             reset_timeout: Time in seconds before attempting to reset.
@@ -30,15 +30,15 @@ class CircuitBreaker:
         self, func: Callable[..., Awaitable[Any]], *args: Any, **kwargs: Any
     ) -> Any:
         """Call a function through the circuit breaker.
-        
+
         Args:
             func: The async function to call.
             args: Positional arguments for the function.
             kwargs: Keyword arguments for the function.
-            
+
         Returns:
             The result of the function call.
-            
+
         Raises:
             RuntimeError: If the circuit is open.
         """

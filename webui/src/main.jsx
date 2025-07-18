@@ -8,6 +8,7 @@ import ConsoleView from './components/ConsoleView.jsx';
 import SplitScreen from './components/SplitScreen.jsx';
 import MobileLayout from './components/MobileLayout.jsx';
 import { initMobileFeatures } from './mobileFeatures.js';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 let Root = App;
 const path = window.location.pathname;
@@ -35,17 +36,19 @@ window.fetch = (url, opts = {}) => {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <NavBar />
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/console" element={<ConsoleView />} />
-        <Route path="/settings" element={<SettingsForm />} />
-        <Route path="/import-health" element={<HealthImport />} />
-        <Route path="/split" element={<SplitView />} />
-        <Route path="/mobile/*" element={<MobileLayout />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <NavBar />
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/console" element={<ConsoleView />} />
+          <Route path="/settings" element={<SettingsForm />} />
+          <Route path="/import-health" element={<HealthImport />} />
+          <Route path="/split" element={<SplitView />} />
+          <Route path="/mobile/*" element={<MobileLayout />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );

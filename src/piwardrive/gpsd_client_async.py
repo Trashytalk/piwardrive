@@ -15,7 +15,7 @@ class AsyncGPSDClient:
 
     def __init__(self, host: str | None = None, port: int | None = None) -> None:
         """Initialize the async GPSD client.
-        
+
         Args:
             host: Hostname of the gpsd service. Defaults to environment
                 variable PW_GPSD_HOST or '127.0.0.1'.
@@ -100,7 +100,7 @@ class AsyncGPSDClient:
 
     async def get_position_async(self) -> tuple[float, float] | None:
         """Get the current GPS position asynchronously.
-        
+
         Returns:
             A tuple of (latitude, longitude) if available, otherwise None.
         """
@@ -115,7 +115,7 @@ class AsyncGPSDClient:
 
     async def get_accuracy_async(self) -> float | None:
         """Get the current GPS accuracy asynchronously.
-        
+
         Returns:
             The GPS accuracy in meters if available, otherwise None.
         """
@@ -130,9 +130,9 @@ class AsyncGPSDClient:
 
     async def get_fix_quality_async(self) -> str:
         """Get the current GPS fix quality asynchronously.
-        
+
         Returns:
-            A string describing the fix quality ('No Fix', '2D', '3D', 'DGPS', 
+            A string describing the fix quality ('No Fix', '2D', '3D', 'DGPS',
             'Unknown', or the raw mode value).
         """
         tpv = await self._poll()

@@ -10,8 +10,8 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from piwardrive.api.auth import AUTH_DEP
 from piwardrive.analytics.baseline import analyze_health_baseline, load_baseline_health
+from piwardrive.api.auth import AUTH_DEP
 from piwardrive.database_service import db_service
 from piwardrive.exceptions import ServiceError
 from piwardrive.sync import upload_data
@@ -22,9 +22,7 @@ router = APIRouter()
 
 
 @router.get("/status")
-async def get_status(
-    limit: int = 5, _auth: Any = AUTH_DEP
-) -> list[HealthRecordDict]:
+async def get_status(limit: int = 5, _auth: Any = AUTH_DEP) -> list[HealthRecordDict]:
     records = db_service.load_recent_health(limit)
     if inspect.isawaitable(records):
         records = await records
@@ -75,6 +73,7 @@ async def sse_history(
             yield f"data: {json.dumps(_data)}\n\n"
             seq += 1
             import asyncio
+
             await asyncio.sleep(max(interval, 0.1))  # MIN_EVENT_INTERVAL replacement
 
     headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}

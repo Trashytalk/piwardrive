@@ -1,5 +1,3 @@
-import logging
-
 """Tests for :mod:`piwardrive.error_reporting`."""
 
 from types import SimpleNamespace

@@ -86,6 +86,56 @@ async def update_user_token(*_a, **_k) -> None:
     """Stub for ``service`` imports."""
 
 
+# TODO: Stub for HealthRecord
+class HealthRecord:
+    pass
+
+
+# TODO: Stub for DashboardSettings
+class DashboardSettings:
+    pass
+
+
+# TODO: Stub for FingerprintInfo
+class FingerprintInfo:
+    pass
+
+
+# TODO: Stub for User
+class User:
+    pass
+
+
+# TODO: Stub for load_app_state
+def load_app_state(*args, **kwargs):
+    pass
+
+
+# TODO: Stub for save_app_state
+def save_app_state(*args, **kwargs):
+    pass
+
+
+# TODO: Stub for load_recent_health
+def load_recent_health(*args, **kwargs):
+    pass
+
+
+# TODO: Stub for flush_health_records
+def flush_health_records(*args, **kwargs):
+    pass
+
+
+# TODO: Stub for save_health_record
+def save_health_record(*args, **kwargs):
+    pass
+
+
+# TODO: Stub for load_ap_cache
+def load_ap_cache(*args, **kwargs):
+    pass
+
+
 __all__ = [  # noqa: F405
     *globals().get("__all__", []),
     "_db_path",

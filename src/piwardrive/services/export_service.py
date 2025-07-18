@@ -42,11 +42,11 @@ async def export_to_kml(path: str) -> None:
     )
     aps = await _fetch(
         "SELECT latitude AS lat, longitude AS lon, ssid, bssid, ",
-        "signal_strength_dbm as rssi FROM wifi_detections"
+        "signal_strength_dbm as rssi FROM wifi_detections",
     )
     bts = await _fetch(
         "SELECT latitude AS lat, longitude AS lon, device_name as name, ",
-        "mac_address as address, rssi_dbm as rssi FROM bluetooth_detections"
+        "mac_address as address, rssi_dbm as rssi FROM bluetooth_detections",
     )
     track = [
         (r["lat"], r["lon"])
@@ -60,7 +60,7 @@ async def export_to_wigle(path: str) -> None:
     """Export Wi-Fi detections to a WiGLE compatible CSV file."""
     rows = await _fetch(
         "SELECT bssid, ssid, frequency_mhz, channel, first_seen, last_seen, ",
-        "latitude, longitude FROM wifi_detections"
+        "latitude, longitude FROM wifi_detections",
     )
     fieldnames = [
         "netid",

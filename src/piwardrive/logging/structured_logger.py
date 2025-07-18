@@ -11,6 +11,7 @@ Features:
 - Fallback serialization for complex objects
 - Exception formatting with traceback details
 """
+
 import json
 import logging
 import os
@@ -20,7 +21,7 @@ from contextvars import ContextVar
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from ..fastjson import dumps
 
@@ -156,15 +157,15 @@ class PiWardriveLogger:
             handlers.append(stream_handler)
 
         if log_file:
-            from logging.handlers import RotatingFileHandler
             import os
+            from logging.handlers import RotatingFileHandler
 
             try:
                 # Ensure the directory exists
                 log_dir = os.path.dirname(log_file)
                 if log_dir and not os.path.exists(log_dir):
                     os.makedirs(log_dir, exist_ok=True)
-                    
+
                 file_handler = RotatingFileHandler(
                     log_file,
                     maxBytes=self.config.get("max_bytes", 10_485_760),
@@ -172,10 +173,18 @@ class PiWardriveLogger:
                 )
                 file_handler.setFormatter(formatter)
                 handlers.append(file_handler)
-            except (OSError, PermissionError, FileNotFoundError, NotADirectoryError) as e:
+            except (
+                OSError,
+                PermissionError,
+                FileNotFoundError,
+                NotADirectoryError,
+            ) as e:
                 # If file handler creation fails, log a warning and continue with stream handler only
                 import warnings
-                warnings.warn(f"Failed to create file handler for {log_file}: {e}", UserWarning)
+
+                warnings.warn(
+                    f"Failed to create file handler for {log_file}: {e}", UserWarning
+                )
 
         return handlers
 

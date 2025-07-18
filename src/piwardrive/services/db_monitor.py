@@ -3,6 +3,7 @@
 This module provides database performance monitoring, query analysis, and
 health check functionality for PiWardrive database operations.
 """
+
 from __future__ import annotations
 
 import logging
@@ -33,6 +34,7 @@ def get_query_metrics() -> Dict[str, Dict[str, float]]:
         result[key] = {"count": count, "avg": avg}
     return result
 
+
 async def health_check() -> bool:
     """Return ``True`` if the database is reachable."""
     try:
@@ -42,6 +44,7 @@ async def health_check() -> bool:
         logger.exception("database health check failed")
         return False
     return True
+
 
 async def analyze_index_usage() -> List[Dict[str, Any]]:
     """Return basic index size information using the ``dbstat`` virtual table."""
@@ -55,5 +58,6 @@ async def analyze_index_usage() -> List[Dict[str, Any]]:
             logger.debug("index usage query failed: %s", exc)
             return []
     return [dict(row) for row in rows]
+
 
 __all__ = ["record_query", "get_query_metrics", "health_check", "analyze_index_usage"]

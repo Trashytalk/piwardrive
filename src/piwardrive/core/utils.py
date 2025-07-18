@@ -233,14 +233,14 @@ def async_ttl_cache(
             if redis_cli is not None:
                 redis_key = f"async_cache:{func.__module__}:{func.__name__}:{hash(key)}"
                 try:
-                    _data = await redis_cli.get(redis_key)
+                    data = await redis_cli.get(redis_key)
                     if data:
                         ts, res = pickle.loads(data)
                         if now is not None and now - ts <= ttl:
                             return res
                 except Exception:
                     logging.debug("Redis get failed", exc_info=True)
-            _result = await func(*args, **kwargs)
+            result = await func(*args, **kwargs)
             async with lock:
                 cache[key] = ((0.0 if now is None else now), result)
             if redis_cli is not None and redis_key is not None:
@@ -382,7 +382,7 @@ def run_async_task(
 
         def _done(f: Future[T]) -> None:
             try:
-                _result = f.result()
+                result = f.result()
             except Exception as exc:  # pragma: no cover - background errors
                 logging.exception("Async task failed: %s", exc)
             else:
@@ -457,7 +457,7 @@ def safe_request(
         report_error(f"Unexpected error for {url}: {exc}")
     if fallback is not None:
         try:
-            _result = fallback()
+            result = fallback()
             if cache_seconds:
                 with _SAFE_REQUEST_CACHE_LOCK:
                     _SAFE_REQUEST_CACHE[url] = result
@@ -639,10 +639,10 @@ def tail_file(path: str, lines: int = 50) -> list[str]:
             text = mm[start:]
             _result = text.decode("utf-8", errors="ignore").splitlines()
     except (OSError, ValueError):
-        _result = []
+        pass
     with _TAIL_FILE_CACHE_LOCK:
-        _TAIL_FILE_CACHE[path] = (now, mtime, result)
-    return result[-lines:]
+        _TAIL_FILE_CACHE[path] = (now, mtime, _result)
+    return _result[-lines:]
 
 
 async def async_tail_file(path: str, lines: int = 50) -> list[str]:
@@ -926,7 +926,7 @@ async def fetch_kismet_devices_async() -> tuple[list, list]:
                         ErrorCode.KISMET_API_REQUEST_FAILED,
                         (
                             f"Kismet API request failed: {exc}. ",
-                            "Ensure Kismet is running."
+                            "Ensure Kismet is running.",
                         ),
                     )
                 )
@@ -1049,7 +1049,7 @@ def _get_cached_gps_data(force_refresh: bool = False) -> _GPSDEntry | None:
 
 def get_gps_accuracy(force_refresh: bool = False) -> float | None:
     """Return GPS accuracy from cached GPSD data."""
-    _data = _get_cached_gps_data(force_refresh)
+    data = _get_cached_gps_data(force_refresh)
     if not data:
         return None
     return data.get("accuracy")
@@ -1057,7 +1057,7 @@ def get_gps_accuracy(force_refresh: bool = False) -> float | None:
 
 def get_gps_fix_quality(force_refresh: bool = False) -> str:
     """Return human readable GPS fix quality from cached data."""
-    _data = _get_cached_gps_data(force_refresh)
+    data = _get_cached_gps_data(force_refresh)
     if not data:
         return "Unknown"
     return str(data.get("fix", "Unknown"))
@@ -1232,7 +1232,7 @@ def load_kml(path: str) -> list[dict[str, Any]]:
         with zipfile.ZipFile(path) as zf:
             for name in zf.namelist():
                 if name.lower().endswith(".kml"):
-                    _data = zf.read(name)
+                    data = zf.read(name)
                     root = ET.fromstring(data)
                     return _parse(root)
         return []

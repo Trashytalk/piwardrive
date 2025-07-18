@@ -26,7 +26,7 @@ async def list_suspicious(
     """Return suspicious activity rows."""
     query = (
         "SELECT id, scan_session_id, activity_type, severity, description, ",
-        "detected_at, latitude, longitude, analyst_notes FROM suspicious_activities"
+        "detected_at, latitude, longitude, analyst_notes FROM suspicious_activities",
     )
     params: list[object] = []
     clauses: list[str] = []

@@ -12,7 +12,7 @@ import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 from weakref import WeakSet
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class AsyncPerformanceMonitor:
 
     def __init__(self, max_metrics: int = 10000):
         """Initialize the async performance monitor.
-        
+
         Args:
             max_metrics: Maximum number of metrics to store in memory.
         """
@@ -47,9 +47,27 @@ class AsyncPerformanceMonitor:
         self.slow_operations: List[AsyncMetrics] = []
         self.slow_threshold = 0.1  # 100ms
 
+        # Queue time tracking
+        self.queued_operations: Dict[str, float] = {}
+        self.queue_metrics: Dict[str, List[float]] = defaultdict(list)
+
+    def queue_operation(self, operation_name: str) -> str:
+        """Queue an operation for execution tracking."""
+        operation_id = f"{operation_name}_{time.time()}_{id(self)}"
+        self.queued_operations[operation_id] = time.time()
+        return operation_id
+
     def start_operation(self, operation_name: str) -> str:
         """Start tracking an async operation."""
         operation_id = f"{operation_name}_{time.time()}_{id(self)}"
+
+        # Check if operation was previously queued
+        if operation_id in self.queued_operations:
+            # Calculate queue time
+            queue_start = self.queued_operations.pop(operation_id)
+            queue_time = time.time() - queue_start
+            self.queue_metrics[operation_name].append(queue_time)
+
         self.active_operations[operation_id] = time.time()
         return operation_id
 
@@ -66,10 +84,15 @@ class AsyncPerformanceMonitor:
         # Extract operation name from ID
         operation_name = operation_id.split("_")[0]
 
+        # Calculate queue time from metrics
+        queue_time = 0.0
+        if operation_name in self.queue_metrics and self.queue_metrics[operation_name]:
+            queue_time = self.queue_metrics[operation_name].pop(0)
+
         metric = AsyncMetrics(
             operation_name=operation_name,
             execution_time=execution_time,
-            queue_time=0,  # TODO: Implement queue time tracking
+            queue_time=queue_time,
             success=success,
             error=error,
             timestamp=time.time(),
@@ -103,12 +126,19 @@ class AsyncPerformanceMonitor:
 
         for op_name, metrics in operation_metrics.items():
             successful = [m for m in metrics if m.success]
-            _failed = [m for m in metrics if not m.success]
+            [m for m in metrics if not m.success]
 
             if metrics:
                 avg_time = sum(m.execution_time for m in metrics) / len(metrics)
                 max_time = max(m.execution_time for m in metrics)
                 min_time = min(m.execution_time for m in metrics)
+
+                # Calculate queue time statistics
+                queue_times = [m.queue_time for m in metrics if m.queue_time > 0]
+                avg_queue_time = (
+                    sum(queue_times) / len(queue_times) if queue_times else 0
+                )
+                max_queue_time = max(queue_times) if queue_times else 0
 
                 summary["operation_summary"][op_name] = {
                     "count": len(metrics),
@@ -116,12 +146,52 @@ class AsyncPerformanceMonitor:
                     "avg_time": avg_time,
                     "max_time": max_time,
                     "min_time": min_time,
+                    "avg_queue_time": avg_queue_time,
+                    "max_queue_time": max_queue_time,
                     "slow_count": len(
                         [m for m in metrics if m.execution_time > self.slow_threshold]
                     ),
                 }
 
         return summary
+
+    @asynccontextmanager
+    async def monitor_queued_operation(self, operation_name: str):
+        """Context manager for monitoring queued operations."""
+        self.queue_operation(operation_name)
+        try:
+            # When entering the context, start the operation
+            actual_id = self.start_operation(operation_name)
+            yield actual_id
+            # Success
+            self.end_operation(actual_id, success=True)
+        except Exception as e:
+            # Error
+            self.end_operation(actual_id, success=False, error=str(e))
+            raise
+
+    def get_queue_statistics(self) -> Dict[str, Any]:
+        """Get queue time statistics."""
+        if not self.queue_metrics:
+            return {"message": "No queue metrics available"}
+
+        queue_stats = {}
+        for op_name, queue_times in self.queue_metrics.items():
+            if queue_times:
+                queue_stats[op_name] = {
+                    "count": len(queue_times),
+                    "avg_queue_time": sum(queue_times) / len(queue_times),
+                    "max_queue_time": max(queue_times),
+                    "min_queue_time": min(queue_times),
+                }
+
+        return {
+            "queue_statistics": queue_stats,
+            "total_queued_operations": sum(
+                len(times) for times in self.queue_metrics.values()
+            ),
+            "operations_with_queue_time": len(queue_stats),
+        }
 
 
 def monitor_async_performance(
@@ -137,9 +207,9 @@ def monitor_async_performance(
 
             operation_id = monitor.start_operation(operation_name)
             try:
-                __result = await func(*args, **kwargs)
+                result = await func(*args, **kwargs)
                 monitor.end_operation(operation_id, success=True)
-                return _result
+                return result
             except Exception as e:
                 monitor.end_operation(operation_id, success=False, error=str(e))
                 raise
@@ -252,7 +322,7 @@ class AsyncTaskQueue:
             _stats["avg_execution_time"] = (
                 _stats["total_execution_time"] / _stats["tasks_completed"]
             )
-        return stats
+        return _stats
 
 
 class AsyncResourcePool:
@@ -334,7 +404,7 @@ class AsyncResourcePool:
         _stats["max_size"] = self.max_size
         _stats["created_count"] = self.created_count
         _stats["active_count"] = len(self.active_resources)
-        return stats
+        return _stats
 
 
 class AsyncRateLimiter:
@@ -404,9 +474,9 @@ class AsyncCircuitBreaker:
 
         try:
             if asyncio.iscoroutinefunction(func):
-                ___result = await func(*args, **kwargs)
+                result = await func(*args, **kwargs)
             else:
-                __result = func(*args, **kwargs)
+                result = func(*args, **kwargs)
 
             # Success - reset failure count
             async with self.lock:
@@ -417,9 +487,9 @@ class AsyncCircuitBreaker:
                     )
                 self.failure_count = 0
 
-            return _result
+            return result
 
-        except Exception as e:
+        except Exception:
             async with self.lock:
                 self.failure_count += 1
                 self.last_failure_time = time.time()
@@ -519,7 +589,7 @@ class AsyncBatchProcessor:
             _stats["avg_batch_size"] = (
                 _stats["items_processed"] / _stats["batches_processed"]
             )
-        return stats
+        return _stats
 
 
 class AsyncOptimizer:
@@ -544,20 +614,19 @@ class AsyncOptimizer:
 
         if enable_circuit_breaker:
             self.circuit_breaker = AsyncCircuitBreaker(
-                failure_threshold=5,
-                recovery_timeout=30.0,
-                call_timeout=10.0
+                failure_threshold=5, recovery_timeout=30.0, call_timeout=10.0
             )
 
         if enable_rate_limiting:
             self.rate_limiter = AsyncRateLimiter(
-                rate=100,  # 100 requests per second
-                per=1.0
+                rate=100, per=1.0  # 100 requests per second
             )
 
-    async def optimize_coroutine(self, coro: Callable[..., Any], *args, **kwargs) -> Any:
+    async def optimize_coroutine(
+        self, coro: Callable[..., Any], *args, **kwargs
+    ) -> Any:
         """Optimize execution of a coroutine with monitoring and protection."""
-        operation_name = getattr(coro, '__name__', 'unknown')
+        operation_name = getattr(coro, "__name__", "unknown")
         operation_id = self.monitor.start_operation(operation_name)
 
         try:
@@ -578,7 +647,9 @@ class AsyncOptimizer:
             self.monitor.end_operation(operation_id, success=False, error=str(e))
             raise
 
-    async def optimize_batch(self, coros: List[Callable[..., Any]], batch_size: int = 10) -> List[Any]:
+    async def optimize_batch(
+        self, coros: List[Callable[..., Any]], batch_size: int = 10
+    ) -> List[Any]:
         """Optimize batch execution of coroutines."""
         processor = AsyncBatchProcessor(batch_size=batch_size)
 
@@ -594,9 +665,9 @@ class AsyncOptimizer:
 
     async def cleanup(self):
         """Clean up resources."""
-        if hasattr(self.task_queue, 'cleanup'):
+        if hasattr(self.task_queue, "cleanup"):
             await self.task_queue.cleanup()
-        if hasattr(self.resource_pool, 'cleanup'):
+        if hasattr(self.resource_pool, "cleanup"):
             await self.resource_pool.cleanup()
 
 
@@ -635,11 +706,27 @@ if __name__ == "__main__":
             if random.random() < 0.1:  # 10% failure rate
                 raise Exception("Random failure")
 
+        # Test queued operations
+        async def test_queued_operation(delay: float):
+            operation_id = monitor.queue_operation("queued_test")
+            await asyncio.sleep(0.01)  # Simulate queue wait time
+            monitor.start_operation("queued_test")
+            try:
+                await asyncio.sleep(delay)
+                monitor.end_operation(operation_id, success=True)
+            except Exception as e:
+                monitor.end_operation(operation_id, success=False, error=str(e))
+
         # Run test operations
         tasks = []
         for i in range(100):
             delay = random.uniform(0.01, 0.2)
             tasks.append(test_operation(delay))
+
+        # Run some queued operations
+        for i in range(20):
+            delay = random.uniform(0.01, 0.1)
+            tasks.append(test_queued_operation(delay))
 
         # Execute with some failures
         _results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -652,10 +739,26 @@ if __name__ == "__main__":
 
         for op_name, stats in summary["operation_summary"].items():
             print(f"\n{op_name}:")
-            print(f"  Count: {_stats['count']}")
-            print(f"  Success rate: {_stats['success_rate']:.1f}%")
-            print(f"  Avg time: {_stats['avg_time']:.3f}s")
-            print(f"  Max time: {_stats['max_time']:.3f}s")
-            print(f"  Slow count: {_stats['slow_count']}")
+            print(f"  Count: {stats['count']}")
+            print(f"  Success rate: {stats['success_rate']:.1f}%")
+            print(f"  Avg time: {stats['avg_time']:.3f}s")
+            print(f"  Max time: {stats['max_time']:.3f}s")
+            print(f"  Avg queue time: {stats['avg_queue_time']:.3f}s")
+            print(f"  Max queue time: {stats['max_queue_time']:.3f}s")
+            print(f"  Slow count: {stats['slow_count']}")
+
+        # Print queue statistics
+        queue_stats = monitor.get_queue_statistics()
+        print(f"\nQueue Statistics:")
+        print(
+            f"Total queued operations: {queue_stats.get('total_queued_operations', 0)}"
+        )
+        print(
+            f"Operations with queue time: {queue_stats.get('operations_with_queue_time', 0)}"
+        )
+        for op_name, stats in queue_stats.get("queue_statistics", {}).items():
+            print(
+                f"  {op_name}: avg={stats['avg_queue_time']:.3f}s, max={stats['max_queue_time']:.3f}s"
+            )
 
     asyncio.run(test_async_performance())

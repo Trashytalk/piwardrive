@@ -12,20 +12,15 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
 
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from piwardrive.performance.async_optimizer import (
-    AsyncPerformanceMonitor,
-    get_global_monitor,
-)
+from piwardrive.performance.async_optimizer import (AsyncPerformanceMonitor,
+                                                    get_global_monitor)
 from piwardrive.performance.db_optimizer import (
-    DatabaseOptimizer,
-    apply_performance_optimizations,
-    run_performance_analysis,
-)
+    DatabaseOptimizer, apply_performance_optimizations,
+    run_performance_analysis)
 from piwardrive.performance.realtime_optimizer import get_global_optimizer
 
 

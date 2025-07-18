@@ -32,10 +32,10 @@ def _render(template: str, data: dict[str, object]) -> str:
 
 async def generate_daily_summary(day: datetime) -> str:
     """Generate a daily summary report for the specified day.
-    
+
     Args:
         day: The date to generate the summary for.
-        
+
     Returns:
         Formatted summary report as a string.
     """
@@ -62,7 +62,7 @@ class ReportGeneratorService:
 
     def __init__(self, scheduler: PollScheduler, hour: int = 2) -> None:
         """Initialize the report generator service.
-        
+
         Args:
             scheduler: Scheduler instance for periodic report generation.
             hour: Hour of the day to generate reports (default 2 AM).

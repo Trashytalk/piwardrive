@@ -20,7 +20,7 @@ async def ws_detections(websocket: WebSocket) -> None:
     queue = stream_processor.register_listener()
     try:
         while True:
-            _data = await queue.get()
+            data = await queue.get()
             try:
                 await service.asyncio.wait_for(websocket.send_json(data), timeout=5)
             except Exception:
@@ -40,7 +40,7 @@ async def sse_detections(request: Request) -> StreamingResponse:
             while True:
                 if await request.is_disconnected():
                     break
-                _data = await queue.get()
+                data = await queue.get()
                 yield f"data: {json.dumps(data)}\n\n"
         finally:
             stream_processor.unregister_listener(queue)

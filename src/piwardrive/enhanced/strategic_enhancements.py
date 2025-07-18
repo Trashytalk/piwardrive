@@ -23,32 +23,20 @@ import secrets
 import sqlite3
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, List, Tuple
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from sklearn.cluster import DBSCAN
 from sklearn.ensemble import IsolationForest, RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -169,7 +157,7 @@ class AdvancedThreatIntelligence:
 
     def __init__(self, db_path: str = "threat_intel.db"):
         """Initialize threat intelligence platform.
-        
+
         Args:
             db_path: Path to threat intelligence database.
         """
@@ -356,7 +344,7 @@ class EnterpriseIntegration:
             logger.warning("SIEM integration not configured")
             return
 
-        _siem_config = self.integrations[IntegrationType.SIEM]
+        self.integrations[IntegrationType.SIEM]
 
         # Format event for SIEM
         siem_event = {
@@ -438,17 +426,14 @@ class QuantumSafeCryptography:
     def _kyber_operations(self):
         """Kyber key encapsulation mechanism"""
         # Placeholder for Kyber implementation
-        pass
 
     def _dilithium_operations(self):
         """Dilithium digital signature"""
         # Placeholder for Dilithium implementation
-        pass
 
     def _sphincs_operations(self):
         """SPHINCS+ stateless hash-based signatures"""
         # Placeholder for SPHINCS+ implementation
-        pass
 
     def encrypt_quantum_safe(
         self, data: bytes, public_key: bytes, algorithm: QuantumSafeAlgorithm
@@ -871,8 +856,8 @@ class AnalyticsEngine:
 
     def compute_statistics(self, data: pd.DataFrame) -> Dict[str, Any]:
         """Compute comprehensive statistics"""
-        _stats = {}
-
+        stats = {}
+        
         for column in data.columns:
             if data[column].dtype in [np.number]:
                 stats[column] = {
@@ -941,7 +926,7 @@ class ComplianceAutomation:
 
         rule = self.compliance_rules[rule_id]
         try:
-            _result = rule["check_function"](data)
+            result = rule["check_function"](data)
             rule["status"] = "passed" if result else "failed"
             rule["last_checked"] = datetime.now()
 
@@ -1360,7 +1345,7 @@ def test_analytics():
     analytics = AdvancedAnalytics()
 
     # Generate sample data
-    __data = pd.DataFrame(
+    data = pd.DataFrame(
         {
             "timestamp": pd.date_range("2023-01-01", periods=1000, freq="H"),
             "signal_strength": np.random.normal(-60, 10, 1000),
@@ -1390,7 +1375,7 @@ def test_compliance():
 
     # Test compliance checks
     test_data = {"encrypted": True, "data_type": "credit_card"}
-    _result = compliance.run_compliance_check("encryption_check", test_data)
+    result = compliance.run_compliance_check("encryption_check", test_data)
     print(f"Compliance check result: {result}")
 
     # Generate report
@@ -1405,7 +1390,7 @@ def test_visualization():
     viz = NextGenVisualization()
 
     # Generate sample data
-    _data = pd.DataFrame(
+    data = pd.DataFrame(
         {
             "x": np.random.randn(100),
             "y": np.random.randn(100),

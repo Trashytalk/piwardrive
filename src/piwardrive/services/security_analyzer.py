@@ -39,10 +39,10 @@ def _make_row(
 
 def detect_hidden_ssids(records: Iterable[Mapping[str, Any]]) -> List[dict[str, Any]]:
     """Detect access points with hidden SSIDs.
-    
+
     Args:
         records: WiFi detection records to analyze.
-        
+
     Returns:
         List of suspicious activity records for hidden SSIDs.
     """
@@ -57,10 +57,10 @@ def detect_hidden_ssids(records: Iterable[Mapping[str, Any]]) -> List[dict[str, 
 
 def detect_evil_twins(records: Iterable[Mapping[str, Any]]) -> List[dict[str, Any]]:
     """Detect potential evil twin access points.
-    
+
     Args:
         records: WiFi detection records to analyze.
-        
+
     Returns:
         List of suspicious activity records for potential evil twins.
     """
@@ -98,10 +98,10 @@ def detect_evil_twins(records: Iterable[Mapping[str, Any]]) -> List[dict[str, An
 
 def detect_deauth_attacks(records: Iterable[Mapping[str, Any]]) -> List[dict[str, Any]]:
     """Detect potential deauth attacks based on signal patterns.
-    
+
     Args:
         records: WiFi detection records to analyze.
-        
+
     Returns:
         List of suspicious activity records for potential deauth attacks.
     """

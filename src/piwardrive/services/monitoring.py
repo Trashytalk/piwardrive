@@ -5,14 +5,11 @@ from __future__ import annotations
 import logging
 import os
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List, Mapping
+from typing import Any, Dict, List
 
 import psutil
 
-from piwardrive.api.common import (
-    fetch_metrics_async,
-    get_network_throughput,
-)
+from piwardrive.api.common import fetch_metrics_async, get_network_throughput
 from piwardrive.database_service import db_service
 from piwardrive.services import db_monitor
 

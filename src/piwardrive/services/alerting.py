@@ -4,6 +4,7 @@ This module provides comprehensive alerting functionality including email
 notifications, webhook integrations, and rule-based alert management for
 the PiWardrive monitoring system.
 """
+
 from __future__ import annotations
 
 import logging
@@ -67,7 +68,7 @@ class AlertManager:
 
     def __init__(self, rules: Iterable[AlertRule] | None = None) -> None:
         """Initialize alert manager with optional rules.
-        
+
         Args:
             rules: Initial set of alert rules to load.
         """

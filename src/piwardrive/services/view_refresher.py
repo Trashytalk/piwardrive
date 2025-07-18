@@ -12,7 +12,7 @@ class ViewRefresher:
 
     def __init__(self, scheduler: PollScheduler, interval: int = 3600) -> None:
         """Initialize the view refresher service.
-        
+
         Args:
             scheduler: The poll scheduler to use for periodic refresh.
             interval: Refresh interval in seconds (default: 3600 = 1 hour).

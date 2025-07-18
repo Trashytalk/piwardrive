@@ -19,10 +19,13 @@ from piwardrive.api.analytics_jobs import router as jobs_router
 from piwardrive.api.auth import AUTH_DEP, AuthMiddleware
 from piwardrive.api.auth import router as auth_router
 
+
 # Authentication function for routes compatibility
 def _check_auth():
     """Check authentication for route compatibility."""
     return None
+
+
 from piwardrive.api.common import (
     async_scan_lora,
     async_tail_file,

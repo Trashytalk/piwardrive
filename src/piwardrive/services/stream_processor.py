@@ -21,7 +21,7 @@ class StreamProcessor:
         rate_limit: float = 20.0,
     ) -> None:
         """Initialize the stream processor.
-        
+
         Args:
             max_queue: Maximum size of the processing queue
             listener_queue: Maximum size of listener queues
@@ -58,7 +58,7 @@ class StreamProcessor:
 
     def register_listener(self) -> asyncio.Queue[dict[str, Any]]:
         """Register a new listener queue for receiving processed events.
-        
+
         Returns:
             Queue for receiving processed events
         """
@@ -70,7 +70,7 @@ class StreamProcessor:
 
     def unregister_listener(self, q: asyncio.Queue[dict[str, Any]]) -> None:
         """Unregister a listener queue.
-        
+
         Args:
             q: The queue to unregister
         """
@@ -92,7 +92,7 @@ class StreamProcessor:
 
     def publish_wifi(self, records: Iterable[Mapping[str, Any]]) -> None:
         """Publish WiFi detection records for processing.
-        
+
         Args:
             records: WiFi detection records to process
         """
@@ -100,7 +100,7 @@ class StreamProcessor:
 
     def publish_bluetooth(self, records: Iterable[Mapping[str, Any]]) -> None:
         """Publish Bluetooth detection records for processing.
-        
+
         Args:
             records: Bluetooth detection records to process
         """
@@ -108,7 +108,7 @@ class StreamProcessor:
 
     def publish_cellular(self, records: Iterable[Mapping[str, Any]]) -> None:
         """Publish cellular detection records for processing.
-        
+
         Args:
             records: Cellular detection records to process
         """

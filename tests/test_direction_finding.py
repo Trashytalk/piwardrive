@@ -1,5 +1,3 @@
-import logging
-
 #!/usr/bin/env python3
 """
 Unit tests for PiWardrive Direction Finding System
@@ -7,14 +5,13 @@ Tests all major components and functionality.
 """
 
 import time
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 # Import DF components
 from piwardrive.direction_finding import (
     AngleEstimate,
-    AntennaArrayManager,
     DFAlgorithm,
     DFConfigManager,
     DFConfiguration,
@@ -28,10 +25,6 @@ from piwardrive.direction_finding import (
     PathLossModel,
     PositionEstimate,
     RSSTriangulation,
-    WiFiAdapterManager,
-    config_manager,
-    get_df_config,
-    set_df_algorithm,
 )
 
 

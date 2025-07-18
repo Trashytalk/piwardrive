@@ -471,7 +471,6 @@ class DFConfigManager:
         """Convert dictionary to configuration."""
         # This is simplified - in practice, you'd need more robust deserialization
         # that properly handles enum conversion and nested dataclass creation
-        pass
 
     def _validate_config(self) -> None:
         """Validate configuration parameters."""

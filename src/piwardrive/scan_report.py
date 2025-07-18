@@ -3,6 +3,7 @@
 This module provides functionality to generate comprehensive scan reports
 including statistics, summaries, and formatted output for analysis results.
 """
+
 import asyncio
 import json
 import os
@@ -29,7 +30,7 @@ async def _load_records() -> list[dict[str, Any]]:
 
 async def generate_scan_report() -> Dict[str, Any]:
     """Generate a comprehensive scan report with statistics and insights."""
-    _data = await _load_records()
+    data = await _load_records()
     total = len(data)
     ssids = Counter((r.get("ssid") or "") for r in data)
     open_count = sum(1 for r in data if not r.get("encryption"))
@@ -45,10 +46,10 @@ async def generate_scan_report() -> Dict[str, Any]:
 
 async def write_scan_report(path: str | None = None) -> str:
     """Write scan report to file and return the file path.
-    
+
     Args:
         path: Optional custom path for the report file.
-        
+
     Returns:
         Path to the generated report file.
     """

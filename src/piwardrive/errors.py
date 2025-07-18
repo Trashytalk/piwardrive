@@ -17,6 +17,11 @@ class GeofenceError(ServiceError):
     """Raised for geofence load/save issues."""
 
 
+# TODO: Stub for SecurityError
+class SecurityError(Exception):
+    pass
+
+
 __all__ = [
     "PiWardriveError",
     "ConfigError",

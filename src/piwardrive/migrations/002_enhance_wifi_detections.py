@@ -57,39 +57,39 @@ class Migration(BaseMigration):
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_session ON ",
-            "wifi_detections(scan_session_id)"
+            "wifi_detections(scan_session_id)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_bssid ON ",
-            "wifi_detections(bssid)"
+            "wifi_detections(bssid)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_ssid ON ",
-            "wifi_detections(ssid)"
+            "wifi_detections(ssid)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_time ON ",
-            "wifi_detections(detection_timestamp)"
+            "wifi_detections(detection_timestamp)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_location ON ",
-            "wifi_detections(latitude, longitude)"
+            "wifi_detections(latitude, longitude)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_signal ON ",
-            "wifi_detections(signal_strength_dbm)"
+            "wifi_detections(signal_strength_dbm)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_channel ON ",
-            "wifi_detections(channel)"
+            "wifi_detections(channel)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_encryption ON ",
-            "wifi_detections(encryption_type)"
+            "wifi_detections(encryption_type)",
         )
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_wifi_detections_vendor ON ",
-            "wifi_detections(vendor_name)"
+            "wifi_detections(vendor_name)",
         )
 
         # Migrate existing data from ap_cache if present

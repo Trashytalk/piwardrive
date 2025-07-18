@@ -4,6 +4,7 @@ This module provides a centralized aggregation service that collects and
 processes data from multiple distributed PiWardrive scanning units for
 comprehensive network analysis and reporting.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -106,7 +107,7 @@ async def _process_upload(path: str) -> None:
     async with aiosqlite.connect(path) as db:
         cur = await db.execute(
             "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, ",
-            "disk_percent FROM health_records"
+            "disk_percent FROM health_records",
         )
         recs = await cur.fetchall()
         await _merge_records([tuple(r) for r in recs])
@@ -158,7 +159,7 @@ async def stats() -> Dict[str, float]:  # noqa: V103 - FastAPI route
     async with _get_conn() as conn:
         cur = await conn.execute(
             "SELECT timestamp, cpu_temp, cpu_percent, memory_percent, ",
-            "disk_percent FROM health_records"
+            "disk_percent FROM health_records",
         )
         rows = await cur.fetchall()
         records = [HealthRecord(*row) for row in rows]
@@ -180,7 +181,7 @@ async def overlay(bins: int = 100) -> Dict[str, List[Tuple[float, float, int]]]:
 
 async def main() -> None:
     """Start the aggregation service server.
-    
+
     Initializes the database connection pool and starts the FastAPI server
     on the configured port to accept connections from PiWardrive units.
     """

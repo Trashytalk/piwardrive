@@ -1,5 +1,3 @@
-import logging
-
 """
 Comprehensive integration tests for PiWardrive.
 
@@ -16,21 +14,14 @@ import tempfile
 import threading
 import time
 from contextlib import contextmanager
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 import requests
 
-from src.analysis import AnalysisEngine
-from src.config import ConfigManager
-from src.data.aggregation import AggregationService
-from src.gps.client import GPSClient
-from src.network.scanner import NetworkScanner
-from src.persistence import PersistenceManager
-
-# Import core components
-from src.service import PiWardriveService
+# Import core components - using correct module paths
+from src.piwardrive.config import ConfigManager
+from src.piwardrive.service import PiWardriveService
 from src.webui.server import WebUIServer
 
 
@@ -120,7 +111,7 @@ class TestServiceIntegration:
 
     def test_service_startup_and_shutdown(self, integration_fixture):
         """Test complete service lifecycle."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Test service initialization
         service = PiWardriveService(config)
@@ -136,7 +127,7 @@ class TestServiceIntegration:
 
     def test_database_initialization_and_operations(self, integration_fixture):
         """Test database setup and basic operations."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         persistence = PersistenceManager(config)
 
         # Test database initialization
@@ -156,7 +147,7 @@ class TestServiceIntegration:
     def test_config_validation_and_loading(self, integration_fixture):
         """Test configuration validation and loading."""
         # Test valid configuration
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         assert config.is_valid()
 
         # Test invalid configuration
@@ -171,7 +162,7 @@ class TestServiceIntegration:
 
     def test_gps_data_flow(self, integration_fixture):
         """Test GPS data collection and processing."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Use mock GPS client
         with integration_fixture.managed_service(GPSClient, config) as gps_client:
@@ -191,7 +182,7 @@ class TestServiceIntegration:
 
     def test_network_scanning_integration(self, integration_fixture):
         """Test network scanning and data storage."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         persistence = PersistenceManager(config)
         persistence.initialize()
 
@@ -212,7 +203,7 @@ class TestServiceIntegration:
 
     def test_analysis_engine_integration(self, integration_fixture):
         """Test analysis engine with real data."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         persistence = PersistenceManager(config)
         persistence.initialize()
 
@@ -251,7 +242,7 @@ class TestServiceIntegration:
 
     def test_webui_integration(self, integration_fixture):
         """Test WebUI server integration."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         with integration_fixture.managed_service(WebUIServer, config) as server:
             # Start server
@@ -272,7 +263,7 @@ class TestServiceIntegration:
 
     def test_data_aggregation_integration(self, integration_fixture):
         """Test data aggregation service integration."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         persistence = PersistenceManager(config)
         persistence.initialize()
 
@@ -313,10 +304,9 @@ class TestAsyncIntegration:
     @pytest.mark.asyncio
     async def test_async_service_coordination(self, integration_fixture):
         """Test coordination between async services."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Test async service startup
-        _tasks = []
 
         # Mock async GPS service
         async def mock_gps_service():
@@ -360,7 +350,7 @@ class TestAsyncIntegration:
     @pytest.mark.asyncio
     async def test_async_data_processing_pipeline(self, integration_fixture):
         """Test async data processing pipeline."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Mock async data pipeline
         async def data_generator():
@@ -397,7 +387,7 @@ class TestErrorHandlingIntegration:
 
     def test_database_connection_failure_handling(self, integration_fixture):
         """Test handling of database connection failures."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Test with invalid database path
         invalid_config = json.loads(open(integration_fixture.config_path).read())
@@ -418,7 +408,7 @@ class TestErrorHandlingIntegration:
 
     def test_service_recovery_after_failure(self, integration_fixture):
         """Test service recovery after component failure."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Test service with failing component
         service = PiWardriveService(config)
@@ -433,7 +423,7 @@ class TestErrorHandlingIntegration:
 
     def test_concurrent_access_handling(self, integration_fixture):
         """Test handling of concurrent database access."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         persistence = PersistenceManager(config)
         persistence.initialize()
 
@@ -470,7 +460,7 @@ class TestPerformanceIntegration:
 
     def test_high_volume_data_processing(self, integration_fixture):
         """Test processing of high-volume data."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
         persistence = PersistenceManager(config)
         persistence.initialize()
 
@@ -499,7 +489,7 @@ class TestPerformanceIntegration:
 
         import psutil
 
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         # Get initial memory usage
         process = psutil.Process(os.getpid())
@@ -523,7 +513,7 @@ class TestPerformanceIntegration:
 
     def test_concurrent_user_simulation(self, integration_fixture):
         """Test system under concurrent user load."""
-        _config = ConfigManager(integration_fixture.config_path)
+        ConfigManager(integration_fixture.config_path)
 
         with integration_fixture.managed_service(WebUIServer, config) as server:
             server.start()

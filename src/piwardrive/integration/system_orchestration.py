@@ -21,33 +21,18 @@ import secrets
 import threading
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Dict, List, Optional
 
 import consul
 import prometheus_client
 import yaml
-from celery import Celery
-from flask import Flask, jsonify, request
-from flask_restx import Api, Resource, fields
+from flask import Flask, jsonify
+from flask_restx import Api
 from prometheus_client import Counter, Gauge, Histogram
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -261,7 +246,7 @@ class ServiceDiscovery:
     def discover(self, service_id: str) -> Optional[ServiceInstance]:
         """Discover service instance"""
         if service_id in self.registry:
-            _service_def = self.registry[service_id]
+            self.registry[service_id]
             # Return mock instance for demo
             return ServiceInstance(
                 instance_id=f"{service_id}-instance-1",
@@ -634,10 +619,10 @@ class ConfigurationManager:
 
     def get_secret(self, secret_path: str) -> Optional[str]:
         """Get secret from Vault.
-        
+
         Args:
             secret_path: Path to the secret.
-            
+
         Returns:
             Secret value or None if not found.
         """

@@ -5,18 +5,19 @@ Comprehensive test suite for exceptions.py module.
 Tests all custom exception classes and error handling functionality.
 """
 
-import pytest
 import sys
 from http import HTTPStatus
 from pathlib import Path
+
+import pytest
 
 # Add source directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from piwardrive.exceptions import (
-    PiWardriveError,
     ConfigurationError,
     DatabaseError,
+    PiWardriveError,
     ServiceError,
 )
 
@@ -28,7 +29,7 @@ class TestPiWardriveError:
         """Test PiWardriveError with default parameters."""
         message = "Test error message"
         error = PiWardriveError(message)
-        
+
         assert str(error) == message
         assert error.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert isinstance(error, Exception)
@@ -38,7 +39,7 @@ class TestPiWardriveError:
         message = "Custom error"
         status_code = HTTPStatus.BAD_REQUEST
         error = PiWardriveError(message, status_code=status_code)
-        
+
         assert str(error) == message
         assert error.status_code == status_code
 
@@ -51,7 +52,7 @@ class TestPiWardriveError:
             (HTTPStatus.BAD_REQUEST, "Invalid request"),
             (HTTPStatus.CONFLICT, "Resource conflict"),
         ]
-        
+
         for status_code, message in test_cases:
             error = PiWardriveError(message, status_code=status_code)
             assert error.status_code == status_code
@@ -66,9 +67,9 @@ class TestPiWardriveError:
     def test_piwardrive_error_attributes(self):
         """Test that PiWardriveError has the expected attributes."""
         error = PiWardriveError("Test message", status_code=HTTPStatus.NOT_FOUND)
-        
+
         # Check that the error has both message and status_code
-        assert hasattr(error, 'status_code')
+        assert hasattr(error, "status_code")
         assert error.status_code == HTTPStatus.NOT_FOUND
         assert str(error) == "Test message"
 
@@ -77,7 +78,7 @@ class TestPiWardriveError:
         # This should work
         error = PiWardriveError("message", status_code=HTTPStatus.NOT_FOUND)
         assert error.status_code == HTTPStatus.NOT_FOUND
-        
+
         # This should also work (default status code)
         error = PiWardriveError("message")
         assert error.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
@@ -90,7 +91,7 @@ class TestConfigurationError:
         """Test basic ConfigurationError functionality."""
         message = "Invalid configuration"
         error = ConfigurationError(message)
-        
+
         assert str(error) == message
         assert error.status_code == HTTPStatus.BAD_REQUEST
         assert isinstance(error, PiWardriveError)
@@ -99,7 +100,7 @@ class TestConfigurationError:
     def test_configuration_error_inheritance(self):
         """Test ConfigurationError inheritance chain."""
         error = ConfigurationError("Config error")
-        
+
         assert isinstance(error, Exception)
         assert isinstance(error, PiWardriveError)
         assert isinstance(error, ConfigurationError)
@@ -119,7 +120,7 @@ class TestConfigurationError:
             "YAML parsing error in config file",
             "Environment variable validation failed",
         ]
-        
+
         for message in test_messages:
             error = ConfigurationError(message)
             assert str(error) == message
@@ -133,7 +134,7 @@ class TestDatabaseError:
         """Test DatabaseError with default parameters."""
         message = "Database connection failed"
         error = DatabaseError(message)
-        
+
         assert str(error) == message
         assert error.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert isinstance(error, PiWardriveError)
@@ -144,14 +145,14 @@ class TestDatabaseError:
         message = "Database query failed"
         status_code = HTTPStatus.SERVICE_UNAVAILABLE
         error = DatabaseError(message, status_code=status_code)
-        
+
         assert str(error) == message
         assert error.status_code == status_code
 
     def test_database_error_inheritance(self):
         """Test DatabaseError inheritance chain."""
         error = DatabaseError("DB error")
-        
+
         assert isinstance(error, Exception)
         assert isinstance(error, PiWardriveError)
         assert isinstance(error, DatabaseError)
@@ -165,7 +166,7 @@ class TestDatabaseError:
             ("Database locked", HTTPStatus.LOCKED),
             ("Query syntax error", HTTPStatus.BAD_REQUEST),
         ]
-        
+
         for message, status_code in test_cases:
             error = DatabaseError(message, status_code=status_code)
             assert str(error) == message
@@ -179,7 +180,7 @@ class TestServiceError:
         """Test ServiceError with default parameters."""
         message = "Service operation failed"
         error = ServiceError(message)
-        
+
         assert str(error) == message
         assert error.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
         assert isinstance(error, PiWardriveError)
@@ -190,14 +191,14 @@ class TestServiceError:
         message = "Service unavailable"
         status_code = HTTPStatus.SERVICE_UNAVAILABLE
         error = ServiceError(message, status_code=status_code)
-        
+
         assert str(error) == message
         assert error.status_code == status_code
 
     def test_service_error_inheritance(self):
         """Test ServiceError inheritance chain."""
         error = ServiceError("Service error")
-        
+
         assert isinstance(error, Exception)
         assert isinstance(error, PiWardriveError)
         assert isinstance(error, ServiceError)
@@ -211,7 +212,7 @@ class TestServiceError:
             ("Service configuration invalid", HTTPStatus.BAD_REQUEST),
             ("Service dependency unavailable", HTTPStatus.SERVICE_UNAVAILABLE),
         ]
-        
+
         for message, status_code in test_cases:
             error = ServiceError(message, status_code=status_code)
             assert str(error) == message
@@ -228,7 +229,7 @@ class TestExceptionHierarchy:
             DatabaseError("test"),
             ServiceError("test"),
         ]
-        
+
         for exception in exceptions:
             assert isinstance(exception, PiWardriveError)
             assert isinstance(exception, Exception)
@@ -242,9 +243,9 @@ class TestExceptionHierarchy:
             DatabaseError("test"),
             ServiceError("test"),
         ]
-        
+
         for exception in exceptions:
-            assert hasattr(exception, 'status_code')
+            assert hasattr(exception, "status_code")
             assert isinstance(exception.status_code, HTTPStatus)
 
     def test_exception_str_representation(self):
@@ -256,24 +257,24 @@ class TestExceptionHierarchy:
             DatabaseError(test_message),
             ServiceError(test_message),
         ]
-        
+
         for exception in exceptions:
             assert str(exception) == test_message
 
     def test_exception_module_exports(self):
         """Test that __all__ exports are correct."""
         from piwardrive import exceptions
-        
+
         expected_exports = [
             "PiWardriveError",
-            "ConfigurationError", 
+            "ConfigurationError",
             "DatabaseError",
             "ServiceError",
         ]
-        
-        assert hasattr(exceptions, '__all__')
+
+        assert hasattr(exceptions, "__all__")
         assert set(exceptions.__all__) == set(expected_exports)
-        
+
         # Verify all exported items are accessible
         for export_name in expected_exports:
             assert hasattr(exceptions, export_name)
@@ -295,7 +296,10 @@ class TestExceptionErrorScenarios:
         """Test DatabaseError in database connection scenario."""
         try:
             # Simulate database connection failure
-            raise DatabaseError("Connection to database failed", status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+            raise DatabaseError(
+                "Connection to database failed",
+                status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            )
         except DatabaseError as e:
             assert e.status_code == HTTPStatus.SERVICE_UNAVAILABLE
             assert "Connection to database failed" in str(e)
@@ -304,7 +308,10 @@ class TestExceptionErrorScenarios:
         """Test ServiceError in API service scenario."""
         try:
             # Simulate external service failure
-            raise ServiceError("External API rate limit exceeded", status_code=HTTPStatus.TOO_MANY_REQUESTS)
+            raise ServiceError(
+                "External API rate limit exceeded",
+                status_code=HTTPStatus.TOO_MANY_REQUESTS,
+            )
         except ServiceError as e:
             assert e.status_code == HTTPStatus.TOO_MANY_REQUESTS
             assert "rate limit" in str(e)
@@ -315,7 +322,10 @@ class TestExceptionErrorScenarios:
             try:
                 raise DatabaseError("Primary DB failure")
             except DatabaseError:
-                raise ServiceError("Service failed due to database issue", status_code=HTTPStatus.SERVICE_UNAVAILABLE)
+                raise ServiceError(
+                    "Service failed due to database issue",
+                    status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+                )
         except ServiceError as e:
             assert e.status_code == HTTPStatus.SERVICE_UNAVAILABLE
             assert "Service failed" in str(e)

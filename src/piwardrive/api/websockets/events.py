@@ -24,7 +24,7 @@ async def broadcast_events(request: Request) -> StreamingResponse:
                 records = await records
             if records:
                 last_time = max(r["last_time"] for r in records)
-            _data = {"seq": seq, "aps": records}
+            data = {"seq": seq, "aps": records}
             yield f"data: {json.dumps(data)}\n\n"
             seq += 1
             await service.asyncio.sleep(service.STREAM_SLEEP)

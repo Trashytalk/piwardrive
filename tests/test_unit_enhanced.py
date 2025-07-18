@@ -1,5 +1,3 @@
-import logging
-
 """
 Enhanced unit tests with reduced mocking for PiWardrive.
 
@@ -14,9 +12,6 @@ import sqlite3
 import tempfile
 import threading
 import time
-from contextlib import contextmanager
-from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -26,7 +21,6 @@ from src.cache import CacheManager
 # Import components for testing
 from src.config import ConfigManager
 from src.gps.client import GPSClient
-from src.logging import LoggingManager
 from src.network.scanner import NetworkScanner
 from src.persistence import PersistenceManager
 from src.security import SecurityManager

@@ -14,7 +14,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import psutil
@@ -25,6 +25,7 @@ import requests
 @dataclass
 class PerformanceTestResult:
     """Result of a performance test."""
+
     test_name: str
     duration: float
     throughput: float
@@ -37,9 +38,11 @@ class PerformanceTestResult:
     cpu_peak: float
     timestamp: float
 
+
 @dataclass
 class LoadTestConfig:
     """Configuration for load testing."""
+
     url: str
     method: str = "GET"
     payload: Optional[Dict] = None
@@ -54,7 +57,7 @@ class PerformanceTestRunner:
     """Main class for running performance tests."""
 
     def __init__(self, base_url: str = "http://localhost:8080"):
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.results: List[PerformanceTestResult] = []
         self.baseline_file = Path("performance_baseline.json")
 
@@ -71,19 +74,19 @@ class PerformanceTestRunner:
                     config.url,
                     json=config.payload,
                     headers=config.headers,
-                    timeout=config.timeout
+                    timeout=config.timeout,
                 )
                 return {
-                    'status_code': response.status_code,
-                    'response_time': response.elapsed.total_seconds(),
-                    'success': 200 <= response.status_code < 300
+                    "status_code": response.status_code,
+                    "response_time": response.elapsed.total_seconds(),
+                    "success": 200 <= response.status_code < 300,
                 }
             except Exception as e:
                 return {
-                    'status_code': 0,
-                    'response_time': config.timeout,
-                    'success': False,
-                    'error': str(e)
+                    "status_code": 0,
+                    "response_time": config.timeout,
+                    "success": False,
+                    "error": str(e),
                 }
 
         # Monitor system resources
@@ -114,8 +117,8 @@ class PerformanceTestRunner:
                 try:
                     result = future.result(timeout=config.timeout + 10)
                     responses.append(result)
-                    if not result['success']:
-                        errors.append(result.get('error', 'Unknown error'))
+                    if not result["success"]:
+                        errors.append(result.get("error", "Unknown error"))
                 except Exception as e:
                     errors.append(str(e))
 
@@ -123,8 +126,8 @@ class PerformanceTestRunner:
         total_duration = end_time - start_time
 
         # Calculate metrics
-        successful_responses = [r for r in responses if r['success']]
-        response_times = [r['response_time'] for r in responses]
+        successful_responses = [r for r in responses if r["success"]]
+        response_times = [r["response_time"] for r in responses]
 
         if not response_times:
             response_times = [0]
@@ -134,24 +137,29 @@ class PerformanceTestRunner:
             duration=total_duration,
             throughput=len(successful_responses) / total_duration,
             latency_avg=statistics.mean(response_times),
-            latency_p95=statistics.quantiles(response_times,
-                n=20)[18] if len(response_times) > 1 else response_times[0],
-                
-            latency_p99=statistics.quantiles(response_times,
-                n=100)[98] if len(response_times) > 1 else response_times[0],
-                
+            latency_p95=(
+                statistics.quantiles(response_times, n=20)[18]
+                if len(response_times) > 1
+                else response_times[0]
+            ),
+            latency_p99=(
+                statistics.quantiles(response_times, n=100)[98]
+                if len(response_times) > 1
+                else response_times[0]
+            ),
             success_rate=len(successful_responses) / len(responses) if responses else 0,
             error_count=len(errors),
             memory_peak=max(memory_usage) if memory_usage else 0,
             cpu_peak=max(cpu_usage) if cpu_usage else 0,
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
         self.results.append(result)
         return result
 
-    async def run_async_load_test(self,
-        config: LoadTestConfig) -> PerformanceTestResult:
+    async def run_async_load_test(
+        self, config: LoadTestConfig
+    ) -> PerformanceTestResult:
         """Run async load test for better performance."""
         start_time = time.perf_counter()
         responses = []
@@ -165,20 +173,20 @@ class PerformanceTestRunner:
                     config.url,
                     json=config.payload,
                     headers=config.headers,
-                    timeout=aiohttp.ClientTimeout(total=config.timeout)
+                    timeout=aiohttp.ClientTimeout(total=config.timeout),
                 ) as response:
                     request_end = time.perf_counter()
                     return {
-                        'status_code': response.status,
-                        'response_time': request_end - request_start,
-                        'success': 200 <= response.status < 300
+                        "status_code": response.status,
+                        "response_time": request_end - request_start,
+                        "success": 200 <= response.status < 300,
                     }
             except Exception as e:
                 return {
-                    'status_code': 0,
-                    'response_time': config.timeout,
-                    'success': False,
-                    'error': str(e)
+                    "status_code": 0,
+                    "response_time": config.timeout,
+                    "success": False,
+                    "error": str(e),
                 }
 
         # Monitor system resources
@@ -211,15 +219,15 @@ class PerformanceTestRunner:
                     errors.append(str(result))
                 else:
                     responses.append(result)
-                    if not result['success']:
-                        errors.append(result.get('error', 'Request failed'))
+                    if not result["success"]:
+                        errors.append(result.get("error", "Request failed"))
 
         end_time = time.perf_counter()
         total_duration = end_time - start_time
 
         # Calculate metrics
-        successful_responses = [r for r in responses if r['success']]
-        response_times = [r['response_time'] for r in responses]
+        successful_responses = [r for r in responses if r["success"]]
+        response_times = [r["response_time"] for r in responses]
 
         if not response_times:
             response_times = [0]
@@ -229,17 +237,21 @@ class PerformanceTestRunner:
             duration=total_duration,
             throughput=len(successful_responses) / total_duration,
             latency_avg=statistics.mean(response_times),
-            latency_p95=statistics.quantiles(response_times,
-                n=20)[18] if len(response_times) > 1 else response_times[0],
-                
-            latency_p99=statistics.quantiles(response_times,
-                n=100)[98] if len(response_times) > 1 else response_times[0],
-                
+            latency_p95=(
+                statistics.quantiles(response_times, n=20)[18]
+                if len(response_times) > 1
+                else response_times[0]
+            ),
+            latency_p99=(
+                statistics.quantiles(response_times, n=100)[98]
+                if len(response_times) > 1
+                else response_times[0]
+            ),
             success_rate=len(successful_responses) / len(responses) if responses else 0,
             error_count=len(errors),
             memory_peak=max(memory_usage) if memory_usage else 0,
             cpu_peak=max(cpu_usage) if cpu_usage else 0,
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
         self.results.append(result)
@@ -251,10 +263,10 @@ class PerformanceTestRunner:
 
         # Test various database operations
         operations = [
-            ('SELECT COUNT(*) FROM wifi_networks', 'count_wifi'),
-            ('SELECT COUNT(*) FROM bluetooth_devices', 'count_bluetooth'),
-            ('SELECT * FROM wifi_networks LIMIT 100', 'select_wifi_100'),
-            ('SELECT * FROM bluetooth_devices LIMIT 100', 'select_bluetooth_100'),
+            ("SELECT COUNT(*) FROM wifi_networks", "count_wifi"),
+            ("SELECT COUNT(*) FROM bluetooth_devices", "count_bluetooth"),
+            ("SELECT * FROM wifi_networks LIMIT 100", "select_wifi_100"),
+            ("SELECT * FROM bluetooth_devices LIMIT 100", "select_bluetooth_100"),
         ]
 
         response_times = []
@@ -269,8 +281,8 @@ class PerformanceTestRunner:
                 # Simulate database operation via API
                 response = requests.get(
                     f"{self.base_url}/api/database/query",
-                    params={'query': query},
-                    timeout=30
+                    params={"query": query},
+                    timeout=30,
                 )
 
                 operation_end = time.perf_counter()
@@ -293,17 +305,21 @@ class PerformanceTestRunner:
             duration=total_duration,
             throughput=len(operations) / total_duration,
             latency_avg=statistics.mean(response_times),
-            latency_p95=statistics.quantiles(response_times,
-                n=20)[18] if len(response_times) > 1 else response_times[0],
-                
-            latency_p99=statistics.quantiles(response_times,
-                n=100)[98] if len(response_times) > 1 else response_times[0],
-                
+            latency_p95=(
+                statistics.quantiles(response_times, n=20)[18]
+                if len(response_times) > 1
+                else response_times[0]
+            ),
+            latency_p99=(
+                statistics.quantiles(response_times, n=100)[98]
+                if len(response_times) > 1
+                else response_times[0]
+            ),
             success_rate=(len(operations) - len(errors)) / len(operations),
             error_count=len(errors),
             memory_peak=psutil.Process().memory_info().rss / 1024 / 1024,
             cpu_peak=psutil.Process().cpu_percent(),
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
         self.results.append(result)
@@ -324,7 +340,7 @@ class PerformanceTestRunner:
                 url=f"{self.base_url}/api/status",
                 concurrent_users=max_concurrent,
                 duration_seconds=10,
-                timeout=30
+                timeout=30,
             )
 
             result = self.run_api_load_test(config)
@@ -345,17 +361,21 @@ class PerformanceTestRunner:
             duration=total_duration,
             throughput=breaking_point,  # Users at breaking point
             latency_avg=statistics.mean(response_times) if response_times else 0,
-            latency_p95=statistics.quantiles(response_times,
-                n=20)[18] if len(response_times) > 1 else (response_times[0] if response_times else 0),
-                
-            latency_p99=statistics.quantiles(response_times,
-                n=100)[98] if len(response_times) > 1 else (response_times[0] if response_times else 0),
-                
+            latency_p95=(
+                statistics.quantiles(response_times, n=20)[18]
+                if len(response_times) > 1
+                else (response_times[0] if response_times else 0)
+            ),
+            latency_p99=(
+                statistics.quantiles(response_times, n=100)[98]
+                if len(response_times) > 1
+                else (response_times[0] if response_times else 0)
+            ),
             success_rate=1.0 if breaking_point == 0 else 0.95,
             error_count=len(errors),
             memory_peak=psutil.Process().memory_info().rss / 1024 / 1024,
             cpu_peak=psutil.Process().cpu_percent(),
-            timestamp=time.time()
+            timestamp=time.time(),
         )
 
         self.results.append(result)
@@ -364,12 +384,12 @@ class PerformanceTestRunner:
     def save_results(self, filename: str = "performance_results.json"):
         """Save performance test results to JSON file."""
         results_data = {
-            'timestamp': time.time(),
-            'results': [asdict(result) for result in self.results],
-            'summary': self.get_summary()
+            "timestamp": time.time(),
+            "results": [asdict(result) for result in self.results],
+            "summary": self.get_summary(),
         }
 
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(results_data, f, indent=2)
 
     def get_summary(self) -> Dict[str, Any]:
@@ -378,46 +398,51 @@ class PerformanceTestRunner:
             return {}
 
         return {
-            'total_tests': len(self.results),
-            'avg_throughput': statistics.mean([r.throughput for r in self.results]),
-            'avg_latency': statistics.mean([r.latency_avg for r in self.results]),
-            'overall_success_rate': statistics.mean([r.success_rate for r in self.results]),
-                
-            'total_errors': sum([r.error_count for r in self.results]),
-            'peak_memory': max([r.memory_peak for r in self.results]),
-            'peak_cpu': max([r.cpu_peak for r in self.results])
+            "total_tests": len(self.results),
+            "avg_throughput": statistics.mean([r.throughput for r in self.results]),
+            "avg_latency": statistics.mean([r.latency_avg for r in self.results]),
+            "overall_success_rate": statistics.mean(
+                [r.success_rate for r in self.results]
+            ),
+            "total_errors": sum([r.error_count for r in self.results]),
+            "peak_memory": max([r.memory_peak for r in self.results]),
+            "peak_cpu": max([r.cpu_peak for r in self.results]),
         }
 
-    def compare_with_baseline(self,
-        baseline_file: str = "performance_baseline.json") -> Dict[str,
-        Any]:
+    def compare_with_baseline(
+        self, baseline_file: str = "performance_baseline.json"
+    ) -> Dict[str, Any]:
         """Compare current results with baseline."""
         if not os.path.exists(baseline_file):
-            return {'error': 'Baseline file not found'}
+            return {"error": "Baseline file not found"}
 
-        with open(baseline_file, 'r') as f:
+        with open(baseline_file, "r") as f:
             baseline_data = json.load(f)
 
         current_summary = self.get_summary()
-        baseline_summary = baseline_data.get('summary', {})
+        baseline_summary = baseline_data.get("summary", {})
 
         comparison = {}
 
-        for metric in ['avg_throughput', 'avg_latency', 'overall_success_rate']:
+        for metric in ["avg_throughput", "avg_latency", "overall_success_rate"]:
             if metric in current_summary and metric in baseline_summary:
                 current_value = current_summary[metric]
                 baseline_value = baseline_summary[metric]
 
                 if baseline_value != 0:
-                    percentage_change = ((current_value - baseline_value) / baseline_value) * 100
+                    percentage_change = (
+                        (current_value - baseline_value) / baseline_value
+                    ) * 100
                     comparison[metric] = {
-                        'current': current_value,
-                        'baseline': baseline_value,
-                        'change_percent': percentage_change,
-                        'regression': percentage_change < -10  # 10% degradation threshold
+                        "current": current_value,
+                        "baseline": baseline_value,
+                        "change_percent": percentage_change,
+                        "regression": percentage_change
+                        < -10,  # 10% degradation threshold
                     }
 
         return comparison
+
 
 @pytest.mark.performance
 class TestPerformance:
@@ -426,7 +451,7 @@ class TestPerformance:
     @pytest.fixture(scope="class")
     def perf_runner(self):
         """Create performance test runner."""
-        base_url = os.getenv('TEST_BASE_URL', 'http://localhost:8080')
+        base_url = os.getenv("TEST_BASE_URL", "http://localhost:8080")
         return PerformanceTestRunner(base_url)
 
     @pytest.fixture(scope="class")
@@ -435,7 +460,7 @@ class TestPerformance:
         return LoadTestConfig(
             url=f"{os.getenv('TEST_BASE_URL', 'http://localhost:8080')}/api/status",
             concurrent_users=10,
-            duration_seconds=30
+            duration_seconds=30,
         )
 
     def test_api_response_time(self, perf_runner):
@@ -443,55 +468,62 @@ class TestPerformance:
         config = LoadTestConfig(
             url=f"{perf_runner.base_url}/api/status",
             concurrent_users=5,
-            duration_seconds=10
+            duration_seconds=10,
         )
 
         result = perf_runner.run_api_load_test(config)
 
         # Assert performance requirements
-        assert result.latency_avg < 2.0, \
-            f"Average latency too high: {result.latency_avg}s"
-        assert result.latency_p95 < 3.0, \
-            f"95th percentile latency too high: {result.latency_p95}s"
-        assert result.success_rate > 0.95, \
-            f"Success rate too low: {result.success_rate:.2%}"
+        assert (
+            result.latency_avg < 2.0
+        ), f"Average latency too high: {result.latency_avg}s"
+        assert (
+            result.latency_p95 < 3.0
+        ), f"95th percentile latency too high: {result.latency_p95}s"
+        assert (
+            result.success_rate > 0.95
+        ), f"Success rate too low: {result.success_rate:.2%}"
 
     def test_concurrent_user_handling(self, perf_runner):
         """Test concurrent user handling capability."""
         config = LoadTestConfig(
             url=f"{perf_runner.base_url}/api/status",
             concurrent_users=50,
-            duration_seconds=30
+            duration_seconds=30,
         )
 
         result = perf_runner.run_api_load_test(config)
 
         assert result.throughput > 10, f"Throughput too low: {result.throughput} req/s"
-        assert result.success_rate > 0.90, \
-            f"Success rate too low under load: {result.success_rate:.2%}"
+        assert (
+            result.success_rate > 0.90
+        ), f"Success rate too low under load: {result.success_rate:.2%}"
 
     def test_database_performance(self, perf_runner):
         """Test database performance requirements."""
         result = perf_runner.run_database_performance_test()
 
-        assert result.latency_avg < 1.0, \
-            f"Database operations too slow: {result.latency_avg}s"
-        assert result.success_rate > 0.95, \
-            f"Database success rate too low: {result.success_rate:.2%}"
+        assert (
+            result.latency_avg < 1.0
+        ), f"Database operations too slow: {result.latency_avg}s"
+        assert (
+            result.success_rate > 0.95
+        ), f"Database success rate too low: {result.success_rate:.2%}"
 
     def test_memory_usage(self, perf_runner):
         """Test memory usage during load."""
         config = LoadTestConfig(
             url=f"{perf_runner.base_url}/api/status",
             concurrent_users=20,
-            duration_seconds=60
+            duration_seconds=60,
         )
 
         result = perf_runner.run_api_load_test(config)
 
         # Memory should not exceed 500MB during normal operation
-        assert result.memory_peak < 500, \
-            f"Memory usage too high: {result.memory_peak}MB"
+        assert (
+            result.memory_peak < 500
+        ), f"Memory usage too high: {result.memory_peak}MB"
 
     @pytest.mark.slow
     def test_long_running_stability(self, perf_runner):
@@ -499,15 +531,17 @@ class TestPerformance:
         config = LoadTestConfig(
             url=f"{perf_runner.base_url}/api/status",
             concurrent_users=10,
-            duration_seconds=300  # 5 minutes
+            duration_seconds=300,  # 5 minutes
         )
 
         result = perf_runner.run_api_load_test(config)
 
-        assert result.success_rate > 0.95, \
-            f"Long-running stability issue: {result.success_rate:.2%}"
-        assert result.latency_avg < 2.0, \
-            f"Performance degradation over time: {result.latency_avg}s"
+        assert (
+            result.success_rate > 0.95
+        ), f"Long-running stability issue: {result.success_rate:.2%}"
+        assert (
+            result.latency_avg < 2.0
+        ), f"Performance degradation over time: {result.latency_avg}s"
 
     @pytest.mark.stress
     def test_stress_breaking_point(self, perf_runner):
@@ -515,24 +549,27 @@ class TestPerformance:
         result = perf_runner.run_stress_test()
 
         # System should handle at least 50 concurrent users
-        assert result.throughput >= 50, \
-            f"System breaking point too low: {result.throughput} users"
+        assert (
+            result.throughput >= 50
+        ), f"System breaking point too low: {result.throughput} users"
 
     def test_performance_regression(self, perf_runner):
         """Test for performance regression against baseline."""
         config = LoadTestConfig(
             url=f"{perf_runner.base_url}/api/status",
             concurrent_users=10,
-            duration_seconds=30
+            duration_seconds=30,
         )
 
         perf_runner.run_api_load_test(config)
         comparison = perf_runner.compare_with_baseline()
 
-        if 'error' not in comparison:
+        if "error" not in comparison:
             for metric, data in comparison.items():
-                assert not data['regression'], \
-                    f"Performance regression detected in {metric}: {data['change_percent']:.1f}%"
+                assert not data[
+                    "regression"
+                ], f"Performance regression detected in {metric}: {data['change_percent']:.1f}%"
+
 
 if __name__ == "__main__":
     # Run performance tests
@@ -541,9 +578,7 @@ if __name__ == "__main__":
     # Run all performance tests
     print("Running API load test...")
     api_config = LoadTestConfig(
-        url=f"{runner.base_url}/api/status",
-        concurrent_users=20,
-        duration_seconds=60
+        url=f"{runner.base_url}/api/status", concurrent_users=20, duration_seconds=60
     )
     runner.run_api_load_test(api_config)
 

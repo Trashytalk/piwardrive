@@ -54,9 +54,9 @@ class LoggingConfig:
         file_config: Dict[str, Any] = {}
         try:
             with open(self.config_path) as f:
-                _fileconfig = json.load(f)
+                json.load(f)
         except FileNotFoundError:
-            _fileconfig = {}
+            pass
         except Exception as exc:  # pragma: no cover - configuration may be invalid
             print(f"Failed to load logging config: {exc}")
 

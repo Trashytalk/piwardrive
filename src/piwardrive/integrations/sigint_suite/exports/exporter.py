@@ -60,7 +60,7 @@ def export_yaml(records: Iterable[Any], path: str) -> None:
     except Exception as exc:  # pragma: no cover - optional dep
         raise RuntimeError("PyYAML required for YAML export") from exc
 
-    _data = []
+    data = []
     for rec in records:
         if hasattr(rec, "model_dump"):
             data.append(rec.model_dump())

@@ -1,3 +1,5 @@
+import { enhancedFetch } from './utils/networkErrorHandler.js';
+
 export function authHeaders() {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -7,54 +9,97 @@ export async function login(username, password) {
   const data = new URLSearchParams();
   data.append('username', username);
   data.append('password', password);
-  const resp = await fetch('/auth/login', { method: 'POST', body: data });
-  const out = await resp.json();
-  if (resp.ok) {
-    localStorage.setItem('token', out.access_token);
-    localStorage.setItem('role', out.role);
+  
+  try {
+    const resp = await enhancedFetch('/auth/login', { method: 'POST', body: data });
+    const out = await resp.json();
+    
+    if (resp.ok) {
+      localStorage.setItem('token', out.access_token);
+      localStorage.setItem('role', out.role);
+    }
+    return out;
+  } catch (error) {
+    throw new Error(`Login failed: ${error.message}`);
   }
-  return out;
 }
 
-export function logout() {
-  fetch('/auth/logout', { method: 'POST', headers: authHeaders() }).finally(
-    () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('role');
-    }
-  );
+export async function logout() {
+  try {
+    await enhancedFetch('/auth/logout', { method: 'POST', headers: authHeaders() });
+  } catch (error) {
+    console.warn('Logout request failed:', error);
+  } finally {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+  }
 }
 
 export async function fetchServiceStatuses(services) {
-  const entries = await Promise.all(
-    services.map((svc) =>
-      fetch(`/service/${svc}`, { headers: authHeaders() })
-        .then((r) => r.json())
-        .then((d) => [svc, !!d.active])
-    )
-  );
-  return Object.fromEntries(entries);
+  try {
+    const entries = await Promise.all(
+      services.map(async (svc) => {
+        try {
+          const resp = await enhancedFetch(`/service/${svc}`, { headers: authHeaders() });
+          const data = await resp.json();
+          return [svc, !!data.active];
+        } catch (error) {
+          console.warn(`Failed to fetch status for service ${svc}:`, error);
+          return [svc, false];
+        }
+      })
+    );
+    return Object.fromEntries(entries);
+  } catch (error) {
+    throw new Error(`Failed to fetch service statuses: ${error.message}`);
+  }
 }
 
 export async function syncHealthRecords(limit = 100) {
-  const resp = await fetch(`/sync?limit=${limit}`, {
-    method: 'POST',
-    headers: authHeaders(),
-  });
-  if (!resp.ok) throw new Error('sync failed');
-  return await resp.json();
+  try {
+    const resp = await enhancedFetch(`/sync?limit=${limit}`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    
+    if (!resp.ok) {
+      throw new Error(`Sync failed with status ${resp.status}`);
+    }
+    
+    return await resp.json();
+  } catch (error) {
+    throw new Error(`Health record sync failed: ${error.message}`);
+  }
 }
 
 export async function fetchSigintData(type) {
-  const resp = await fetch(`/export/${type}?fmt=json`, {
-    headers: authHeaders(),
-  });
-  return await resp.json();
+  try {
+    const resp = await enhancedFetch(`/export/${type}?fmt=json`, {
+      headers: authHeaders(),
+    });
+    
+    if (!resp.ok) {
+      throw new Error(`SIGINT data fetch failed with status ${resp.status}`);
+    }
+    
+    return await resp.json();
+  } catch (error) {
+    throw new Error(`Failed to fetch SIGINT data: ${error.message}`);
+  }
 }
 
 export async function fetchStatus(limit = 5) {
-  const resp = await fetch(`/status?limit=${limit}`, {
-    headers: authHeaders(),
-  });
-  return await resp.json();
+  try {
+    const resp = await enhancedFetch(`/status?limit=${limit}`, {
+      headers: authHeaders(),
+    });
+    
+    if (!resp.ok) {
+      throw new Error(`Status fetch failed with status ${resp.status}`);
+    }
+    
+    return await resp.json();
+  } catch (error) {
+    throw new Error(`Failed to fetch status: ${error.message}`);
+  }
 }

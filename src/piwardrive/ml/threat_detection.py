@@ -13,13 +13,11 @@ import pickle
 import re
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-from sklearn.cluster import DBSCAN
-from sklearn.decomposition import PCA
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
 
@@ -915,7 +913,7 @@ class OfflineThreatDetector:
             fingerprint_str = (
                 f"{vendor}_{fingerprint.device_type}_{len(fingerprint.probe_requests)}"
             )
-            fingerprint.fingerprint_hash = hashlib.md5(
+            fingerprint.fingerprint_hash = hashlib.sha256(
                 fingerprint_str.encode()
             ).hexdigest()
 

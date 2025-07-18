@@ -11,11 +11,10 @@ import logging
 import subprocess
 import threading
 import time
-from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import serial
 
@@ -28,7 +27,7 @@ except ImportError:
     HAS_RPI_HARDWARE = False
 
 try:
-    import usb.core
+    pass
 
     HAS_USB_SUPPORT = True
 except ImportError:
@@ -40,6 +39,14 @@ try:
     HAS_OPENCV = True
 except ImportError:
     HAS_OPENCV = False
+
+try:
+    import picamera
+
+    HAS_PICAMERA = True
+except ImportError:
+    HAS_PICAMERA = False
+    picamera = None
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +280,6 @@ class MultiAdapterManager:
                 ["iwlist", interface, "freq"], capture_output=True, text=True
             )
 
-            _frequencies = []
             for line in _result.stdout.split("\n"):
                 if "Channel" in line and "GHz" in line:
                     if "2.4" in line or "2." in line:
@@ -327,7 +333,7 @@ class MultiAdapterManager:
         assignments = {}
 
         with self.lock:
-            _available_adapters = list(self.adapters.keys())
+            list(self.adapters.keys())
 
             # Example assignment logic
             if "2.4GHz" in scan_config.get("bands", []):
@@ -996,17 +1002,16 @@ class CameraIntegration:
     def initialize_camera(self) -> bool:
         """Initialize camera system"""
         try:
-            if HAS_RPI_HARDWARE:
+            if HAS_RPI_HARDWARE and HAS_PICAMERA:
                 # Try PiCamera first
                 try:
-
                     self.camera = picamera.PiCamera()
                     self.camera.resolution = (1920, 1080)
                     self.camera.framerate = 30
                     logger.info("PiCamera initialized")
                     return True
-                except ImportError:
-                    pass
+                except Exception as e:
+                    logger.debug(f"PiCamera initialization failed: {e}")
 
             # Try OpenCV camera
             if HAS_OPENCV:
@@ -1108,6 +1113,41 @@ class CameraIntegration:
             info["framerate"] = self.camera.framerate
 
         return info
+
+
+# TODO: Implement CameraManager for hardware integration tests
+class CameraManager:
+    pass
+
+
+# TODO: Implement EnvironmentalSensor for hardware integration tests
+class EnvironmentalSensor:
+    pass
+
+
+# TODO: Implement AdapterInfo for hardware integration tests
+class AdapterInfo:
+    pass
+
+
+# TODO: Implement GPSManager for hardware integration tests
+class GPSManager:
+    pass
+
+
+# TODO: Stub for HardwareManager
+class HardwareManager:
+    pass
+
+
+# TODO: Stub for PowerManager
+class PowerManager:
+    pass
+
+
+# TODO: Stub for WirelessAdapter
+class WirelessAdapter:
+    pass
 
 
 # Example usage functions

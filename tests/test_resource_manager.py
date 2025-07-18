@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 
 from piwardrive.resource_manager import ResourceManager
 

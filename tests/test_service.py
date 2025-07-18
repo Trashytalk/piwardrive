@@ -5,7 +5,6 @@ import sys
 import tempfile
 from dataclasses import asdict, dataclass
 from types import ModuleType, SimpleNamespace
-from typing import Any
 from unittest import mock
 
 import pytest

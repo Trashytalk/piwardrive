@@ -35,7 +35,7 @@ class GPSHandler:
         timeout: float = 1.0,
     ) -> None:
         """Initialize GPS handler.
-        
+
         Args:
             host: GPS daemon host (default: 127.0.0.1)
             port: GPS daemon port (default: 2947)
@@ -87,10 +87,10 @@ class GPSHandler:
     # Public API -------------------------------------------------------
     def get_position(self, timeout: float | None = None) -> tuple[float, float] | None:
         """Get current GPS position as (latitude, longitude).
-        
+
         Args:
             timeout: Read timeout in seconds
-            
+
         Returns:
             Tuple of (lat, lon) or None if unavailable
         """
@@ -108,10 +108,10 @@ class GPSHandler:
 
     def get_accuracy(self, timeout: float | None = None) -> float | None:
         """Get current GPS accuracy in meters.
-        
+
         Args:
             timeout: Read timeout in seconds
-            
+
         Returns:
             Accuracy in meters or None if unavailable
         """
@@ -129,10 +129,10 @@ class GPSHandler:
 
     def get_fix_quality(self, timeout: float | None = None) -> str:
         """Get current GPS fix quality.
-        
+
         Args:
             timeout: Read timeout in seconds
-            
+
         Returns:
             Fix quality string (No Fix, 2D, 3D, DGPS, etc.)
         """

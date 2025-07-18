@@ -1,5 +1,4 @@
 import json
-import logging
 import sys
 from types import SimpleNamespace
 

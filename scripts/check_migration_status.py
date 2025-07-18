@@ -12,8 +12,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 try:
     from piwardrive.core.persistence import _db_path, _get_conn
-from piwardrive.migrations.runner import (
-        get_applied_migrations,)
+
+from piwardrive.migrations.runner import get_applied_migrations
+
         get_available_migrationsexcept ImportError as e:print(f"Import error: {e}")
     print("This script requires the PiWardrive package to be installed")
     sys.exit(1)

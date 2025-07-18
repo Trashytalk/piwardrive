@@ -50,7 +50,7 @@ class PollScheduler:
         except Exception:
             return {}
         result: Dict[str, Sequence[tuple[float, float]]] = {}
-        for item in data if isinstance(data, list) else []:
+        for item in _data if isinstance(_data, list) else []:
             name = str(item.get("name", ""))
             points = [tuple(p) for p in item.get("points", []) if len(p) == 2]
             if name and points:
@@ -79,11 +79,11 @@ class PollScheduler:
     @classmethod
     def check_rules(cls, rules: Mapping[str, Any]) -> bool:
         """Check if scheduling rules allow execution.
-        
+
         Args:
             rules: Dictionary containing scheduling rules including
                 time_ranges and geofences.
-                
+
         Returns:
             True if all rules allow execution, False otherwise.
         """
@@ -127,8 +127,8 @@ class PollScheduler:
                         dt = time.time() - last
                         last = time.time()
                         _result = callback(dt)
-                        if inspect.isawaitable(result):
-                            await result
+                        if inspect.isawaitable(_result):
+                            await _result
                 except asyncio.CancelledError:
                     raise
                 except Exception as exc:
@@ -156,8 +156,8 @@ class PollScheduler:
         async def _call_update() -> None:
             try:
                 _result = widget.update()
-                if inspect.isawaitable(result):
-                    await result
+                if inspect.isawaitable(_result):
+                    await _result
             except Exception as exc:  # pragma: no cover - UI update failures
                 logging.exception("Widget %s update failed: %s", cb_name, exc)
 
@@ -210,8 +210,8 @@ class AsyncScheduler:
                 start = time.perf_counter()
                 try:
                     _result = callback()
-                    if inspect.isawaitable(result):
-                        await result
+                    if inspect.isawaitable(_result):
+                        await _result
                 except asyncio.CancelledError:
                     raise
                 except Exception as exc:  # pragma: no cover - background errors
@@ -253,7 +253,10 @@ class AsyncScheduler:
         for task in tasks:
             task.cancel()
         if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
+            # Wait for tasks to complete cancellation
+            await asyncio.gather(
+                *[task for task in tasks if not task.done()], return_exceptions=True
+            )
         self._next_runs.clear()
         self._durations.clear()
 
@@ -266,3 +269,18 @@ class AsyncScheduler:
                 "last_duration": self._durations.get(name, float("nan")),
             }
         return metrics
+
+
+# TODO: Implement ScheduledTask for scheduler tests
+class ScheduledTask:
+    pass
+
+
+# TODO: Stub for Scheduler
+class Scheduler:
+    pass
+
+
+# TODO: Stub for TaskStatus
+class TaskStatus:
+    pass

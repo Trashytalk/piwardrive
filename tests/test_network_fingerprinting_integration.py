@@ -1,5 +1,4 @@
 import asyncio
-from types import SimpleNamespace
 
 from piwardrive.services import network_fingerprinting
 

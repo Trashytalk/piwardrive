@@ -8,13 +8,13 @@ including query analysis, index recommendations, and connection monitoring.
 import asyncio
 import logging
 import time
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import aiosqlite
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class QueryMetrics:
@@ -29,6 +29,7 @@ class QueryMetrics:
     def is_slow(self) -> bool:
         """Check if query is considered slow (>100ms)."""
         return self.execution_time > 0.1
+
 
 @dataclass
 class IndexRecommendation:
@@ -45,7 +46,6 @@ class IndexRecommendation:
         index_name = f"idx_{self.table}_{'_'.join(self.columns)}"
         columns_str = ", ".join(self.columns)
         return f"CREATE INDEX IF NOT EXISTS {index_name} ON {self.table}({columns_str})"
-
 
 
 class DatabaseOptimizer:
@@ -81,7 +81,7 @@ class DatabaseOptimizer:
 
     async def get_table_stats(self) -> Dict[str, Any]:
         """Get table statistics for performance analysis."""
-        __stats = {}
+        stats = {}
 
         async with aiosqlite.connect(self.db_path) as db:
             # Get table sizes
@@ -250,7 +250,7 @@ class DatabaseOptimizer:
                     # Verify the setting
                     if pragma != "optimize":
                         cursor = await db.execute(f"PRAGMA {pragma}")
-                        _result = await cursor.fetchone()
+                        result = await cursor.fetchone()
                         results[pragma] = result[0] if result else "applied"
                     else:
                         results[pragma] = "executed"
@@ -383,7 +383,7 @@ class OptimizedSQLiteConnection:
         start_time = time.time()
 
         cursor = await self.connection.execute(query, parameters)
-        _result = await cursor.fetchall()
+        result = await cursor.fetchall()
 
         execution_time = time.time() - start_time
 
@@ -408,6 +408,7 @@ class OptimizedSQLiteConnection:
                 query, execution_time, len(parameters_list)
             )
 
+
 async def run_performance_analysis(db_path: str) -> Dict[str, Any]:
     """Run a comprehensive performance analysis on the database."""
     optimizer = DatabaseOptimizer(db_path)
@@ -423,6 +424,7 @@ async def run_performance_analysis(db_path: str) -> Dict[str, Any]:
     }
 
     return analysis
+
 
 async def apply_performance_optimizations(
     db_path: str, create_indexes: bool = True
@@ -451,6 +453,7 @@ async def apply_performance_optimizations(
     results["vacuum_results"] = await optimizer.vacuum_database()
 
     return results
+
 
 if __name__ == "__main__":
     import sys
