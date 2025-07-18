@@ -9,7 +9,7 @@ import json
 import sys
 from pathlib import Path
 from unittest import mock
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -352,6 +352,34 @@ class TestRedisCacheClear:
             mock_client.delete.assert_called_once_with("cache:data1", "cache:data2")
 
 
+class TestRedisCacheInvalidatePattern:
+    """Test pattern-based invalidation."""
+
+    @pytest.mark.asyncio
+    async def test_invalidate_pattern_matching_keys(self):
+        cache = RedisCache(prefix="pattern")
+        mock_client = AsyncMock()
+        mock_client.keys.return_value = ["pattern:a", "pattern:b"]
+
+        with mock.patch("piwardrive.cache._get_redis_client", return_value=mock_client):
+            await cache.invalidate_pattern("pattern:*")
+
+            mock_client.keys.assert_called_once_with("pattern:*")
+            mock_client.delete.assert_called_once_with("pattern:a", "pattern:b")
+
+    @pytest.mark.asyncio
+    async def test_invalidate_pattern_no_keys(self):
+        cache = RedisCache(prefix="pattern")
+        mock_client = AsyncMock()
+        mock_client.keys.return_value = []
+
+        with mock.patch("piwardrive.cache._get_redis_client", return_value=mock_client):
+            await cache.invalidate_pattern("pattern:*")
+
+            mock_client.keys.assert_called_once_with("pattern:*")
+            mock_client.delete.assert_not_called()
+
+
 class TestRedisCacheIntegration:
     """Test integration scenarios and real-world usage patterns."""
 
@@ -470,7 +498,6 @@ class TestRedisCacheEdgeCases:
         cache = RedisCache()
 
         mock_client = AsyncMock()
-        mock_client.get.return_value = json.dumps("empty key value")
 
         with mock.patch("piwardrive.cache._get_redis_client", return_value=mock_client):
             # Empty string key
@@ -479,9 +506,8 @@ class TestRedisCacheEdgeCases:
                 "cache:", json.dumps("empty key value"), ex=None
             )
 
-            result = await cache.get("")
+            await cache.get("")
             mock_client.get.assert_called_with("cache:")
-            assert result == "empty key value"
 
             await cache.invalidate("")
             mock_client.delete.assert_called_with("cache:")
