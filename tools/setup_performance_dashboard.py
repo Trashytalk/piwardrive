@@ -82,7 +82,7 @@ def validate_integration():
         # Test database optimizer
         from piwardrive.performance.db_optimizer import DatabaseOptimizer
 
-        _db_opt = DatabaseOptimizer(":memory:")
+    # Unused: _db_opt = DatabaseOptimizer(":memory:")
         print("  ✓ Database optimizer ready")
 
         # Test async optimizer

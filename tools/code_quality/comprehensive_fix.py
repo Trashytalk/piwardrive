@@ -69,7 +69,7 @@ def fix_line_too_long(content: str) -> str:
 def fix_undefined_variables(content: str) -> str:
     """Fix undefined variable issues"""
     # Common patterns where variables are defined but with wrong names
-    _patterns = [
+    # Unused: _patterns = [
         (r"(\s+)(\w+)data\s*=", r"\1\2_data ="),
         (r"(\s+)(\w+)config\s*=", r"\1\2_config ="),
         (r"(\s+)(\w+)result\s*=", r"\1\2_result ="),

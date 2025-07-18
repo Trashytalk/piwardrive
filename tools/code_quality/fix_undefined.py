@@ -29,7 +29,7 @@ def fix_undefined_variables(content: str) -> str:
     content = "\n".join(fixed_lines)
 
     # Look for undefined variable references and fix them
-    _undefined_patterns = [
+    # Unused: _undefined_patterns = [
         (r"\bdata\b(?!\s*=)", "_data"),
         (r"\bresult\b(?!\s*=)", "_result"),
         (r"\bconfig\b(?!\s*=)", "_config"),

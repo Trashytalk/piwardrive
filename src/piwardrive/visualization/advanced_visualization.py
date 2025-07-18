@@ -1037,7 +1037,7 @@ def demo_advanced_visualization():
         dimensions=[DataDimension.TIME],
     )
 
-    _fig_temporal = viz_engine.create_temporal_visualization(
+    # Unused: _fig_temporal = viz_engine.create_temporal_visualization(
         timeline_events, config_temporal
     )
     print(f"   Created temporal visualization with {len(timeline_events)} events")
@@ -1051,7 +1051,7 @@ def demo_advanced_visualization():
         dimensions=[DataDimension.X, DataDimension.Y, DataDimension.SIGNAL_STRENGTH],
     )
 
-    _fig_heatmap = viz_engine.create_signal_strength_heatmap(
+    # Unused: _fig_heatmap = viz_engine.create_signal_strength_heatmap(
         sample_data, config_heatmap
     )
     print("   Created heatmap visualization")
@@ -1134,7 +1134,7 @@ _result = fig
     viz_engine.custom_scripts.register_script("trend_plot", custom_script)
 
     try:
-        _custom_fig = viz_engine.custom_scripts.execute_script(
+    # Unused: _custom_fig = viz_engine.custom_scripts.execute_script(
             "trend_plot", sample_data, {"title": "Custom Trend Analysis"}
         )
         print("   Custom script executed successfully")

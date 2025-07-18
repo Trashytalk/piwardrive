@@ -12,7 +12,6 @@ import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 from weakref import WeakSet
 
 logger = logging.getLogger(__name__)
@@ -117,7 +116,7 @@ class AsyncPerformanceMonitor:
 
         for op_name, metrics in operation_metrics.items():
             successful = [m for m in metrics if m.success]
-            _failed = [m for m in metrics if not m.success]
+    # Unused: _failed = [m for m in metrics if not m.success]
 
             if metrics:
                 avg_time = sum(m.execution_time for m in metrics) / len(metrics)
@@ -157,7 +156,7 @@ def monitor_async_performance(
 
             operation_id = monitor.start_operation(operation_name)
             try:
-                _result = await func(*args, **kwargs)
+    # Unused: _result = await func(*args, **kwargs)
                 monitor.end_operation(operation_id, success=True)
                 return result
             except Exception as e:
@@ -271,7 +270,7 @@ class AsyncTaskQueue:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get task queue statistics."""
-        _stats = dict(self.stats)
+    # Unused: _stats = dict(self.stats)
         stats["workers"] = len(self.workers)
         stats["running"] = self.running
         if stats["tasks_completed"] > 0:
@@ -356,7 +355,7 @@ class AsyncResourcePool:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get resource pool statistics."""
-        _stats = dict(self.stats)
+    # Unused: _stats = dict(self.stats)
         stats["max_size"] = self.max_size
         stats["created_count"] = self.created_count
         stats["active_count"] = len(self.active_resources)
@@ -432,7 +431,7 @@ class AsyncCircuitBreaker:
             if asyncio.iscoroutinefunction(func):
                 __result = await func(*args, **kwargs)
             else:
-                __result = func(*args, **kwargs)
+    # Unused: __result = func(*args, **kwargs)
 
             # Success - reset failure count
             async with self.lock:
@@ -534,7 +533,7 @@ class AsyncBatchProcessor:
 
     def get_stats(self) -> Dict[str, Any]:
         """Get batch processing statistics."""
-        _stats = dict(self.stats)
+    # Unused: _stats = dict(self.stats)
         stats["current_batch_size"] = len(self.batch)
         stats["batch_size_limit"] = self.batch_size
         stats["flush_interval"] = self.flush_interval
@@ -668,7 +667,7 @@ if __name__ == "__main__":
             tasks.append(test_operation(delay))
 
         # Execute with some failures
-        _results = await asyncio.gather(*tasks, return_exceptions=True)
+    # Unused: _results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Print performance summary
         summary = monitor.get_performance_summary()

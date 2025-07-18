@@ -359,7 +359,7 @@ class StatisticalAnalysisTools:
         if not data:
             return {}
 
-        __stats = {
+    # Unused: __stats = {
             "count": len(data),
             "mean": statistics.mean(data),
             "median": statistics.median(data),

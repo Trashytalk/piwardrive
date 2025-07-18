@@ -220,7 +220,7 @@ class TestPathLossCalculator:
             {"distance": 50, "rssi": -65, "tx_power": 20},
         ]
 
-        _original_exponent = config.path_loss_exponent
+    # Unused: _original_exponent = config.path_loss_exponent
         calculator.calibrate(calibration_points)
 
         # Calibration should update the path loss exponent

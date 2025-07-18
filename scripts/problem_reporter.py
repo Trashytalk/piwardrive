@@ -17,7 +17,6 @@ import uuid
 from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 import signal
 import threading
