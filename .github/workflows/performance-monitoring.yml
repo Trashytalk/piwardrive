@@ -135,7 +135,7 @@ jobs:
           curl -f http://localhost:8080/health || exit 1
       
       - name: Download baseline results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: performance-baseline
           path: baseline/
@@ -318,7 +318,7 @@ jobs:
           pip install matplotlib seaborn pandas numpy
       
       - name: Download all performance results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           pattern: performance-results-*
           merge-multiple: true
